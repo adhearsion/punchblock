@@ -29,6 +29,35 @@ module Ozone
       obj
     end
 
+    def self.parse(xml)
+puts xml.inspect
+      msg_data = xml.to_h
+puts msg_data.inspect
+      case msg_data['iq']['type']
+      when 'set'
+        case xml.children[0].name
+        when 'offer'
+          call = Ozone::Call.new(msg_data['iq']['from'], msg_data['iq']['to'], msg_data)
+          # FIXME: Acknowledge the offer
+          return call
+        when 'complete'
+
+        when 'info'
+        when 'end'
+          if xml.children[0].children[0].name != 'error'
+            return End.new xml.children[0].children[0].name
+          end
+        end
+      when 'result'
+        if xml.children[0]
+          case xml.children[0].name
+          when 'ref'
+          end
+        end
+      when 'error'
+      end
+    end
+
     ##
     # An Ozone answer message
     #
@@ -280,8 +309,21 @@ module Ozone
 
     class Offer < Message
       ##
-      # Creates an Offer message.  This message may not be sent by a client;
-      # this object is used to represent an offer received from the Ozone server.
+      # Creates an Offer message.
+      # This message may not be sent by a client; this object is used
+      # to represent an offer received from the Ozone server.
+      def self.parse(xml)
+        msg = self.new 'offer'
+        hash = xml.to_h
+        #@headers = hash
+      end
+    end
+
+    class End < Message
+      ##
+      # Creates an End message.  This signfies the end of a call.
+      # This message may not be sent by a client; this object is used
+      # to represent an offer received from the Ozone server.
       def self.parse(xml)
         msg = self.new 'offer'
         hash = xml.to_h

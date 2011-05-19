@@ -7,7 +7,7 @@ module Ozone
     BASE_NAMESPACE_MESSAGES = %w[answer hangup]
 
     # Parent object that created this object, if applicable
-    attr_accessor :parent
+    attr_accessor :parent, :headers
 
     ##
     # Create a new Ozone Message object.
@@ -30,9 +30,7 @@ module Ozone
     end
 
     def self.parse(xml)
-puts xml.inspect
       msg_data = xml.to_h
-puts msg_data.inspect
       case msg_data['iq']['type']
       when 'set'
         case xml.children[0].name
@@ -314,8 +312,7 @@ puts msg_data.inspect
       # to represent an offer received from the Ozone server.
       def self.parse(xml)
         msg = self.new 'offer'
-        hash = xml.to_h
-        #@headers = hash
+        @headers = xml.to_h
       end
     end
 
@@ -326,8 +323,14 @@ puts msg_data.inspect
       # to represent an offer received from the Ozone server.
       def self.parse(xml)
         msg = self.new 'offer'
-        hash = xml.to_h
-        #@headers = hash
+        @headers = xml.to_h
+      end
+    end
+
+    class Info < Message
+      def self.parse(xml)
+        msg = self.new 'info'
+        @headers = xml.to_h
       end
     end
   end

@@ -31,8 +31,8 @@ module Ozone
           begin
             loop do
               call, msg = @command_queue.pop
-              @logger.debug "Sending #{msg.to_xml} to #{call.from}"
-              iq_stanza = create_iq_stanza(call.from)
+              @logger.debug "Sending #{msg.to_xml} to #{call.id}"
+              iq_stanza = create_iq_stanza(call.id)
               iq_stanza.add_child(msg)
               write_to_stream iq_stanza
             end

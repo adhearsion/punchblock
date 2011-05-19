@@ -11,18 +11,60 @@ wire_logger.debug "Starting up..."
 protocol_logger = Logger.new('ozone-protocol.log')
 protocol_logger.level = Logger::DEBUG
 protocol_logger.debug "Starting up..."
-connection = Ozone::Protocol::XMPP.new 'usera@127.0.0.1', '1', :wire_logger => wire_logger, :protocol_logger => protocol_logger
+$connection = Ozone::Protocol::XMPP.new 'usera@127.0.0.1', '1', :wire_logger => wire_logger, :protocol_logger => protocol_logger
 x = Thread.new do
   begin
-    connection.run
+    $connection.run
   rescue => e
     puts "Exception in XMPP thread! #{e.message}"
     puts e.backtrace.join("\t\n")
   end
 end
 
+event_logger = Logger.new('ozone-events.log')
+event_logger.level = Logger::DEBUG
+CALL_QUEUES = {}
+INFO_EVENT_QUEUE = Queue.new
 
-call = connection.event_queue.pop
-msg = Ozone::Message::Answer.new
-connection.command_queue.push [call, msg]
+### DISPATCHER THREAD
+# This thread multiplexes the event stream from the underlying protocol handler and routes them
+# to the correct queue for each call.  It also starts a call handler, the run_call method) after creating
+# the queue.
+Thread.new do
+  loop do
+    event = $connection.event_queue.pop
+    case event
+    when Ozone::Call
+      raise "Duplicate call ID for #{event.id}" if CALL_QUEUES.has_key?(event.id)
+      CALL_QUEUES[event.id] = Queue.new
+      CALL_QUEUES[event.id].push event
+      run_call event
+    when Ozone::Message::Info
+      INFO_EVENT_QUEUE.push event
+
+    else
+      puts "Unknown event: #{event.inspect}"
+    end
+
+  end
+end
+
+def run_call(call)
+  Thread.new do
+    raise "Unknown call #{call.id}" unless CALL_QUEUES.has_key?(call.id)
+    queue = CALL_QUEUES[call.id]
+    call = queue.pop
+
+    dsl = Ozone::DSL.new call, queue
+
+    puts "Incoming call #{call.id}"
+    dsl.answer
+    sleep 5
+    dsl.hangup
+
+    # Clean up the queue.
+    CALL_QUEUES[call_id] = nil
+  end
+end
+
 x.join

@@ -4,18 +4,12 @@ module Ozone
   # This class represents an active Ozone call
   #
   class Call
-    attr_accessor :from
+    attr_accessor :id
 
-    def initialize(from, to, params)
-      @from    = from
+    def initialize(id, to, params)
+      @id = id
 puts params.inspect
       #@headers = params.delete :headers
     end
-
-    # @param [Ozone::Message] Message to send to the call
-    def send(msg)
-      
-    end
-
   end
 end

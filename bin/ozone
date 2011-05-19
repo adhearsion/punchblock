@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+$:.push File.join(File.dirname(__FILE__), '..', 'lib')
+require 'bundler/setup'
+require 'ozone'
+
+connection = Ozone::Protocol::XMPP.new 'usera@127.0.0.1', '1'
+connection.run

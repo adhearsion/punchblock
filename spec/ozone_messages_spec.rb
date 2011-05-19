@@ -1,10 +1,10 @@
 require 'spec_helper'
 
 describe 'Ozone message generator' do
-  include Ozone::Messages
+  include Ozone
 
   it 'should generate a correct "answer" message' do
-    answer.to_xml.should == '<answer xmlns="urn:xmpp:ozone:1"/>'
+    Message::Answer.new.to_xml.should == '<answer xmlns="urn:xmpp:ozone:1"/>'
   end
 
   it 'should generate a correct "ask" message' do
@@ -16,7 +16,7 @@ describe 'Ozone message generator' do
   <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
 </ask>
     RESPONSE
-    msg = ask 'Please enter your postal code.', '[5 DIGITS]'
+    msg = Message::Ask.new 'Please enter your postal code.', '[5 DIGITS]'
     msg.to_xml.should == expected_response.chomp
   end
 
@@ -29,12 +29,12 @@ describe 'Ozone message generator' do
   <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
 </ask>
     RESPONSE
-    msg = ask 'Please enter your postal code.', '[5 DIGITS]', :grammar => 'application/grammar+custom'
+    msg = Message::Ask.new 'Please enter your postal code.', '[5 DIGITS]', :grammar => 'application/grammar+custom'
     msg.to_xml.should == expected_response.chomp
   end
 
   it 'should generate a correct "conference" message' do
-    conference('1234').to_xml.should == '<conference xmlns="urn:xmpp:ozone:conference:1" id="1234"/>' 
+    Message::Conference.new('1234').to_xml.should == '<conference xmlns="urn:xmpp:ozone:conference:1" id="1234"/>' 
   end
 
   it 'should generate a correct "conference" message with options' do
@@ -46,35 +46,41 @@ describe 'Ozone message generator' do
   </music>
 </conference>
     RESPONSE
-    msg = conference '1234', :beep => true, :terminator => '#', :prompt => "Welcome to Ozone", :audio_url => "http://it.doesnt.matter.does.it/?"
+    msg = Message::Conference.new '1234', :beep => true, :terminator => '#', :prompt => "Welcome to Ozone", :audio_url => "http://it.doesnt.matter.does.it/?"
     msg.to_xml.should == expected_response.chomp
   end
 
   it 'should create a correct "hangup" message' do
-    hangup.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
+    Message::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
   end
 
   it 'should create a correct "pause" message' do
+    pending 'Need to construct the parent object first'
     pause.to_xml.should == '<pause xmlns="urn:xmpp:ozone:say:1"/>'
   end
 
   it 'should create a correct "resume" message' do
+    pending 'Need to construct the parent object first'
     resume(:say).to_xml.should == '<resume xmlns="urn:xmpp:ozone:say:1"/>'
   end
 
   it 'should create a correct "mute" message' do
+    pending 'Need to construct the parent object first'
     mute.to_xml.should == '<mute xmlns="urn:xmpp:ozone:conference:1"/>'
   end
 
   it 'should create a correct "unmute" message' do
+    pending 'Need to construct the parent object first'
     unmute.to_xml.should == '<unmute xmlns="urn:xmpp:ozone:conference:1"/>'
   end
 
   it 'should create a correct "kick" message' do
+    pending 'Need to construct the parent object first'
     kick.to_xml.should == '<kick xmlns="urn:xmpp:ozone:conference:1"/>'
   end
 
   it 'should create a correct "stop" message' do
+    pending 'Need to construct the parent object first'
     stop(:say).to_xml.should == '<stop xmlns="urn:xmpp:ozone:say:1"/>'
   end
 
@@ -84,7 +90,7 @@ describe 'Ozone message generator' do
   <audio url="http://whatever.you-say-boss.com"/>
 </say>
     RESPONSE
-    say_audio('http://whatever.you-say-boss.com').to_xml.should == expected_response.chomp
+    Message::Say.new(:url => 'http://whatever.you-say-boss.com').to_xml.should == expected_response.chomp
   end
 
   it 'should create a correct "say" message for text' do
@@ -93,15 +99,15 @@ describe 'Ozone message generator' do
   <speak>Once upon a time there was a message...</speak>
 </say>
     RESPONSE
-    say_text('Once upon a time there was a message...').to_xml.should == expected_response.chomp
+    Message::Say.new(:text => 'Once upon a time there was a message...').to_xml.should == expected_response.chomp
   end
 
   it 'should create a correct "transfer" message' do
-    transfer('tel:+14045551212').to_xml.should == '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212"/>'
+    Message::Transfer.new('tel:+14045551212').to_xml.should == '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212"/>'
   end
 
   it 'should create a correct "transfer" message with options' do
     expected_response = '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212" terminator="#"/>'
-    transfer('tel:+14045551212', :terminator => "#").to_xml.should == expected_response.chomp
+    Message::Transfer.new('tel:+14045551212', :terminator => "#").to_xml.should == expected_response.chomp
   end
 end

@@ -3,5 +3,26 @@ $:.push File.join(File.dirname(__FILE__), '..', 'lib')
 require 'bundler/setup'
 require 'ozone'
 
-connection = Ozone::Protocol::XMPP.new 'usera@127.0.0.1', '1'
-connection.run
+Thread.abort_on_exception = true
+
+wire_logger = Logger.new('ozone-wire.log')
+wire_logger.level = Logger::DEBUG
+wire_logger.debug "Starting up..."
+protocol_logger = Logger.new('ozone-protocol.log')
+protocol_logger.level = Logger::DEBUG
+protocol_logger.debug "Starting up..."
+connection = Ozone::Protocol::XMPP.new 'usera@127.0.0.1', '1', :wire_logger => wire_logger, :protocol_logger => protocol_logger
+x = Thread.new do
+  begin
+    connection.run
+  rescue => e
+    puts "Exception in XMPP thread! #{e.message}"
+    puts e.backtrace.join("\t\n")
+  end
+end
+
+
+call = connection.event_queue.pop
+msg = Ozone::Message::Answer.new
+connection.command_queue.push [call, msg]
+x.join

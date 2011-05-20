@@ -14,8 +14,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "punchblock"
   gem.homepage = "http://github.com/jsgoecke/punchblock"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = "Punchblock is a middleware library for telephony applications."
+  gem.description = "Like Rack is to Rails and Sinatra, Punchblock provides a consistent API on top of several underlying third-party call control protocols."
   gem.email = "jsgoecke@voxeo.com"
   gem.authors = ["Jason Goecke", "Ben Klang", "Ben Langfeld"]
   gem.add_runtime_dependency 'blather'

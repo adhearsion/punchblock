@@ -1,20 +1,21 @@
 #!/usr/bin/env ruby
 $:.push File.join(File.dirname(__FILE__), '..', 'lib')
 require 'bundler/setup'
-require 'ozone'
+require 'punchblock'
 
 Thread.abort_on_exception = true
 
-wire_logger = Logger.new('ozone-wire.log')
-wire_logger.level = Logger::DEBUG
-wire_logger.debug "Starting up..."
+transport_logger = Logger.new('ozone-transport.log')
+transport_logger.level = Logger::DEBUG
+transport_logger.debug "Starting up..."
 protocol_logger = Logger.new('ozone-protocol.log')
 protocol_logger.level = Logger::DEBUG
 protocol_logger.debug "Starting up..."
-$connection = Ozone::Protocol::XMPP.new 'usera@127.0.0.1', '1', :wire_logger => wire_logger, :protocol_logger => protocol_logger
+protocol = Punchblock::Protocol::Ozone
+transport = Punchblock::Transport::XMPP.new protocol, 'usera@127.0.0.1', '1', :transport_logger => transport_logger, :protocol_logger => protocol_logger
 x = Thread.new do
   begin
-    $connection.run
+    transport.run
   rescue => e
     puts "Exception in XMPP thread! #{e.message}"
     puts e.backtrace.join("\t\n")
@@ -32,14 +33,14 @@ INFO_EVENT_QUEUE = Queue.new
 # the queue.
 Thread.new do
   loop do
-    event = $connection.event_queue.pop
+    event = transport.event_queue.pop
     case event
-    when Ozone::Call
+    when Punchblock::Call
       raise "Duplicate call ID for #{event.id}" if CALL_QUEUES.has_key?(event.id)
       CALL_QUEUES[event.id] = Queue.new
       CALL_QUEUES[event.id].push event
-      run_call event
-    when Ozone::Message::Info
+      run_call transport, protocol, event
+    when protocol::Message::Info
       INFO_EVENT_QUEUE.push event
 
     else
@@ -49,16 +50,19 @@ Thread.new do
   end
 end
 
-def run_call(call)
+def run_call(transport, protocol, call)
+  ### CALL THREAD
+  # One thread is spun up to handle each call.
   Thread.new do
     raise "Unknown call #{call.id}" unless CALL_QUEUES.has_key?(call.id)
     queue = CALL_QUEUES[call.id]
     call = queue.pop
 
-    dsl = Ozone::DSL.new call, queue
+    dsl = Punchblock::DSL.new transport, protocol, call, queue
 
     puts "Incoming call #{call.id}"
     dsl.answer
+    dsl.say 'Hello World'
     sleep 5
     dsl.hangup
 

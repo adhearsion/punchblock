@@ -21,7 +21,7 @@ module Punchblock
           msg = @protocol::Message.parse msg
           @logger.debug msg.inspect
           @event_queue.push msg
-          # TODO: acknowledge message
+          iq.reply
         end
       end
 

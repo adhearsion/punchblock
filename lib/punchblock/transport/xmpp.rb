@@ -1,7 +1,7 @@
 require 'blather/client/dsl'
 
-module Ozone
-  module Protocol
+module Protocol
+  module Transport
     class XMPP
       attr_accessor :event_queue, :command_queue
 

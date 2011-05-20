@@ -1,4 +1,4 @@
-module Ozone
+module Punchblock
   class DSL
     def initialize(call, queue)
       @call  = call

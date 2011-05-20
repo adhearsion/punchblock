@@ -1,6 +1,6 @@
 require 'nokogiri'
 
-module Ozone
+module Punchblock
   class Message < Nokogiri::XML::Node
     BASE_OZONE_NAMESPACE = 'urn:xmpp:ozone'
     OZONE_VERSION        = '1'

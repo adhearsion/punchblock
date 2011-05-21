@@ -33,12 +33,18 @@ module Punchblock
 
         def self.parse(xml)
           msg = xml.children.first
-          case msg['type']
+          case xml['type']
           when 'set'
             case msg.name
             when 'offer'
-              call = Punchblock::Call.new(msg['from'], msg['to'], msg)
-              # FIXME: Acknowledge the offer
+              # Collect headers into an array
+              headers = msg.children.inject({}) do |headers, header|
+                headers[header['name']] = header['value']
+                headers
+              end
+              puts headers.inspect
+              call = Punchblock::Call.new(msg['from'], msg['to'], headers)
+              # TODO: Acknowledge the offer?
               return call
             when 'complete'
 

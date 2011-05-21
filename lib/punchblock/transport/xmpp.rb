@@ -18,10 +18,10 @@ module Punchblock
         # Add message handlers
         when_ready { @logger.info "Connected to XMPP as #{username}" }
         iq do |msg|
-          msg = @protocol::Message.parse msg
-          @logger.debug msg.inspect
-          @event_queue.push msg
-          iq.reply
+          pmsg = @protocol::Message.parse msg
+          @logger.debug pmsg.inspect
+          @event_queue.push pmsg
+          msg.reply
         end
       end
 

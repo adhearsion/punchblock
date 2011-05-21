@@ -9,6 +9,6 @@ group :development do
 end
 
 group :runtime do
-  gem 'blather'
+  gem 'blather', :git => 'git://github.com/sprsquish/blather.git'
   gem 'pry'
 end

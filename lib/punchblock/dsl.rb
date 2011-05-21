@@ -19,8 +19,8 @@ module Punchblock
       send @protocol::Message::Hangup.new
     end
 
-    def say(text) # :nodoc:
-      send @protocol::Message::Say.new :text => text
+    def say(string, type = :text) # :nodoc:
+      send @protocol::Message::Say.new type => string
       puts "Waiting on the queue..."
       response = @queue.pop
     end

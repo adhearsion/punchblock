@@ -14,11 +14,11 @@ module Punchblock
         ##
         # Create a new Ozone Message object.
         #
-        # @param [Symbol, Required] Verb for this new message
+        # @param [Symbol, Required] Component for this new message
         # @param [Nokogiri::XML::Document, Optional] Existing XML document to which this message should be added
         #
         # @return [Ozone::Message] New Ozone Message object
-        def self.new(klass = 'message', command = nil, parent = nil)
+        def self.new(klass, command = nil, parent = nil)
           # Ugly hack: we have to pass in the class name because
           # self.class returns "Class" right now
           name = klass.to_s.downcase
@@ -186,8 +186,6 @@ module Punchblock
 
           ##
           # Creates an Ozone stop message for the current Say
-          #
-          # @param [String] verb to create the pause for
           #
           # @return [Ozone::Message] an Ozone stop message
           #

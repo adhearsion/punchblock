@@ -9,9 +9,9 @@ module Punchblock
       def initialize(protocol, username, password, options)
         setup username, password
         @protocol = protocol
-        @event_queue   = Queue.new
+        @event_queue = Queue.new
 
-        Blather.logger  = options.delete(:wire_logger) if options.has_key?(:wire_logger)
+        Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
         @logger = options.delete(:transport_logger)
 
 
@@ -21,7 +21,7 @@ module Punchblock
           pmsg = @protocol::Message.parse msg
           @logger.debug pmsg.inspect
           @event_queue.push pmsg
-          msg.reply
+          write_to_stream msg.reply!
         end
       end
 

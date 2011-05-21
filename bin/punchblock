@@ -3,6 +3,7 @@ $:.push File.join(File.dirname(__FILE__), '..', 'lib')
 require 'rubygems'
 require 'bundler/setup'
 require 'punchblock'
+require 'pry'
 
 Thread.abort_on_exception = true
 
@@ -61,14 +62,11 @@ def run_call(transport, protocol, call)
 
     dsl = Punchblock::DSL.new transport, protocol, call, queue
 
-    puts "Incoming call #{call.id}"
-    dsl.answer
-    dsl.say 'Hello World'
-    sleep 5
-    dsl.hangup
+    puts "Incoming call to #{call.to} from #{call.headers[:from]}"
+    dsl.pry
 
     # Clean up the queue.
-    CALL_QUEUES[call_id] = nil
+    CALL_QUEUES[call.id] = nil
   end
 end
 

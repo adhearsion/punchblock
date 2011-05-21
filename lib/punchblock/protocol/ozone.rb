@@ -42,7 +42,6 @@ module Punchblock
                 headers[header['name']] = header['value']
                 headers
               end
-              puts headers.inspect
               call = Punchblock::Call.new(msg['from'], msg['to'], headers)
               # TODO: Acknowledge the offer?
               return call

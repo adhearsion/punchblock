@@ -32,25 +32,26 @@ module Punchblock
         end
 
         def self.parse(xml)
-          msg_data = xml.to_h
-          case msg_data['iq']['type']
+          msg = xml.children.first
+          case msg['type']
           when 'set'
-            case xml.children[0].name
+            case msg.name
             when 'offer'
-              call = Punchblock::Call.new(msg_data['iq']['from'], msg_data['iq']['to'], msg_data)
+              call = Punchblock::Call.new(msg['from'], msg['to'], msg)
               # FIXME: Acknowledge the offer
               return call
             when 'complete'
 
             when 'info'
             when 'end'
-              if xml.children[0].children[0].name != 'error'
-                return End.new xml.children[0].children[0].name
+              unless msg.first.name == 'error'
+                return End.new msg.first.name
               end
             end
           when 'result'
-            if xml.children[0]
-              case xml.children[0].name
+            Result.new xml
+            if msg.children
+              case msg.children.first.name
               when 'ref'
               end
             end

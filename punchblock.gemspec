@@ -20,7 +20,6 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     ".document",
-    ".rspec",
     "Gemfile",
     "LICENSE.txt",
     "README.markdown",

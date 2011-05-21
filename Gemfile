@@ -10,4 +10,5 @@ end
 
 group :runtime do
   gem 'blather'
+  gem 'pry'
 end

@@ -9,21 +9,6 @@ rescue Bundler::BundlerError => e
 end
 require 'rake'
 
-require 'jeweler'
-Jeweler::Tasks.new do |gem|
-  gem.name = "punchblock"
-  gem.homepage = "http://github.com/jsgoecke/punchblock"
-  gem.license = "MIT"
-  gem.summary = "Punchblock is a middleware library for telephony applications."
-  gem.description = "Like Rack is to Rails and Sinatra, Punchblock provides a consistent API on top of several underlying third-party call control protocols."
-  gem.email = "jsgoecke@voxeo.com"
-  gem.authors = ["Jason Goecke", "Ben Klang", "Ben Langfeld"]
-  gem.add_runtime_dependency 'blather'
-  gem.add_development_dependency 'rspec'
-  gem.executables = ["punchblock"]
-end
-Jeweler::RubygemsDotOrgTasks.new
-
 require 'rspec/core'
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|

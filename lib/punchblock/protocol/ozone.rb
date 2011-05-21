@@ -2,6 +2,11 @@ require 'nokogiri'
 
 module Punchblock
   module Protocol
+
+    ##
+    # This exception may be raised if a protocol error is detected.
+    class ProtocolError < StandardError; end
+
     module Ozone
       class Message < Nokogiri::XML::Node
         BASE_OZONE_NAMESPACE = 'urn:xmpp:ozone'
@@ -32,9 +37,9 @@ module Punchblock
         end
 
         def self.parse(xml)
-          msg = xml.children.first
           case xml['type']
           when 'set'
+            msg = xml.children.first
             case msg.name
             when 'offer'
               # Collect headers into an array
@@ -55,12 +60,14 @@ module Punchblock
             end
           when 'result'
             Result.new xml
-            if msg.children
-              case msg.children.first.name
+            if xml.children.count > 0
+              case xml.children.first.name
               when 'ref'
               end
             end
           when 'error'
+          else
+            raise ProtocolError
           end
         end
 
@@ -334,6 +341,13 @@ module Punchblock
         end
 
         class Info < Message
+          def self.parse(xml)
+            msg = self.new 'info'
+            @headers = xml.to_h
+          end
+        end
+
+        class Result < Message
           def self.parse(xml)
             msg = self.new 'info'
             @headers = xml.to_h

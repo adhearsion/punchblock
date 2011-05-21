@@ -42,7 +42,7 @@ module Punchblock
                 headers[header['name']] = header['value']
                 headers
               end
-              call = Punchblock::Call.new(msg['from'], msg['to'], headers)
+              call = Punchblock::Call.new(xml['from'], msg['to'], headers)
               # TODO: Acknowledge the offer?
               return call
             when 'complete'

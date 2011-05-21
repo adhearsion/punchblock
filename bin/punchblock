@@ -1,18 +1,19 @@
 #!/usr/bin/env ruby
 $:.push File.join(File.dirname(__FILE__), '..', 'lib')
+require 'rubygems'
 require 'bundler/setup'
 require 'punchblock'
 
 Thread.abort_on_exception = true
 
-transport_logger = Logger.new('ozone-transport.log')
+wire_logger = Logger.new('ozone-transport.log')
+wire_logger.level = Logger::DEBUG
+wire_logger.debug "Starting up..."
+transport_logger = Logger.new('ozone-protocol.log')
 transport_logger.level = Logger::DEBUG
 transport_logger.debug "Starting up..."
-protocol_logger = Logger.new('ozone-protocol.log')
-protocol_logger.level = Logger::DEBUG
-protocol_logger.debug "Starting up..."
 protocol = Punchblock::Protocol::Ozone
-transport = Punchblock::Transport::XMPP.new protocol, 'usera@127.0.0.1', '1', :transport_logger => transport_logger, :protocol_logger => protocol_logger
+transport = Punchblock::Transport::XMPP.new protocol, 'usera@127.0.0.1', '1', :wire_logger => wire_logger, :transport_logger => transport_logger
 x = Thread.new do
   begin
     transport.run

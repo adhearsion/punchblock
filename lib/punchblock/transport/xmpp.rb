@@ -12,7 +12,7 @@ module Punchblock
         @event_queue   = Queue.new
 
         Blather.logger  = options.delete(:wire_logger) if options.has_key?(:wire_logger)
-        @logger = options.delete(:protocol_logger)
+        @logger = options.delete(:transport_logger)
 
 
         # Add message handlers

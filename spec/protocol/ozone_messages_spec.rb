@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'Ozone message generator' do
-  include Ozone
+  include Punchblock::Protocol::Ozone
 
   it 'should generate a correct "answer" message' do
     Message::Answer.new.to_xml.should == '<answer xmlns="urn:xmpp:ozone:1"/>'

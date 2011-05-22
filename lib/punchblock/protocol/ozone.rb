@@ -114,7 +114,7 @@ module Punchblock
         #    returns:
         #        <reject xmlns="urn:xmpp:ozone:1"/>
         class Reject < Message
-          def self.new(reason)
+          def self.new(reason = :declined)
             raise ArgumentError unless [:busy, :declined, :error].include? reason
             super('reject').tap do |msg|
               Nokogiri::XML::Builder.with(msg) do |xml|

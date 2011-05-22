@@ -11,7 +11,7 @@ module Punchblock
       class Message < Nokogiri::XML::Node
         BASE_OZONE_NAMESPACE = 'urn:xmpp:ozone'
         OZONE_VERSION        = '1'
-        BASE_NAMESPACE_MESSAGES = %w[answer hangup]
+        BASE_NAMESPACE_MESSAGES = %w[accept answer hangup reject redirect]
 
         # Parent object that created this object, if applicable
         attr_accessor :parent, :call_id, :cmd_id
@@ -65,13 +65,27 @@ module Punchblock
         end
 
         ##
-        # An Ozone answer message
+        # An Ozone accept message.  This is equivalent to a SIP "180 Trying"
+        #
+        # @example
+        #    Accept.new.to_xml
+        #
+        #    returns:
+        #        <accept xmlns="urn:xmpp:ozone:1"/>
+        class Accept < Message
+          def self.new
+            super 'accept'
+          end
+        end
+
+        ##
+        # An Ozone answer message.  This is equivalent to a SIP "200 OK"
         #
         # @example
         #    Answer.new.to_xml
         #
         #    returns:
-        #        <hangup xmlns="urn:xmpp:ozone:1"/>
+        #        <answer xmlns="urn:xmpp:ozone:1"/>
         class Answer < Message
           def self.new
             super 'answer'
@@ -89,6 +103,36 @@ module Punchblock
         class Hangup < Message
           def self.new
             super 'hangup'
+          end
+        end
+
+        ##
+        # An Ozone reject message
+        #
+        # @example
+        #    Reject.new.to_xml
+        #
+        #    returns:
+        #        <reject xmlns="urn:xmpp:ozone:1"/>
+        class Reject < Message
+          def self.new
+            super 'reject'
+          end
+        end
+
+        ##
+        # An Ozone redirect message
+        #
+        # @example
+        #    Redirect.new('tel:+14045551234').to_xml
+        #
+        #    returns:
+        #        <redirect to="tel:+14045551234" xmlns="urn:xmpp:ozone:1"/>
+        class Redirect < Message
+          def self.new(destination)
+            msg = super 'redirect'
+            msg.set_attribute 'to', destination
+            msg
           end
         end
 

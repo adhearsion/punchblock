@@ -5,8 +5,24 @@ describe 'Ozone message generator' do
     @module = Punchblock::Protocol::Ozone
   end
 
+  it 'should generate a correct "accept" message' do
+    @module::Message::Accept.new.to_xml.should == '<accept xmlns="urn:xmpp:ozone:1"/>'
+  end
+
   it 'should generate a correct "answer" message' do
     @module::Message::Answer.new.to_xml.should == '<answer xmlns="urn:xmpp:ozone:1"/>'
+  end
+
+  it 'should create a correct "hangup" message' do
+    @module::Message::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
+  end
+
+  it 'should create a correct "reject" message' do
+    @module::Message::Reject.new.to_xml.should == '<reject xmlns="urn:xmpp:ozone:1"/>'
+  end
+
+  it 'should create a correct "redirect" message' do
+    @module::Message::Redirect.new('tel:+14045551234').to_xml.should == '<redirect xmlns="urn:xmpp:ozone:1" to="tel:+14045551234"/>'
   end
 
   it 'should generate a correct "ask" message' do
@@ -50,10 +66,6 @@ describe 'Ozone message generator' do
     RESPONSE
     msg = @module::Message::Conference.new '1234', :beep => true, :terminator => '#', :prompt => "Welcome to Ozone", :audio_url => "http://it.doesnt.matter.does.it/?"
     msg.to_xml.should == expected_response.chomp
-  end
-
-  it 'should create a correct "hangup" message' do
-    @module::Message::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
   end
 
   it 'should create a correct "pause" message' do

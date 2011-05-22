@@ -14,7 +14,7 @@ module Punchblock
         BASE_NAMESPACE_MESSAGES = %w[answer hangup]
 
         # Parent object that created this object, if applicable
-        attr_accessor :parent
+        attr_accessor :parent, :call_id, :cmd_id
 
         ##
         # Create a new Ozone Message object.

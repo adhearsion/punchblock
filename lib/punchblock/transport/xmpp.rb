@@ -2,6 +2,10 @@ require 'blather/client/dsl'
 
 module Punchblock
   module Transport
+    ##
+    # This exception may be raised if a transport error is detected.
+    class TransportError < StandardError; end
+
     class XMPP
       attr_accessor :event_queue
 
@@ -41,9 +45,9 @@ module Punchblock
             #  </error>
             #</iq>
             #------
-            raise ProtocolError, msg
+            raise TransportError, msg
           else
-            raise ProtocolError, msg
+            raise TransportError, msg
           end
         end
       end

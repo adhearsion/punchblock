@@ -60,10 +60,9 @@ def run_call(transport, protocol, call)
     raise "Unknown call #{call.id}" unless CALL_QUEUES.has_key?(call.id)
     queue = CALL_QUEUES[call.id]
     call = queue.pop
-
     dsl = Punchblock::DSL.new transport, protocol, call, queue
 
-    puts "Incoming call to #{call.to} from #{call.headers[:from]}"
+    puts "Incoming call to #{call.to} from #{call.headers[:from]} #{call}"
     dsl.pry
 
     # Clean up the queue.

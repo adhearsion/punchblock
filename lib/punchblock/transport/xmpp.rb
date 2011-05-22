@@ -15,9 +15,9 @@ module Punchblock
         Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
         @logger = options.delete(:transport_logger)
 
-
         # Add message handlers
         when_ready { @logger.info "Connected to XMPP as #{username}" }
+
         iq do |msg|
           jid = Blather::JID.new msg['from']
           call_id = "#{jid.node}@#{jid.domain}"
@@ -50,9 +50,9 @@ module Punchblock
 
       def send(call, msg)
         @logger.debug "Sending #{msg.to_xml} to #{call.id}"
-        iq = create_iq(call.id)
+        iq = create_iq call.id
         @result_queues[iq['id']] = Queue.new
-        iq.add_child(msg)
+        iq.add_child msg
         write_to_stream iq
         # Block until we get a response to this message
         # TODO: Implement a timeout
@@ -71,12 +71,8 @@ module Punchblock
 
       ##
       # Creates the base iq stanza object
-      def create_iq(jid=nil)
-        if jid
-          iq_stanza = Blather::Stanza::Iq.new(:set, jid)
-        else
-          iq_stanza = Blather::Stanza::Iq.new(:set, @call_id)
-        end
+      def create_iq(jid = nil)
+        iq_stanza = Blather::Stanza::Iq.new :set, jid || @call_id
         iq_stanza.from = @client_jid
         iq_stanza
       end

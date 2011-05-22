@@ -10,9 +10,9 @@ module ActiveSupport
       if string.blank?
         {}
       else
-        doc = Nokogiri::XML(string)
-        raise doc.errors.first if doc.errors.length > 0
-        doc.to_h
+        Nokogiri::XML(string).tap do |doc|
+          raise doc.errors.first if doc.errors.length > 0
+        end.to_h
       end
     end
 
@@ -33,7 +33,7 @@ module ActiveSupport
         def to_h(hash = {})
           hash[name] ||= attributes_as_hash
 
-          walker = lambda { |memo, parent, child, callback|
+          walker = lambda do |memo, parent, child, callback|
             next if child.blank? && 'file' != parent['type']
 
             if child.text?
@@ -52,12 +52,10 @@ module ActiveSupport
             end
 
             # Recusively walk children
-            child.children.each { |c|
-              callback.call(child_hash, child, c, callback)
-            }
-          }
+            child.children.each { |c| callback.call child_hash, child, c, callback }
+          end
 
-          children.each { |c| walker.call(hash[name], self, c, walker) }
+          children.each { |c| walker.call hash[name], self, c, walker }
           hash
         end
 
@@ -69,7 +67,7 @@ module ActiveSupport
       end
     end
 
-    Nokogiri::XML::Document.send(:include, Conversions::Document)
-    Nokogiri::XML::Node.send(:include, Conversions::Node)
+    Nokogiri::XML::Document.send :include, Conversions::Document
+    Nokogiri::XML::Node.send :include, Conversions::Node
   end
 end

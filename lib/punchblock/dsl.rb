@@ -5,10 +5,7 @@
 module Punchblock
   class DSL
     def initialize(transport, protocol, call, queue) # :nodoc:
-      @transport = transport
-      @protocol  = protocol
-      @call      = call
-      @queue     = queue
+      @transport, @protocol, @call, @queue = transport, protocol, call, queue
     end
 
     def accept # :nodoc:

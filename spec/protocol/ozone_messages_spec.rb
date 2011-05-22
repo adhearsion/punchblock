@@ -18,8 +18,28 @@ describe 'Ozone message generator' do
       @module::Message::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
     end
 
-    it '"reject" message' do
-      @module::Message::Reject.new.to_xml.should == '<reject xmlns="urn:xmpp:ozone:1"/>'
+    it '"reject" message with the default reason' do
+      expected_response = <<-RESPONSE
+<reject xmlns="urn:xmpp:ozone:1">
+  <declined/>
+</reject>
+      RESPONSE
+      @module::Message::Reject.new.to_xml.should == expected_response.chomp
+    end
+
+    it '"reject" message with a specified reason' do
+      expected_response = <<-RESPONSE
+<reject xmlns="urn:xmpp:ozone:1">
+  <busy/>
+</reject>
+      RESPONSE
+      @module::Message::Reject.new(:busy).to_xml.should == expected_response.chomp
+    end
+
+    it 'ArgumentError exception for a reject with an invalid reason' do
+      expect {
+        @module::Message::Reject.new(:blahblahblah)
+      }.to raise_error ArgumentError
     end
 
     it '"redirect" message' do

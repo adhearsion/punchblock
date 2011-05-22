@@ -20,8 +20,8 @@ module Punchblock
       send @protocol::Message::Hangup.new
     end
 
-    def reject # :nodoc:
-      send @protocol::Message::Reject.new
+    def reject(reason = :declined) # :nodoc:
+      send @protocol::Message::Reject.new reason
     end
 
     def redirect(dest) # :nodoc:

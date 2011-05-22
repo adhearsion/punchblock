@@ -24,7 +24,7 @@ x = Thread.new do
   end
 end
 
-event_logger = Logger.new('ozone-events.log')
+event_logger = Logger.new('log/ozone-events.log')
 event_logger.level = Logger::DEBUG
 CALL_QUEUES = {}
 INFO_EVENT_QUEUE = Queue.new

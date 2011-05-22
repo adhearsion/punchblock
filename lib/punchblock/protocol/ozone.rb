@@ -23,51 +23,44 @@ module Punchblock
         # @param [Nokogiri::XML::Document, Optional] Existing XML document to which this message should be added
         #
         # @return [Ozone::Message] New Ozone Message object
-        def self.new(klass, command = nil, parent = nil)
+        def self.new(klass, options={})
           # Ugly hack: we have to pass in the class name because
           # self.class returns "Class" right now
           name = klass.to_s.downcase
-          element = command.nil? ? name : command
+          element = options.has_key?(:command) ? options.delete(:command) : name
           obj = super element, Nokogiri::XML::Document.new
           scope = BASE_NAMESPACE_MESSAGES.include?(name) ? nil : name
           xmlns = [BASE_OZONE_NAMESPACE, scope, OZONE_VERSION].compact.join(':')
           obj.set_attribute 'xmlns', xmlns
-          obj.parent = parent
+          # FIXME: Do I need a handle to the parent object?
+          obj.parent  = options.delete :parent
+          obj.call_id = options.delete :call_id
+          obj.cmd_id  = options.delete :cmd_id
           obj
         end
 
-        def self.parse(xml)
-          case xml['type']
-          when 'set'
-            msg = xml.children.first
-            case msg.name
-            when 'offer'
-              # Collect headers into an array
-              headers = msg.children.inject({}) do |headers, header|
-                headers[header['name']] = header['value']
-                headers
-              end
-              call = Punchblock::Call.new(xml['from'], msg['to'], headers)
-              # TODO: Acknowledge the offer?
-              return call
-            when 'complete'
-
-            when 'info'
-            when 'end'
-              unless msg.first.name == 'error'
-                return End.new msg.first.name
-              end
+        def self.parse(call_id, cmd_id, xml)
+          # TODO: Handle more than one message at a time?
+          msg = xml.first
+          case msg.name
+          when 'offer'
+            # Collect headers into an array
+            headers = msg.children.inject({}) do |headers, header|
+              headers[header['name']] = header['value']
+              headers
             end
-          when 'result'
-            Result.new xml
-            if xml.children.count > 0
-              case xml.children.first.name
-              when 'ref'
-              end
+            call = Punchblock::Call.new(call_id, msg['to'], headers)
+            # TODO: Acknowledge the offer?
+            return call
+          when 'complete'
+            return Complete.new xml, :call_id => call_id, :cmd_id => cmd_id
+          when 'info'
+            return Info.new xml, :call_id => call_id, :cmd_id => cmd_id
+          when 'end'
+            puts msg.inspect
+            unless msg.first && msg.first.name == 'error'
+              return End.new msg.name
             end
-          when 'error'
-          else
-            raise ProtocolError
           end
         end
 
@@ -179,7 +172,7 @@ module Punchblock
           #    returns:
           #      <pause xmlns="urn:xmpp:ozone:say:1"/>
           def pause
-            Say.new :pause, self
+            Say.new :pause, :parent => self
           end
 
           ##
@@ -193,7 +186,7 @@ module Punchblock
           #    returns:
           #      <resume xmlns="urn:xmpp:ozone:say:1"/>
           def resume
-            Say.new :resume, self
+            Say.new :resume, :parent => self
           end
 
           ##
@@ -207,7 +200,7 @@ module Punchblock
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:say:1"/>
           def stop
-            Say.new :stop, self
+            Say.new :stop, :parent => self
           end
         end
 
@@ -259,7 +252,7 @@ module Punchblock
           #    returns:
           #      <mute xmlns="urn:xmpp:ozone:conference:1"/>
           def mute
-            Conference.new :mute, self
+            Conference.new :mute, :parent => self
           end
 
           ##
@@ -273,7 +266,7 @@ module Punchblock
           #    returns:
           #      <unmute xmlns="urn:xmpp:ozone:conference:1"/>
           def unmute
-            Conference.new :unmute, self
+            Conference.new :unmute, :parent => self
           end
 
           ##
@@ -287,7 +280,7 @@ module Punchblock
           #    returns:
           #      <kick xmlns="urn:xmpp:ozone:conference:1"/>
           def kick
-            Conference.new :kick, self
+            Conference.new :kick, :parent => self
           end
 
         end
@@ -331,25 +324,25 @@ module Punchblock
 
         class End < Message
           ##
-          # Creates an End message.  This signfies the end of a call.
+          # Creates an End message.  This signifies the end of a call.
           # This message may not be sent by a client; this object is used
           # to represent an offer received from the Ozone server.
           def self.parse(xml)
-            msg = self.new 'offer'
+            msg = self.new 'end'
             @headers = xml.to_h
           end
         end
 
         class Info < Message
-          def self.parse(xml)
-            msg = self.new 'info'
+          def self.parse(xml, options)
+            msg = self.new 'info', options
             @headers = xml.to_h
           end
         end
 
-        class Result < Message
-          def self.parse(xml)
-            msg = self.new 'info'
+        class Complete < Message
+          def self.parse(xml, options)
+            msg = self.new 'complete', options
             @headers = xml.to_h
           end
         end

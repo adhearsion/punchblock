@@ -23,6 +23,7 @@ module Punchblock
       send @protocol::Message::Say.new type => string
       puts "Waiting on the queue..."
       response = @queue.pop
+      # TODO: Error handling
     end
 
     def send(msg) # :nodoc:

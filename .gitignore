@@ -7,3 +7,4 @@ pkg/*
 .rvmrc
 .yardoc
 doc
+log/*

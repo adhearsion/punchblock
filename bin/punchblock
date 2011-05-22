@@ -7,10 +7,10 @@ require 'pry'
 
 Thread.abort_on_exception = true
 
-wire_logger = Logger.new('ozone-transport.log')
+wire_logger = Logger.new('log/ozone-wire.log')
 wire_logger.level = Logger::DEBUG
 wire_logger.debug "Starting up..."
-transport_logger = Logger.new('ozone-protocol.log')
+transport_logger = Logger.new('log/ozone-transport.log')
 transport_logger.level = Logger::DEBUG
 transport_logger.debug "Starting up..."
 protocol = Punchblock::Protocol::Ozone

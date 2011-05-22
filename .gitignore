@@ -1,2 +1,7 @@
 .*.swp
 .*.swo
+*.gem
+.bundle
+Gemfile.lock
+pkg/*
+.rvmrc

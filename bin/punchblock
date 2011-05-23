@@ -7,6 +7,9 @@ require 'pry'
 
 Thread.abort_on_exception = true
 
+username = ARGV[0] || 'usera@127.0.0.1'
+password = ARGV[1] || '1'
+
 wire_logger = Logger.new('log/ozone-wire.log')
 wire_logger.level = Logger::DEBUG
 wire_logger.debug "Starting up..."
@@ -15,8 +18,8 @@ transport_logger.level = Logger::DEBUG
 transport_logger.debug "Starting up..."
 protocol = Punchblock::Protocol::Ozone
 transport = Punchblock::Transport::XMPP.new protocol,
-  { :username => 'usera@127.0.0.1',
-    :password => '1',
+  { :username => username,
+    :password => password,
     :wire_logger => wire_logger,
     :transport_logger => transport_logger
   }

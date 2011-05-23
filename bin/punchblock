@@ -37,6 +37,9 @@ event_logger.level = Logger::DEBUG
 CALL_QUEUES = {}
 INFO_EVENT_QUEUE = Queue.new
 
+# Block on waiting for the XMPP to connect, then show when we are connected
+puts transport.event_queue.pop
+
 ### DISPATCHER THREAD
 # This thread multiplexes the event stream from the underlying protocol handler and routes them
 # to the correct queue for each call.  It also starts a call handler, the run_call method) after creating

@@ -18,7 +18,7 @@ module Punchblock
         raise ArgumentError unless options.has_key? :password
         setup @username, options.delete(:password)
 
-        # This queue is used to synchronize between threads calling #send
+        # This queue is used to synchronize between threads calling #write
         # and the transport-level responses they need to return from the
         # EventMachine loop.
         @result_queues = {}
@@ -61,7 +61,7 @@ module Punchblock
         end
       end
 
-      def send(call, msg)
+      def write(call, msg)
         @logger.debug "Sending #{msg.to_xml} to #{call.id}"
         iq = create_iq call.id
         @result_queues[iq['id']] = Queue.new

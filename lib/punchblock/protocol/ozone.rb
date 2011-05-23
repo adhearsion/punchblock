@@ -197,9 +197,9 @@ module Punchblock
             super('say').tap do |msg|
               text = options.delete :text
               url  = options.delete :url
+              msg.add_child text if text
               builder = Nokogiri::XML::Builder.with msg do |xml|
-                xml.speak text if text
-                xml.audio("url" => url) if url
+                xml.audio('src' => url) if url
               end
             end
           end

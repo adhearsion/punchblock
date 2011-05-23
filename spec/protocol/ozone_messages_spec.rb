@@ -122,7 +122,7 @@ describe 'Ozone message generator' do
     it '"say" message for audio' do
       expected_response = <<-RESPONSE
 <say xmlns="urn:xmpp:ozone:say:1">
-  <audio url="http://whatever.you-say-boss.com"/>
+  <audio src="http://whatever.you-say-boss.com"/>
 </say>
       RESPONSE
       @module::Message::Say.new(:url => 'http://whatever.you-say-boss.com').to_xml.should == expected_response.chomp
@@ -130,9 +130,7 @@ describe 'Ozone message generator' do
 
     it '"say" message for text' do
       expected_response = <<-RESPONSE
-<say xmlns="urn:xmpp:ozone:say:1">
-  <speak>Once upon a time there was a message...</speak>
-</say>
+<say xmlns="urn:xmpp:ozone:say:1">Once upon a time there was a message...</say>
       RESPONSE
       @module::Message::Say.new(:text => 'Once upon a time there was a message...').to_xml.should == expected_response.chomp
     end

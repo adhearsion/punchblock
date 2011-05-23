@@ -14,7 +14,12 @@ transport_logger = Logger.new('log/ozone-transport.log')
 transport_logger.level = Logger::DEBUG
 transport_logger.debug "Starting up..."
 protocol = Punchblock::Protocol::Ozone
-transport = Punchblock::Transport::XMPP.new protocol, 'usera@127.0.0.1', '1', :wire_logger => wire_logger, :transport_logger => transport_logger
+transport = Punchblock::Transport::XMPP.new protocol,
+  { :username => 'usera@127.0.0.1',
+    :password => '1',
+    :wire_logger => wire_logger,
+    :transport_logger => transport_logger
+  }
 x = Thread.new do
   begin
     transport.run

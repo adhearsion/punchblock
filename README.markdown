@@ -24,3 +24,8 @@ is what we plan to support:
 * Ozone (Tropo, Voxeo Prism)
 * AGI/AMI (Asterisk)
 * EventSocket (FreeSWITCH, maybe)
+
+Installation
+------------
+
+	gem install punchblock

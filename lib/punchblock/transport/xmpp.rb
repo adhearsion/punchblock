@@ -1,5 +1,6 @@
 require 'blather/client/dsl'
 require 'punchblock/transport/generic_transport'
+require 'punchblock/protocol/generic_protocol'
 
 module Punchblock
   module Transport
@@ -23,9 +24,12 @@ module Punchblock
         @result_queues = {}
 
         Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
-
-        # Add message handlers
-        when_ready { @logger.info "Connected to XMPP as #{@username}" }
+        
+        # Push a message to the queue and the log that we connected
+        when_ready { 
+          @event_queue.push Protocol::GenericProtocol::connected
+          @logger.info "Connected to XMPP as #{@username}"
+        }
 
         iq do |msg|
           jid = Blather::JID.new msg['from']

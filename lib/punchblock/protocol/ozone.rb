@@ -386,6 +386,9 @@ module Punchblock
           def self.parse(xml, options)
             msg = self.new 'complete', options
             @headers = xml.to_h
+            # TODO: Validate response and return response type.
+            # -----
+            # <complete xmlns="urn:xmpp:ozone:say:1" reason="SUCCESS"/>
           end
         end
       end

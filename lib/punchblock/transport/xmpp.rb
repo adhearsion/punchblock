@@ -1,4 +1,5 @@
 require 'blather/client/dsl'
+require 'punchblock/transport/generic_transport'
 
 module Punchblock
   module Transport
@@ -6,21 +7,25 @@ module Punchblock
     # This exception may be raised if a transport error is detected.
     class TransportError < StandardError; end
 
-    class XMPP
+    class XMPP < GenericTransport
       attr_accessor :event_queue
 
       include Blather::DSL
-      def initialize(protocol, username, password, options)
-        setup username, password
-        @protocol = protocol
-        @event_queue = Queue.new
+      def initialize(protocol, options)
+        super
+        raise ArgumentError unless @username = options.delete(:username)
+        raise ArgumentError unless options.has_key? :password
+        setup @username, options.delete(:password)
+
+        # This queue is used to synchronize between threads calling #send
+        # and the transport-level responses they need to return from the
+        # EventMachine loop.
         @result_queues = {}
 
         Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
-        @logger = options.delete(:transport_logger)
 
         # Add message handlers
-        when_ready { @logger.info "Connected to XMPP as #{username}" }
+        when_ready { @logger.info "Connected to XMPP as #{@username}" }
 
         iq do |msg|
           jid = Blather::JID.new msg['from']

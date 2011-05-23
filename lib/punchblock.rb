@@ -1,5 +1,3 @@
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'punchblock'))
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'core_ext'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 %w{
 punchblock/call

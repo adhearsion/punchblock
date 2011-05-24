@@ -28,7 +28,7 @@ module Punchblock
         # Push a message to the queue and the log that we connected
         when_ready { 
           @event_queue.push Protocol::GenericProtocol::connected
-          @logger.info "Connected to XMPP as #{@username}"
+          @logger.info "Connected to XMPP as #{@username}" if @logger
         }
 
         iq do |msg|
@@ -38,7 +38,7 @@ module Punchblock
           case msg['type']
           when 'set'
             pmsg = @protocol::Message.parse call_id, command_id, msg.children
-            @logger.debug pmsg.inspect
+            @logger.debug pmsg.inspect if @logger
             @event_queue.push pmsg
             write_to_stream msg.reply!
           when 'result'
@@ -62,7 +62,7 @@ module Punchblock
       end
 
       def write(call, msg)
-        @logger.debug "Sending #{msg.to_xml} to #{call.id}"
+        @logger.debug "Sending #{msg.to_xml} to #{call.id}" if @logger
         iq = create_iq call.id
         @result_queues[iq['id']] = Queue.new
         iq.add_child msg

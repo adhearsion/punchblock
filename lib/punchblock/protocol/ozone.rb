@@ -56,7 +56,7 @@ module Punchblock
           when 'info'
             return Info.new xml, :call_id => call_id, :cmd_id => cmd_id
           when 'end'
-            puts msg.inspect
+            #puts msg.inspect
             unless msg.first && msg.first.name == 'error'
               return End.new msg.name
             end

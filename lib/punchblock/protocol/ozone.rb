@@ -418,8 +418,9 @@ module Punchblock
             self.new('info', options).tap do |info|
               event = xml.first.children.first
               info.type = event.name.to_sym
-              info.attributes = event.attributes.each_with_object({}) do |(k, v), h|
+              info.attributes = event.attributes.inject({}) do |h, (k, v)|
                 h[k.downcase.to_sym] = v.value
+                h
               end
             end
           end

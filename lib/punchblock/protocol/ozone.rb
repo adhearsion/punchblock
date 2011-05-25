@@ -392,8 +392,7 @@ module Punchblock
           # This message may not be sent by a client; this object is used
           # to represent an offer received from the Ozone server.
           def self.parse(xml)
-            msg = self.new 'offer'
-            @headers = xml
+            self.new 'offer'
           end
         end
 
@@ -403,22 +402,19 @@ module Punchblock
           # This message may not be sent by a client; this object is used
           # to represent an offer received from the Ozone server.
           def self.parse(xml)
-            msg = self.new 'end'
-            @headers = xml
+            self.new 'end'
           end
         end
 
         class Info < Message
           def self.parse(xml, options)
-            msg = self.new 'info', options
-            @headers = xml
+            self.new 'info', options
           end
         end
 
         class Complete < Message
           def self.parse(xml, options)
-            msg = self.new 'complete', options
-            @headers = xml
+            self.new 'complete', options
             # TODO: Validate response and return response type.
             # -----
             # <complete xmlns="urn:xmpp:ozone:say:1" reason="SUCCESS"/>

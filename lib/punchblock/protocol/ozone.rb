@@ -73,9 +73,7 @@ module Punchblock
             return Info.parse xml, :call_id => call_id, :cmd_id => cmd_id
           when 'end'
             #puts msg.inspect
-            unless msg.first && msg.first.name == 'error'
-              return End.new msg.name
-            end
+            return End.parse xml, :call_id => call_id, :cmd_id => cmd_id # unless msg.first && msg.first.name == 'error'
           end
         end
 

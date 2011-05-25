@@ -430,7 +430,7 @@ module Punchblock
           def self.parse(xml, options)
             self.new('complete', options).tap do |info|
               attributes = xml.first.attributes
-              info.reason = attributes['reason'].value.downcase.to_sym
+              info.reason = attributes['reason'].value.downcase.to_sym if attributes['reason']
               info.xmlns = xml.first.namespace.href
             end
             # TODO: Validate response and return response type.

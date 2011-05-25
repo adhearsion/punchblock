@@ -4,10 +4,10 @@ module Punchblock
   # This class represents an active Ozone call
   #
   class Call
-    attr_accessor :id, :to, :headers
+    attr_accessor :call_id, :to, :headers
 
-    def initialize(id, to, headers)
-      @id, @to = id, to
+    def initialize(call_id, to, headers)
+      @call_id, @to = call_id, to
       # Ensure all our headers have lowercase names and convert to symbols
       @headers = headers.inject({}) do |headers,pair|
         headers[pair.shift.downcase.to_sym] = pair.shift
@@ -16,7 +16,7 @@ module Punchblock
     end
 
     def to_s
-      "#<Punchblock::Call:#{@id}>"
+      "#<Punchblock::Call:#{@call_id}>"
     end
   end
 end

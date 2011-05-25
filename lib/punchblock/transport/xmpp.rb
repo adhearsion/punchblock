@@ -24,16 +24,16 @@ module Punchblock
         @result_queues = {}
 
         Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
-        
+
         # Push a message to the queue and the log that we connected
-        when_ready { 
+        when_ready {
           @event_queue.push Protocol::GenericProtocol::connected
           @logger.info "Connected to XMPP as #{@username}" if @logger
         }
 
         iq do |msg|
           jid = Blather::JID.new msg['from']
-          call_id = "#{jid.node}@#{jid.domain}"
+          call_id = jid.node
           command_id = "#{jid.resource}"
           case msg['type']
           when 'set'

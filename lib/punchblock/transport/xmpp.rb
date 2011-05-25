@@ -43,6 +43,7 @@ module Punchblock
             write_to_stream msg.reply!
           when 'result'
             # Send this result to the waiting queue
+            @logger.debug "Command #{msg['id']} completed successfully" if @logger
             @result_queues[msg['id']].push msg
           when 'error'
             # TODO: Example messages to handle:
@@ -54,6 +55,8 @@ module Punchblock
             #  </error>
             #</iq>
             #------
+            # FIXME: This should probably be parsed by the Protocol layer and return
+            # a ProtocolError exception.
             raise TransportError, msg
           else
             raise TransportError, msg
@@ -68,8 +71,8 @@ module Punchblock
         # Nokogiri object, if it contains XML (ie. Ozone).
         # FIXME: What happens if Nokogiri tries to parse non-XML string?
         msg = Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(msg.to_s)
-        @logger.debug "Sending #{msg.to_xml} to #{call.id}" if @logger
         iq = create_iq call.id
+        @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{call.id}" if @logger
         @result_queues[iq['id']] = Queue.new
         iq.add_child msg
         write_to_stream iq
@@ -79,7 +82,7 @@ module Punchblock
         # Shut down this queue
         @result_queues[iq['id']] = nil
         # FIXME: Error handling
-        return result['jid']
+        result['jid']
       end
 
       def run

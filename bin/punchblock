@@ -55,7 +55,7 @@ Thread.new do
       run_call transport, protocol, event
     when protocol::Message::Info
       INFO_EVENT_QUEUE.push event
-    when protocol::Message::Complete
+    when protocol::Message::Complete || protocol::Message::End
       CALL_QUEUES[event.call_id].push event
     else
       puts "Unknown event: #{event.inspect}"

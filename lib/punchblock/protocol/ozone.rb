@@ -406,7 +406,7 @@ module Punchblock
           def self.parse(xml)
             self.new('end', options).tap do |info|
               event = xml.first.children.first
-              self.type = event.name.to_sym
+              info.type = event.name.to_sym
             end
           end
         end
@@ -417,8 +417,8 @@ module Punchblock
           def self.parse(xml, options)
             self.new('info', options).tap do |info|
               event = xml.first.children.first
-              self.type = event.name.to_sym
-              self.attributes = event.attributes.each_with_object({}) do |(k, v), h|
+              info.type = event.name.to_sym
+              info.attributes = event.attributes.each_with_object({}) do |(k, v), h|
                 h[k.downcase.to_sym] = v.value
               end
             end
@@ -431,8 +431,8 @@ module Punchblock
           def self.parse(xml, options)
             self.new('complete', options).tap do |info|
               attributes = xml.first.attributes
-              self.reason = attributes['reason'].to_sym
-              self.xmlns = attributes['xmlns'].to_sym
+              info.reason = attributes['reason'].to_sym
+              info.xmlns = attributes['xmlns'].to_sym
             end
             # TODO: Validate response and return response type.
             # -----

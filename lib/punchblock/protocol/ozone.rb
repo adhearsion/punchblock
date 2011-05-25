@@ -391,8 +391,8 @@ module Punchblock
           # Creates an Offer message.
           # This message may not be sent by a client; this object is used
           # to represent an offer received from the Ozone server.
-          def self.parse(xml)
-            self.new 'offer'
+          def self.parse(xml, options)
+            self.new 'offer', options
           end
         end
 
@@ -403,7 +403,7 @@ module Punchblock
           # Creates an End message.  This signifies the end of a call.
           # This message may not be sent by a client; this object is used
           # to represent an offer received from the Ozone server.
-          def self.parse(xml)
+          def self.parse(xml, options)
             self.new('end', options).tap do |info|
               event = xml.first.children.first
               info.type = event.name.to_sym
@@ -432,8 +432,8 @@ module Punchblock
           def self.parse(xml, options)
             self.new('complete', options).tap do |info|
               attributes = xml.first.attributes
-              info.reason = attributes['reason'].to_sym
-              info.xmlns = attributes['xmlns'].to_sym
+              info.reason = attributes['reason'].value.downcase.to_sym
+              info.xmlns = xml.first.namespace.href
             end
             # TODO: Validate response and return response type.
             # -----

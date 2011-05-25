@@ -397,24 +397,43 @@ module Punchblock
         end
 
         class End < Message
+          attr_accessor :type
+
           ##
           # Creates an End message.  This signifies the end of a call.
           # This message may not be sent by a client; this object is used
           # to represent an offer received from the Ozone server.
           def self.parse(xml)
-            self.new 'end'
+            self.new('end', options).tap do |info|
+              event = xml.first.children.first
+              self.type = event.name.to_sym
+            end
           end
         end
 
         class Info < Message
+          attr_accessor :type, :attributes
+
           def self.parse(xml, options)
-            self.new 'info', options
+            self.new('info', options).tap do |info|
+              event = xml.first.children.first
+              self.type = event.name.to_sym
+              self.attributes = event.attributes.each_with_object({}) do |(k, v), h|
+                h[k.downcase.to_sym] = v.value
+              end
+            end
           end
         end
 
         class Complete < Message
+          attr_accessor :reason, :xmlns
+
           def self.parse(xml, options)
-            self.new 'complete', options
+            self.new('complete', options).tap do |info|
+              attributes = xml.first.attributes
+              self.reason = attributes['reason'].to_sym
+              self.xmlns = attributes['xmlns'].to_sym
+            end
             # TODO: Validate response and return response type.
             # -----
             # <complete xmlns="urn:xmpp:ozone:say:1" reason="SUCCESS"/>

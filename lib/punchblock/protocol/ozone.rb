@@ -61,7 +61,7 @@ module Punchblock
           when 'offer'
             # Collect headers into an array
             headers = msg.children.inject({}) do |headers, header|
-              headers[header['name']] = header['value']
+              headers[header['name'].gsub('-','_')] = header['value']
               headers
             end
             call = Punchblock::Call.new call_id, msg['to'], headers

@@ -76,7 +76,7 @@ module Punchblock
         # Nokogiri object, if it contains XML (ie. Ozone).
         # FIXME: What happens if Nokogiri tries to parse non-XML string?
         msg = Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(msg.to_s)
-        puts call.inspect
+        #puts call.inspect
         iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
         @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{call.call_id}" if @logger
         @result_queues[iq['id']] = Queue.new

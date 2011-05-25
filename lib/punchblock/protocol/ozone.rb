@@ -8,7 +8,14 @@ module Punchblock
     class ProtocolError < StandardError; end
 
     module Ozone
-      class Message < Nokogiri::XML::Node
+      class MessageProxy < Nokogiri::XML::Node
+        def self.new(element, document = nil)
+          document = Nokogiri::XML::Document.new if document.nil?
+          super(element, document)
+        end
+      end
+
+      class Message
         BASE_OZONE_NAMESPACE    = 'urn:xmpp:ozone'
         OZONE_VERSION           = '1'
         BASE_NAMESPACE_MESSAGES = %w[accept answer hangup reject redirect]
@@ -23,22 +30,31 @@ module Punchblock
         # @param [Nokogiri::XML::Document, Optional] Existing XML document to which this message should be added
         #
         # @return [Ozone::Message] New Ozone Message object
-        def self.new(klass, options = {})
-          # Ugly hack: we have to pass in the class name because
-          # self.class returns "Class" right now
-          name    = klass.to_s.downcase
+        def initialize(name, options = {})
           element = options.has_key?(:command) ? options.delete(:command) : name
-          super(element, Nokogiri::XML::Document.new).tap do |obj|
+          @xml = MessageProxy.new(element).tap do |obj|
             scope = BASE_NAMESPACE_MESSAGES.include?(name) ? nil : name
             obj.set_attribute 'xmlns', [BASE_OZONE_NAMESPACE, scope, OZONE_VERSION].compact.join(':')
             # FIXME: Do I need a handle to the parent object?
-            obj.parent  = options.delete :parent
-            obj.call_id = options.delete :call_id
-            obj.cmd_id  = options.delete :cmd_id
+
           end
+          @parent  = options.delete :parent
+          @call_id = options.delete :call_id
+          @cmd_id  = options.delete :cmd_id
         end
 
+        def to_s
+          @xml.to_xml
+        end
+        alias :to_xml :to_s
+
+        # @param [String] Call ID
+        # @param [String] Ozone Command ID.  Can be nil
+        # @param [String] XML to be converted to an Ozone Message
         def self.parse(call_id, cmd_id, xml)
+          # Try to ensure that newlines don't get read as content by Nokogiri
+          xml = Nokogiri.parse(xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).children
+
           # TODO: Handle more than one message at a time?
           msg = xml.first
           case msg.name
@@ -52,9 +68,9 @@ module Punchblock
             # TODO: Acknowledge the offer?
             return call
           when 'complete'
-            return Complete.new xml, :call_id => call_id, :cmd_id => cmd_id
+            return Complete.parse xml, :call_id => call_id, :cmd_id => cmd_id
           when 'info'
-            return Info.new xml, :call_id => call_id, :cmd_id => cmd_id
+            return Info.parse xml, :call_id => call_id, :cmd_id => cmd_id
           when 'end'
             #puts msg.inspect
             unless msg.first && msg.first.name == 'error'
@@ -117,7 +133,7 @@ module Punchblock
           def self.new(reason = :declined)
             raise ArgumentError unless [:busy, :declined, :error].include? reason
             super('reject').tap do |msg|
-              Nokogiri::XML::Builder.with(msg) do |xml|
+              Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
                 xml.send reason.to_sym
               end
             end
@@ -135,8 +151,12 @@ module Punchblock
         class Redirect < Message
           def self.new(destination)
             super('redirect').tap do |msg|
-              msg.set_attribute 'to', destination
+              msg.set_destination destination
             end
+          end
+
+          def set_destination(dest)
+            @xml.set_attribute 'to', dest
           end
         end
 
@@ -169,7 +189,7 @@ module Punchblock
           #      </ask>
           def self.new(prompt, choices, options = {})
             super('ask').tap do |msg|
-              Nokogiri::XML::Builder.with(msg) do |xml|
+              Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
                 xml.prompt { xml.speak prompt }
                 # Default is the Voxeo Simple Grammar, unless specified
                 xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') { xml.text choices }
@@ -195,13 +215,16 @@ module Punchblock
           #     </say>
           def self.new(options = {})
             super('say').tap do |msg|
-              text = options.delete :text
+              msg.set_text(options.delete(:text)) if options.has_key?(:text)
               url  = options.delete :url
-              msg.add_child text if text
-              builder = Nokogiri::XML::Builder.with msg do |xml|
+              Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
                 xml.audio('src' => url) if url
               end
             end
+          end
+
+          def set_text(text)
+            @xml.add_child text if text
           end
 
           ##
@@ -271,16 +294,22 @@ module Punchblock
               prompt    = options.delete :prompt
               audio_url = options.delete :audio_url
 
-              msg.set_attribute 'id', room_id
-              msg.set_attribute 'beep', 'true' if options.delete(:beep)
-              msg.set_attribute 'terminator', options.delete(:terminator) if options.has_key?(:terminator)
-              Nokogiri::XML::Builder.with msg do |xml|
+              options[:room_id] = room_id
+              msg.set_options options
+
+              Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
                 xml.music {
                   xml.speak prompt if prompt
                   xml.audio(:url => audio_url) if audio_url
                 } if prompt || audio_url
               end
             end
+          end
+
+          def set_options(options)
+            @xml.set_attribute 'id', options.delete(:room_id)
+            @xml.set_attribute 'beep', 'true' if options.delete(:beep)
+            @xml.set_attribute 'terminator', options.delete(:terminator) if options.has_key?(:terminator)
           end
 
           ##
@@ -345,10 +374,14 @@ module Punchblock
           #     <transfer xmlns="urn:xmpp:ozone:transfer:1" to="sip:myapp@mydomain.com" terminator="#"/>
           def self.new(to, options = {})
             super('transfer').tap do |msg|
-              msg.set_attribute 'to', to
-              options.each do |option, value|
-                msg.set_attribute option.to_s, value
-              end
+              options[:to] = to
+              msg.set_options options
+            end
+          end
+
+          def set_options options
+            options.each do |option, value|
+              @xml.set_attribute option.to_s, value
             end
           end
         end
@@ -360,7 +393,7 @@ module Punchblock
           # to represent an offer received from the Ozone server.
           def self.parse(xml)
             msg = self.new 'offer'
-            @headers = xml.to_h
+            @headers = xml
           end
         end
 
@@ -371,21 +404,21 @@ module Punchblock
           # to represent an offer received from the Ozone server.
           def self.parse(xml)
             msg = self.new 'end'
-            @headers = xml.to_h
+            @headers = xml
           end
         end
 
         class Info < Message
           def self.parse(xml, options)
             msg = self.new 'info', options
-            @headers = xml.to_h
+            @headers = xml
           end
         end
 
         class Complete < Message
           def self.parse(xml, options)
             msg = self.new 'complete', options
-            @headers = xml.to_h
+            @headers = xml
             # TODO: Validate response and return response type.
             # -----
             # <complete xmlns="urn:xmpp:ozone:say:1" reason="SUCCESS"/>

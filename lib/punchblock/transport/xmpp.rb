@@ -37,7 +37,7 @@ module Punchblock
           command_id = "#{jid.resource}"
           case msg['type']
           when 'set'
-            pmsg = @protocol::Message.parse call_id, command_id, msg.children
+            pmsg = @protocol::Message.parse call_id, command_id, msg.children.first.to_xml
             @logger.debug pmsg.inspect if @logger
             @event_queue.push pmsg
             write_to_stream msg.reply!
@@ -62,6 +62,12 @@ module Punchblock
       end
 
       def write(call, msg)
+        # The interface between the Protocol layer and the Transport layer is
+        # defined to be a String.  Because Blather uses Nokogiri to construct
+        # and send XMPP messages, we need to convert the Protocol layer to a
+        # Nokogiri object, if it contains XML (ie. Ozone).
+        # FIXME: What happens if Nokogiri tries to parse non-XML string?
+        msg = Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(msg.to_s)
         @logger.debug "Sending #{msg.to_xml} to #{call.id}" if @logger
         iq = create_iq call.id
         @result_queues[iq['id']] = Queue.new

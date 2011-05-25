@@ -140,7 +140,7 @@ describe 'Ozone message generator' do
     end
 
     it '"transfer" message with options' do
-      expected_response = '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212" terminator="#"/>'
+      expected_response = '<transfer xmlns="urn:xmpp:ozone:transfer:1" terminator="#" to="tel:+14045551212"/>'
       @module::Message::Transfer.new('tel:+14045551212', :terminator => "#").to_xml.should == expected_response.chomp
     end
   end

@@ -23,6 +23,9 @@ module Punchblock
         # EventMachine loop.
         @result_queues = {}
 
+        # This hash maps call IDs to their XMPP domain.
+        @callmap = {}
+
         Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
 
         # Push a message to the queue and the log that we connected
@@ -34,6 +37,8 @@ module Punchblock
         iq do |msg|
           jid = Blather::JID.new msg['from']
           call_id = jid.node
+          # FIXME: Do we need to raise a warning if the domain changes?
+          @callmap[call_id] = jid.domain
           command_id = "#{jid.resource}"
           case msg['type']
           when 'set'
@@ -71,8 +76,9 @@ module Punchblock
         # Nokogiri object, if it contains XML (ie. Ozone).
         # FIXME: What happens if Nokogiri tries to parse non-XML string?
         msg = Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(msg.to_s)
-        iq = create_iq call.id
-        @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{call.id}" if @logger
+        puts call.inspect
+        iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
+        @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{call.call_id}" if @logger
         @result_queues[iq['id']] = Queue.new
         iq.add_child msg
         write_to_stream iq

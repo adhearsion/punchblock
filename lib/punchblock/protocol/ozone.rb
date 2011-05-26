@@ -425,13 +425,12 @@ module Punchblock
         end
 
         class Complete < Message
-          attr_accessor :reason, :xmlns
+          attr_accessor :attributes, :xmlns
 
           def self.parse(xml, options)
             self.new('complete', options).tap do |info|
-              p info
-              attributes = xml.first.attributes
-              info.reason = attributes['reason'].value.downcase.to_sym if attributes['reason']
+              info.attributes = {}
+              xml.first.attributes.each { |k, v| info.attributes[k.to_sym] = v.value }
               info.xmlns = xml.first.namespace.href
             end
             # TODO: Validate response and return response type.

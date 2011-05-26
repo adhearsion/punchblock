@@ -188,7 +188,7 @@ module Punchblock
           def self.new(prompt, choices, options = {})
             super('ask').tap do |msg|
               Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-                xml.prompt { xml.speak prompt }
+                xml.prompt prompt
                 # Default is the Voxeo Simple Grammar, unless specified
                 xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') { xml.text choices }
               end
@@ -429,6 +429,7 @@ module Punchblock
 
           def self.parse(xml, options)
             self.new('complete', options).tap do |info|
+              p info
               attributes = xml.first.attributes
               info.reason = attributes['reason'].value.downcase.to_sym if attributes['reason']
               info.xmlns = xml.first.namespace.href

@@ -1,3 +1,4 @@
+require 'timeout'
 require 'blather/client/dsl'
 require 'punchblock/transport/generic_transport'
 require 'punchblock/protocol/generic_protocol'
@@ -76,15 +77,12 @@ module Punchblock
         # Nokogiri object, if it contains XML (ie. Ozone).
         # FIXME: What happens if Nokogiri tries to parse non-XML string?
         msg = Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(msg.to_s)
-        #puts call.inspect
         iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
         @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{call.call_id}" if @logger
         @result_queues[iq['id']] = Queue.new
         iq.add_child msg
         write_to_stream iq
-        # Block until we get a response to this message
-        # TODO: Implement a timeout
-        result = @result_queues[iq['id']].pop
+        result = read_queue_with_timeout @result_queues[iq['id']]
         # Shut down this queue
         @result_queues[iq['id']] = nil
         # FIXME: Error handling
@@ -104,7 +102,17 @@ module Punchblock
         iq_stanza.from = @client_jid
         iq_stanza
       end
-
+      
+      def read_queue_with_timeout(queue, timeout=3)
+        begin
+          data = Timeout::timeout(timeout) {
+            queue.pop
+          }
+        rescue Timeout::Error => e
+          data = e.to_s
+        end
+        data
+      end
     end
   end
 end

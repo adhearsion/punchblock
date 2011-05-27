@@ -49,9 +49,7 @@ describe 'Ozone message generator' do
     it '"ask" message' do
       expected_response = <<-RESPONSE
 <ask xmlns="urn:xmpp:ozone:ask:1">
-  <prompt>
-    <speak>Please enter your postal code.</speak>
-  </prompt>
+  <prompt>Please enter your postal code.</prompt>
   <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
 </ask>
       RESPONSE
@@ -62,9 +60,7 @@ describe 'Ozone message generator' do
     it '"ask" message with an alternate grammar' do
       expected_response = <<-RESPONSE
 <ask xmlns="urn:xmpp:ozone:ask:1">
-  <prompt>
-    <speak>Please enter your postal code.</speak>
-  </prompt>
+  <prompt>Please enter your postal code.</prompt>
   <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
 </ask>
       RESPONSE

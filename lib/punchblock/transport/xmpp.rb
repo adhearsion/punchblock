@@ -36,37 +36,41 @@ module Punchblock
         }
 
         iq do |msg|
-          jid = Blather::JID.new msg['from']
-          call_id = jid.node
-          # FIXME: Do we need to raise a warning if the domain changes?
-          @callmap[call_id] = jid.domain
-          command_id = "#{jid.resource}"
-          case msg['type']
-          when 'set'
-            pmsg = @protocol::Message.parse call_id, command_id, msg.children.first.to_xml
-            @logger.debug pmsg.inspect if @logger
-            @event_queue.push pmsg
-            write_to_stream msg.reply!
-          when 'result'
-            # Send this result to the waiting queue
-            @logger.debug "Command #{msg['id']} completed successfully" if @logger
-            @result_queues[msg['id']].push msg
-          when 'error'
-            # TODO: Example messages to handle:
-            #------
-            #<iq type="error" id="blather0016" to="usera@127.0.0.1/voxeo" from="15dce14a-778e-42f2-9ac4-501805ec0388@127.0.0.1">
-            #  <answer xmlns="urn:xmpp:ozone:1"/>
-            #  <error type="cancel">
-            #    <item-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
-            #  </error>
-            #</iq>
-            #------
-            # FIXME: This should probably be parsed by the Protocol layer and return
-            # a ProtocolError exception.
-            raise TransportError, msg
-          else
-            raise TransportError, msg
-          end
+          read msg
+        end
+      end
+
+      def read(msg)
+        jid = Blather::JID.new msg['from']
+        call_id = jid.node
+        # FIXME: Do we need to raise a warning if the domain changes?
+        @callmap[call_id] = jid.domain
+        command_id = "#{jid.resource}"
+        case msg['type']
+        when 'set'
+          pmsg = @protocol::Message.parse call_id, command_id, msg.children.first.to_xml
+          @logger.debug pmsg.inspect if @logger
+          @event_queue.push pmsg
+          write_to_stream msg.reply!
+        when 'result'
+          # Send this result to the waiting queue
+          @logger.debug "Command #{msg['id']} completed successfully" if @logger
+          @result_queues[msg['id']].push msg
+        when 'error'
+          # TODO: Example messages to handle:
+          #------
+          #<iq type="error" id="blather0016" to="usera@127.0.0.1/voxeo" from="15dce14a-778e-42f2-9ac4-501805ec0388@127.0.0.1">
+          #  <answer xmlns="urn:xmpp:ozone:1"/>
+          #  <error type="cancel">
+          #    <item-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
+          #  </error>
+          #</iq>
+          #------
+          # FIXME: This should probably be parsed by the Protocol layer and return
+          # a ProtocolError exception.
+          raise TransportError, msg
+        else
+          raise TransportError, msg
         end
       end
 

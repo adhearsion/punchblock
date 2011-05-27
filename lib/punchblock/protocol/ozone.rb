@@ -223,13 +223,18 @@ module Punchblock
           def self.new(options = {})
             super('say').tap do |msg|
               msg.set_text(options.delete(:text)) if options.has_key?(:text)
+              msg.set_options options.clone
               url  = options.delete :url
               Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
                 xml.audio('src' => url) if url
               end
             end
           end
-
+          
+          def set_options(options)
+            options.each { |option, value| @xml.set_attribute option.to_s, value }
+          end
+          
           def set_text(text)
             @xml.add_child text if text
           end

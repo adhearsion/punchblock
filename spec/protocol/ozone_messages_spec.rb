@@ -153,9 +153,10 @@ describe 'Ozone message generator' do
 
     it '"say" message for text' do
       expected_response = <<-RESPONSE
-<say xmlns="urn:xmpp:ozone:say:1">Once upon a time there was a message...</say>
+<say xmlns="urn:xmpp:ozone:say:1" voice="kate">Once upon a time there was a message...</say>
       RESPONSE
-      @module::Message::Say.new(:text => 'Once upon a time there was a message...').to_xml.should == expected_response.chomp
+      msg = @module::Message::Say.new(:text => 'Once upon a time there was a message...', :voice => 'kate')
+      msg.to_xml.should == expected_response.chomp
     end
 
     it '"transfer" message' do

@@ -184,14 +184,24 @@ module Punchblock
           #        </prompt>
           #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
           #      </ask>
-          def self.new(prompt, choices, options = {})
+          def self.new(prompt, options = {})
             super('ask').tap do |msg|
+              msg.set_options options.clone
+              
               Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
                 xml.prompt prompt
                 # Default is the Voxeo Simple Grammar, unless specified
-                xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') { xml.text choices }
+                xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') { xml.text options[:choices] }
               end
             end
+          end
+          
+          def set_options(options)
+            options.delete(:grammar) if options[:grammar]
+            options.delete(:voice) if options[:voice]
+            options.delete(:choices) if options[:choices]
+            
+            options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
           end
         end
 
@@ -304,12 +314,7 @@ module Punchblock
           end
 
           def set_options(options)
-            @xml.set_attribute 'name', options.delete(:name)
-            @xml.set_attribute 'beep', 'true' if options.delete(:beep).to_s
-            @xml.set_attribute 'terminator', options.delete(:terminator) if options.has_key?(:terminator)
-            @xml.set_attribute 'tone-passthrough', options.delete(:tone_passthrough).to_s if options.has_key?(:tone_passthrough)
-            @xml.set_attribute 'moderator', options.delete(:moderator).to_s if options.has_key?(:moderator)
-            @xml.set_attribute 'mute', options.delete(:mute).to_s if options.has_key?(:mute)
+            options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
           end
 
           ##
@@ -380,9 +385,7 @@ module Punchblock
           end
 
           def set_options options
-            options.each do |option, value|
-              @xml.set_attribute option.to_s, value
-            end
+            options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
           end
         end
 

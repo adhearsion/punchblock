@@ -53,7 +53,7 @@ describe 'Ozone message generator' do
   <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
 </ask>
       RESPONSE
-      msg = @module::Message::Ask.new 'Please enter your postal code.', '[5 DIGITS]'
+      msg = @module::Message::Ask.new 'Please enter your postal code.', :choices => '[5 DIGITS]'
       msg.to_xml.should == expected_response.chomp
     end
 
@@ -64,8 +64,28 @@ describe 'Ozone message generator' do
   <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
 </ask>
       RESPONSE
-      msg = @module::Message::Ask.new 'Please enter your postal code.', '[5 DIGITS]', :grammar => 'application/grammar+custom'
+      msg = @module::Message::Ask.new 'Please enter your postal code.', { :choices => '[5 DIGITS]', 
+                                                                          :grammar => 'application/grammar+custom' }
       msg.to_xml.should == expected_response.chomp
+    end
+    
+    it '"ask"message with alternate grammar, voice and attributes' do
+      expected_response = <<-RESPONSE
+<ask xmlns="urn:xmpp:ozone:ask:1" bargein="true" mode="speech|dtmf|both" min-confidence="0.3" recognizer="en-US" terminator="#" timeout="12000">
+  <prompt>Please enter your postal code.</prompt>
+  <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
+</ask>
+      RESPONSE
+      msg = @module::Message::Ask.new 'Please enter your postal code.', { :choices        => '[5 DIGITS]',
+                                                                          :grammar        => 'application/grammar+custom',
+                                                                          :voice          => 'kate',
+                                                                          :bargein        => true,
+                                                                          :min_confidence => '0.3',
+                                                                          :mode           => 'speech|dtmf|both',
+                                                                          :recognizer     => 'en-US',
+                                                                          :terminator     => '#',
+                                                                          :timeout        => 12000 }
+      msg.to_xml.should eql expected_response.chomp
     end
 
     it '"conference" message' do
@@ -74,7 +94,7 @@ describe 'Ozone message generator' do
 
     it '"conference" message with options' do
       expected_response = <<-RESPONSE
-<conference xmlns="urn:xmpp:ozone:conference:1" name="1234" beep="true" terminator="#" tone-passthrough="true" moderator="true" mute="false">
+<conference xmlns="urn:xmpp:ozone:conference:1" terminator="#" moderator="true" name="1234" tone-passthrough="true" beep="true" mute="false">
   <music>
     <speak>Welcome to Ozone</speak>
     <audio url="http://it.doesnt.matter.does.it/?"/>
@@ -138,7 +158,14 @@ describe 'Ozone message generator' do
     end
 
     it '"transfer" message' do
-      @module::Message::Transfer.new('tel:+14045551212').to_xml.should == '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212"/>'
+      expected_response = <<-RESPONSE
+<transfer xmlns="urn:xmpp:ozone:transfer:1" terminator="*" to="tel:+14045551212" from="tel:+14155551212" timeout="120000" answer-on-media="true"/>
+      RESPONSE
+      msg = @module::Message::Transfer.new('tel:+14045551212', { :from            => 'tel:+14155551212',
+                                                                 :terminator      => '*',
+                                                                 :timeout         => 120000,
+                                                                 :answer_on_media => 'true' })
+      msg.to_xml.should eql expected_response.chomp
     end
 
     it '"transfer" message with options' do

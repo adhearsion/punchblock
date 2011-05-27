@@ -89,12 +89,13 @@ describe 'Ozone message generator' do
     end
 
     it '"conference" message' do
-      @module::Message::Conference.new('1234').to_xml.should == '<conference xmlns="urn:xmpp:ozone:conference:1" id="1234"/>'
+      msg = @module::Message::Conference.new('1234')
+      msg.to_xml.should == '<conference xmlns="urn:xmpp:ozone:conference:1" name="1234"/>'
     end
 
     it '"conference" message with options' do
       expected_response = <<-RESPONSE
-<conference xmlns="urn:xmpp:ozone:conference:1" terminator="#" moderator="true" name="1234" tone-passthrough="true" beep="true" mute="false">
+<conference xmlns="urn:xmpp:ozone:conference:1" tone-passthrough="true" mute="false" beep="true" terminator="#" name="1234" moderator="true">
   <music>
     <speak>Welcome to Ozone</speak>
     <audio url="http://it.doesnt.matter.does.it/?"/>
@@ -159,7 +160,7 @@ describe 'Ozone message generator' do
 
     it '"transfer" message' do
       expected_response = <<-RESPONSE
-<transfer xmlns="urn:xmpp:ozone:transfer:1" terminator="*" to="tel:+14045551212" from="tel:+14155551212" timeout="120000" answer-on-media="true"/>
+<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212" terminator="*" from="tel:+14155551212" timeout="120000" answer-on-media="true"/>
       RESPONSE
       msg = @module::Message::Transfer.new('tel:+14045551212', { :from            => 'tel:+14155551212',
                                                                  :terminator      => '*',
@@ -169,8 +170,9 @@ describe 'Ozone message generator' do
     end
 
     it '"transfer" message with options' do
-      expected_response = '<transfer xmlns="urn:xmpp:ozone:transfer:1" terminator="#" to="tel:+14045551212"/>'
-      @module::Message::Transfer.new('tel:+14045551212', :terminator => "#").to_xml.should == expected_response.chomp
+      expected_response = '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212" terminator="#"/>'
+      msg = @module::Message::Transfer.new('tel:+14045551212', :terminator => "#")
+      msg.to_xml.should == expected_response.chomp
     end
   end
 end

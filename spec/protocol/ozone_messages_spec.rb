@@ -74,14 +74,20 @@ describe 'Ozone message generator' do
 
     it '"conference" message with options' do
       expected_response = <<-RESPONSE
-<conference xmlns="urn:xmpp:ozone:conference:1" id="1234" beep="true" terminator="#">
+<conference xmlns="urn:xmpp:ozone:conference:1" name="1234" beep="true" terminator="#" tone-passthrough="true" moderator="true" mute="false">
   <music>
     <speak>Welcome to Ozone</speak>
     <audio url="http://it.doesnt.matter.does.it/?"/>
   </music>
 </conference>
       RESPONSE
-      msg = @module::Message::Conference.new '1234', :beep => true, :terminator => '#', :prompt => "Welcome to Ozone", :audio_url => "http://it.doesnt.matter.does.it/?"
+      msg = @module::Message::Conference.new '1234',{ :beep             => true, 
+                                                      :terminator       => '#', 
+                                                      :prompt           => "Welcome to Ozone", 
+                                                      :audio_url        => "http://it.doesnt.matter.does.it/?",
+                                                      :moderator        => true,
+                                                      :tone_passthrough => true,
+                                                      :mute             => false }
       msg.to_xml.should == expected_response.chomp
     end
 

@@ -286,12 +286,12 @@ module Punchblock
           #
           #    returns:
           #      <conference xmlns="urn:xmpp:ozone:conference:1" id="1234" beep="true" terminator="#"/>
-          def self.new(room_id, options = {})
+          def self.new(name, options = {})
             super('conference').tap do |msg|
               prompt    = options.delete :prompt
               audio_url = options.delete :audio_url
 
-              options[:room_id] = room_id
+              options[:name] = name
               msg.set_options options
 
               Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
@@ -304,9 +304,12 @@ module Punchblock
           end
 
           def set_options(options)
-            @xml.set_attribute 'id', options.delete(:room_id)
-            @xml.set_attribute 'beep', 'true' if options.delete(:beep)
+            @xml.set_attribute 'name', options.delete(:name)
+            @xml.set_attribute 'beep', 'true' if options.delete(:beep).to_s
             @xml.set_attribute 'terminator', options.delete(:terminator) if options.has_key?(:terminator)
+            @xml.set_attribute 'tone-passthrough', options.delete(:tone_passthrough).to_s if options.has_key?(:tone_passthrough)
+            @xml.set_attribute 'moderator', options.delete(:moderator).to_s if options.has_key?(:moderator)
+            @xml.set_attribute 'mute', options.delete(:mute).to_s if options.has_key?(:mute)
           end
 
           ##

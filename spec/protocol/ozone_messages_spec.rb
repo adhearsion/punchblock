@@ -111,7 +111,12 @@ describe 'Ozone message generator' do
                                                       :mute             => false }
       msg.to_xml.should == expected_response.chomp
     end
-
+    
+    it '"dial" message' do
+      msg = @module::Message::Dial.new(:to => 'tel:+14155551212', :from => '+13035551212')
+      msg.to_xml.should == '<dial xmlns="urn:xmpp:ozone:dial:1" to="tel:+14155551212" from="+13035551212"/>'.chomp
+    end
+    
     it '"pause" message' do
       pending 'Need to construct the parent object first'
       pause.to_xml.should == '<pause xmlns="urn:xmpp:ozone:say:1"/>'

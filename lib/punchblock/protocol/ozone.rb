@@ -195,7 +195,7 @@ module Punchblock
           # @option options [Integer, Optional] :timeout to wait for user input
           # @option options [String, Optional] :recognizer to use for speech recognition
           # @option options [String, Optional] :voice to use for speech synthesis
-          # @option options [String, Optional] :grammar to use for speech recognition (ie - application/grammar+voxeo or application/grammar+grxml)
+          # @option options [String or Nokogiri::XML Object, Optional] :grammar to use for speech recognition (ie - application/grammar+voxeo or application/grammar+grxml)
           #
           # @return [Ozone::Message] a formatted Ozone ask message
           #
@@ -207,20 +207,23 @@ module Punchblock
           #
           #    returns:
           #      <ask xmlns="urn:xmpp:ozone:ask:1" timeout="30" recognizer="es-es">
-          #        <prompt>
-          #          <speak>Please enter your postal code.</speak>
-          #        </prompt>
+          #        <prompt>Please enter your postal code.</prompt>
           #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
           #      </ask>
           def self.new(prompt, options = {})
-            super('ask').tap do |msg|
+            super('ask').tap do |msg|              
               msg.set_options options.clone
+              
+              options[:choices] = msg.set_grxml(options[:choices]) if options[:grammar] == 'application/grammar+grxml' && options[:grammar].instance_of?(String)
               
               Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
                 xml.prompt prompt
                 # Default is the Voxeo Simple Grammar, unless specified
-                xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') { xml.text options[:choices] }
+                xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo')
               end
+              
+              # Add the grammar as a Nokogiri Node object as opposed to inner_text
+              msg.instance_variable_get(:@xml).children[1].add_child options[:choices]
             end
           end
           
@@ -230,6 +233,12 @@ module Punchblock
             options.delete(:choices) if options[:choices]
             
             options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
+          end
+          
+          def set_grxml(grxml)
+            Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(grxml) do |config|
+              config.noblanks.strict
+            end
           end
         end
 
@@ -251,6 +260,8 @@ module Punchblock
           def self.new(options = {})
             super('say').tap do |msg|
               msg.set_text(options.delete(:text)) if options.has_key?(:text)
+              msg.instance_variable_get(:@xml).add_child msg.set_ssml(options.delete(:ssml)) if options[:ssml]
+            
               url  = options.delete :url
               msg.set_options options.clone
               Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
@@ -261,6 +272,14 @@ module Punchblock
           
           def set_options(options)
             options.each { |option, value| @xml.set_attribute option.to_s, value }
+          end
+          
+          def set_ssml(ssml)
+            if ssml.instance_of?(String)
+              Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(ssml) do |config|
+                config.noblanks.strict
+              end
+            end
           end
           
           def set_text(text)

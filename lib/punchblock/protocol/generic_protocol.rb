@@ -8,6 +8,10 @@ module Punchblock
       def self.connected
         'CONNECTED'
       end
+
+      # Blank class. Used primarily for testing.
+      class Message # :nodoc:
+      end
     end
   end
 end

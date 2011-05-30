@@ -7,15 +7,15 @@ describe 'Ozone message generator' do
 
   describe "should create a correct" do
     it '"accept" message' do
-      @module::Message::Accept.new.to_xml.should == '<accept xmlns="urn:xmpp:ozone:1"/>'
+      @module::Accept.new.to_xml.should == '<accept xmlns="urn:xmpp:ozone:1"/>'
     end
 
     it '"answer" message' do
-      @module::Message::Answer.new.to_xml.should == '<answer xmlns="urn:xmpp:ozone:1"/>'
+      @module::Answer.new.to_xml.should == '<answer xmlns="urn:xmpp:ozone:1"/>'
     end
 
     it '"hangup" message' do
-      @module::Message::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
+      @module::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
     end
 
     it '"reject" message with the default reason' do
@@ -24,7 +24,7 @@ describe 'Ozone message generator' do
   <declined/>
 </reject>
       RESPONSE
-      @module::Message::Reject.new.to_xml.should == expected_response.chomp
+      @module::Reject.new.to_xml.should == expected_response.chomp
     end
 
     it '"reject" message with a specified reason' do
@@ -33,17 +33,17 @@ describe 'Ozone message generator' do
   <busy/>
 </reject>
       RESPONSE
-      @module::Message::Reject.new(:busy).to_xml.should == expected_response.chomp
+      @module::Reject.new(:busy).to_xml.should == expected_response.chomp
     end
 
     it 'ArgumentError exception for a reject with an invalid reason' do
       expect {
-        @module::Message::Reject.new(:blahblahblah)
+        @module::Reject.new(:blahblahblah)
       }.to raise_error ArgumentError
     end
 
     it '"redirect" message' do
-      @module::Message::Redirect.new('tel:+14045551234').to_xml.should == '<redirect xmlns="urn:xmpp:ozone:1" to="tel:+14045551234"/>'
+      @module::Redirect.new('tel:+14045551234').to_xml.should == '<redirect xmlns="urn:xmpp:ozone:1" to="tel:+14045551234"/>'
     end
 
     it '"ask" message' do
@@ -53,7 +53,7 @@ describe 'Ozone message generator' do
   <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
 </ask>
       RESPONSE
-      msg = @module::Message::Ask.new 'Please enter your postal code.', '[5 DIGITS]'
+      msg = @module::Ask.new 'Please enter your postal code.', '[5 DIGITS]'
       msg.to_xml.should == expected_response.chomp
     end
 
@@ -64,12 +64,12 @@ describe 'Ozone message generator' do
   <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
 </ask>
       RESPONSE
-      msg = @module::Message::Ask.new 'Please enter your postal code.', '[5 DIGITS]', :grammar => 'application/grammar+custom'
+      msg = @module::Ask.new 'Please enter your postal code.', '[5 DIGITS]', :grammar => 'application/grammar+custom'
       msg.to_xml.should == expected_response.chomp
     end
 
     it '"conference" message' do
-      @module::Message::Conference.new('1234').to_xml.should == '<conference xmlns="urn:xmpp:ozone:conference:1" id="1234"/>'
+      @module::Conference.new('1234').to_xml.should == '<conference xmlns="urn:xmpp:ozone:conference:1" id="1234"/>'
     end
 
     it '"conference" message with options' do
@@ -81,7 +81,7 @@ describe 'Ozone message generator' do
   </music>
 </conference>
       RESPONSE
-      msg = @module::Message::Conference.new '1234', :beep => true, :terminator => '#', :prompt => "Welcome to Ozone", :audio_url => "http://it.doesnt.matter.does.it/?"
+      msg = @module::Conference.new '1234', :beep => true, :terminator => '#', :prompt => "Welcome to Ozone", :audio_url => "http://it.doesnt.matter.does.it/?"
       msg.to_xml.should == expected_response.chomp
     end
 
@@ -121,23 +121,23 @@ describe 'Ozone message generator' do
   <audio src="http://whatever.you-say-boss.com"/>
 </say>
       RESPONSE
-      @module::Message::Say.new(:url => 'http://whatever.you-say-boss.com').to_xml.should == expected_response.chomp
+      @module::Say.new(:url => 'http://whatever.you-say-boss.com').to_xml.should == expected_response.chomp
     end
 
     it '"say" message for text' do
       expected_response = <<-RESPONSE
 <say xmlns="urn:xmpp:ozone:say:1">Once upon a time there was a message...</say>
       RESPONSE
-      @module::Message::Say.new(:text => 'Once upon a time there was a message...').to_xml.should == expected_response.chomp
+      @module::Say.new(:text => 'Once upon a time there was a message...').to_xml.should == expected_response.chomp
     end
 
     it '"transfer" message' do
-      @module::Message::Transfer.new('tel:+14045551212').to_xml.should == '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212"/>'
+      @module::Transfer.new('tel:+14045551212').to_xml.should == '<transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212"/>'
     end
 
     it '"transfer" message with options' do
       expected_response = '<transfer xmlns="urn:xmpp:ozone:transfer:1" terminator="#" to="tel:+14045551212"/>'
-      @module::Message::Transfer.new('tel:+14045551212', :terminator => "#").to_xml.should == expected_response.chomp
+      @module::Transfer.new('tel:+14045551212', :terminator => "#").to_xml.should == expected_response.chomp
     end
   end
 end

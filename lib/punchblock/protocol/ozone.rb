@@ -2,11 +2,6 @@ require 'nokogiri'
 
 module Punchblock
   module Protocol
-
-    ##
-    # This exception may be raised if a protocol error is detected.
-    class ProtocolError < StandardError; end
-
     module Ozone
       class MessageProxy < Nokogiri::XML::Node
         def self.new(element, document = nil)

@@ -53,9 +53,9 @@ Thread.new do
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
       run_call transport, protocol, event
-    when protocol::Message::Info
+    when protocol::Info
       INFO_EVENT_QUEUE.push event
-    when protocol::Message::Complete || protocol::Message::End
+    when protocol::Complete || protocol::End
       CALL_QUEUES[event.call_id].push event
     else
       puts "Unknown event: #{event.inspect}"

@@ -9,27 +9,27 @@ module Punchblock
     end
 
     def accept # :nodoc:
-      write @protocol::Message::Accept.new
+      write @protocol::Accept.new
     end
 
     def answer # :nodoc:
-      write @protocol::Message::Answer.new
+      write @protocol::Answer.new
     end
 
     def hangup # :nodoc:
-      write @protocol::Message::Hangup.new
+      write @protocol::Hangup.new
     end
 
     def reject(reason = :declined) # :nodoc:
-      write @protocol::Message::Reject.new reason
+      write @protocol::Reject.new reason
     end
 
     def redirect(dest) # :nodoc:
-      write @protocol::Message::Redirect.new(dest)
+      write @protocol::Redirect.new(dest)
     end
 
     def say(string, type = :text) # :nodoc:
-      write @protocol::Message::Say.new type => string
+      write @protocol::Say.new type => string
       puts "Waiting on the queue..."
       response = @queue.pop
       # TODO: Error handling

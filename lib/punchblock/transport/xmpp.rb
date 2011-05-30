@@ -45,7 +45,7 @@ module Punchblock
         call_id = jid.node
         # FIXME: Do we need to raise a warning if the domain changes?
         @callmap[call_id] = jid.domain
-        command_id = "#{jid.resource}"
+        command_id = jid.resource
         case msg['type']
         when 'set'
           pmsg = @protocol::Message.parse call_id, command_id, msg.children.first.to_xml

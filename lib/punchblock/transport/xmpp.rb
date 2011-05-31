@@ -70,7 +70,12 @@ module Punchblock
           #------
           # FIXME: This should probably be parsed by the Protocol layer and return
           # a ProtocolError exception.
-          raise TransportError, msg
+          if @result_queues.has_key?(msg['id'])
+            @result_queues[msg['id']].push TransportError.new msg
+          else
+            # Un-associated transport error??
+            raise TransportError.new msg
+          end
         else
           raise TransportError, msg
         end
@@ -97,7 +102,8 @@ module Punchblock
         # Shut down this queue
         @result_queues[iq['id']] = nil
         # FIXME: Error handling
-        result['jid']
+        raise result if result.is_a? Exception
+        true
       end
 
       def run

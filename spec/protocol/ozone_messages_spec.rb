@@ -101,8 +101,29 @@ describe 'Ozone message generator' do
         expected_response = <<-RESPONSE
 <ask xmlns="urn:xmpp:ozone:ask:1">
   <prompt>Please enter your postal code.</prompt>
-  <choices content-type="application/grammar+grxml"><grammar xmlns="http://www.w3.org/2001/06/grammar" root="MAINRULE"><rule id="MAINRULE"><one-of><item><item repeat="0-1"> need a</item><item repeat="0-1"> i need a</item><one-of><item> clue </item></one-of><tag> out.concept = "clue";</tag></item><item><item repeat="0-1"> have an</item><item repeat="0-1"> i have an</item><one-of><item> answer </item></one-of><tag> out.concept = "answer";</tag></item></one-of></rule></grammar>
-</choices>
+  <choices content-type="application/grammar+grxml"><![CDATA[        <grammar xmlns="http://www.w3.org/2001/06/grammar" root="MAINRULE">
+            <rule id="MAINRULE"> 
+                <one-of>
+                    <item>
+                        <item repeat="0-1"> need a</item>
+                        <item repeat="0-1"> i need a</item>
+                            <one-of> 
+                                <item> clue </item>
+                            </one-of>
+                        <tag> out.concept = "clue";</tag> 
+                    </item>
+                    <item>
+                        <item repeat="0-1"> have an</item>
+                        <item repeat="0-1"> i have an</item>
+                            <one-of> 
+                                <item> answer </item>
+                            </one-of>
+                        <tag> out.concept = "answer";</tag> 
+                    </item>
+                    </one-of>
+            </rule> 
+        </grammar>
+]]></choices>
 </ask>
 RESPONSE
         

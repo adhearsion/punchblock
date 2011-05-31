@@ -29,7 +29,11 @@ module Punchblock
           element = options.has_key?(:command) ? options.delete(:command) : name
           @xml = MessageProxy.new(element).tap do |obj|
             scope = BASE_NAMESPACE_MESSAGES.include?(name) ? nil : name
-            obj.set_attribute 'xmlns', [BASE_OZONE_NAMESPACE, scope, OZONE_VERSION].compact.join(':')
+            if scope == 'dial'
+              obj.set_attribute 'xmlns', [BASE_OZONE_NAMESPACE, OZONE_VERSION].compact.join(':')
+            else
+              obj.set_attribute 'xmlns', [BASE_OZONE_NAMESPACE, scope, OZONE_VERSION].compact.join(':')
+            end
             # FIXME: Do I need a handle to the parent object?
 
           end

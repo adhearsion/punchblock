@@ -204,9 +204,8 @@ module Punchblock
         #   say 'Hello brown cow.'
         #
         #   returns:
-        #     <say xmlns="urn:xmpp:ozone:say:1">
-        #       <speak>Hello brown cow.</speak>
-        #     </say>
+        #     <say xmlns="urn:xmpp:ozone:say:1">Hello brown cow.</say>
+        #
         def self.new(options = {})
           super('say').tap do |msg|
             msg.set_text(options.delete(:text)) if options.has_key?(:text)

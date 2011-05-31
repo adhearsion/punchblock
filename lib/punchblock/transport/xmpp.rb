@@ -82,7 +82,7 @@ module Punchblock
         # and send XMPP messages, we need to convert the Protocol layer to a
         # Nokogiri object, if it contains XML (ie. Ozone).
         # FIXME: What happens if Nokogiri tries to parse non-XML string?
-        if msg.class == Punchblock::Protocol::Ozone::Message::Dial
+        if msg.class == Punchblock::Protocol::Ozone::Dial
           iq = create_iq @client_jid.domain
           @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{@client_jid.domain}" if @logger
         else

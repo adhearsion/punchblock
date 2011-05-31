@@ -17,6 +17,8 @@ module Punchblock
         super
         raise ArgumentError unless @username = options.delete(:username)
         raise ArgumentError unless options.has_key? :password
+        @client_jid = Blather::JID.new @username
+        
         setup @username, options.delete(:password)
 
         # This queue is used to synchronize between threads calling #write
@@ -80,9 +82,14 @@ module Punchblock
         # and send XMPP messages, we need to convert the Protocol layer to a
         # Nokogiri object, if it contains XML (ie. Ozone).
         # FIXME: What happens if Nokogiri tries to parse non-XML string?
+        if msg.class == Punchblock::Protocol::Ozone::Message::Dial
+          iq = create_iq @client_jid.domain
+          @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{@client_jid.domain}" if @logger
+        else
+          iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
+          @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{call.call_id}" if @logger
+        end
         msg = Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(msg.to_s)
-        iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
-        @logger.debug "Sending Command ID #{iq['id']} #{msg.to_xml} to #{call.call_id}" if @logger
         @result_queues[iq['id']] = Queue.new
         iq.add_child msg
         write_to_stream iq

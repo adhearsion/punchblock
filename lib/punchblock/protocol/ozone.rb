@@ -67,7 +67,6 @@ module Punchblock
           when 'info'
             return Info.parse xml, :call_id => call_id, :cmd_id => cmd_id
           when 'end'
-            #puts msg.inspect
             return End.parse xml, :call_id => call_id, :cmd_id => cmd_id # unless msg.first && msg.first.name == 'error'
           end
         end
@@ -164,7 +163,7 @@ module Punchblock
         # @option options [Integer, Optional] :timeout to wait for user input
         # @option options [String, Optional] :recognizer to use for speech recognition
         # @option options [String, Optional] :voice to use for speech synthesis
-        # @option options [String, Optional] :grammar to use for speech recognition (ie - application/grammar+voxeo or application/grammar+grxml)
+        # @option options [String or Nokogiri::XML, Optional] :grammar to use for speech recognition (ie - application/grammar+voxeo or application/grammar+grxml)
         #
         # @return [Ozone::Message] a formatted Ozone ask message
         #
@@ -176,19 +175,34 @@ module Punchblock
         #
         #    returns:
         #      <ask xmlns="urn:xmpp:ozone:ask:1" timeout="30" recognizer="es-es">
-        #        <prompt>
-        #          <speak>Please enter your postal code.</speak>
-        #        </prompt>
+        #        <prompt>Please enter your postal code.</prompt>
         #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
         #      </ask>
-        def self.new(prompt, choices, options = {})
+        def self.new(prompt, options = {})
           super('ask').tap do |msg|
+            msg.set_options options.clone
+            grammar_type = options[:grammer]
+
             Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
               xml.prompt prompt
               # Default is the Voxeo Simple Grammar, unless specified
-              xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') { xml.text choices }
+              xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') {
+                if grammar_type == 'application/grammar+grxml'
+                  xml.cdata options[:choices] 
+                else
+                  xml.text options[:choices] 
+                end
+              }
             end
           end
+        end
+
+        def set_options(options)
+          options.delete(:grammar) if options[:grammar]
+          options.delete(:voice) if options[:voice]
+          options.delete(:choices) if options[:choices]
+
+          options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
         end
       end
 
@@ -209,9 +223,23 @@ module Punchblock
         def self.new(options = {})
           super('say').tap do |msg|
             msg.set_text(options.delete(:text)) if options.has_key?(:text)
+            msg.instance_variable_get(:@xml).add_child msg.set_ssml(options.delete(:ssml)) if options[:ssml]
             url  = options.delete :url
+            msg.set_options options.clone
             Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
               xml.audio('src' => url) if url
+            end
+          end
+        end
+
+        def set_options(options)
+          options.each { |option, value| @xml.set_attribute option.to_s, value }
+        end
+
+        def set_ssml(ssml)
+          if ssml.instance_of?(String)
+            Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(ssml) do |config|
+              config.noblanks.strict
             end
           end
         end
@@ -234,6 +262,34 @@ module Punchblock
           Say.new :pause, :parent => self
         end
 
+        class Dial < Message
+          ##
+          # Create a dial message
+          #
+          # @param [Hash] options for dialing a call
+          # @option options [Integer, Optional] :to destination to dial
+          # @option options [String, Optional] :from what to set the Caller ID to
+          #
+          # @return [Ozone::Message] a formatted Ozone dial message
+          #
+          # @example
+          #    dial :to => 'tel:+14155551212', :from => 'tel:+13035551212'
+          #
+          #    returns:
+          #      <iq type='set' to='call.ozone.net' from='16577@app.ozone.net/1'>
+          #        <dial to='tel:+13055195825' from='tel:+14152226789' xmlns='urn:xmpp:ozone:1' />
+          #      </iq>
+          def self.new(options)
+            super('dial').tap do |msg|              
+              msg.set_options options
+            end
+          end
+          
+          def set_options(options)            
+            options.each { |option, value| @xml.set_attribute option.to_s, value }
+          end
+        end
+        
         ##
         # Create an Ozone resume message for the current Say
         #
@@ -282,12 +338,12 @@ module Punchblock
         #
         #    returns:
         #      <conference xmlns="urn:xmpp:ozone:conference:1" id="1234" beep="true" terminator="#"/>
-        def self.new(room_id, options = {})
+        def self.new(name, options = {})
           super('conference').tap do |msg|
             prompt    = options.delete :prompt
             audio_url = options.delete :audio_url
 
-            options[:room_id] = room_id
+            options[:name] = name
             msg.set_options options
 
             Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
@@ -300,9 +356,9 @@ module Punchblock
         end
 
         def set_options(options)
-          @xml.set_attribute 'id', options.delete(:room_id)
-          @xml.set_attribute 'beep', 'true' if options.delete(:beep)
-          @xml.set_attribute 'terminator', options.delete(:terminator) if options.has_key?(:terminator)
+          options.each do |option, value|
+            @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s
+          end
         end
 
         ##
@@ -374,7 +430,7 @@ module Punchblock
 
         def set_options options
           options.each do |option, value|
-            @xml.set_attribute option.to_s, value
+            @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s
           end
         end
       end

@@ -180,8 +180,8 @@ MESSAGE
     end
     
     it '"dial" message' do
-      msg = @module::Dial.new(:to => 'tel:+14155551212', :from => '+13035551212')
-      Hash.from_xml(msg.to_xml).should == Hash.from_xml('<dial xmlns="urn:xmpp:ozone:dial:1" to="tel:+14155551212" from="+13035551212"/>')
+      msg = @module::Dial.new(:to => 'tel:+14155551212', :from => 'tel:+13035551212')
+      Hash.from_xml(msg.to_xml).should == Hash.from_xml('<dial xmlns="urn:xmpp:ozone:1" to="tel:+14155551212" from="tel:+13035551212"/>')
     end
     
     it '"pause" message' do

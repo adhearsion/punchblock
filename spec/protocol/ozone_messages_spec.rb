@@ -17,23 +17,43 @@ describe 'Ozone message generator' do
     it '"hangup" message' do
       @module::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
     end
-
-    it '"reject" message with the default reason' do
-      expected_message = <<-MESSAGE
+    
+    describe 'reject' do
+      it '"reject" message with the default reason' do
+        expected_message = <<-MESSAGE
+  <reject xmlns="urn:xmpp:ozone:1">
+    <declined/>
+  </reject>
+        MESSAGE
+        @module::Reject.new.to_xml.should == expected_message.chomp
+      end
+      
+      it '"reject" message with the declined reason' do
+        expected_message = <<-MESSAGE
 <reject xmlns="urn:xmpp:ozone:1">
   <declined/>
 </reject>
-      MESSAGE
-      @module::Reject.new.to_xml.should == expected_message.chomp
-    end
-
-    it '"reject" message with a specified reason' do
-      expected_message = <<-MESSAGE
+        MESSAGE
+        @module::Reject.new(:declined).to_xml.should == expected_message.chomp
+      end
+      
+      it '"reject" message with a busy reason' do
+        expected_message = <<-MESSAGE
 <reject xmlns="urn:xmpp:ozone:1">
   <busy/>
 </reject>
       MESSAGE
-      @module::Reject.new(:busy).to_xml.should == expected_message.chomp
+        @module::Reject.new(:busy).to_xml.should == expected_message.chomp
+      end
+      
+      it '"reject" message with an error reason' do
+        expected_message = <<-MESSAGE
+<reject xmlns="urn:xmpp:ozone:1">
+  <error/>
+</reject>
+      MESSAGE
+        @module::Reject.new(:error).to_xml.should == expected_message.chomp
+      end
     end
 
     it 'ArgumentError exception for a reject with an invalid reason' do

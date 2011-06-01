@@ -30,4 +30,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<yard>, ["~> 0.6.0"]
   s.add_development_dependency %q<bluecloth>, [">= 0"]
   s.add_development_dependency %q<rcov>, [">= 0"]
+  s.add_development_dependency %q<rake>, [">= 0"]
+  s.add_development_dependency %q<flexmock>, [">= 0"]
+  s.add_development_dependency %q<activesupport>, [">= 0"]
+  s.add_development_dependency %q<i18n>, [">= 0"]
 end

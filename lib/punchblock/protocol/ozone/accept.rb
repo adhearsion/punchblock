@@ -13,7 +13,7 @@ module Punchblock
         def self.new
           super 'accept'
         end
-      end
-    end
-  end
-end
+      end # Accept
+    end # Ozone
+  end # Protocol
+end # Punchblock

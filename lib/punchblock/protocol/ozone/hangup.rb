@@ -13,7 +13,7 @@ module Punchblock
         def self.new
           super 'hangup'
         end
-      end
-    end
-  end
-end
+      end # Hangup
+    end # Ozone
+  end # Protocol
+end # Punchblock

@@ -6,6 +6,6 @@ module Punchblock
       describe Accept do
         its(:to_xml) { should == '<accept xmlns="urn:xmpp:ozone:1"/>' }
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

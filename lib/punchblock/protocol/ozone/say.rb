@@ -84,7 +84,7 @@ module Punchblock
         def stop
           Say.new :stop, :parent => self
         end
-      end
-    end
-  end
-end
+      end # Say
+    end # Ozone
+  end # Protocol
+end # Punchblock

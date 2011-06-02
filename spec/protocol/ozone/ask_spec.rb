@@ -121,6 +121,6 @@ module Punchblock
           its(:to_xml) { should == expected_message.strip }
         end
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

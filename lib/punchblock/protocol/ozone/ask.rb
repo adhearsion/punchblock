@@ -59,7 +59,7 @@ module Punchblock
 
           options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
         end
-      end
-    end
-  end
-end
+      end # Ask
+    end # Ozone
+  end # Protocol
+end # Punchblock

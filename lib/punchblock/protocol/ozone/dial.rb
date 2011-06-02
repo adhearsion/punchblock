@@ -27,7 +27,7 @@ module Punchblock
         def set_options(options)
           options.each { |option, value| @xml.set_attribute option.to_s, value }
         end
-      end
-    end
-  end
-end
+      end # Dial
+    end # Ozone
+  end # Protocol
+end # Punchblock

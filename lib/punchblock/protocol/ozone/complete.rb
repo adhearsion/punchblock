@@ -14,7 +14,7 @@ module Punchblock
           # -----
           # <complete xmlns="urn:xmpp:ozone:say:1" reason="SUCCESS"/>
         end
-      end
-    end
-  end
-end
+      end # Complete
+    end # Ozone
+  end # Protocol
+end # Punchblock

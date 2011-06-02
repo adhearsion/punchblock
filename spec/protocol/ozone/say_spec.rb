@@ -57,6 +57,6 @@ module Punchblock
           stop(:say).to_xml.should == '<stop xmlns="urn:xmpp:ozone:say:1"/>'
         end
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

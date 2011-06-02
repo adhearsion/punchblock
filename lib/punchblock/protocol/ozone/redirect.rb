@@ -19,7 +19,7 @@ module Punchblock
         def set_destination(dest)
           @xml.set_attribute 'to', dest
         end
-      end
-    end
-  end
-end
+      end # Redirect
+    end # Ozone
+  end # Protocol
+end # Punchblock

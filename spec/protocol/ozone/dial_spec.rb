@@ -8,6 +8,6 @@ module Punchblock
 
         its(:to_xml) { should == '<dial xmlns="urn:xmpp:ozone:1" to="tel:+14155551212" from="tel:+13035551212"/>' }
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

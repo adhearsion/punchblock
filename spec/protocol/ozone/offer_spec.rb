@@ -6,6 +6,6 @@ module Punchblock
       describe Offer do
         # its(:to_xml) { should == '<offer xmlns="urn:xmpp:ozone:1"/>' }
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

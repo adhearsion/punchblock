@@ -47,6 +47,6 @@ module Punchblock
           kick.to_xml.should == '<kick xmlns="urn:xmpp:ozone:conference:1"/>'
         end
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

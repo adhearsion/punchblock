@@ -6,6 +6,6 @@ module Punchblock
       describe End do
         # its(:to_xml) { should == '<end xmlns="urn:xmpp:ozone:1"/>' }
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

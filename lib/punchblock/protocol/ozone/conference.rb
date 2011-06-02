@@ -85,7 +85,7 @@ module Punchblock
           Conference.new :kick, :parent => self
         end
 
-      end
-    end
-  end
-end
+      end # Conference
+    end # Ozone
+  end # Protocol
+end # Punchblock

@@ -6,6 +6,6 @@ module Punchblock
       describe Hangup do
         its(:to_xml) { should == '<hangup xmlns="urn:xmpp:ozone:1"/>' }
       end
-    end
-  end
-end
+    end # Ozone
+  end # Protocol
+end # Punchblock

@@ -29,7 +29,7 @@ module Punchblock
             @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s
           end
         end
-      end
-    end
-  end
-end
+      end # Transfer
+    end # Ozone
+  end # Protocol
+end # Punchblock

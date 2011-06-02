@@ -18,7 +18,7 @@ module Punchblock
             end
           end
         end
-      end
-    end
-  end
-end
+      end # Reject
+    end # Ozone
+  end # Protocol
+end # Punchblock

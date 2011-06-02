@@ -13,7 +13,7 @@ module Punchblock
         def self.new
           super 'answer'
         end
-      end
-    end
-  end
-end
+      end # Answer
+    end # Ozone
+  end # Protocol
+end # Punchblock

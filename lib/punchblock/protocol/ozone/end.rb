@@ -14,7 +14,7 @@ module Punchblock
             info.type = event.name.to_sym
           end
         end
-      end
-    end
-  end
-end
+      end # End
+    end # Ozone
+  end # Protocol
+end # Punchblock

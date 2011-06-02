@@ -9,7 +9,7 @@ module Punchblock
         def self.parse(xml, options)
           self.new 'offer', options
         end
-      end
-    end
-  end
-end
+      end # Offer
+    end # Ozone
+  end # Protocol
+end # Punchblock

@@ -212,13 +212,12 @@ module Punchblock
         #      </ask>
         def self.new(prompt, options = {})
           super('ask').tap do |msg|
+            grammar_type = options.delete(:grammar) || 'application/grammar+voxeo' # Default is the Voxeo Simple Grammar, unless specified
             msg.set_options options.clone
-            grammar_type = options[:grammer]
 
-            Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
+            Nokogiri::XML::Builder.with msg.instance_variable_get(:@xml) do |xml|
               xml.prompt prompt
-              # Default is the Voxeo Simple Grammar, unless specified
-              xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') {
+              xml.choices("content-type" => grammar_type) {
                 if grammar_type == 'application/grammar+grxml'
                   xml.cdata options[:choices]
                 else
@@ -230,9 +229,9 @@ module Punchblock
         end
 
         def set_options(options)
-          options.delete(:grammar) if options[:grammar]
-          options.delete(:voice) if options[:voice]
-          options.delete(:choices) if options[:choices]
+          [:grammar, :voice, :choices].each do |val|
+            options.delete(val) if options[val]
+          end
 
           options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
         end

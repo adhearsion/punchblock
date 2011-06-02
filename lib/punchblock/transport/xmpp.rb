@@ -18,7 +18,7 @@ module Punchblock
         raise ArgumentError unless @username = options.delete(:username)
         raise ArgumentError unless options.has_key? :password
         @client_jid = Blather::JID.new @username
-        
+
         setup @username, options.delete(:password)
 
         # This queue is used to synchronize between threads calling #write
@@ -119,7 +119,7 @@ module Punchblock
         iq_stanza.from = @client_jid
         iq_stanza
       end
-      
+
       def read_queue_with_timeout(queue, timeout=3)
         begin
           data = Timeout::timeout(timeout) {

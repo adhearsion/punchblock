@@ -32,6 +32,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<rcov>, [">= 0"]
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<flexmock>, [">= 0"]
-  s.add_development_dependency %q<activesupport>, [">= 0"]
+  s.add_development_dependency %q<activesupport>, [">= 3.0.7"]
   s.add_development_dependency %q<i18n>, [">= 0"]
 end

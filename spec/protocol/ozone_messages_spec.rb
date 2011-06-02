@@ -153,7 +153,7 @@ MESSAGE
       it '"ask" message with alternate grammar, voice and attributes' do
         expected_message = <<-MESSAGE
 <ask xmlns="urn:xmpp:ozone:ask:1" bargein="true" min-confidence="0.3" mode="speech" recognizer="en-US" terminator="#" timeout="12000">
-  <prompt>Please enter your postal code.</prompt>
+  <prompt voice="kate">Please enter your postal code.</prompt>
   <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
 </ask>
         MESSAGE

@@ -206,20 +206,25 @@ module Punchblock
         #    ask 'Please enter your postal code.',
         #        '[5 DIGITS]',
         #        :timeout => 30,
-        #        :recognizer => 'es-es'
+        #        :recognizer => 'es-es',
+        #        :voice => 'simon'
         #
         #    returns:
         #      <ask xmlns="urn:xmpp:ozone:ask:1" timeout="30" recognizer="es-es">
-        #        <prompt>Please enter your postal code.</prompt>
+        #        <prompt voice='simon'>Please enter your postal code.</prompt>
         #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
         #      </ask>
         def self.new(prompt, options = {})
           super('ask').tap do |msg|
+            voice = options.delete :voice
             grammar_type = options.delete(:grammar) || 'application/grammar+voxeo' # Default is the Voxeo Simple Grammar, unless specified
             msg.set_options options.clone
 
             Nokogiri::XML::Builder.with msg.instance_variable_get(:@xml) do |xml|
-              xml.prompt prompt
+              prompt_opts = {:voice => voice} if voice
+              xml.prompt prompt_opts do
+                xml.text prompt
+              end
               xml.choices("content-type" => grammar_type) {
                 if grammar_type == 'application/grammar+grxml'
                   xml.cdata options[:choices]

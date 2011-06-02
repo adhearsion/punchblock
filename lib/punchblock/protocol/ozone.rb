@@ -176,7 +176,15 @@ module Punchblock
         #      </iq>
         def self.new(options)
           super('dial').tap do |msg|
+            headers = options.delete(:headers)
             msg.set_options options
+            if headers
+              Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
+                headers.each do |k,v|
+                  xml.header('name' => k.to_s, 'value' => v)
+                end
+              end
+            end
           end
         end
 

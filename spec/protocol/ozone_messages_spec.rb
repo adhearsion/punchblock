@@ -21,9 +21,9 @@ describe 'Ozone message generator' do
     describe 'reject' do
       it '"reject" message with the default reason' do
         expected_message = <<-MESSAGE
-  <reject xmlns="urn:xmpp:ozone:1">
-    <declined/>
-  </reject>
+<reject xmlns="urn:xmpp:ozone:1">
+  <declined/>
+</reject>
         MESSAGE
         @module::Reject.new.to_xml.should == expected_message.chomp
       end
@@ -202,6 +202,19 @@ MESSAGE
     it '"dial" message' do
       msg = @module::Dial.new(:to => 'tel:+14155551212', :from => 'tel:+13035551212')
       Hash.from_xml(msg.to_xml).should == Hash.from_xml('<dial xmlns="urn:xmpp:ozone:1" to="tel:+14155551212" from="tel:+13035551212"/>')
+    end
+    
+    it '"dial" message with headers' do
+      expected_response = <<-MESSAGE
+<dial xmlns="urn:xmpp:ozone:1" to="tel:+14155551212" from="tel:+13035551212">
+  <header name="foo" value="bar"/>
+  <header name="foe" value="fum"/>
+</dial>
+MESSAGE
+      msg = @module::Dial.new({ :to   => 'tel:+14155551212', 
+                                :from => 'tel:+13035551212',
+                                :headers => { :foo => 'bar', 'foe' => 'fum' } })
+      Hash.from_xml(msg.to_xml).should == Hash.from_xml(expected_response)
     end
     
     it '"pause" message' do

@@ -17,17 +17,17 @@ describe 'Ozone message generator' do
     it '"hangup" message' do
       @module::Hangup.new.to_xml.should == '<hangup xmlns="urn:xmpp:ozone:1"/>'
     end
-    
+
     describe 'reject' do
       it '"reject" message with the default reason' do
         expected_message = <<-MESSAGE
-  <reject xmlns="urn:xmpp:ozone:1">
-    <declined/>
-  </reject>
+<reject xmlns="urn:xmpp:ozone:1">
+  <declined/>
+</reject>
         MESSAGE
         @module::Reject.new.to_xml.should == expected_message.chomp
       end
-      
+
       it '"reject" message with the declined reason' do
         expected_message = <<-MESSAGE
 <reject xmlns="urn:xmpp:ozone:1">
@@ -36,7 +36,7 @@ describe 'Ozone message generator' do
         MESSAGE
         @module::Reject.new(:declined).to_xml.should == expected_message.chomp
       end
-      
+
       it '"reject" message with a busy reason' do
         expected_message = <<-MESSAGE
 <reject xmlns="urn:xmpp:ozone:1">
@@ -45,7 +45,7 @@ describe 'Ozone message generator' do
       MESSAGE
         @module::Reject.new(:busy).to_xml.should == expected_message.chomp
       end
-      
+
       it '"reject" message with an error reason' do
         expected_message = <<-MESSAGE
 <reject xmlns="urn:xmpp:ozone:1">
@@ -65,35 +65,35 @@ describe 'Ozone message generator' do
     it '"redirect" message' do
       @module::Redirect.new('tel:+14045551234').to_xml.should == '<redirect xmlns="urn:xmpp:ozone:1" to="tel:+14045551234"/>'
     end
-    
+
     describe 'ask' do
       before(:all) do
         @grxml = <<-GRXML
         <grammar xmlns="http://www.w3.org/2001/06/grammar" root="MAINRULE">
-            <rule id="MAINRULE"> 
+            <rule id="MAINRULE">
                 <one-of>
                     <item>
                         <item repeat="0-1"> need a</item>
                         <item repeat="0-1"> i need a</item>
-                            <one-of> 
+                            <one-of>
                                 <item> clue </item>
                             </one-of>
-                        <tag> out.concept = "clue";</tag> 
+                        <tag> out.concept = "clue";</tag>
                     </item>
                     <item>
                         <item repeat="0-1"> have an</item>
                         <item repeat="0-1"> i have an</item>
-                            <one-of> 
+                            <one-of>
                                 <item> answer </item>
                             </one-of>
-                        <tag> out.concept = "answer";</tag> 
+                        <tag> out.concept = "answer";</tag>
                     </item>
                     </one-of>
-            </rule> 
+            </rule>
         </grammar>
         GRXML
       end
-      
+
       it '"ask" message' do
         expected_message = <<-MESSAGE
 <ask xmlns="urn:xmpp:ozone:ask:1">
@@ -112,66 +112,66 @@ describe 'Ozone message generator' do
   <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
 </ask>
         MESSAGE
-        msg = @module::Ask.new 'Please enter your postal code.', { :choices => '[5 DIGITS]', 
+        msg = @module::Ask.new 'Please enter your postal code.', { :choices => '[5 DIGITS]',
                                                                             :grammar => 'application/grammar+custom' }
         msg.to_xml.should == expected_message.chomp
       end
-    
+
       it '"ask" message with a GRXML grammar' do
         expected_message = Hash.from_xml <<-MESSAGE
 <ask xmlns="urn:xmpp:ozone:ask:1">
   <prompt>Please enter your postal code.</prompt>
   <choices content-type="application/grammar+grxml"><![CDATA[        <grammar xmlns="http://www.w3.org/2001/06/grammar" root="MAINRULE">
-            <rule id="MAINRULE"> 
+            <rule id="MAINRULE">
                 <one-of>
                     <item>
                         <item repeat="0-1"> need a</item>
                         <item repeat="0-1"> i need a</item>
-                            <one-of> 
+                            <one-of>
                                 <item> clue </item>
                             </one-of>
-                        <tag> out.concept = "clue";</tag> 
+                        <tag> out.concept = "clue";</tag>
                     </item>
                     <item>
                         <item repeat="0-1"> have an</item>
                         <item repeat="0-1"> i have an</item>
-                            <one-of> 
+                            <one-of>
                                 <item> answer </item>
                             </one-of>
-                        <tag> out.concept = "answer";</tag> 
+                        <tag> out.concept = "answer";</tag>
                     </item>
                     </one-of>
-            </rule> 
+            </rule>
         </grammar>
 ]]></choices>
 </ask>
 MESSAGE
-        
-        msg = @module::Ask.new 'Please enter your postal code.', { :choices => @grxml, 
+
+        msg = @module::Ask.new 'Please enter your postal code.', { :choices => @grxml,
                                                                             :grammar => 'application/grammar+grxml' }
         Hash.from_xml(msg.to_xml).should == expected_message
       end
-    
-      it '"ask"message with alternate grammar, voice and attributes' do
+
+      it '"ask" message with alternate grammar, voice and attributes' do
         expected_message = Hash.from_xml <<-MESSAGE
-<ask xmlns="urn:xmpp:ozone:ask:1" mode="speech|dtmf|both" bargein="true" min-confidence="0.3" recognizer="en-US" terminator="#" timeout="12000">
-  <prompt>Please enter your postal code.</prompt>
+<ask xmlns="urn:xmpp:ozone:ask:1" mode="speech" bargein="true" min-confidence="0.3" recognizer="en-US" terminator="#" timeout="12000">
+  <prompt voice="kate">Please enter your postal code.</prompt>
   <choices content-type="application/grammar+custom">[5 DIGITS]</choices>
 </ask>
         MESSAGE
         msg = @module::Ask.new 'Please enter your postal code.', { :choices        => '[5 DIGITS]',
-                                                                            :grammar        => 'application/grammar+custom',
-                                                                            :voice          => 'kate',
-                                                                            :bargein        => true,
-                                                                            :min_confidence => '0.3',
-                                                                            :mode           => 'speech|dtmf|both',
-                                                                            :recognizer     => 'en-US',
-                                                                            :terminator     => '#',
-                                                                            :timeout        => 12000 }
+                                                                   :grammar        => 'application/grammar+custom',
+                                                                   :voice          => 'kate',
+                                                                   :bargein        => true,
+                                                                   :min_confidence => '0.3',
+                                                                   :mode           => :speech,
+                                                                   :recognizer     => 'en-US',
+                                                                   :terminator     => '#',
+                                                                   :timeout        => 12000 }
         Hash.from_xml(msg.to_xml).should == expected_message
       end
     end
-    
+
     it '"conference" message' do
       msg = @module::Conference.new('1234')
       msg.to_xml.should == '<conference xmlns="urn:xmpp:ozone:conference:1" name="1234"/>'
@@ -187,23 +187,23 @@ MESSAGE
 </conference>
       MESSAGE
 
-      msg = @module::Conference.new '1234',{ :beep             => true, 
-                                             :terminator       => '#', 
-                                             :prompt           => "Welcome to Ozone", 
+      msg = @module::Conference.new '1234',{ :beep             => true,
+                                             :terminator       => '#',
+                                             :prompt           => "Welcome to Ozone",
                                              :audio_url        => "http://it.doesnt.matter.does.it/?",
                                              :moderator        => true,
                                              :tone_passthrough => true,
                                              :mute             => false }
       msg = Hash.from_xml msg.to_xml
       msg.should == expected_message
-       
+
     end
-    
+
     it '"dial" message' do
       msg = @module::Dial.new(:to => 'tel:+14155551212', :from => 'tel:+13035551212')
       Hash.from_xml(msg.to_xml).should == Hash.from_xml('<dial xmlns="urn:xmpp:ozone:1" to="tel:+14155551212" from="tel:+13035551212"/>')
     end
-    
+
     it '"pause" message' do
       pending 'Need to construct the parent object first'
       pause.to_xml.should == '<pause xmlns="urn:xmpp:ozone:say:1"/>'
@@ -251,7 +251,7 @@ MESSAGE
         msg = @module::Say.new(:text => 'Once upon a time there was a message...', :voice => 'kate')
         msg.to_xml.should == expected_message.chomp
       end
-      
+
       it '"say" message for SSML' do
         expected_message = <<-MESSAGE
 <say xmlns="urn:xmpp:ozone:say:1">
@@ -261,7 +261,7 @@ MESSAGE
         msg = @module::Say.new(:ssml => '<say-as interpret-as="ordinal">100</say-as>')
         msg.to_xml.should == expected_message.chomp
       end
-    
+
     it '"say" message for SSML with a custom voice' do
       expected_message = <<-MESSAGE
 <say xmlns="urn:xmpp:ozone:say:1" voice="kate">
@@ -272,7 +272,7 @@ MESSAGE
       msg.to_xml.should == expected_message.chomp
     end
   end
-        
+
     it '"transfer" message' do
       expected_message = Hash.from_xml <<-MESSAGE
 <transfer xmlns="urn:xmpp:ozone:transfer:1" to="tel:+14045551212" terminator="*" from="tel:+14155551212" timeout="120000" answer-on-media="true"/>

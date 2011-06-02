@@ -192,9 +192,12 @@ module Punchblock
         # @param [String] prompt to ask the caller
         # @param [String] choices to ask the user
         # @param [Hash] options for asking/prompting a specific call
+        # @option options [Symbol, Optional] :mode by which to accept input. Can be :speech, :dtmf or :any
         # @option options [Integer, Optional] :timeout to wait for user input
         # @option options [String, Optional] :recognizer to use for speech recognition
         # @option options [String, Optional] :voice to use for speech synthesis
+        # @option options [String, Optional] :terminator by which to signal the end of input
+        # @option options [Float, Optional] :min_confidence with which to consider a response acceptable
         # @option options [String or Nokogiri::XML, Optional] :grammar to use for speech recognition (ie - application/grammar+voxeo or application/grammar+grxml)
         #
         # @return [Ozone::Message] a formatted Ozone ask message

@@ -22,8 +22,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.3.7") if s.respond_to? :required_rubygems_version=
 
-  # Temporary work around as we are on a development release of Blather
-  #s.add_runtime_dependency %q<blather>, [">= 0.4.16"]
+  s.add_runtime_dependency %q<blather>, [">= 0.5.0"]
   s.add_runtime_dependency %q<pry>, [">= 0.8.3"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0.0"]
@@ -31,4 +30,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<yard>, ["~> 0.6.0"]
   s.add_development_dependency %q<bluecloth>, [">= 0"]
   s.add_development_dependency %q<rcov>, [">= 0"]
+  s.add_development_dependency %q<rake>, [">= 0"]
+  s.add_development_dependency %q<flexmock>, [">= 0"]
+  s.add_development_dependency %q<activesupport>, [">= 0"]
+  s.add_development_dependency %q<i18n>, [">= 0"]
 end

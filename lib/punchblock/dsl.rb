@@ -4,39 +4,39 @@
 # THIS IS IMPERMANENT AND WILL DISAPPEAR
 module Punchblock
   class DSL
-    def initialize(transport, protocol, call, queue) # :nodoc:
-      @transport, @protocol, @call, @queue = transport, protocol, call, queue
+    def initialize(connection, call, queue) # :nodoc:
+      @connection, @call, @queue = connection, call, queue
     end
 
     def accept # :nodoc:
-      write @protocol::Accept.new
+      write @connection.class::Accept.new
     end
 
     def answer # :nodoc:
-      write @protocol::Answer.new
+      write @connection.class::Answer.new
     end
 
     def hangup # :nodoc:
-      write @protocol::Hangup.new
+      write @connection.class::Hangup.new
     end
 
     def reject(reason = :declined) # :nodoc:
-      write @protocol::Reject.new reason
+      write @connection.class::Reject.new reason
     end
 
     def redirect(dest) # :nodoc:
-      write @protocol::Redirect.new(dest)
+      write @connection.class::Redirect.new(dest)
     end
 
     def say(string, type = :text) # :nodoc:
-      write @protocol::Say.new type => string
+      write @connection.class::Say.new type => string
       puts "Waiting on the queue..."
       response = @queue.pop
       # TODO: Error handling
     end
 
     def write(msg) # :nodoc:
-      @transport.write @call, msg
+      @connection.write @call, msg
     end
   end
 end

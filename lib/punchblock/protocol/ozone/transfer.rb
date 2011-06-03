@@ -17,17 +17,70 @@ module Punchblock
         #
         #   returns:
         #     <transfer xmlns="urn:xmpp:ozone:transfer:1" to="sip:myapp@mydomain.com" terminator="#"/>
-        def self.new(to, options = {})
-          super('transfer').tap do |msg|
-            options[:to] = to
-            msg.set_options options
+        register :ozone_transfer, :transfer, 'urn:xmpp:ozone:transfer:1'
+
+        # Creates the proper class from the stana's child
+        # @private
+        def self.import(node)
+          klass = nil
+          if transfer = node.document.find_first('//ns:transfer', :ns => self.registered_ns)
+            transfer.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
+          (klass || self).new(node[:type]).inherit(node)
         end
 
-        def set_options options
-          options.each do |option, value|
-            @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s
+        # Overrides the parent to ensure a transfer node is created
+        # @private
+        def self.new(type = nil)
+          new_node = super type
+          new_node.transfer
+          new_node
+        end
+
+        # Overrides the parent to ensure the transfer node is destroyed
+        # @private
+        def inherit(node)
+          remove_children :transfer
+          super
+        end
+
+        # Get or create the transfer node on the stanza
+        #
+        # @return [Blather::XMPPNode]
+        def transfer
+          unless p = find_first('ns:transfer', :ns => self.class.registered_ns)
+            self << (p = ::Blather::XMPPNode.new('transfer', self.document))
+            p.namespace = self.class.registered_ns
           end
+          p
+        end
+
+        def transfer_to
+          transfer.find('ns:to', :ns => self.class.registered_ns).map &:text
+        end
+
+        def transfer_from
+          transfer[:from]
+        end
+
+        def terminator
+          transfer[:terminator]
+        end
+
+        def timeout
+          transfer[:timeout].to_i
+        end
+
+        def answer_on_media
+          transfer['answer-on-media'] == 'true'
+        end
+
+        def call_id
+          to.node
+        end
+
+        def command_id
+          to.resource
         end
       end # Transfer
     end # Ozone

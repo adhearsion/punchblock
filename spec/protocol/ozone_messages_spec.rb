@@ -208,13 +208,12 @@ MESSAGE
       expected_response = <<-MESSAGE
 <dial xmlns="urn:xmpp:ozone:1" to="tel:+14155551212" from="tel:+13035551212">
   <header name="foo" value="bar"/>
-  <header name="foe" value="fum"/>
 </dial>
 MESSAGE
       msg = @module::Dial.new({ :to   => 'tel:+14155551212', 
                                 :from => 'tel:+13035551212',
-                                :headers => { :foo => 'bar', :foe => 'fum' } })
-      Hash.from_xml(msg.to_xml).should eql Hash.from_xml(expected_response)
+                                :headers => { :foo => 'bar' } })
+      Hash.from_xml(msg.to_xml).should include(Hash.from_xml(expected_response))
     end
     
     it '"pause" message' do

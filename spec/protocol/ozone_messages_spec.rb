@@ -213,8 +213,8 @@ MESSAGE
 MESSAGE
       msg = @module::Dial.new({ :to   => 'tel:+14155551212', 
                                 :from => 'tel:+13035551212',
-                                :headers => { :foo => 'bar', 'foe' => 'fum' } })
-      Hash.from_xml(msg.to_xml).should == Hash.from_xml(expected_response)
+                                :headers => { :foo => 'bar', :foe => 'fum' } })
+      Hash.from_xml(msg.to_xml).should eql Hash.from_xml(expected_response)
     end
     
     it '"pause" message' do

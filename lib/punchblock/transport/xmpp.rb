@@ -77,7 +77,7 @@ module Punchblock
             raise TransportError.new msg
           end
         else
-          raise TransportError, msg
+          raise TransportError.new, msg
         end
       end
 

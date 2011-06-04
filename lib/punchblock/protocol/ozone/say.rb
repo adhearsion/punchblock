@@ -11,14 +11,29 @@ module Punchblock
           if say = node.document.find_first('//ns:say', :ns => self.registered_ns)
             say.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new(node[:type]).inherit(node)
+          (klass || self).new({:type => node[:type]}).inherit(node)
         end
 
-        # Overrides the parent to ensure a say node is created
-        # @private
-        def self.new(type = nil)
-          new_node = super type
+        ##
+        # Creates a say with a text for Ozone
+        #
+        # @param [String] text to speak back to a caller
+        #
+        # @return [Ozone::Message] an Ozone "say" message
+        #
+        # @example
+        #   say 'Hello brown cow.'
+        #
+        #   returns:
+        #     <say xmlns="urn:xmpp:ozone:say:1">Hello brown cow.</say>
+        #
+        def self.new(options = {})
+          new_node = super options[:type]
           new_node.say
+          new_node << options.delete(:text) if options.has_key?(:text)
+          new_node.voice = options.delete(:voice) if options.has_key?(:voice)
+          new_node.ssml = options.delete(:ssml) if options.has_key?(:ssml)
+          new_node.audio = options if options.has_key?(:url)
           new_node
         end
 
@@ -44,6 +59,26 @@ module Punchblock
           say[:voice]
         end
 
+        def voice=(voice)
+          say[:voice] = voice
+        end
+
+        def audio
+
+        end
+
+        def audio=(audio)
+
+        end
+
+        def ssml=(ssml)
+          if ssml.instance_of?(String)
+            say << Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(ssml) do |config|
+              config.noblanks.strict
+            end
+          end
+        end
+
         def call_id
           to.node
         end
@@ -52,48 +87,6 @@ module Punchblock
           to.resource
         end
 
-        # ##
-        # # Creates a say with a text for Ozone
-        # #
-        # # @param [String] text to speak back to a caller
-        # #
-        # # @return [Ozone::Message] an Ozone "say" message
-        # #
-        # # @example
-        # #   say 'Hello brown cow.'
-        # #
-        # #   returns:
-        # #     <say xmlns="urn:xmpp:ozone:say:1">Hello brown cow.</say>
-        # #
-        # def self.new(options = {})
-        #   super('say').tap do |msg|
-        #     msg.set_text(options.delete(:text)) if options.has_key?(:text)
-        #     msg.instance_variable_get(:@xml).add_child msg.set_ssml(options.delete(:ssml)) if options[:ssml]
-        #     url  = options.delete :url
-        #     msg.set_options options.clone
-        #     Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-        #       xml.audio('src' => url) if url
-        #     end
-        #   end
-        # end
-        #
-        # def set_options(options)
-        #   options.each { |option, value| @xml.set_attribute option.to_s, value }
-        # end
-        #
-        # def set_ssml(ssml)
-        #   if ssml.instance_of?(String)
-        #     Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(ssml) do |config|
-        #       config.noblanks.strict
-        #     end
-        #   end
-        # end
-        #
-        # def set_text(text)
-        #   @xml.add_child text if text
-        # end
-        #
-        # ##
         # # Pauses a running Say
         # #
         # # @return [Ozone::Message::Say] an Ozone pause message for the current Say

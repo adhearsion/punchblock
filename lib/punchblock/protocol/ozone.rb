@@ -16,6 +16,30 @@ module Punchblock
         # register :ozone_message, nil, [BASE_OZONE_NAMESPACE, OZONE_VERSION].compact.join(':')
       end
 
+      module HasHeaders
+        def headers_hash
+          headers.inject({}) do |hash, header|
+            hash[header.name] = header.value
+            hash
+          end
+        end
+
+        def headers
+          main_node.find('//ns:header', :ns => self.class.registered_ns).map do |i|
+            Header.new i
+          end
+        end
+
+        def headers=(headers)
+          main_node.find('//ns:header', :ns => self.class.registered_ns).each &:remove
+          if headers.is_a? Hash
+            headers.each_pair { |k,v| self.main_node << Header.new(k, v) }
+          elsif headers.is_a? Array
+            [headers].flatten.each { |i| self.main_node << Identity.new(i) }
+          end
+        end
+      end
+
       class Connection < GenericConnection
         attr_accessor :event_queue
 

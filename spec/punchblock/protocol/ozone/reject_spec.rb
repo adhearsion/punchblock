@@ -20,10 +20,11 @@ module Punchblock
           subject.find_first('/iq/ns:reject', :ns => Reject.registered_ns).should_not be_nil
         end
 
-        # it 'sets the host if requested' do
-        #   aff = Reject.new :get, 'reject.jabber.local'
-        #   aff.to.should == Blather::JID.new('reject.jabber.local')
-        # end
+        describe "when setting options in initializer" do
+          subject { Reject.new :busy, :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
+
+          its(:reject_reason) { should == :busy }
+        end
 
         describe "from a stanza" do
           let :stanza do
@@ -32,7 +33,8 @@ module Punchblock
   <reject xmlns='urn:xmpp:ozone:1'>
     <busy />
     <!-- Sample Headers (optional) -->
-    <header name="x-busy-detail" value="out of licenses" />
+    <header name="x-skill" value="agent" />
+    <header name="x-customer-id" value="8877" />
   </reject>
 </iq>
             MESSAGE
@@ -42,10 +44,14 @@ module Punchblock
 
           it { should be_instance_of Reject }
 
+          def num_arguments_pre_options
+            1
+          end
+
           it_should_behave_like 'message'
+          it_should_behave_like 'headers'
 
           its(:reject_reason) { should == :busy }
-          its(:headers) { should == {:x_busy_detail => 'out of licenses'} }
         end
 
         # its(:to_xml) { should == expected_message.chomp }

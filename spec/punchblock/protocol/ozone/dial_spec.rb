@@ -4,9 +4,6 @@ module Punchblock
   module Protocol
     module Ozone
       describe Dial do
-        # subject { Dial.new :to => 'tel:+14155551212', :from => 'tel:+13035551212' }
-        #
-        # its(:to_xml) { should == '<dial xmlns="urn:xmpp:ozone:1" to="tel:+14155551212" from="tel:+13035551212"/>' }
 
         it 'registers itself' do
           Blather::XMPPNode.class_from_registration(:dial, 'urn:xmpp:ozone:1').should == Dial
@@ -24,10 +21,12 @@ module Punchblock
           subject.find_first('/iq/ns:dial', :ns => Dial.registered_ns).should_not be_nil
         end
 
-        # it 'sets the host if requested' do
-        #   aff = Dial.new :get, 'dial.jabber.local'
-        #   aff.to.should == Blather::JID.new('dial.jabber.local')
-        # end
+        describe "when setting options in initializer" do
+          subject { Dial.new 'tel:+14155551212', 'tel:+13035551212', :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
+
+          its(:dial_to) { should == 'tel:+14155551212' }
+          its(:dial_from) { should == 'tel:+13035551212' }
+        end
 
         describe "from a stanza" do
           let :stanza do
@@ -45,9 +44,14 @@ module Punchblock
 
           it { should be_instance_of Dial }
 
+          def num_arguments_pre_options
+            2
+          end
+
+          it_should_behave_like 'headers'
+
           its(:dial_to) { should == 'tel:+13055195825' }
           its(:dial_from) { should == 'tel:+14152226789' }
-          its(:headers) { should == {:x_skill => 'agent', :x_customer_id => '8877'} }
         end
       end
     end # Ozone

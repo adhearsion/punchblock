@@ -25,7 +25,8 @@ module Punchblock
             <<-MESSAGE
 <iq from='blah@blah.com' to='9f00061@call.ozone.net/1' from='16577@app.ozone.net/1' id='12323'>
   <hangup xmlns="urn:xmpp:ozone:1">
-    <header name="x-reason-internal" value="bad-skill" />
+    <header name="x-skill" value="agent" />
+    <header name="x-customer-id" value="8877" />
   </end>
 </iq>
             MESSAGE
@@ -35,9 +36,12 @@ module Punchblock
 
           it { should be_instance_of Hangup }
 
-          it_should_behave_like 'message'
+          def num_arguments_pre_options
+            0
+          end
 
-          its(:headers) { should == {:x_reason_internal => 'bad-skill'} }
+          it_should_behave_like 'message'
+          it_should_behave_like 'headers'
         end
       end
     end # Ozone

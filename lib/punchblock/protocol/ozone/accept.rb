@@ -12,6 +12,8 @@ module Punchblock
       class Accept < Message
         register :ozone_accept, :accept, 'urn:xmpp:ozone:1'
 
+        include HasHeaders
+
         # Creates the proper class from the stana's child
         # @private
         def self.import(node)
@@ -19,14 +21,15 @@ module Punchblock
           if accept = node.document.find_first('//ns:accept', :ns => self.registered_ns)
             accept.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new(node[:type]).inherit(node)
+          (klass || self).new({:type => node[:type]}).inherit(node)
         end
 
         # Overrides the parent to ensure a accept node is created
         # @private
-        def self.new(type = nil)
-          new_node = super type
+        def self.new(options = {})
+          new_node = super options[:type]
           new_node.accept
+          new_node.headers = options[:headers]
           new_node
         end
 
@@ -47,13 +50,7 @@ module Punchblock
           end
           p
         end
-
-        def headers
-          accept.find('ns:header', :ns => self.class.registered_ns).inject({}) do |headers, header|
-            headers[header[:name].gsub('-','_').downcase.to_sym] = header[:value]
-            headers
-          end
-        end
+        alias :main_node :accept
 
         def call_id
           to.node

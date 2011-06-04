@@ -20,11 +20,6 @@ module Punchblock
           subject.find_first('/iq/ns:info', :ns => Info.registered_ns).should_not be_nil
         end
 
-        # it 'sets the host if requested' do
-        #   aff = Info.new :get, 'info.jabber.local'
-        #   aff.to.should == Blather::JID.new('info.jabber.local')
-        # end
-
         describe "from a stanza" do
           let :stanza do
             <<-MESSAGE

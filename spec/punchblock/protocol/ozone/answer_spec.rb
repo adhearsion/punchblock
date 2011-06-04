@@ -20,11 +20,6 @@ module Punchblock
           subject.find_first('/iq/ns:answer', :ns => Answer.registered_ns).should_not be_nil
         end
 
-        # it 'sets the host if requested' do
-        #   aff = Answer.new :get, 'answer.jabber.local'
-        #   aff.to.should == Blather::JID.new('answer.jabber.local')
-        # end
-
         describe "from a stanza" do
           let :stanza do
             <<-MESSAGE
@@ -42,9 +37,12 @@ module Punchblock
 
           it { should be_instance_of Answer }
 
-          it_should_behave_like 'message'
+          def num_arguments_pre_options
+            0
+          end
 
-          its(:headers) { should == {:x_skill => 'agent', :x_customer_id => "8877"} }
+          it_should_behave_like 'message'
+          it_should_behave_like 'headers'
         end
       end
     end # Ozone

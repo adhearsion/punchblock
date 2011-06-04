@@ -20,6 +20,8 @@ module Punchblock
         #      </iq>
         register :ozone_dial, :dial, 'urn:xmpp:ozone:1'
 
+        include HasHeaders
+
         # Creates the proper class from the stana's child
         # @private
         def self.import(node)
@@ -27,14 +29,17 @@ module Punchblock
           if dial = node.document.find_first('//ns:dial', :ns => self.registered_ns)
             dial.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new(node[:type]).inherit(node)
+          (klass || self).new({:type => node[:type]}).inherit(node)
         end
 
         # Overrides the parent to ensure a dial node is created
         # @private
-        def self.new(type = nil)
-          new_node = super type
+        def self.new(dial_to = nil, dial_from = nil, options = {})
+          new_node = super options[:type]
           new_node.dial
+          new_node.dial_to = dial_to
+          new_node.dial_from = dial_from
+          new_node.headers = options[:headers]
           new_node
         end
 
@@ -55,20 +60,22 @@ module Punchblock
           end
           p
         end
+        alias :main_node :dial
 
         def dial_to
           dial[:to]
+        end
+
+        def dial_to=(dial_to)
+          dial[:to] = dial_to
         end
 
         def dial_from
           dial[:from]
         end
 
-        def headers
-          dial.find('ns:header', :ns => self.class.registered_ns).inject({}) do |headers, header|
-            headers[header[:name].gsub('-','_').downcase.to_sym] = header[:value]
-            headers
-          end
+        def dial_from=(dial_from)
+          dial[:from] = dial_from
         end
       end # Dial
     end # Ozone

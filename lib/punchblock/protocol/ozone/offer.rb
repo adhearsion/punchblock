@@ -4,6 +4,8 @@ module Punchblock
       class Offer < Message
         register :ozone_offer, :offer, 'urn:xmpp:ozone:1'
 
+        include HasHeaders
+
         # Creates the proper class from the stana's child
         # @private
         def self.import(node)
@@ -11,14 +13,17 @@ module Punchblock
           if offer = node.document.find_first('//ns:offer', :ns => self.registered_ns)
             offer.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new(node[:type]).inherit(node)
+          (klass || self).new({:type => node[:type]}).inherit(node)
         end
 
         # Overrides the parent to ensure a offer node is created
         # @private
-        def self.new(type = nil)
-          new_node = super type
+        def self.new(offer_to = nil, offer_from = nil, options = {})
+          new_node = super options[:type]
           new_node.offer
+          new_node.offer_to = offer_to
+          new_node.offer_from = offer_from
+          new_node.headers = options[:headers]
           new_node
         end
 
@@ -39,20 +44,22 @@ module Punchblock
           end
           p
         end
+        alias :main_node :offer
 
         def offer_to
           offer[:to]
+        end
+
+        def offer_to=(offer_to)
+          offer[:to] = offer_to
         end
 
         def offer_from
           offer[:from]
         end
 
-        def headers
-          offer.find('ns:header', :ns => self.class.registered_ns).inject({}) do |headers, header|
-            headers[header[:name].gsub('-','_').downcase.to_sym] = header[:value]
-            headers
-          end
+        def offer_from=(offer_from)
+          offer[:from] = offer_from
         end
 
         def call_id

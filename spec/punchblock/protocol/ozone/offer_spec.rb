@@ -20,10 +20,12 @@ module Punchblock
           subject.find_first('/iq/ns:offer', :ns => Offer.registered_ns).should_not be_nil
         end
 
-        # it 'sets the host if requested' do
-        #   aff = Offer.new :get, 'offer.jabber.local'
-        #   aff.to.should == Blather::JID.new('offer.jabber.local')
-        # end
+        describe "when setting options in initializer" do
+          subject { Offer.new 'tel:+18003211212', 'tel:+13058881212', :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
+
+          its(:offer_to) { should == 'tel:+18003211212' }
+          its(:offer_from) { should == 'tel:+13058881212' }
+        end
 
         describe "from a stanza" do
           let :stanza do
@@ -33,8 +35,8 @@ module Punchblock
       to='tel:+18003211212'
       from='tel:+13058881212'>
     <!-- Signaling (e.g. SIP) Headers -->
-    <header name='Via' value='192.168.0.1' />
-    <header name='Contact' value='192.168.0.1' />
+    <header name="x-skill" value="agent" />
+    <header name="x-customer-id" value="8877" />
   </offer>
 </iq>
             MESSAGE
@@ -44,11 +46,15 @@ module Punchblock
 
           it { should be_instance_of Offer }
 
+          def num_arguments_pre_options
+            2
+          end
+
           it_should_behave_like 'message'
+          it_should_behave_like 'headers'
 
           its(:offer_to) { should == 'tel:+18003211212' }
           its(:offer_from) { should == 'tel:+13058881212' }
-          its(:headers) { should == {:via => '192.168.0.1', :contact => '192.168.0.1'} }
         end
       end
     end # Ozone

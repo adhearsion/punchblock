@@ -4,9 +4,6 @@ module Punchblock
   module Protocol
     module Ozone
       describe Redirect do
-        # subject { Redirect.new 'tel:+14045551234' }
-
-        # its(:to_xml) { should == '<redirect xmlns="urn:xmpp:ozone:1" to="tel:+14045551234"/>' }
 
         it 'registers itself' do
           Blather::XMPPNode.class_from_registration(:redirect, 'urn:xmpp:ozone:1').should == Redirect
@@ -22,6 +19,12 @@ module Punchblock
 
           subject.redirect.should_not be_nil
           subject.find_first('/iq/ns:redirect', :ns => Redirect.registered_ns).should_not be_nil
+        end
+
+        describe "when setting options in initializer" do
+          subject { Redirect.new 'tel:+14045551234', :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
+
+          its(:redirect_to) { should == 'tel:+14045551234' }
         end
 
         describe "from a stanza" do
@@ -41,10 +44,14 @@ module Punchblock
 
           it { should be_instance_of Redirect }
 
+          def num_arguments_pre_options
+            1
+          end
+
           it_should_behave_like 'message'
+          it_should_behave_like 'headers'
 
           its(:redirect_to) { should == 'tel:+14152226789' }
-          its(:headers) { should == {:x_skill => 'agent', :x_customer_id => '8877'} }
         end
       end
     end # Ozone

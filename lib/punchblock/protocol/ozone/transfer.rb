@@ -31,9 +31,14 @@ module Punchblock
 
         # Overrides the parent to ensure a transfer node is created
         # @private
-        def self.new(type = nil)
-          new_node = super type
+        def self.new(transfer_to = '', options = {})
+          new_node = super()
           new_node.transfer
+          new_node.transfer_to = transfer_to
+          new_node.transfer_from = options[:from]
+          new_node.terminator = options[:terminator]
+          new_node.timeout = options[:timeout]
+          new_node.answer_on_media = options[:answer_on_media]
           new_node
         end
 
@@ -59,20 +64,47 @@ module Punchblock
           transfer.find('ns:to', :ns => self.class.registered_ns).map &:text
         end
 
+        def transfer_to=(transfer_to)
+          transfer.find('//ns:to', :ns => self.class.registered_ns).each &:remove
+          if transfer_to
+            [transfer_to].flatten.each do |i|
+              to = ::Blather::XMPPNode.new :to
+              to << i
+              self.transfer << to
+            end
+          end
+        end
+
         def transfer_from
           transfer[:from]
+        end
+
+        def transfer_from=(transfer_from)
+          transfer[:from] = transfer_from
         end
 
         def terminator
           transfer[:terminator]
         end
 
+        def terminator=(terminator)
+          transfer[:terminator] = terminator
+        end
+
         def timeout
           transfer[:timeout].to_i
         end
 
+        def timeout=(timeout)
+          transfer[:timeout] = timeout
+        end
+
         def answer_on_media
           transfer['answer-on-media'] == 'true'
+        end
+
+        def answer_on_media=(aom)
+          transfer['answer-on-media'] = aom.to_s
         end
 
         def call_id

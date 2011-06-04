@@ -11,13 +11,13 @@ module Punchblock
           if info = node.document.find_first('//ns:info', :ns => self.registered_ns)
             info.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new(node[:type]).inherit(node)
+          (klass || self).new(:type => node[:type]).inherit(node)
         end
 
         # Overrides the parent to ensure a info node is created
         # @private
-        def self.new(type = nil)
-          new_node = super type
+        def self.new(options = {})
+          new_node = super options[:type]
           new_node.info
           new_node
         end

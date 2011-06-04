@@ -23,7 +23,7 @@ module Punchblock
           if reject = node.document.find_first('//ns:reject', :ns => self.registered_ns)
             reject.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new(nil, {:type => node[:type]}).inherit(node)
+          (klass || self).new(nil, :type => node[:type]).inherit(node)
         end
 
         # Overrides the parent to ensure a reject node is created

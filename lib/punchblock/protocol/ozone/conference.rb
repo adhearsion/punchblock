@@ -11,7 +11,7 @@ module Punchblock
           if conference = node.document.find_first('//ns:conference', :ns => self.registered_ns)
             conference.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new({:type => node[:type]}).inherit(node)
+          (klass || self).new(:type => node[:type]).inherit(node)
         end
 
         ##

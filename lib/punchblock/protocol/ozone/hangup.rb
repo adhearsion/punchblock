@@ -16,7 +16,7 @@ module Punchblock
           if hangup = node.document.find_first('//ns:hangup', :ns => self.registered_ns)
             hangup.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new({:type => node[:type]}).inherit(node)
+          (klass || self).new(:type => node[:type]).inherit(node)
         end
 
         # Overrides the parent to ensure a hangup node is created

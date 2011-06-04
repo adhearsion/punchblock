@@ -20,11 +20,11 @@ options[:transport_logger].debug "Starting up..."
 
 protocol = Punchblock::Protocol::Ozone
 
-connection = protocol.new options
+connection = protocol::Connection.new options
 
 x = Thread.new do
   begin
-    transport.run
+    connection.run
   rescue => e
     puts "Exception in XMPP thread! #{e.message}"
     puts e.backtrace.join("\t\n")
@@ -49,7 +49,7 @@ Thread.new do
       raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
-      run_call connection, event
+      run_call connection, protocol, event
     when protocol::Info
       INFO_EVENT_QUEUE.push event
     when protocol::Complete || protocol::End
@@ -61,14 +61,14 @@ Thread.new do
   end
 end
 
-def run_call(connection, call)
+def run_call(connection, protocol, call)
   ### CALL THREAD
   # One thread is spun up to handle each call.
   Thread.new do
     raise "Unknown call #{call.call_id}" unless CALL_QUEUES.has_key?(call.call_id)
     queue = CALL_QUEUES[call.call_id]
     call = queue.pop
-    dsl = Punchblock::DSL.new connection, call, queue
+    dsl = Punchblock::DSL.new connection, protocol, call, queue
 
     puts "Incoming call to #{call.to} from #{call.headers[:from]} #{call}"
     dsl.pry

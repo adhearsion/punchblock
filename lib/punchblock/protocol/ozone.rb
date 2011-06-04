@@ -72,11 +72,11 @@ module Punchblock
 
         def read(msg)
           # FIXME: Do we need to raise a warning if the domain changes?
-          @callmap[msg.call_id] = msg.from.domain
+          @callmap[msg.from.node] = msg.from.domain
           case msg.type
           when :set
             @logger.debug msg.inspect if @logger
-            @event_queue.push msg.is_a? Offer ? Punchblock::Call.new(msg.call_id, msg.to, msg.headers) : msg
+            @event_queue.push msg.is_a?(Offer) ? Punchblock::Call.new(msg.call_id, msg.to, msg.headers_hash) : msg
             write_to_stream msg.reply!
           when :result
             # Send this result to the waiting queue
@@ -111,20 +111,18 @@ module Punchblock
           # and send XMPP messages, we need to convert the Protocol layer to a
           # Nokogiri object, if it contains XML (ie. Ozone).
           # FIXME: What happens if Nokogiri tries to parse non-XML string?
-          if msg.class == Punchblock::Protocol::Ozone::Dial
-            iq = create_iq @client_jid.domain
-            @logger.debug "Sending Command ID #{iq.id} #{msg.inspect} to #{@client_jid.domain}" if @logger
+          if msg.is_a?(Dial)
+            jid = @client_jid.domain
+            @logger.debug "Sending Command ID #{msg.id} #{msg.inspect} to #{jid}" if @logger
           else
-            iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
-            @logger.debug "Sending Command ID #{iq.id} #{msg.inspect} to #{call.call_id}" if @logger
+            jid = "#{call.call_id}@#{@callmap[call.call_id]}"
+            @logger.debug "Sending Command ID #{msg.id} #{msg.inspect} to #{call.call_id}" if @logger
           end
-          msg = Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(msg.to_s)
-          @result_queues[iq.id] = Queue.new
-          iq.add_child msg
-          write_to_stream iq
-          result = read_queue_with_timeout @result_queues[iq.id]
-          # Shut down this queue
-          @result_queues[iq.id] = nil
+          msg.to = jid || @call.call_id
+          @result_queues[msg.id] = Queue.new
+          write_to_stream msg
+          result = read_queue_with_timeout @result_queues[msg.id]
+          @result_queues[msg.id] = nil # Shut down this queue
           # FIXME: Error handling
           raise result if result.is_a? Exception
           true
@@ -134,23 +132,18 @@ module Punchblock
           EM.run { client.run }
         end
 
-        private
-
-        ##
-        # Creates the base iq stanza object
-        def create_iq(jid = nil)
-          iq_stanza = Blather::Stanza::Iq.new :set, jid || @call_id
-          iq_stanza.from = @client_jid
-          iq_stanza
+        def connected?
+          client.connected?
         end
+
+        private
 
         def read_queue_with_timeout(queue, timeout = 3)
           begin
-            data = Timeout::timeout(timeout) { queue.pop }
+            Timeout::timeout(timeout) { queue.pop }
           rescue Timeout::Error => e
-            data = e.to_s
+            e.to_s
           end
-          data
         end
       end
 

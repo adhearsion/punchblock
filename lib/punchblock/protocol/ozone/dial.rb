@@ -29,7 +29,7 @@ module Punchblock
           if dial = node.document.find_first('//ns:dial', :ns => self.registered_ns)
             dial.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new({:type => node[:type]}).inherit(node)
+          (klass || self).new(:type => node[:type]).inherit(node)
         end
 
         # Overrides the parent to ensure a dial node is created

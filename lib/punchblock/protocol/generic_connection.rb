@@ -5,7 +5,7 @@ module Punchblock
     class ProtocolError < StandardError; end
 
     class GenericConnection
-      def self.connected
+      def connected
         'CONNECTED'
       end
 

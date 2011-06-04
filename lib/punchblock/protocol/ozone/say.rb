@@ -11,7 +11,7 @@ module Punchblock
           if say = node.document.find_first('//ns:say', :ns => self.registered_ns)
             say.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new({:type => node[:type]}).inherit(node)
+          (klass || self).new(:type => node[:type]).inherit(node)
         end
 
         ##
@@ -30,7 +30,7 @@ module Punchblock
         def self.new(options = {})
           new_node = super options[:type]
           new_node.say
-          new_node << options.delete(:text) if options.has_key?(:text)
+          new_node.say << options.delete(:text) if options.has_key?(:text)
           new_node.voice = options.delete(:voice) if options.has_key?(:voice)
           new_node.ssml = options.delete(:ssml) if options.has_key?(:ssml)
           new_node.audio = options if options.has_key?(:url)

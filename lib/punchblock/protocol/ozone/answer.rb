@@ -21,7 +21,7 @@ module Punchblock
           if answer = node.document.find_first('//ns:answer', :ns => self.registered_ns)
             answer.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
           end
-          (klass || self).new({:type => node[:type]}).inherit(node)
+          (klass || self).new(:type => node[:type]).inherit(node)
         end
 
         # Overrides the parent to ensure a answer node is created

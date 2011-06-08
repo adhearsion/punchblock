@@ -4,22 +4,8 @@ module Punchblock
   module Protocol
     module Ozone
       describe Ask do
-        # subject { Ask.new 'Please enter your postal code.', :choices => '[5 DIGITS]' }
-
         it 'registers itself' do
-          Blather::XMPPNode.class_from_registration(:ask, 'urn:xmpp:ozone:ask:1').should == Ask
-        end
-
-        it 'ensures an ask node is present on create' do
-          subject.find_first('/iq/ns:ask', :ns => Ask.registered_ns).should_not be_nil
-        end
-
-        it 'ensures a ask node exists when calling #ask' do
-          subject.remove_children :ask
-          subject.find_first('/iq/ns:ask', :ns => Ask.registered_ns).should be_nil
-
-          subject.ask.should_not be_nil
-          subject.find_first('/iq/ns:ask', :ns => Ask.registered_ns).should_not be_nil
+          Command.class_from_registration(:ask, 'urn:xmpp:ozone:ask:1').should == Ask
         end
 
         describe "when setting options in initializer" do
@@ -106,43 +92,6 @@ module Punchblock
   #
   #           its(:to_xml) { should == expected_message.strip }
   #         end
-        end
-
-        describe "from a stanza" do
-          let :stanza do
-            <<-MESSAGE
-<iq type='set' to='9f00061@call.ozone.net/1' from='16577@app.ozone.net/1'>
-  <ask xmlns='urn:xmpp:ozone:ask:1'
-      bargein='true'
-      min-confidence='0.3'
-      mode='speech'
-      recognizer='en-US'
-      terminator='#'
-      timeout='12000'>
-    <prompt voice='allison'>
-      Please enter your four digit pin
-    </prompt>
-    <choices content-type='application/grammar+voxeo'>
-      [4 DIGITS]
-    </choices>
-  </ask>
-</iq>
-            MESSAGE
-          end
-
-          subject { Blather::XMPPNode.import parse_stanza(stanza).root }
-
-          it { should be_instance_of Ask }
-
-          it_should_behave_like 'message'
-
-          its(:bargein)           { should == true }
-          its(:min_confidence)    { should == 0.3 }
-          its(:mode)              { should == :speech }
-          its(:recognizer)        { should == 'en-US' }
-          its(:terminator)        { should == '#' }
-          its(:response_timeout)  { should == 12000 }
-          its(:choices)           { should == {:content_type => 'application/grammar+voxeo', :value => '[4 DIGITS]'} }
         end
       end
     end # Ozone

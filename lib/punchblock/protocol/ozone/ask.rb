@@ -1,18 +1,8 @@
 module Punchblock
   module Protocol
     module Ozone
-      class Ask < Message
-        register :ozone_ask, :ask, 'urn:xmpp:ozone:ask:1'
-
-        # Creates the proper class from the stana's child
-        # @private
-        def self.import(node)
-          klass = nil
-          if ask = node.document.find_first('//ns:ask', :ns => self.registered_ns)
-            ask.children.each { |e| break if klass = class_from_registration(e.element_name, (e.namespace.href if e.namespace)) }
-          end
-          (klass || self).new(nil, :type => node[:type]).inherit(node)
-        end
+      class Ask < Command
+        register :ask, :ask
 
         ##
         # Create an ask message
@@ -43,8 +33,7 @@ module Punchblock
         #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
         #      </ask>
         def self.new(prompt = '', options = {})
-          new_node = super options[:type]
-          new_node.ask
+          new_node = super()
 
           voice = options.delete :voice
           grammar_type = options.delete(:grammar) || 'application/grammar+voxeo' # Default is the Voxeo Simple Grammar, unless specified
@@ -70,87 +59,61 @@ module Punchblock
           new_node
         end
 
-        # Overrides the parent to ensure the ask node is destroyed
-        # @private
-        def inherit(node)
-          remove_children :ask
-          super
-        end
-
-        # Get or create the ask node on the stanza
-        #
-        # @return [Blather::XMPPNode]
-        def ask
-          unless p = find_first('ns:ask', :ns => self.class.registered_ns)
-            self << (p = ::Blather::XMPPNode.new('ask', self.document))
-            p.namespace = self.class.registered_ns
-          end
-          p
-        end
-
         def bargein
-          ask[:bargein] == "true"
+          self[:bargein] == "true"
         end
 
         def bargein=(bargein)
-          ask[:bargein] = bargein.to_s
+          self[:bargein] = bargein.to_s
         end
 
         def min_confidence
-          ask['min-confidence'].to_f
+          self['min-confidence'].to_f
         end
 
         def min_confidence=(min_confidence)
-          ask['min-confidence'] = min_confidence
+          self['min-confidence'] = min_confidence
         end
 
         def mode
-          ask[:mode].to_sym
+          self[:mode].to_sym
         end
 
         def mode=(mode)
-          ask[:mode] = mode
+          self[:mode] = mode
         end
 
         def recognizer
-          ask[:recognizer]
+          self[:recognizer]
         end
 
         def recognizer=(recognizer)
-          ask[:recognizer] = recognizer
+          self[:recognizer] = recognizer
         end
 
         def terminator
-          ask[:terminator]
+          self[:terminator]
         end
 
         def terminator=(terminator)
-          ask[:terminator] = terminator
+          self[:terminator] = terminator
         end
 
         def response_timeout
-          ask[:timeout].to_i
+          self[:timeout].to_i
         end
 
         def response_timeout=(rt)
-          ask[:timeout] = rt
+          self[:timeout] = rt
         end
 
         def choices
-          cn = ask.find_first('ns:choices', :ns => self.class.registered_ns)
+          cn = find_first('ns:choices', :ns => self.class.registered_ns)
           {:content_type => cn['content-type'], :value => cn.text.strip} if cn
         end
 
         def choices=(choices)
 
-        end
-
-        def call_id
-          to.node
-        end
-
-        def command_id
-          to.resource
         end
       end # Ask
     end # Ozone

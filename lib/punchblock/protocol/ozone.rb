@@ -8,12 +8,215 @@ punchblock/protocol/generic_connection
 module Punchblock
   module Protocol
     module Ozone
-      class Message < ::Blather::Stanza::Iq
 
-        BASE_OZONE_NAMESPACE  = 'urn:xmpp:ozone'
-        OZONE_VERSION         = '1'
+      BASE_OZONE_NAMESPACE  = 'urn:xmpp:ozone'
+      OZONE_VERSION         = '1'
+      OZONE_NAMESPACES      = {:core => [BASE_OZONE_NAMESPACE, OZONE_VERSION].compact.join(':')}
 
-        # register :ozone_message, nil, [BASE_OZONE_NAMESPACE, OZONE_VERSION].compact.join(':')
+      [:ext, :transfer, :say, :ask, :conference].each do |ns|
+        OZONE_NAMESPACES[ns] = [BASE_OZONE_NAMESPACE, ns.to_s, OZONE_VERSION].compact.join(':')
+      end
+
+      class Presence < ::Blather::Stanza::Presence
+        register :ozone_event, nil, OZONE_NAMESPACES[:core]
+
+        def event
+          Event.import children.first, :call_id => call_id, :command_id => command_id
+        end
+
+        def call_id
+          from.node
+        end
+
+        def command_id
+          from.resource
+        end
+      end
+
+      class OzoneNode < Nokogiri::XML::Node
+        @@registrations = {}
+
+        class_inheritable_accessor :registered_ns, :registered_name
+
+        attr_accessor :call_id, :command_id
+
+        # Register a new stanza class to a name and/or namespace
+        #
+        # This registers a namespace that is used when looking
+        # up the class name of the object to instantiate when a new
+        # stanza is received
+        #
+        # @param [#to_s] name the name of the node
+        # @param [String, nil] ns the namespace the node belongs to
+        def self.register(name, ns = nil)
+          self.registered_name = name.to_s
+          self.registered_ns = ns.is_a?(Symbol) ? OZONE_NAMESPACES[ns] : ns
+          @@registrations[[self.registered_name, self.registered_ns]] = self
+        end
+
+        # Find the class to use given the name and namespace of a stanza
+        #
+        # @param [#to_s] name the name to lookup
+        # @param [String, nil] xmlns the namespace the node belongs to
+        # @return [Class, nil] the class appropriate for the name/ns combination
+        def self.class_from_registration(name, ns = nil)
+          @@registrations[[name.to_s, ns]]
+        end
+
+        # Import an XML::Node to the appropriate class
+        #
+        # Looks up the class the node should be then creates it based on the
+        # elements of the XML::Node
+        # @param [XML::Node] node the node to import
+        # @return the appropriate object based on the node name and namespace
+        def self.import(node, call_id = nil, command_id = nil)
+          ns = (node.namespace.href if node.namespace)
+          klass = class_from_registration(node.element_name, ns)
+          event = if klass && klass != self
+            klass.import node
+          else
+            new(node.element_name).inherit node
+          end
+          event.tap do |event|
+            event.call_id = call_id
+            event.command_id = command_id
+          end
+        end
+
+        # Create a new Node object
+        #
+        # @param [String, nil] name the element name
+        # @param [XML::Document, nil] doc the document to attach the node to. If
+        # not provided one will be created
+        # @return a new object with the registered name and namespace
+        def self.new(name = nil, doc = nil)
+          name ||= self.registered_name
+
+          node = super name.to_s, (doc || Nokogiri::XML::Document.new)
+          node.document.root = node unless doc
+          node.namespace = self.registered_ns
+          node
+        end
+
+        # Helper method to read an attribute
+        #
+        # @param [#to_sym] attr_name the name of the attribute
+        # @param [String, Symbol, nil] to_call the name of the method to call on
+        # the returned value
+        # @return nil or the value
+        def read_attr(attr_name, to_call = nil)
+          val = self[attr_name.to_sym]
+          val && to_call ? val.__send__(to_call) : val
+        end
+
+        # Helper method to write a value to an attribute
+        #
+        # @param [#to_sym] attr_name the name of the attribute
+        # @param [#to_s] value the value to set the attribute to
+        def write_attr(attr_name, value)
+          self[attr_name.to_sym] = value
+        end
+
+        # Helper method to read the content of a node
+        #
+        # @param [#to_sym] node the name of the node
+        # @param [String, Symbol, nil] to_call the name of the method to call on
+        # the returned value
+        # @return nil or the value
+        def read_content(node, to_call = nil)
+          val = content_from node.to_sym
+          val && to_call ? val.__send__(to_call) : val
+        end
+
+        # Inherit the attributes and children of an XML::Node
+        #
+        # @param [XML::Node] stanza the node to inherit
+        # @return [self]
+        def inherit(node)
+          set_namespace node.namespace if node.namespace
+          inherit_attrs node.attributes
+          node.children.each do |c|
+            self << (n = c.dup)
+            ns = n.namespace_definitions.find { |ns| ns.prefix == c.namespace.prefix }
+            n.namespace = ns if ns
+          end
+          self
+        end
+
+        # Inherit a set of attributes
+        #
+        # @param [Hash] attrs a hash of attributes to set on the node
+        # @return [self]
+        def inherit_attrs(attrs)
+          attrs.each  { |name, value| self[name] = value }
+          self
+        end
+
+        # @private
+        alias_method :nokogiri_namespace=, :namespace=
+        # Attach a namespace to the node
+        #
+        # @overload namespace=(ns)
+        #   Attach an already created XML::Namespace
+        #   @param [XML::Namespace] ns the namespace object
+        # @overload namespace=(ns)
+        #   Create a new namespace and attach it
+        #   @param [String] ns the namespace uri
+        # @overload namespace=(namespaces)
+        #   Createa and add new namespaces from a hash
+        #   @param [Hash] namespaces a hash of prefix => uri pairs
+        def namespace=(namespaces)
+          case namespaces
+          when Nokogiri::XML::Namespace
+            self.nokogiri_namespace = namespaces
+          when String
+            self.add_namespace nil, namespaces
+          when Hash
+            if ns = namespaces.delete(nil)
+              self.add_namespace nil, ns
+            end
+            namespaces.each do |p, n|
+              ns = self.add_namespace p, n
+              self.nokogiri_namespace = ns
+            end
+          end
+        end
+
+        # Helper method to get the node's namespace
+        #
+        # @return [XML::Namespace, nil] The node's namespace object if it exists
+        def namespace_href
+          namespace.href if namespace
+        end
+
+        # The node as XML
+        #
+        # @return [String] XML representation of the node
+        def inspect
+          self.to_xml
+        end
+
+        # Check that a set of fields are equal between nodes
+        #
+        # @param [XMPPNode] other the other node to compare against
+        # @param [*#to_s] fields the set of fields to compare
+        # @return [Fixnum<-1,0,1>]
+        def eql?(o, *fields)
+          o.is_a?(self.class) && fields.all? { |f| self.__send__(f) == o.__send__(f) }
+        end
+
+        # @private
+        def ==(o)
+          eql?(o)
+        end
+      end
+
+      class Event < OzoneNode
+
+      end
+
+      class Command < OzoneNode
+
       end
 
       module HasHeaders
@@ -25,17 +228,17 @@ module Punchblock
         end
 
         def headers
-          main_node.find('//ns:header', :ns => self.class.registered_ns).map do |i|
+          find('//ns:header', :ns => self.class.registered_ns).map do |i|
             Header.new i
           end
         end
 
         def headers=(headers)
-          main_node.find('//ns:header', :ns => self.class.registered_ns).each &:remove
+          find('//ns:header', :ns => self.class.registered_ns).each &:remove
           if headers.is_a? Hash
-            headers.each_pair { |k,v| self.main_node << Header.new(k, v) }
+            headers.each_pair { |k,v| self << Header.new(k, v) }
           elsif headers.is_a? Array
-            [headers].flatten.each { |i| self.main_node << Identity.new(i) }
+            [headers].flatten.each { |i| self << Header.new(i) }
           end
         end
       end
@@ -68,20 +271,22 @@ module Punchblock
           }
 
           iq { |msg| read msg }
+
+          presence do |msg|
+            @logger.debug msg.inspect if @logger
+            event = msg.event
+            @event_queue.push event.is_a?(Offer) ? Punchblock::Call.new(event.call_id, msg.to, event.headers_hash) : event
+          end
         end
 
-        def read(msg)
+        def read(iq)
           # FIXME: Do we need to raise a warning if the domain changes?
-          @callmap[msg.from.node] = msg.from.domain
-          case msg.type
-          when :set
-            @logger.debug msg.inspect if @logger
-            @event_queue.push msg.is_a?(Offer) ? Punchblock::Call.new(msg.call_id, msg.to, msg.headers_hash) : msg
-            write_to_stream msg.reply!
+          @callmap[iq.from.node] = iq.from.domain
+          case iq.type
           when :result
             # Send this result to the waiting queue
-            @logger.debug "Command #{msg.id} completed successfully" if @logger
-            @result_queues[msg.id].push msg
+            @logger.debug "Command #{iq.id} completed successfully" if @logger
+            @result_queues[iq.id].push iq
           when :error
             # TODO: Example messages to handle:
             #------
@@ -94,14 +299,14 @@ module Punchblock
             #------
             # FIXME: This should probably be parsed by the Protocol layer and return
             # a ProtocolError exception.
-            if @result_queues.has_key?(msg.id)
-              @result_queues[msg.id].push TransportError.new msg
+            if @result_queues.has_key?(iq.id)
+              @result_queues[iq.id].push TransportError.new iq
             else
               # Un-associated transport error??
-              raise TransportError.new msg
+              raise TransportError.new iq
             end
           else
-            raise TransportError, msg
+            raise TransportError, iq
           end
         end
 
@@ -113,19 +318,26 @@ module Punchblock
           # FIXME: What happens if Nokogiri tries to parse non-XML string?
           if msg.is_a?(Dial)
             jid = @client_jid.domain
-            @logger.debug "Sending Command ID #{msg.id} #{msg.inspect} to #{jid}" if @logger
+            iq = create_iq jid
+            @logger.debug "Sending Command ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
           else
-            jid = "#{call.call_id}@#{@callmap[call.call_id]}"
-            @logger.debug "Sending Command ID #{msg.id} #{msg.inspect} to #{call.call_id}" if @logger
+            iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
+            @logger.debug "Sending Command ID #{iq.id} #{msg.inspect} to #{call.call_id}" if @logger
           end
-          msg.to = jid || @call.call_id
-          @result_queues[msg.id] = Queue.new
+          iq << msg
+          @result_queues[iq.id] = Queue.new
           write_to_stream msg
-          result = read_queue_with_timeout @result_queues[msg.id]
-          @result_queues[msg.id] = nil # Shut down this queue
+          result = read_queue_with_timeout @result_queues[iq.id]
+          @result_queues[iq.id] = nil # Shut down this queue
           # FIXME: Error handling
           raise result if result.is_a? Exception
           true
+        end
+
+        def create_iq(jid = nil)
+          Blather::Stanza::Iq.new(:set, jid || @call_id).tap do |iq|
+            iq.from = @client_jid
+          end
         end
 
         def run

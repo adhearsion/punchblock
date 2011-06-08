@@ -5,46 +5,7 @@ module Punchblock
     module Ozone
       describe Say do
         it 'registers itself' do
-          Blather::XMPPNode.class_from_registration(:say, 'urn:xmpp:ozone:say:1').should == Say
-        end
-
-        it 'ensures an say node is present on create' do
-          subject.find_first('/iq/ns:say', :ns => Say.registered_ns).should_not be_nil
-        end
-
-        it 'ensures a say node exists when calling #say' do
-          subject.remove_children :say
-          subject.find_first('/iq/ns:say', :ns => Say.registered_ns).should be_nil
-
-          subject.say.should_not be_nil
-          subject.find_first('/iq/ns:say', :ns => Say.registered_ns).should_not be_nil
-        end
-
-        describe "from a stanza" do
-          let :stanza do
-            <<-MESSAGE
-<iq type='set' to='9f00061@call.ozone.net/1' from='16577@app.ozone.net/1'>
-  <say xmlns='urn:xmpp:ozone:say:1'
-      voice='allison'>
-    <audio url='http://acme.com/greeting.mp3'>
-        Thanks for calling ACME company
-    </audio>
-    <audio url='http://acme.com/package-shipped.mp3'>
-        Your package was shipped on
-    </audio>
-    <say-as interpret-as='date'>12/01/2011</say-as>
-  </say>
-</iq>
-            MESSAGE
-          end
-
-          subject { Blather::XMPPNode.import parse_stanza(stanza).root }
-
-          it { should be_instance_of Say }
-
-          it_should_behave_like 'message'
-
-          its(:voice) { should == 'allison' }
+          Command.class_from_registration(:say, 'urn:xmpp:ozone:say:1').should == Say
         end
 
         describe "for audio" do
@@ -64,10 +25,6 @@ module Punchblock
 
         describe "for text" do
           subject { Say.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
-
-          it "does something" do
-            p subject
-          end
 
           its(:voice) { should == 'kate' }
           its(:text) { should == 'Once upon a time there was a message...' }

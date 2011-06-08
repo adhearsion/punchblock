@@ -34,6 +34,7 @@ module Punchblock
           self[:voice] = voice
         end
 
+        # TODO: Make an audio class
         def audio
 
         end

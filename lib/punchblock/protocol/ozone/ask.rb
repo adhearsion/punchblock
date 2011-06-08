@@ -107,6 +107,7 @@ module Punchblock
           self[:timeout] = rt
         end
 
+        # TODO: Make a choices class
         def choices
           cn = find_first('ns:choices', :ns => self.class.registered_ns)
           {:content_type => cn['content-type'], :value => cn.text.strip} if cn

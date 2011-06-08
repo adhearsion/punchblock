@@ -89,6 +89,7 @@ module Punchblock
           self[:moderator] = moderator.to_s
         end
 
+        # TODO: make an announcement class
         def announcement
           an = find_first('ns:announcement', :ns => self.class.registered_ns)
           {:voice => an[:voice], :text => an.text.strip} if an

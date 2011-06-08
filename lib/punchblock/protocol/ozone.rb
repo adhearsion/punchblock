@@ -33,6 +33,7 @@ module Punchblock
         end
       end
 
+      # TODO: Remove as much of the duplication of Blather::XMPPNode as possible here
       class OzoneNode < Nokogiri::XML::Node
         @@registrations = {}
 
@@ -211,6 +212,7 @@ module Punchblock
         end
       end
 
+      # TODO: Figure out if we need this
       class Event < OzoneNode
 
       end

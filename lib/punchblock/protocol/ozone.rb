@@ -17,9 +17,7 @@ module Punchblock
         OZONE_NAMESPACES[ns] = [BASE_OZONE_NAMESPACE, ns.to_s, OZONE_VERSION].compact.join(':')
       end
 
-      class Presence < ::Blather::Stanza::Presence
-        register :ozone_event, nil, OZONE_NAMESPACES[:core]
-
+      class Blather::Stanza::Presence
         def event
           Event.import children.first, :call_id => call_id, :command_id => command_id
         end

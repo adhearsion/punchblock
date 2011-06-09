@@ -44,6 +44,7 @@ puts connection.event_queue.pop
 Thread.new do
   loop do
     event = connection.event_queue.pop
+    puts "#{event.class} event for call: #{event.call_id}"
     case event
     when Punchblock::Call
       raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)

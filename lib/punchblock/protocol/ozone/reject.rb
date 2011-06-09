@@ -19,10 +19,10 @@ module Punchblock
         # Overrides the parent to ensure a reject node is created
         # @private
         def self.new(reason = :declined, options = {})
-          new_node = super()
-          new_node.reason = reason
-          new_node.headers = options[:headers]
-          new_node
+          super().tap do |new_node|
+            new_node.reason = reason
+            new_node.headers = options[:headers]
+          end
         end
 
         def reason

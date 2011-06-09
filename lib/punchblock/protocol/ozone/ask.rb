@@ -33,30 +33,29 @@ module Punchblock
         #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
         #      </ask>
         def self.new(prompt = '', options = {})
-          new_node = super()
+          super().tap do |new_node|
+            voice = options.delete :voice
+            grammar_type = options.delete(:grammar) || 'application/grammar+voxeo' # Default is the Voxeo Simple Grammar, unless specified
 
-          voice = options.delete :voice
-          grammar_type = options.delete(:grammar) || 'application/grammar+voxeo' # Default is the Voxeo Simple Grammar, unless specified
+            options.each_pair do |k,v|
+              new_node.send :"#{k}=", v
+            end
 
-          options.each_pair do |k,v|
-            new_node.send :"#{k}=", v
+            # Nokogiri::XML::Builder.with msg.instance_variable_get(:@xml) do |xml|
+            #   prompt_opts = {:voice => voice} if voice
+            #   xml.prompt prompt_opts do
+            #     xml.text prompt
+            #   end
+            #   xml.choices("content-type" => grammar_type) {
+            #     if grammar_type == 'application/grammar+grxml'
+            #       xml.cdata options[:choices]
+            #     else
+            #       xml.text options[:choices]
+            #     end
+            #   }
+            # end
+
           end
-
-          # Nokogiri::XML::Builder.with msg.instance_variable_get(:@xml) do |xml|
-          #   prompt_opts = {:voice => voice} if voice
-          #   xml.prompt prompt_opts do
-          #     xml.text prompt
-          #   end
-          #   xml.choices("content-type" => grammar_type) {
-          #     if grammar_type == 'application/grammar+grxml'
-          #       xml.cdata options[:choices]
-          #     else
-          #       xml.text options[:choices]
-          #     end
-          #   }
-          # end
-
-          new_node
         end
 
         def bargein

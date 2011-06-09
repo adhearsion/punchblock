@@ -17,9 +17,9 @@ module Punchblock
         # Overrides the parent to ensure a answer node is created
         # @private
         def self.new(options = {})
-          new_node = super()
-          new_node.headers = options[:headers]
-          new_node
+          super().tap do |new_node|
+            new_node.headers = options[:headers]
+          end
         end
       end # Answer
     end # Ozone

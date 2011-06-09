@@ -18,12 +18,12 @@ module Punchblock
         #     <say xmlns="urn:xmpp:ozone:say:1">Hello brown cow.</say>
         #
         def self.new(options = {})
-          new_node = super()
-          new_node << options.delete(:text) if options.has_key?(:text)
-          new_node.voice = options.delete(:voice) if options.has_key?(:voice)
-          new_node.ssml = options.delete(:ssml) if options.has_key?(:ssml)
-          new_node.audio = options if options.has_key?(:url)
-          new_node
+          super().tap do |new_node|
+            new_node << options.delete(:text) if options.has_key?(:text)
+            new_node.voice = options.delete(:voice) if options.has_key?(:voice)
+            new_node.ssml = options.delete(:ssml) if options.has_key?(:ssml)
+            new_node.audio = options if options.has_key?(:url)
+          end
         end
 
         def voice

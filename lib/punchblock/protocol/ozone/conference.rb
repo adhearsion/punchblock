@@ -22,23 +22,23 @@ module Punchblock
         #    returns:
         #      <conference xmlns="urn:xmpp:ozone:conference:1" id="1234" beep="true" terminator="#"/>
         def self.new(name = nil, options = {})
-          new_node = super()
-          prompt    = options.delete :prompt
-          audio_url = options.delete :audio_url
+          super().tap do |new_node|
+            prompt    = options.delete :prompt
+            audio_url = options.delete :audio_url
 
-          new_node.name = name
-          options.each_pair do |k,v|
-            new_node.send :"#{k}=", v
+            new_node.name = name
+            options.each_pair do |k,v|
+              new_node.send :"#{k}=", v
+            end
+
+            # Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
+            #   xml.music {
+            #     xml.speak prompt if prompt
+            #     xml.audio(:url => audio_url) if audio_url
+            #   } if prompt || audio_url
+            # end
+
           end
-
-          # Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-          #   xml.music {
-          #     xml.speak prompt if prompt
-          #     xml.audio(:url => audio_url) if audio_url
-          #   } if prompt || audio_url
-          # end
-
-          new_node
         end
 
         def name

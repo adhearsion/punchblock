@@ -15,10 +15,10 @@ module Punchblock
         include HasHeaders
 
         def self.new(to = '', options = {})
-          new_node = super()
-          new_node.to = to
-          new_node.headers = options[:headers]
-          new_node
+          super().tap do |new_node|
+            new_node.to = to
+            new_node.headers = options[:headers]
+          end
         end
 
         def to

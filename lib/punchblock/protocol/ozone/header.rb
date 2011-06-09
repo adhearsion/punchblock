@@ -3,16 +3,15 @@ module Punchblock
     module Ozone
       class Header < OzoneNode
         def self.new(name, value = '')
-          new_node = super :header
-
-          case name
-          when Nokogiri::XML::Node
-            new_node.inherit name
-          else
-            new_node.name = name
-            new_node.value = value
+          super(:header).tap do |new_node|
+            case name
+            when Nokogiri::XML::Node
+              new_node.inherit name
+            else
+              new_node.name = name
+              new_node.value = value
+            end
           end
-          new_node
         end
 
         # The Header's name

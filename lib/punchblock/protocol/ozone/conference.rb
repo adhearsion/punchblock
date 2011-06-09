@@ -1,3 +1,5 @@
+require 'punchblock/protocol/ozone/say'
+
 module Punchblock
   module Protocol
     module Ozone
@@ -26,18 +28,12 @@ module Punchblock
             prompt    = options.delete :prompt
             audio_url = options.delete :audio_url
 
+            new_node.announcement = {:text => prompt, :url => audio_url}
+
             new_node.name = name
             options.each_pair do |k,v|
               new_node.send :"#{k}=", v
             end
-
-            # Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-            #   xml.music {
-            #     xml.speak prompt if prompt
-            #     xml.audio(:url => audio_url) if audio_url
-            #   } if prompt || audio_url
-            # end
-
           end
         end
 
@@ -89,10 +85,16 @@ module Punchblock
           self[:moderator] = moderator.to_s
         end
 
-        # TODO: make an announcement class
         def announcement
-          an = find_first('ns:announcement', :ns => self.class.registered_ns)
-          {:voice => an[:voice], :text => an.text.strip} if an
+          Announcement.new find_first('//ns:announcement', :ns => self.registered_ns)
+        end
+
+        def announcement=(ann)
+          self << Announcement.new(ann)
+        end
+
+        class Announcement < Say
+          register :announcement, :conference
         end
 
         # ##

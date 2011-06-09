@@ -23,11 +23,9 @@ module Punchblock
           its(:beep)              { should == true }
           its(:mute)              { should == false }
           its(:terminator)        { should == '#' }
-          its(:prompt)            { should == "Welcome to Ozone" }
-          its(:audio_url)         { pending; should == "http://it.doesnt.matter.does.it/?" }
+          its(:announcement)      { should == Conference::Announcement.new(:text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?") }
           its(:tone_passthrough)  { should == true }
           its(:moderator)         { should == true }
-          its(:announcement)      { should == {:voice => 'allison', :text => 'Jose de Castro has entered the conference'} }
         end
 
         it '"mute" message' do

@@ -19,7 +19,7 @@ module Punchblock
 
       class Blather::Stanza::Presence
         def event
-          Event.import children.first, :call_id => call_id, :command_id => command_id
+          Event.import children.first, call_id, command_id
         end
 
         def call_id
@@ -72,7 +72,7 @@ module Punchblock
           ns = (node.namespace.href if node.namespace)
           klass = class_from_registration(node.element_name, ns)
           event = if klass && klass != self
-            klass.import node
+            klass.import node, call_id, command_id
           else
             new(node.element_name).inherit node
           end

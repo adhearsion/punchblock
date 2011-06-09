@@ -31,7 +31,6 @@ module Punchblock
         end
       end
 
-      # TODO: Remove as much of the duplication of Blather::XMPPNode as possible here
       class OzoneNode < Niceogiri::XML::Node
         @@registrations = {}
 

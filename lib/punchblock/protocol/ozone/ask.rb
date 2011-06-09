@@ -35,7 +35,7 @@ module Punchblock
         def self.new(prompt = '', options = {})
           super().tap do |new_node|
             voice = options.delete :voice
-            grammar_type = options.delete(:grammar) || 'application/grammar+voxeo' # Default is the Voxeo Simple Grammar, unless specified
+            new_node.choices = {:content_type => options.delete(:grammar), :value => options.delete(:choices)}
 
             options.each_pair do |k,v|
               new_node.send :"#{k}=", v
@@ -46,14 +46,6 @@ module Punchblock
             #   xml.prompt prompt_opts do
             #     xml.text prompt
             #   end
-            #   xml.choices("content-type" => grammar_type) {
-            #     if grammar_type == 'application/grammar+grxml'
-            #       xml.cdata options[:choices]
-            #     else
-            #       xml.text options[:choices]
-            #     end
-            #   }
-            # end
 
           end
         end
@@ -106,14 +98,69 @@ module Punchblock
           self[:timeout] = rt
         end
 
-        # TODO: Make a choices class
         def choices
-          cn = find_first('ns:choices', :ns => self.class.registered_ns)
-          {:content_type => cn['content-type'], :value => cn.text.strip} if cn
+          Choices.new find_first('ns:choices', :ns => self.class.registered_ns)
         end
 
         def choices=(choices)
+          remove_children :choices
+          self << Choices.new(choices)
+        end
 
+        class Choices < OzoneNode
+          def self.new(value, content_type = 'application/grammar+voxeo')
+            # Default is the Voxeo Simple Grammar, unless specified
+
+            super(:choices).tap do |new_node|
+              case value
+              when Nokogiri::XML::Node
+                new_node.inherit value
+              when Hash
+                new_node.content_type = value[:content_type]
+                new_node.value = value[:value]
+              else
+                new_node.content_type = content_type
+                new_node.value = value
+              end
+            end
+          end
+
+          # The Header's name
+          # @return [Symbol]
+          def content_type
+            read_attr 'content-type'
+          end
+
+          # Set the Header's name
+          # @param [Symbol] name the new name for the header
+          def content_type=(content_type)
+            write_attr 'content-type', content_type
+          end
+
+          # The Header's value
+          # @return [String]
+          def value
+            content
+          end
+
+          # Set the Header's value
+          # @param [String] value the new value for the header
+          def value=(value)
+            Nokogiri::XML::Builder.with(self) do |xml|
+              if content_type == 'application/grammar+grxml'
+                xml.cdata value
+              else
+                xml.text value
+              end
+            end
+          end
+
+          # Compare two Header objects by name, and value
+          # @param [Header] o the Header object to compare against
+          # @return [true, false]
+          def eql?(o, *fields)
+            super o, *(fields + [:content_type])
+          end
         end
       end # Ask
     end # Ozone

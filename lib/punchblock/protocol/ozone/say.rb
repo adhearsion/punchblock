@@ -36,11 +36,12 @@ module Punchblock
 
         # TODO: Make an audio class
         def audio
-
+          Audio.new find_first('//audio')
         end
 
         def audio=(audio)
-
+          remove_children :audio
+          self << Audio.new(audio)
         end
 
         def ssml=(ssml)

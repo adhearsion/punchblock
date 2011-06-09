@@ -127,6 +127,51 @@ module Punchblock
           val && to_call ? val.__send__(to_call) : val
         end
 
+        # Remove a child with the name and (optionally) namespace given
+        #
+        # @param [String] name the name or xpath of the node to remove
+        # @param [String, nil] ns the namespace the node is in
+        def remove_child(name, ns = nil)
+          child = xpath(name, ns).first
+          child.remove if child
+        end
+
+        # Remove all children with a given name regardless of namespace
+        #
+        # @param [String] name the name of the nodes to remove
+        def remove_children(name)
+          xpath("./*[local-name()='#{name}']").remove
+        end
+
+        # The content of the named node
+        #
+        # @param [String] name the name or xpath of the node
+        # @param [String, nil] ns the namespace the node is in
+        # @return [String, nil] the content of the node
+        def content_from(name, ns = nil)
+          child = xpath(name, ns).first
+          child.content if child
+        end
+
+        # Sets the content for the specified node.
+        # If the node exists it is updated. If not a new node is created
+        # If the node exists and the content is nil, the node will be removed
+        # entirely
+        #
+        # @param [String] node the name of the node to update/create
+        # @param [String, nil] content the content to set within the node
+        def set_content_for(node, content = nil)
+          if content
+            child = xpath(node).first
+            self << (child = XMPPNode.new(node, self.document)) unless child
+            child.content = content
+          else
+            remove_child node
+          end
+        end
+
+        alias_method :copy, :dup
+
         # Inherit the attributes and children of an XML::Node
         #
         # @param [XML::Node] stanza the node to inherit
@@ -197,7 +242,7 @@ module Punchblock
 
         # Check that a set of fields are equal between nodes
         #
-        # @param [XMPPNode] other the other node to compare against
+        # @param [OzoneNode] other the other node to compare against
         # @param [*#to_s] fields the set of fields to compare
         # @return [Fixnum<-1,0,1>]
         def eql?(o, *fields)

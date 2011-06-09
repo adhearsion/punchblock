@@ -9,18 +9,9 @@ module Punchblock
         end
 
         describe "for audio" do
-          before { pending }
           subject { Say.new :url => 'http://whatever.you-say-boss.com' }
 
-          let :expected_message do
-            <<-MESSAGE
-<say xmlns="urn:xmpp:ozone:say:1">
-  <audio src="http://whatever.you-say-boss.com"/>
-</say>
-            MESSAGE
-          end
-
-          its(:to_xml) { should == expected_message.strip }
+          its(:audio) { should == Audio.new('http://whatever.you-say-boss.com') }
         end
 
         describe "for text" do

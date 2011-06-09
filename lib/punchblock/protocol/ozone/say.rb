@@ -19,10 +19,15 @@ module Punchblock
         #
         def self.new(options = {})
           super().tap do |new_node|
-            new_node << options.delete(:text) if options.has_key?(:text)
-            new_node.voice = options.delete(:voice) if options.has_key?(:voice)
-            new_node.ssml = options.delete(:ssml) if options.has_key?(:ssml)
-            new_node.audio = options if options.has_key?(:url)
+            case options
+            when Hash
+              new_node << options.delete(:text) if options.has_key?(:text)
+              new_node.voice = options.delete(:voice) if options.has_key?(:voice)
+              new_node.ssml = options.delete(:ssml) if options.has_key?(:ssml)
+              new_node.audio = options if options.has_key?(:url)
+            when Nokogiri::XML::Element
+              new_node.inherit options
+            end
           end
         end
 
@@ -34,14 +39,13 @@ module Punchblock
           self[:voice] = voice
         end
 
-        # TODO: Make an audio class
         def audio
-          Audio.new find_first('//audio')
+          Audio.new find_first('//ns:audio', :ns => self.registered_ns)
         end
 
         def audio=(audio)
           remove_children :audio
-          self << Audio.new(audio)
+          self << Audio.new(audio) if audio.present?
         end
 
         def ssml=(ssml)

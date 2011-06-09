@@ -267,13 +267,17 @@ module Punchblock
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
 
           # Push a message to the queue and the log that we connected
-          when_ready {
+          when_ready do
             @event_queue.push connected
             @logger.info "Connected to XMPP as #{@username}" if @logger
-          }
+          end
 
-          iq { |msg| read msg }
+          # Read/handle call control messages
+          iq do |msg|
+            read msg
+          end
 
+          # Read/handle presence requests.  This is how new calls are set up.
           presence do |msg|
             @logger.debug msg.inspect if @logger
             event = msg.event

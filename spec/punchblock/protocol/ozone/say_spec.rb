@@ -25,7 +25,9 @@ module Punchblock
           subject { Say.new :ssml => '<say-as interpret-as="ordinal">100</say-as>', :voice => 'kate' }
 
           its(:voice) { should == 'kate' }
-          # its(:child) { should == '<say-as interpret-as="ordinal">100</say-as>' }
+          it "should have the correct content" do
+            subject.child.to_s.should == '<say-as interpret-as="ordinal">100</say-as>'
+          end
         end
 
         it '"pause" message' do

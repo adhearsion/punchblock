@@ -277,9 +277,11 @@ module Punchblock
 
           # Read/handle presence requests.  This is how new calls are set up.
           presence do |msg|
+            @logger.info "Receiving event for call ID #{msg.call_id}"
+            @callmap[msg.call_id] = msg.from.domain
             @logger.debug msg.inspect if @logger
             event = msg.event
-            @event_queue.push event.is_a?(Offer) ? Punchblock::Call.new(event.call_id, msg.to, event.headers_hash) : event
+            @event_queue.push event.is_a?(Offer) ? Punchblock::Call.new(msg.call_id, msg.to, event.headers_hash) : event
           end
         end
 

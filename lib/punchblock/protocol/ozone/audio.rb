@@ -16,13 +16,13 @@ module Punchblock
         # The Audio's source
         # @return [String]
         def src
-          read_attr :src
+          self[:src]
         end
 
         # Set the Audio's source
         # @param [String] src the new source URL for the audio
         def src=(src)
-          write_attr :src, nil
+          self[:src] = src
         end
 
         # Compare two Audio objects by src

@@ -330,7 +330,7 @@ module Punchblock
           end
           iq << msg
           @result_queues[iq.id] = Queue.new
-          write_to_stream msg
+          write_to_stream iq
           result = read_queue_with_timeout @result_queues[iq.id]
           @result_queues[iq.id] = nil # Shut down this queue
           # FIXME: Error handling

@@ -7,8 +7,10 @@ module Punchblock
             case src
             when Nokogiri::XML::Node
               new_node.inherit src
+            when Hash
+              new_node.src = src[:url]
             else
-              new_node.src = src
+              new_node << src if src
             end
           end
         end

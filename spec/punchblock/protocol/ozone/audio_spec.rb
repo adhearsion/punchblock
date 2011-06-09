@@ -4,11 +4,16 @@ module Punchblock
   module Protocol
     module Ozone
       describe Audio do
-        describe "for audio" do
-          subject { Audio.new 'http://whatever.you-say-boss.com' }
+        describe "for a URL" do
+          subject { Audio.new :url => 'http://whatever.you-say-boss.com' }
 
-          its(:node_name) { should == 'audio' }
           its(:src) { should == 'http://whatever.you-say-boss.com' }
+        end
+
+        describe "for text" do
+          subject { Audio.new 'Hello' }
+
+          its(:content) { should == 'Hello' }
         end
       end
     end # Ozone

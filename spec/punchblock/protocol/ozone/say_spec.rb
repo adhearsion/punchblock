@@ -11,7 +11,7 @@ module Punchblock
         describe "for audio" do
           subject { Say.new :url => 'http://whatever.you-say-boss.com' }
 
-          its(:audio) { should == Audio.new('http://whatever.you-say-boss.com') }
+          its(:audio) { should == Audio.new(:url => 'http://whatever.you-say-boss.com') }
         end
 
         describe "for text" do

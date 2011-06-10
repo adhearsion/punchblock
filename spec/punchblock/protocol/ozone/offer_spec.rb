@@ -28,8 +28,8 @@ module Punchblock
           it_should_behave_like 'event'
           it_should_behave_like 'event_headers'
 
-          its(:offer_to) { should == 'tel:+18003211212' }
-          its(:offer_from) { should == 'tel:+13058881212' }
+          its(:to) { should == 'tel:+18003211212' }
+          its(:from) { should == 'tel:+13058881212' }
         end
       end
     end # Ozone

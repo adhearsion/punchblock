@@ -28,7 +28,7 @@ module Punchblock
             prompt    = options.delete :prompt
             audio_url = options.delete :audio_url
 
-            new_node.announcement = {:text => prompt, :url => audio_url}
+            new_node.announcement = {:text => prompt, :url => audio_url} if prompt || audio_url
 
             new_node.name = name
             options.each_pair do |k,v|
@@ -86,7 +86,8 @@ module Punchblock
         end
 
         def announcement
-          Announcement.new find_first('//ns:announcement', :ns => self.registered_ns)
+          node = find_first '//ns:announcement', :ns => self.registered_ns
+          Announcement.new node if node
         end
 
         def announcement=(ann)

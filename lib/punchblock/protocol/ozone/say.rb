@@ -9,12 +9,13 @@ module Punchblock
         ##
         # Creates a say with a text for Ozone
         #
-        # @param [String] text to speak back to a caller
+        # @param [Hash] options
+        # @option options [String] :text to speak back to a caller
         #
         # @return [Ozone::Message] an Ozone "say" message
         #
         # @example
-        #   say 'Hello brown cow.'
+        #   say :text => 'Hello brown cow.'
         #
         #   returns:
         #     <say xmlns="urn:xmpp:ozone:say:1">Hello brown cow.</say>

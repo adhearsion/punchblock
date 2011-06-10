@@ -9,11 +9,11 @@ module Punchblock
         ##
         # Create an ask message
         #
-        # @param [String] prompt to ask the caller
-        # @param [String] choices to ask the user
         # @param [Hash] options for asking/prompting a specific call
+        # @option options [String] :prompt to ask the caller
+        # @option options [String] :choices to ask the user
         # @option options [Symbol, Optional] :mode by which to accept input. Can be :speech, :dtmf or :any
-        # @option options [Integer, Optional] :response_timeout to wait for user input
+        # @option options [Integer, Optional] :timeout to wait for user input
         # @option options [String, Optional] :recognizer to use for speech recognition
         # @option options [String, Optional] :voice to use for speech synthesis
         # @option options [String, Optional] :terminator by which to signal the end of input
@@ -23,8 +23,8 @@ module Punchblock
         # @return [Ozone::Message] a formatted Ozone ask message
         #
         # @example
-        #    ask 'Please enter your postal code.',
-        #        '[5 DIGITS]',
+        #    ask :text => 'Please enter your postal code.',
+        #        :options => '[5 DIGITS]',
         #        :timeout => 30,
         #        :recognizer => 'es-es',
         #        :voice => 'simon'

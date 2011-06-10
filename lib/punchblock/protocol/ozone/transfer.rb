@@ -7,15 +7,17 @@ module Punchblock
         ##
         # Creates a transfer message for Ozone
         #
-        # @param [String] The destination for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com)
-        #
         # @param [Hash] options for transferring a call
+        # @option options [String] :to The destination for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com)
+        # @option options [String] :from The caller ID for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com)
+        # @option options [Integer, Optional] :timeout How long to wait - in seconds - for an answer, busy signal, or other event to occur.
+        # @option options [Boolean, Optional] :answer_on_media If set to true, the call will be considered "answered" and audio will begin playing as soon as media is received from the far end (ringing / busy signal / etc)
         # @option options [String, Optional] :terminator
         #
         # @return [Ozone::Message::Transfer] an Ozone "transfer" message
         #
         # @example
-        #   Transfer.new('sip:myapp@mydomain.com', :terminator => '#').to_xml
+        #   Transfer.new(:to => 'sip:myapp@mydomain.com', :terminator => '#').to_xml
         #
         #   returns:
         #     <transfer xmlns="urn:xmpp:ozone:transfer:1" to="sip:myapp@mydomain.com" terminator="#"/>

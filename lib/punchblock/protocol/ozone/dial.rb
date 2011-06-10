@@ -6,7 +6,7 @@ module Punchblock
         # Create a dial message
         #
         # @param [Hash] options for dialing a call
-        # @option options [Integer, Optional] :to destination to dial
+        # @option options [String] :to destination to dial
         # @option options [String, Optional] :from what to set the Caller ID to
         #
         # @return [Ozone::Message] a formatted Ozone dial message

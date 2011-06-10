@@ -5,7 +5,7 @@ module Punchblock
       # An Ozone redirect message
       #
       # @example
-      #    Redirect.new('tel:+14045551234').to_xml
+      #    Redirect.new(:to => 'tel:+14045551234').to_xml
       #
       #    returns:
       #        <redirect to="tel:+14045551234" xmlns="urn:xmpp:ozone:1"/>

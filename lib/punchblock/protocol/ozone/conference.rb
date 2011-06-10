@@ -9,8 +9,8 @@ module Punchblock
         ##
         # Creates an Ozone conference message
         #
-        # @param [String] room id to with which to create or join the conference
         # @param [Hash] options for conferencing a specific call
+        # @option options [String] :name room id to with which to create or join the conference
         # @option options [String, Optional] :audio_url URL to play to the caller
         # @option options [String, Optional] :prompt Text to speak to the caller
         #

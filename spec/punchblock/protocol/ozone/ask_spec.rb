@@ -73,6 +73,61 @@ module Punchblock
             end
           end
         end
+
+        describe Ask::Complete::Success do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <success mode="speech" confidence="0.45" xmlns='urn:xmpp:ozone:ask:complete:1'>
+    <interpretation>1234</interpretation>
+    <utterance>one two three four</utterance>
+  </success>
+</complete>
+            MESSAGE
+          end
+
+          subject { Event.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Ask::Complete::Success }
+
+          its(:name)            { should == :success }
+          its(:mode)            { should == :speech }
+          its(:confidence)      { should == 0.45 }
+          its(:interpretation)  { should == '1234' }
+          its(:utterance)       { should == 'one two three four' }
+        end
+
+        describe Ask::Complete::NoMatch do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <nomatch xmlns='urn:xmpp:ozone:ask:complete:1' />
+</complete>
+            MESSAGE
+          end
+
+          subject { Event.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Ask::Complete::NoMatch }
+
+          its(:name) { should == :nomatch }
+        end
+
+        describe Ask::Complete::NoInput do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <noinput xmlns='urn:xmpp:ozone:ask:complete:1' />
+</complete>
+            MESSAGE
+          end
+
+          subject { Event.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Ask::Complete::NoInput }
+
+          its(:name) { should == :noinput }
+        end
       end
     end # Ozone
   end # Protocol

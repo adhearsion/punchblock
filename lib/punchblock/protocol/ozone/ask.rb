@@ -167,6 +167,36 @@ module Punchblock
             super o, *(fields + [:content_type])
           end
         end
+
+        class Complete
+          class Success < Ozone::Complete::Reason
+            register :success, :ask_complete
+
+            def mode
+              read_attr :mode, :to_sym
+            end
+
+            def confidence
+              read_attr :confidence, :to_f
+            end
+
+            def interpretation
+              find_first('//ns:interpretation', :ns => self.registered_ns).text
+            end
+
+            def utterance
+              find_first('//ns:utterance', :ns => self.registered_ns).text
+            end
+          end
+
+          class NoMatch < Ozone::Complete::Reason
+            register :nomatch, :ask_complete
+          end
+
+          class NoInput < Ozone::Complete::Reason
+            register :noinput, :ask_complete
+          end
+        end
       end # Ask
     end # Ozone
   end # Protocol

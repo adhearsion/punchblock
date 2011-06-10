@@ -36,6 +36,10 @@ module Punchblock
           children.each &:remove
           self << OzoneNode.new(reject_reason)
         end
+
+        def attributes
+          [:reason] + super
+        end
       end # Reject
     end # Ozone
   end # Protocol

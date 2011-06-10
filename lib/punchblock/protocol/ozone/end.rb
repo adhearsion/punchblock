@@ -7,6 +7,10 @@ module Punchblock
         def reason
           children.select { |c| c.is_a? Nokogiri::XML::Element }.first.name.to_sym
         end
+
+        def attributes
+          [:reason] + super
+        end
       end # End
     end # Ozone
   end # Protocol

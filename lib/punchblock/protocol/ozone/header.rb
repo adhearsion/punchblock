@@ -44,6 +44,10 @@ module Punchblock
         def eql?(o, *fields)
           super o, *(fields + [:name, :value])
         end
+
+        def attributes
+          [:name, :value] + super
+        end
       end
     end # Ozone
   end # Protocol

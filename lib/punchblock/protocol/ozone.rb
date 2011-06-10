@@ -91,6 +91,14 @@ module Punchblock
         def self.new(name = registered_name, doc = nil)
           super name, doc, registered_ns
         end
+
+        def attributes
+          [:namespace_href]
+        end
+
+        def inspect
+          "#<#{self.class}(#{attributes.map { |c| "#{c}: #{self.__send__ c}" } * ', '})>"
+        end
       end
 
       # TODO: Figure out if we need these

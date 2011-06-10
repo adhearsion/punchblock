@@ -28,6 +28,10 @@ module Punchblock
         def to=(redirect_to)
           write_attr :to, redirect_to
         end
+
+        def attributes
+          [:to] + super
+        end
       end # Redirect
     end # Ozone
   end # Protocol

@@ -21,6 +21,10 @@ module Punchblock
         def offer_from=(offer_from)
           write_attr :from, offer_from
         end
+
+        def attributes
+          [:offer_to, :offer_from] + super
+        end
       end # Offer
     end # Ozone
   end # Protocol

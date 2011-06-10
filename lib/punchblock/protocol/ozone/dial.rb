@@ -45,6 +45,10 @@ module Punchblock
         def from=(dial_from)
           write_attr :from, dial_from
         end
+
+        def attributes
+          [:to, :from] + super
+        end
       end # Dial
     end # Ozone
   end # Protocol

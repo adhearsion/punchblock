@@ -93,6 +93,10 @@ module Punchblock
           self << Announcement.new(ann)
         end
 
+        def attributes
+          [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
+        end
+
         class Announcement < Say
           register :announcement, :conference
         end
@@ -110,6 +114,10 @@ module Punchblock
             register :kick, :conference_complete
 
             alias :details :text
+
+            def attributes
+              [:details] + super
+            end
           end
 
           class Terminator < Ozone::Complete::Reason

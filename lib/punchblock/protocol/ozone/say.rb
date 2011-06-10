@@ -50,12 +50,20 @@ module Punchblock
           self << Audio.new(audio) if audio.present?
         end
 
+        def ssml
+          content.strip
+        end
+
         def ssml=(ssml)
           if ssml.instance_of?(String)
             self << OzoneNode.new('').parse(ssml) do |config|
               config.noblanks.strict
             end
           end
+        end
+
+        def attributes
+          [:voice, :audio, :ssml] + super
         end
 
         class Complete

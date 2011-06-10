@@ -26,7 +26,7 @@ module Punchblock
 
         it "substitutes _ for - on the name attribute when writing" do
           h = Header.new :boo_bah, 'foo'
-          h.inspect.should == '<header name="boo-bah" value="foo"/>'
+          h.to_xml.should == '<header name="boo-bah" value="foo"/>'
         end
 
         it 'has a value attribute' do

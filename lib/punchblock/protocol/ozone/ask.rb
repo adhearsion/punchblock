@@ -112,6 +112,10 @@ module Punchblock
           self << Choices.new(choices)
         end
 
+        def attributes
+          [:bargein, :min_confidence, :mode, :recognizer, :terminator, :timeout, :prompt, :choices] + super
+        end
+
         class Choices < OzoneNode
           def self.new(value, content_type = 'application/grammar+voxeo')
             # Default is the Voxeo Simple Grammar, unless specified
@@ -166,6 +170,10 @@ module Punchblock
           def eql?(o, *fields)
             super o, *(fields + [:content_type])
           end
+
+          def attributes
+            [:content_type, :value] + super
+          end
         end
 
         class Complete
@@ -186,6 +194,10 @@ module Punchblock
 
             def utterance
               find_first('//ns:utterance', :ns => self.registered_ns).text
+            end
+
+            def attributes
+              [:mode, :confidence, :interpretation, :utterance] + super
             end
           end
 

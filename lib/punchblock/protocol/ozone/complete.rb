@@ -16,6 +16,10 @@ module Punchblock
           def name
             super.to_sym
           end
+
+          def attributes
+            [:name] + super
+          end
         end
 
         class Stop < Reason
@@ -31,6 +35,10 @@ module Punchblock
 
           def details
             text.strip
+          end
+
+          def attributes
+            [:details] + super
           end
         end
       end # Complete

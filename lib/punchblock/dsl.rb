@@ -20,12 +20,12 @@ module Punchblock
       write @protocol::Hangup.new
     end
 
-    def reject(reason = :declined) # :nodoc:
-      write @protocol::Reject.new(reason)
+    def reject(reason = nil) # :nodoc:
+      write @protocol::Reject.new(:reason => reason)
     end
 
     def redirect(dest) # :nodoc:
-      write @protocol::Redirect.new(dest)
+      write @protocol::Redirect.new(:to => dest)
     end
 
     def say(string, type = :text) # :nodoc:

@@ -42,6 +42,38 @@ module Punchblock
           pending 'Need to construct the parent object first'
           kick.to_xml.should == '<kick xmlns="urn:xmpp:ozone:conference:1"/>'
         end
+
+        describe Conference::OnHold do
+          it 'registers itself' do
+            Event.class_from_registration(:'on-hold', 'urn:xmpp:ozone:conference:1').should == Conference::OnHold
+          end
+
+          describe "from a stanza" do
+            let(:stanza) { "<on-hold xmlns='urn:xmpp:ozone:conference:1'/>" }
+
+            subject { Event.import parse_stanza(stanza).root, '9f00061', '1' }
+
+            it { should be_instance_of Conference::OnHold }
+
+            it_should_behave_like 'event'
+          end
+        end
+
+        describe Conference::OffHold do
+          it 'registers itself' do
+            Event.class_from_registration(:'off-hold', 'urn:xmpp:ozone:conference:1').should == Conference::OffHold
+          end
+
+          describe "from a stanza" do
+            let(:stanza) { "<off-hold xmlns='urn:xmpp:ozone:conference:1'/>" }
+
+            subject { Event.import parse_stanza(stanza).root, '9f00061', '1' }
+
+            it { should be_instance_of Conference::OffHold }
+
+            it_should_behave_like 'event'
+          end
+        end
       end
     end # Ozone
   end # Protocol

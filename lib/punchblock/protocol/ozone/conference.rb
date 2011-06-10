@@ -97,6 +97,14 @@ module Punchblock
           register :announcement, :conference
         end
 
+        class OnHold < Event
+          register :'on-hold', :conference
+        end
+
+        class OffHold < Event
+          register :'off-hold', :conference
+        end
+
         # ##
         # # Create an Ozone mute message for the current conference
         # #

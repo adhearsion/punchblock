@@ -12,10 +12,7 @@ module Punchblock
           let :stanza do
             <<-MESSAGE
 <complete xmlns='urn:xmpp:ozone:ext:1'>
-  <success mode="speech" confidence="0.45" xmlns='urn:xmpp:ozone:ask:complete:1'>
-    <interpretation>1234</interpretation>
-    <utterance>one two three four</utterance>
-  </success>
+  <success xmlns='urn:xmpp:ozone:say:complete:1' />
 </complete>
             MESSAGE
           end
@@ -26,8 +23,59 @@ module Punchblock
 
           it_should_behave_like 'event'
 
-          its(:complete_type) { should == :success }
+          its(:reason) { should == Say::Complete::Success.new }
         end
+      end
+
+      describe Complete::Stop do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <stop xmlns='urn:xmpp:ozone:ext:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Complete::Stop }
+
+        its(:name) { should == :stop }
+      end
+
+      describe Complete::Hangup do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <hangup xmlns='urn:xmpp:ozone:ext:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Complete::Hangup }
+
+        its(:name) { should == :hangup }
+      end
+
+      describe Complete::Error do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <error xmlns='urn:xmpp:ozone:ext:complete:1'>
+    Something really bad happened
+  </error>
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Complete::Error }
+
+        its(:name) { should == :error }
+        its(:details) { should == "Something really bad happened" }
       end
     end # Ozone
   end # Protocol

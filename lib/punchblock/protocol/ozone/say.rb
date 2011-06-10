@@ -1,3 +1,5 @@
+require 'punchblock/protocol/ozone/complete'
+
 module Punchblock
   module Protocol
     module Ozone
@@ -53,6 +55,12 @@ module Punchblock
             self << OzoneNode.new('').parse(ssml) do |config|
               config.noblanks.strict
             end
+          end
+        end
+
+        class Complete
+          class Success < Ozone::Complete::Reason
+            register :success, :say_complete
           end
         end
 

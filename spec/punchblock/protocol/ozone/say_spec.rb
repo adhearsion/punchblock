@@ -45,6 +45,22 @@ module Punchblock
           stop(:say).to_xml.should == '<stop xmlns="urn:xmpp:ozone:say:1"/>'
         end
       end
+
+      describe Say::Complete::Success do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <success xmlns='urn:xmpp:ozone:say:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Say::Complete::Success }
+
+        its(:name) { should == :success }
+      end
     end # Ozone
   end # Protocol
 end # Punchblock

@@ -22,10 +22,7 @@ module Punchblock
         def self.new(transfer_to = '', options = {})
           super().tap do |new_node|
             new_node.to = transfer_to
-            new_node.from = options[:from]
-            new_node.terminator = options[:terminator]
-            new_node.timeout = options[:timeout]
-            new_node.answer_on_media = options[:answer_on_media]
+            options.each_pair { |k,v| new_node.send :"#{k}=", v }
           end
         end
 

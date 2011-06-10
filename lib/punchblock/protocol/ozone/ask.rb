@@ -1,3 +1,5 @@
+require 'punchblock/protocol/ozone/say'
+
 module Punchblock
   module Protocol
     module Ozone
@@ -34,19 +36,10 @@ module Punchblock
         #      </ask>
         def self.new(prompt = '', options = {})
           super().tap do |new_node|
-            voice = options.delete :voice
+            new_node.prompt = {:voice => options.delete(:voice), :text => options.delete(:text), :url => options.delete(:url)}
             new_node.choices = {:content_type => options.delete(:grammar), :value => options.delete(:choices)}
 
-            options.each_pair do |k,v|
-              new_node.send :"#{k}=", v
-            end
-
-            # Nokogiri::XML::Builder.with msg.instance_variable_get(:@xml) do |xml|
-            #   prompt_opts = {:voice => voice} if voice
-            #   xml.prompt prompt_opts do
-            #     xml.text prompt
-            #   end
-
+            options.each_pair { |k,v| new_node.send :"#{k}=", v }
           end
         end
 
@@ -90,12 +83,24 @@ module Punchblock
           self[:terminator] = terminator
         end
 
-        def response_timeout
+        def timeout
           self[:timeout].to_i
         end
 
-        def response_timeout=(rt)
+        def timeout=(rt)
           self[:timeout] = rt
+        end
+
+        def prompt
+          Prompt.new find_first('//ns:prompt', :ns => self.registered_ns)
+        end
+
+        def prompt=(p)
+          self << Prompt.new(p)
+        end
+
+        class Prompt < Say
+          register :prompt, :ask
         end
 
         def choices

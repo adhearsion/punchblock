@@ -13,21 +13,24 @@ module Punchblock
             Ask.new 'Please enter your postal code.', :choices        => '[5 DIGITS]',
                                                       :grammar        => 'application/grammar+custom',
                                                       :voice          => 'kate',
+                                                      :text           => 'Welcome to Ozone',
+                                                      :url            => "http://it.doesnt.matter.does.it/?",
                                                       :bargein        => true,
                                                       :min_confidence => 0.3,
                                                       :mode           => :speech,
                                                       :recognizer     => 'en-US',
                                                       :terminator     => '#',
-                                                      :response_timeout => 12000
+                                                      :timeout        => 12000
           end
 
-          its(:bargein)           { should == true }
-          its(:min_confidence)    { should == 0.3 }
-          its(:mode)              { should == :speech }
-          its(:recognizer)        { should == 'en-US' }
-          its(:terminator)        { should == '#' }
-          its(:response_timeout)  { should == 12000 }
-          its(:choices)           { should == Ask::Choices.new('[5 DIGITS]', 'application/grammar+custom') }
+          its(:prompt)          { should == Ask::Prompt.new(:voice => 'kate', :text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?") }
+          its(:bargein)         { should == true }
+          its(:min_confidence)  { should == 0.3 }
+          its(:mode)            { should == :speech }
+          its(:recognizer)      { should == 'en-US' }
+          its(:terminator)      { should == '#' }
+          its(:timeout)         { should == 12000 }
+          its(:choices)         { should == Ask::Choices.new('[5 DIGITS]', 'application/grammar+custom') }
         end
 
         describe Ask::Choices do

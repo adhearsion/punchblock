@@ -75,6 +75,28 @@ module Punchblock
         def answer_on_media=(aom)
           write_attr 'answer-on-media', aom.to_s
         end
+
+        class Complete
+          class Success < Ozone::Complete::Reason
+            register :success, :transfer_complete
+          end
+
+          class Timeout < Ozone::Complete::Reason
+            register :timeout, :transfer_complete
+          end
+
+          class Terminator < Ozone::Complete::Reason
+            register :terminator, :transfer_complete
+          end
+
+          class Busy < Ozone::Complete::Reason
+            register :busy, :transfer_complete
+          end
+
+          class Reject < Ozone::Complete::Reason
+            register :reject, :transfer_complete
+          end
+        end
       end # Transfer
     end # Ozone
   end # Protocol

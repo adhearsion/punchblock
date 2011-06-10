@@ -23,6 +23,86 @@ module Punchblock
           its(:answer_on_media) { should == true }
         end
       end
+
+      describe Transfer::Complete::Success do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <success xmlns='urn:xmpp:ozone:transfer:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Transfer::Complete::Success }
+
+        its(:name) { should == :success }
+      end
+
+      describe Transfer::Complete::Timeout do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <timeout xmlns='urn:xmpp:ozone:transfer:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Transfer::Complete::Timeout }
+
+        its(:name) { should == :timeout }
+      end
+
+      describe Transfer::Complete::Terminator do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <terminator xmlns='urn:xmpp:ozone:transfer:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Transfer::Complete::Terminator }
+
+        its(:name) { should == :terminator }
+      end
+
+      describe Transfer::Complete::Busy do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <busy xmlns='urn:xmpp:ozone:transfer:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Transfer::Complete::Busy }
+
+        its(:name) { should == :busy }
+      end
+
+      describe Transfer::Complete::Reject do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <reject xmlns='urn:xmpp:ozone:transfer:complete:1' />
+</complete>
+          MESSAGE
+        end
+
+        subject { Event.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of Transfer::Complete::Reject }
+
+        its(:name) { should == :reject }
+      end
     end # Ozone
   end # Protocol
 end # Punchblock

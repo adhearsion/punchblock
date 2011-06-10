@@ -200,7 +200,7 @@ module Punchblock
               @result_queues[iq.id].push TransportError.new iq
             else
               # Un-associated transport error??
-              raise TransportError.new iq
+              raise TransportError, iq
             end
           else
             raise TransportError, iq

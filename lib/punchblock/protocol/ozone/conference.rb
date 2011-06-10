@@ -105,6 +105,18 @@ module Punchblock
           register :'off-hold', :conference
         end
 
+        class Complete
+          class Kick < Ozone::Complete::Reason
+            register :kick, :conference_complete
+
+            alias :details :text
+          end
+
+          class Terminator < Ozone::Complete::Reason
+            register :terminator, :conference_complete
+          end
+        end
+
         # ##
         # # Create an Ozone mute message for the current conference
         # #

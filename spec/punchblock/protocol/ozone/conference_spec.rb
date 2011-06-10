@@ -74,6 +74,39 @@ module Punchblock
             it_should_behave_like 'event'
           end
         end
+
+        describe Conference::Complete::Kick do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <kick xmlns='urn:xmpp:ozone:conference:complete:1'>wouldn't stop talking</kick>
+</complete>
+            MESSAGE
+          end
+
+          subject { Event.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Conference::Complete::Kick }
+
+          its(:name)    { should == :kick }
+          its(:details) { should == "wouldn't stop talking" }
+        end
+
+        describe Conference::Complete::Terminator do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:ozone:ext:1'>
+  <terminator xmlns='urn:xmpp:ozone:conference:complete:1' />
+</complete>
+            MESSAGE
+          end
+
+          subject { Event.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Conference::Complete::Terminator }
+
+          its(:name) { should == :terminator }
+        end
       end
     end # Ozone
   end # Protocol

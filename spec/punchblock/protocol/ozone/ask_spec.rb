@@ -32,6 +32,11 @@ module Punchblock
           its(:choices)         { should == Ask::Choices.new('[5 DIGITS]', 'application/grammar+custom') }
         end
 
+        describe "when not passing a grammar" do
+          subject { Ask.new('Hello?', :choices => '[5 DIGITS]').choices }
+          its(:content_type) { should == 'application/grammar+voxeo' }
+        end
+
         describe Ask::Choices do
           pending "Write some proper specs for me!"
 

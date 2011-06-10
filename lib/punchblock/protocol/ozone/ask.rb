@@ -117,7 +117,7 @@ module Punchblock
         end
 
         class Choices < OzoneNode
-          def self.new(value, content_type = 'application/grammar+voxeo')
+          def self.new(value, content_type = nil)
             # Default is the Voxeo Simple Grammar, unless specified
 
             super(:choices).tap do |new_node|
@@ -143,7 +143,7 @@ module Punchblock
           # Set the Header's name
           # @param [Symbol] name the new name for the header
           def content_type=(content_type)
-            write_attr 'content-type', content_type
+            write_attr 'content-type', content_type || 'application/grammar+voxeo'
           end
 
           # The Header's value

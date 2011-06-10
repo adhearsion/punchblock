@@ -10,7 +10,7 @@ module Punchblock
       @call_id, @to = call_id, to
       # Ensure all our headers have lowercase names and convert to symbols
       @headers = headers.inject({}) do |headers,pair|
-        headers[pair.shift.downcase.to_sym] = pair.shift
+        headers[pair.shift.to_s.downcase.to_sym] = pair.shift
         headers
       end
     end

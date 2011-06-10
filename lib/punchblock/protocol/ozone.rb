@@ -99,6 +99,8 @@ module Punchblock
         def inspect
           "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__ c}" } * ', '}>"
         end
+
+        alias :to_s :inspect
       end
 
       # TODO: Figure out if we need these

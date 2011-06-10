@@ -24,6 +24,7 @@ module Punchblock
           it_should_behave_like 'event'
 
           its(:event_name) { should == :something }
+          its(:xmlns) { should == 'urn:xmpp:ozone:1' }
         end
       end
     end # Ozone

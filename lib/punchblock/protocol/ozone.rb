@@ -94,6 +94,7 @@ module Punchblock
 
       # TODO: Figure out if we need these
       class Event < OzoneNode
+        alias :xmlns :namespace_href
       end
       class Command < OzoneNode
       end

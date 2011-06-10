@@ -15,10 +15,11 @@ module Punchblock
         end
 
         describe "for text" do
-          subject { Say.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
+          subject { Say.new :text => 'Once upon a time there was a message...', :voice => 'kate', :url => nil }
 
           its(:voice) { should == 'kate' }
           its(:text) { should == 'Once upon a time there was a message...' }
+          its(:audio) { should == nil }
         end
 
         describe "for SSML" do

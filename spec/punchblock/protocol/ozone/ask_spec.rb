@@ -37,6 +37,12 @@ module Punchblock
           its(:content_type) { should == 'application/grammar+voxeo' }
         end
 
+        describe "when not passing a URL" do
+          subject { Ask.new('Hello?', :choices => '[5 DIGITS]').prompt }
+
+          its(:audio) { should == nil }
+        end
+
         describe Ask::Choices do
           pending "Write some proper specs for me!"
 

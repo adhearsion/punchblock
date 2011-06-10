@@ -23,10 +23,10 @@ module Punchblock
           super().tap do |new_node|
             case options
             when Hash
-              new_node << options.delete(:text) if options.has_key?(:text)
-              new_node.voice = options.delete(:voice) if options.has_key?(:voice)
-              new_node.ssml = options.delete(:ssml) if options.has_key?(:ssml)
-              new_node.audio = options if options.has_key?(:url)
+              new_node << options.delete(:text) if options[:text]
+              new_node.voice = options.delete(:voice) if options[:voice]
+              new_node.ssml = options.delete(:ssml) if options[:ssml]
+              new_node.audio = options if options[:url]
             when Nokogiri::XML::Element
               new_node.inherit options
             end
@@ -42,7 +42,8 @@ module Punchblock
         end
 
         def audio
-          Audio.new find_first('//ns:audio', :ns => self.registered_ns)
+          node = find_first('//ns:audio', :ns => self.registered_ns)
+          Audio.new node if node
         end
 
         def audio=(audio)

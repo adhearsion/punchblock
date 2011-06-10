@@ -22,11 +22,11 @@ module Punchblock
         end
 
         def to
-          self[:to]
+          read_attr :to
         end
 
         def to=(redirect_to)
-          self[:to] = redirect_to
+          write_attr :to, redirect_to
         end
       end # Redirect
     end # Ozone

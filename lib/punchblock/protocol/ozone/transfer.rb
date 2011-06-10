@@ -45,35 +45,35 @@ module Punchblock
         end
 
         def from
-          self[:from]
+          read_attr :from
         end
 
         def from=(transfer_from)
-          self[:from] = transfer_from
+          write_attr :from, transfer_from
         end
 
         def terminator
-          self[:terminator]
+          read_attr :terminator
         end
 
         def terminator=(terminator)
-          self[:terminator] = terminator
+          write_attr :terminator, terminator
         end
 
         def timeout
-          self[:timeout].to_i
+          read_attr :timeout, :to_i
         end
 
         def timeout=(timeout)
-          self[:timeout] = timeout
+          write_attr :timeout, timeout
         end
 
         def answer_on_media
-          self['answer-on-media'] == 'true'
+          read_attr('answer-on-media') == 'true'
         end
 
         def answer_on_media=(aom)
-          self['answer-on-media'] = aom.to_s
+          write_attr 'answer-on-media', aom.to_s
         end
       end # Transfer
     end # Ozone

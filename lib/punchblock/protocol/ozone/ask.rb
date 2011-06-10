@@ -44,51 +44,51 @@ module Punchblock
         end
 
         def bargein
-          self[:bargein] == "true"
+          read_attr(:bargein) == "true"
         end
 
         def bargein=(bargein)
-          self[:bargein] = bargein.to_s
+          write_attr :bargein, bargein.to_s
         end
 
         def min_confidence
-          self['min-confidence'].to_f
+          read_attr 'min-confidence', :to_f
         end
 
         def min_confidence=(min_confidence)
-          self['min-confidence'] = min_confidence
+          write_attr 'min-confidence', min_confidence
         end
 
         def mode
-          self[:mode].to_sym
+          read_attr :mode, :to_sym
         end
 
         def mode=(mode)
-          self[:mode] = mode
+          write_attr :mode, mode
         end
 
         def recognizer
-          self[:recognizer]
+          read_attr :recognizer
         end
 
         def recognizer=(recognizer)
-          self[:recognizer] = recognizer
+          write_attr :recognizer, recognizer
         end
 
         def terminator
-          self[:terminator]
+          read_attr :terminator
         end
 
         def terminator=(terminator)
-          self[:terminator] = terminator
+          write_attr :terminator, terminator
         end
 
         def timeout
-          self[:timeout].to_i
+          read_attr :timeout, :to_i
         end
 
         def timeout=(rt)
-          self[:timeout] = rt
+          write_attr :timeout, rt
         end
 
         def prompt

@@ -31,19 +31,19 @@ module Punchblock
         end
 
         def to
-          self[:to]
+          read_attr :to
         end
 
         def to=(dial_to)
-          self[:to] = dial_to
+          write_attr :to, dial_to
         end
 
         def from
-          self[:from]
+          read_attr :from
         end
 
         def from=(dial_from)
-          self[:from] = dial_from
+          write_attr :from, dial_from
         end
       end # Dial
     end # Ozone

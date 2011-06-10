@@ -38,51 +38,51 @@ module Punchblock
         end
 
         def name
-          self[:name]
+          read_attr :name
         end
 
         def name=(name)
-          self[:name] = name
+          write_attr :name, name
         end
 
         def beep
-          self[:beep] == 'true'
+          read_attr(:beep) == 'true'
         end
 
         def beep=(beep)
-          self[:beep] = beep.to_s
+          write_attr :beep, beep.to_s
         end
 
         def mute
-          self[:mute] == 'true'
+          read_attr(:mute) == 'true'
         end
 
         def mute=(mute)
-          self[:mute] = mute.to_s
+          write_attr :mute, mute.to_s
         end
 
         def terminator
-          self[:terminator]
+          read_attr :terminator
         end
 
         def terminator=(terminator)
-          self[:terminator] = terminator
+          write_attr :terminator, terminator
         end
 
         def tone_passthrough
-          self['tone-passthrough'] == 'true'
+          read_attr('tone-passthrough') == 'true'
         end
 
         def tone_passthrough=(tone_passthrough)
-          self['tone-passthrough'] = tone_passthrough.to_s
+          write_attr 'tone-passthrough', tone_passthrough.to_s
         end
 
         def moderator
-          self[:moderator] == 'true'
+          read_attr(:moderator) == 'true'
         end
 
         def moderator=(moderator)
-          self[:moderator] = moderator.to_s
+          write_attr :moderator, moderator.to_s
         end
 
         def announcement

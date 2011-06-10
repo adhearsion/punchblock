@@ -32,11 +32,11 @@ module Punchblock
         end
 
         def voice
-          self[:voice]
+          read_attr :voice
         end
 
         def voice=(voice)
-          self[:voice] = voice
+          write_attr :voice, voice
         end
 
         def audio

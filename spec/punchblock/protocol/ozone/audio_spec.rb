@@ -11,7 +11,7 @@ module Punchblock
         end
 
         describe "for text" do
-          subject { Audio.new 'Hello' }
+          subject { Audio.new :text => 'Hello' }
 
           its(:content) { should == 'Hello' }
         end

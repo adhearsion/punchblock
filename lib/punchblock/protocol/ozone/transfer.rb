@@ -19,9 +19,8 @@ module Punchblock
         #
         #   returns:
         #     <transfer xmlns="urn:xmpp:ozone:transfer:1" to="sip:myapp@mydomain.com" terminator="#"/>
-        def self.new(transfer_to = '', options = {})
+        def self.new(options = {})
           super().tap do |new_node|
-            new_node.to = transfer_to
             options.each_pair { |k,v| new_node.send :"#{k}=", v }
           end
         end

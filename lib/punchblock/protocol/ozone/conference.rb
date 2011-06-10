@@ -23,14 +23,13 @@ module Punchblock
         #
         #    returns:
         #      <conference xmlns="urn:xmpp:ozone:conference:1" id="1234" beep="true" terminator="#"/>
-        def self.new(name = nil, options = {})
+        def self.new(options = {})
           super().tap do |new_node|
             prompt    = options.delete :prompt
             audio_url = options.delete :audio_url
 
             new_node.announcement = {:text => prompt, :url => audio_url} if prompt || audio_url
 
-            new_node.name = name
             options.each_pair do |k,v|
               new_node.send :"#{k}=", v
             end

@@ -10,16 +10,17 @@ module Punchblock
 
         describe "when setting options in initializer" do
           subject do
-            Ask.new 'Please enter your postal code.', :choices        => '[5 DIGITS]',
-                                                      :grammar        => 'application/grammar+custom',
-                                                      :voice          => 'kate',
-                                                      :url            => "http://it.doesnt.matter.does.it/?",
-                                                      :bargein        => true,
-                                                      :min_confidence => 0.3,
-                                                      :mode           => :speech,
-                                                      :recognizer     => 'en-US',
-                                                      :terminator     => '#',
-                                                      :timeout        => 12000
+            Ask.new :text           => 'Please enter your postal code.',
+                    :choices        => '[5 DIGITS]',
+                    :grammar        => 'application/grammar+custom',
+                    :voice          => 'kate',
+                    :url            => "http://it.doesnt.matter.does.it/?",
+                    :bargein        => true,
+                    :min_confidence => 0.3,
+                    :mode           => :speech,
+                    :recognizer     => 'en-US',
+                    :terminator     => '#',
+                    :timeout        => 12000
           end
 
           its(:prompt)          { should == Ask::Prompt.new(:voice => 'kate', :text => 'Please enter your postal code.', :url => "http://it.doesnt.matter.does.it/?") }
@@ -33,12 +34,12 @@ module Punchblock
         end
 
         describe "when not passing a grammar" do
-          subject { Ask.new('Hello?', :choices => '[5 DIGITS]').choices }
+          subject { Ask.new(:choices => '[5 DIGITS]').choices }
           its(:content_type) { should == 'application/grammar+voxeo' }
         end
 
         describe "when not passing a URL" do
-          subject { Ask.new('Hello?', :choices => '[5 DIGITS]').prompt }
+          subject { Ask.new(:choices => '[5 DIGITS]').prompt }
 
           its(:audio) { should == nil }
         end

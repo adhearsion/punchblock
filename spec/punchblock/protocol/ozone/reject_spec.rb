@@ -9,11 +9,7 @@ module Punchblock
         end
 
         describe "when setting options in initializer" do
-          subject { Reject.new :busy, :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
-
-          def num_arguments_pre_options
-            1
-          end
+          subject { Reject.new :reason => :busy, :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
 
           it_should_behave_like 'command_headers'
 
@@ -23,7 +19,7 @@ module Punchblock
         describe "with the reason" do
           [:declined, :busy, :error].each do |reason|
             describe reason do
-              subject { Reject.new reason }
+              subject { Reject.new :reason => reason }
 
               let :expected_message do
                 <<-MESSAGE
@@ -39,7 +35,7 @@ module Punchblock
 
           describe "blahblahblah" do
             it "should raise an error" do
-              expect { Reject.new(:blahblahblah) }.to raise_error ArgumentError
+              expect { Reject.new(:reason => :blahblahblah) }.to raise_error ArgumentError
             end
           end
         end

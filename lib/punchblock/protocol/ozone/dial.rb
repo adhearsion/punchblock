@@ -22,10 +22,10 @@ module Punchblock
 
         include HasHeaders
 
-        def self.new(to = nil, from = nil, options = {})
+        def self.new(options = {})
           super().tap do |new_node|
-            new_node.to = to
-            new_node.from = from
+            new_node.to = options[:to]
+            new_node.from = options[:from]
             new_node.headers = options[:headers]
           end
         end

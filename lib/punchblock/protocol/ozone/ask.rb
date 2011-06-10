@@ -34,9 +34,9 @@ module Punchblock
         #        <prompt voice='simon'>Please enter your postal code.</prompt>
         #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
         #      </ask>
-        def self.new(prompt = '', options = {})
+        def self.new(options = {})
           super().tap do |new_node|
-            new_node.prompt = {:text => prompt, :voice => options.delete(:voice), :url => options.delete(:url)}
+            new_node.prompt = {:text => options.delete(:text), :voice => options.delete(:voice), :url => options.delete(:url)}
             new_node.choices = {:content_type => options.delete(:grammar), :value => options.delete(:choices)}
 
             options.each_pair { |k,v| new_node.send :"#{k}=", v }

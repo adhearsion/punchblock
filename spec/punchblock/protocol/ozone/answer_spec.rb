@@ -8,10 +8,6 @@ module Punchblock
           Command.class_from_registration(:answer, 'urn:xmpp:ozone:1').should == Answer
         end
 
-        def num_arguments_pre_options
-          0
-        end
-
         it_should_behave_like 'command_headers'
       end
     end # Ozone

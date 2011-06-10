@@ -10,11 +10,7 @@ module Punchblock
         end
 
         describe "when setting options in initializer" do
-          subject { Redirect.new 'tel:+14045551234', :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
-
-          def num_arguments_pre_options
-            1
-          end
+          subject { Redirect.new :to => 'tel:+14045551234', :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
 
           it_should_behave_like 'command_headers'
 

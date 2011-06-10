@@ -10,11 +10,7 @@ module Punchblock
         end
 
         describe "when setting options in initializer" do
-          subject { Dial.new 'tel:+14155551212', 'tel:+13035551212', :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
-
-          def num_arguments_pre_options
-            2
-          end
+          subject { Dial.new :to => 'tel:+14155551212', :from => 'tel:+13035551212', :headers => { :x_skill => 'agent', :x_customer_id => 8877 } }
 
           it_should_behave_like 'command_headers'
 

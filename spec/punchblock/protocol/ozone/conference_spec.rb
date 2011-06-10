@@ -10,13 +10,14 @@ module Punchblock
 
         describe "when setting options in initializer" do
           subject do
-            Conference.new '1234', :beep             => true,
-                                   :terminator       => '#',
-                                   :prompt           => "Welcome to Ozone",
-                                   :audio_url        => "http://it.doesnt.matter.does.it/?",
-                                   :moderator        => true,
-                                   :tone_passthrough => true,
-                                   :mute             => false
+            Conference.new :name              => '1234',
+                           :beep              => true,
+                           :terminator        => '#',
+                           :prompt            => "Welcome to Ozone",
+                           :audio_url         => "http://it.doesnt.matter.does.it/?",
+                           :moderator         => true,
+                           :tone_passthrough  => true,
+                           :mute              => false
           end
 
           its(:name)              { should == '1234' }

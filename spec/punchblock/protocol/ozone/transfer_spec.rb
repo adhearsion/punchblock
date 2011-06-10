@@ -10,10 +10,11 @@ module Punchblock
 
         describe 'when setting options in initializer' do
           subject do
-            Transfer.new 'tel:+14045551212', :from            => 'tel:+14155551212',
-                                             :terminator      => '*',
-                                             :timeout         => 120000,
-                                             :answer_on_media => true
+            Transfer.new :to              => 'tel:+14045551212',
+                         :from            => 'tel:+14155551212',
+                         :terminator      => '*',
+                         :timeout         => 120000,
+                         :answer_on_media => true
           end
 
           its(:to) { should == %w{tel:+14045551212} }

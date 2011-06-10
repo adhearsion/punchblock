@@ -27,10 +27,7 @@ shared_examples_for 'command_headers' do
 
     control = [ Header.new(:x_skill, 'agent'), Header.new(:x_customer_id, '8877')]
 
-    options = []
-    num_arguments_pre_options.times { options << nil }
-    options << {:headers => headers}
-    di = subject.class.new *options
+    di = subject.class.new :headers => headers
     di.headers.should have(2).items
     di.headers.each { |i| control.include?(i).should be_true }
   end

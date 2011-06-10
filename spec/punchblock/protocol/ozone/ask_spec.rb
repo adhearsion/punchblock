@@ -13,7 +13,6 @@ module Punchblock
             Ask.new 'Please enter your postal code.', :choices        => '[5 DIGITS]',
                                                       :grammar        => 'application/grammar+custom',
                                                       :voice          => 'kate',
-                                                      :text           => 'Welcome to Ozone',
                                                       :url            => "http://it.doesnt.matter.does.it/?",
                                                       :bargein        => true,
                                                       :min_confidence => 0.3,
@@ -23,7 +22,7 @@ module Punchblock
                                                       :timeout        => 12000
           end
 
-          its(:prompt)          { should == Ask::Prompt.new(:voice => 'kate', :text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?") }
+          its(:prompt)          { should == Ask::Prompt.new(:voice => 'kate', :text => 'Please enter your postal code.', :url => "http://it.doesnt.matter.does.it/?") }
           its(:bargein)         { should == true }
           its(:min_confidence)  { should == 0.3 }
           its(:mode)            { should == :speech }

@@ -36,7 +36,7 @@ module Punchblock
         #      </ask>
         def self.new(prompt = '', options = {})
           super().tap do |new_node|
-            new_node.prompt = {:voice => options.delete(:voice), :text => options.delete(:text), :url => options.delete(:url)}
+            new_node.prompt = {:text => prompt, :voice => options.delete(:voice), :url => options.delete(:url)}
             new_node.choices = {:content_type => options.delete(:grammar), :value => options.delete(:choices)}
 
             options.each_pair { |k,v| new_node.send :"#{k}=", v }

@@ -4,7 +4,6 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
   punchblock/call
   punchblock/dsl
   punchblock/protocol/ozone
-  core_ext/nokogiri_hash
 }.each { |f| require f }
 
 ##

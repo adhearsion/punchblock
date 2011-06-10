@@ -93,7 +93,7 @@ module Punchblock
         end
 
         def attributes
-          [:namespace_href]
+          [:call_id, :command_id, :namespace_href]
         end
 
         def inspect

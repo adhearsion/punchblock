@@ -1,506 +1,263 @@
-require 'nokogiri'
+%w{
+nokogiri
+timeout
+blather/client/dsl
+punchblock/protocol/generic_connection
+}.each { |f| require f }
 
 module Punchblock
   module Protocol
     module Ozone
-      class MessageProxy < Nokogiri::XML::Node
-        def self.new(element, document = nil)
-          document = Nokogiri::XML::Document.new if document.nil?
-          super(element, document)
+
+      BASE_OZONE_NAMESPACE  = 'urn:xmpp:ozone'
+      OZONE_VERSION         = '1'
+      OZONE_NAMESPACES      = {:core => [BASE_OZONE_NAMESPACE, OZONE_VERSION].compact.join(':')}
+
+      [:ext, :transfer, :say, :ask, :conference].each do |ns|
+        OZONE_NAMESPACES[ns] = [BASE_OZONE_NAMESPACE, ns.to_s, OZONE_VERSION].compact.join(':')
+        OZONE_NAMESPACES[:"#{ns}_complete"] = [BASE_OZONE_NAMESPACE, ns.to_s, 'complete', OZONE_VERSION].compact.join(':')
+      end
+
+      class Blather::Stanza::Presence
+        def event
+          Event.import children.first, call_id, command_id
+        end
+
+        def call_id
+          from.node
+        end
+
+        def command_id
+          from.resource
         end
       end
 
-      class Message
-        BASE_OZONE_NAMESPACE    = 'urn:xmpp:ozone'
-        OZONE_VERSION           = '1'
-        BASE_NAMESPACE_MESSAGES = %w[accept answer hangup reject redirect]
+      class OzoneNode < Niceogiri::XML::Node
+        @@registrations = {}
 
-        # Parent object that created this object, if applicable
-        attr_accessor :parent, :call_id, :cmd_id
+        class_inheritable_accessor :registered_ns, :registered_name
 
-        ##
-        # Create a new Ozone Message object.
+        attr_accessor :call_id, :command_id
+
+        # Register a new stanza class to a name and/or namespace
         #
-        # @param [Symbol, Required] Component for this new message
-        # @param [Nokogiri::XML::Document, Optional] Existing XML document to which this message should be added
+        # This registers a namespace that is used when looking
+        # up the class name of the object to instantiate when a new
+        # stanza is received
         #
-        # @return [Ozone::Message] New Ozone Message object
-        def initialize(name, options = {})
-          element = options.has_key?(:command) ? options.delete(:command) : name
-          @xml = MessageProxy.new(element).tap do |obj|
-            scope = BASE_NAMESPACE_MESSAGES.include?(name) ? nil : name
-            if scope == 'dial'
-              obj.set_attribute 'xmlns', [BASE_OZONE_NAMESPACE, OZONE_VERSION].compact.join(':')
+        # @param [#to_s] name the name of the node
+        # @param [String, nil] ns the namespace the node belongs to
+        def self.register(name, ns = nil)
+          self.registered_name = name.to_s
+          self.registered_ns = ns.is_a?(Symbol) ? OZONE_NAMESPACES[ns] : ns
+          @@registrations[[self.registered_name, self.registered_ns]] = self
+        end
+
+        # Find the class to use given the name and namespace of a stanza
+        #
+        # @param [#to_s] name the name to lookup
+        # @param [String, nil] xmlns the namespace the node belongs to
+        # @return [Class, nil] the class appropriate for the name/ns combination
+        def self.class_from_registration(name, ns = nil)
+          @@registrations[[name.to_s, ns]]
+        end
+
+        # Import an XML::Node to the appropriate class
+        #
+        # Looks up the class the node should be then creates it based on the
+        # elements of the XML::Node
+        # @param [XML::Node] node the node to import
+        # @return the appropriate object based on the node name and namespace
+        def self.import(node, call_id = nil, command_id = nil)
+          ns = (node.namespace.href if node.namespace)
+          klass = class_from_registration(node.element_name, ns)
+          event = if klass && klass != self
+            klass.import node, call_id, command_id
+          else
+            new(node.element_name).inherit node
+          end
+          event.tap do |event|
+            event.call_id = call_id
+            event.command_id = command_id
+          end
+        end
+
+        # Create a new Node object
+        #
+        # @param [String, nil] name the element name
+        # @param [XML::Document, nil] doc the document to attach the node to. If
+        # not provided one will be created
+        # @return a new object with the registered name and namespace
+        def self.new(name = registered_name, doc = nil)
+          super name, doc, registered_ns
+        end
+
+        def attributes
+          [:call_id, :command_id, :namespace_href]
+        end
+
+        def inspect
+          "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" } * ', '}>"
+        end
+
+        alias :to_s :inspect
+      end
+
+      # TODO: Figure out if we need these
+      class Event < OzoneNode
+        alias :xmlns :namespace_href
+      end
+      class Command < OzoneNode
+      end
+
+      module HasHeaders
+        def headers_hash
+          headers.inject({}) do |hash, header|
+            hash[header.name] = header.value
+            hash
+          end
+        end
+
+        def headers
+          find('//ns:header', :ns => self.class.registered_ns).map do |i|
+            Header.new i
+          end
+        end
+
+        def headers=(headers)
+          find('//ns:header', :ns => self.class.registered_ns).each &:remove
+          if headers.is_a? Hash
+            headers.each_pair { |k,v| self << Header.new(k, v) }
+          elsif headers.is_a? Array
+            [headers].flatten.each { |i| self << Header.new(i) }
+          end
+        end
+      end
+
+      class Connection < GenericConnection
+        attr_accessor :event_queue
+
+        include Blather::DSL
+        def initialize(options = {})
+          super
+          raise ArgumentError unless @username = options.delete(:username)
+          raise ArgumentError unless options.has_key? :password
+          @client_jid = Blather::JID.new @username
+
+          setup @username, options.delete(:password)
+
+          # This queue is used to synchronize between threads calling #write
+          # and the connection-level responses they need to return from the
+          # EventMachine loop.
+          @result_queues = {}
+
+          @callmap = {} # This hash maps call IDs to their XMPP domain.
+
+          Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
+
+          # Push a message to the queue and the log that we connected
+          when_ready do
+            @event_queue.push connected
+            @logger.info "Connected to XMPP as #{@username}" if @logger
+          end
+
+          # Read/handle call control messages
+          iq do |msg|
+            read msg
+          end
+
+          # Read/handle presence requests.  This is how new calls are set up.
+          presence do |msg|
+            @logger.info "Receiving event for call ID #{msg.call_id}"
+            @callmap[msg.call_id] = msg.from.domain
+            @logger.debug msg.inspect if @logger
+            event = msg.event
+            @event_queue.push event.is_a?(Offer) ? Punchblock::Call.new(msg.call_id, msg.to, event.headers_hash) : event
+          end
+        end
+
+        def read(iq)
+          # FIXME: Do we need to raise a warning if the domain changes?
+          @callmap[iq.from.node] = iq.from.domain
+          case iq.type
+          when :result
+            # Send this result to the waiting queue
+            @logger.debug "Command #{iq.id} completed successfully" if @logger
+            @result_queues[iq.id].push iq
+          when :error
+            # TODO: Example messages to handle:
+            #------
+            #<iq type="error" id="blather0016" to="usera@127.0.0.1/voxeo" from="15dce14a-778e-42f2-9ac4-501805ec0388@127.0.0.1">
+            #  <answer xmlns="urn:xmpp:ozone:1"/>
+            #  <error type="cancel">
+            #    <item-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
+            #  </error>
+            #</iq>
+            #------
+            # FIXME: This should probably be parsed by the Protocol layer and return
+            # a ProtocolError exception.
+            if @result_queues.has_key?(iq.id)
+              @result_queues[iq.id].push TransportError.new iq
             else
-              obj.set_attribute 'xmlns', [BASE_OZONE_NAMESPACE, scope, OZONE_VERSION].compact.join(':')
+              # Un-associated transport error??
+              raise TransportError.new iq
             end
-            # FIXME: Do I need a handle to the parent object?
-
-          end
-          @parent  = options.delete :parent
-          @call_id = options.delete :call_id
-          @cmd_id  = options.delete :cmd_id
-        end
-
-        def to_s
-          @xml.to_xml
-        end
-        alias :to_xml :to_s
-
-        # @param [String] Call ID
-        # @param [String] Ozone Command ID.  Can be nil
-        # @param [String] XML to be converted to an Ozone Message
-        def self.parse(call_id, cmd_id, xml)
-          # Try to ensure that newlines don't get read as content by Nokogiri
-          xml = Nokogiri.parse(xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).children
-
-          # TODO: Handle more than one message at a time?
-          msg = xml.first
-          case msg.name
-          when 'offer'
-            # Collect headers into an array
-            headers = msg.children.inject({}) do |headers, header|
-              headers[header['name'].gsub('-','_')] = header['value']
-              headers
-            end
-            call = Punchblock::Call.new call_id, msg['to'], headers
-            # TODO: Acknowledge the offer?
-            return call
-          when 'complete'
-            return Complete.parse xml, :call_id => call_id, :cmd_id => cmd_id
-          when 'info'
-            return Info.parse xml, :call_id => call_id, :cmd_id => cmd_id
-          when 'end'
-            return End.parse xml, :call_id => call_id, :cmd_id => cmd_id # unless msg.first && msg.first.name == 'error'
+          else
+            raise TransportError, iq
           end
         end
-      end
 
-      ##
-      # An Ozone accept message.  This is equivalent to a SIP "180 Trying"
-      #
-      # @example
-      #    Accept.new.to_xml
-      #
-      #    returns:
-      #        <accept xmlns="urn:xmpp:ozone:1"/>
-      class Accept < Message
-        def self.new
-          super 'accept'
+        def write(call, msg)
+          # The interface between the Protocol layer and the Transport layer is
+          # defined to be a String.  Because Blather uses Nokogiri to construct
+          # and send XMPP messages, we need to convert the Protocol layer to a
+          # Nokogiri object, if it contains XML (ie. Ozone).
+          # FIXME: What happens if Nokogiri tries to parse non-XML string?
+          if msg.is_a?(Dial)
+            jid = @client_jid.domain
+            iq = create_iq jid
+            @logger.debug "Sending Command ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
+          else
+            iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
+            @logger.debug "Sending Command ID #{iq.id} #{msg.inspect} to #{call.call_id}" if @logger
+          end
+          iq << msg
+          @result_queues[iq.id] = Queue.new
+          write_to_stream iq
+          result = read_queue_with_timeout @result_queues[iq.id]
+          @result_queues[iq.id] = nil # Shut down this queue
+          # FIXME: Error handling
+          raise result if result.is_a? Exception
+          true
         end
-      end
 
-      ##
-      # An Ozone answer message.  This is equivalent to a SIP "200 OK"
-      #
-      # @example
-      #    Answer.new.to_xml
-      #
-      #    returns:
-      #        <answer xmlns="urn:xmpp:ozone:1"/>
-      class Answer < Message
-        def self.new
-          super 'answer'
+        def create_iq(jid = nil)
+          Blather::Stanza::Iq.new(:set, jid || @call_id).tap do |iq|
+            iq.from = @client_jid
+          end
         end
-      end
 
-      ##
-      # An Ozone hangup message
-      #
-      # @example
-      #    Hangup.new.to_xml
-      #
-      #    returns:
-      #        <hangup xmlns="urn:xmpp:ozone:1"/>
-      class Hangup < Message
-        def self.new
-          super 'hangup'
+        def run
+          EM.run { client.run }
         end
-      end
 
-      ##
-      # An Ozone reject message
-      #
-      # @example
-      #    Reject.new.to_xml
-      #
-      #    returns:
-      #        <reject xmlns="urn:xmpp:ozone:1"/>
-      class Reject < Message
-        def self.new(reason = :declined)
-          raise ArgumentError unless [:busy, :declined, :error].include? reason
-          super('reject').tap do |msg|
-            Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-              xml.send reason.to_sym
-            end
+        def connected?
+          client.connected?
+        end
+
+        private
+
+        def read_queue_with_timeout(queue, timeout = 3)
+          begin
+            Timeout::timeout(timeout) { queue.pop }
+          rescue Timeout::Error => e
+            e.to_s
           end
         end
       end
 
-      ##
-      # An Ozone redirect message
-      #
-      # @example
-      #    Redirect.new('tel:+14045551234').to_xml
-      #
-      #    returns:
-      #        <redirect to="tel:+14045551234" xmlns="urn:xmpp:ozone:1"/>
-      class Redirect < Message
-        def self.new(destination)
-          super('redirect').tap do |msg|
-            msg.set_destination destination
-          end
-        end
-
-        def set_destination(dest)
-          @xml.set_attribute 'to', dest
-        end
-      end
-
-      class Dial < Message
-        ##
-        # Create a dial message
-        #
-        # @param [Hash] options for dialing a call
-        # @option options [Integer, Optional] :to destination to dial
-        # @option options [String, Optional] :from what to set the Caller ID to
-        #
-        # @return [Ozone::Message] a formatted Ozone dial message
-        #
-        # @example
-        #    dial :to => 'tel:+14155551212', :from => 'tel:+13035551212'
-        #
-        #    returns:
-        #      <iq type='set' to='call.ozone.net' from='16577@app.ozone.net/1'>
-        #        <dial to='tel:+13055195825' from='tel:+14152226789' xmlns='urn:xmpp:ozone:1' />
-        #      </iq>
-        def self.new(options)
-          super('dial').tap do |msg|
-            headers = options.delete(:headers)
-            msg.set_options options
-            if headers
-              Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-                headers.each do |k,v|
-                  xml.header('name' => k.to_s, 'value' => v)
-                end
-              end
-            end
-          end
-        end
-
-        def set_options(options)
-          options.each { |option, value| @xml.set_attribute option.to_s, value }
-        end
-      end
-
-      class Ask < Message
-        ##
-        # Create an ask message
-        #
-        # @param [String] prompt to ask the caller
-        # @param [String] choices to ask the user
-        # @param [Hash] options for asking/prompting a specific call
-        # @option options [Integer, Optional] :timeout to wait for user input
-        # @option options [String, Optional] :recognizer to use for speech recognition
-        # @option options [String, Optional] :voice to use for speech synthesis
-        # @option options [String or Nokogiri::XML, Optional] :grammar to use for speech recognition (ie - application/grammar+voxeo or application/grammar+grxml)
-        #
-        # @return [Ozone::Message] a formatted Ozone ask message
-        #
-        # @example
-        #    ask 'Please enter your postal code.',
-        #        '[5 DIGITS]',
-        #        :timeout => 30,
-        #        :recognizer => 'es-es'
-        #
-        #    returns:
-        #      <ask xmlns="urn:xmpp:ozone:ask:1" timeout="30" recognizer="es-es">
-        #        <prompt>Please enter your postal code.</prompt>
-        #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
-        #      </ask>
-        def self.new(prompt, options = {})
-          super('ask').tap do |msg|
-            msg.set_options options.clone
-            grammar_type = options[:grammer]
-
-            Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-              xml.prompt prompt
-              # Default is the Voxeo Simple Grammar, unless specified
-              xml.choices("content-type" => options.delete(:grammar) || 'application/grammar+voxeo') {
-                if grammar_type == 'application/grammar+grxml'
-                  xml.cdata options[:choices]
-                else
-                  xml.text options[:choices]
-                end
-              }
-            end
-          end
-        end
-
-        def set_options(options)
-          options.delete(:grammar) if options[:grammar]
-          options.delete(:voice) if options[:voice]
-          options.delete(:choices) if options[:choices]
-
-          options.each { |option, value| @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s }
-        end
-      end
-
-      class Say < Message
-        ##
-        # Creates a say with a text for Ozone
-        #
-        # @param [String] text to speak back to a caller
-        #
-        # @return [Ozone::Message] an Ozone "say" message
-        #
-        # @example
-        #   say 'Hello brown cow.'
-        #
-        #   returns:
-        #     <say xmlns="urn:xmpp:ozone:say:1">Hello brown cow.</say>
-        #
-        def self.new(options = {})
-          super('say').tap do |msg|
-            msg.set_text(options.delete(:text)) if options.has_key?(:text)
-            msg.instance_variable_get(:@xml).add_child msg.set_ssml(options.delete(:ssml)) if options[:ssml]
-            url  = options.delete :url
-            msg.set_options options.clone
-            Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-              xml.audio('src' => url) if url
-            end
-          end
-        end
-
-        def set_options(options)
-          options.each { |option, value| @xml.set_attribute option.to_s, value }
-        end
-
-        def set_ssml(ssml)
-          if ssml.instance_of?(String)
-            Nokogiri::XML::Node.new('', Nokogiri::XML::Document.new).parse(ssml) do |config|
-              config.noblanks.strict
-            end
-          end
-        end
-
-        def set_text(text)
-          @xml.add_child text if text
-        end
-
-        ##
-        # Pauses a running Say
-        #
-        # @return [Ozone::Message::Say] an Ozone pause message for the current Say
-        #
-        # @example
-        #    say_obj.pause.to_xml
-        #
-        #    returns:
-        #      <pause xmlns="urn:xmpp:ozone:say:1"/>
-        def pause
-          Say.new :pause, :parent => self
-        end
-
-        ##
-        # Create an Ozone resume message for the current Say
-        #
-        # @return [Ozone::Message::Say] an Ozone resume message
-        #
-        # @example
-        #    say_obj.resume.to_xml
-        #
-        #    returns:
-        #      <resume xmlns="urn:xmpp:ozone:say:1"/>
-        def resume
-          Say.new :resume, :parent => self
-        end
-
-        ##
-        # Creates an Ozone stop message for the current Say
-        #
-        # @return [Ozone::Message] an Ozone stop message
-        #
-        # @example
-        #    stop 'say'
-        #
-        #    returns:
-        #      <stop xmlns="urn:xmpp:ozone:say:1"/>
-        def stop
-          Say.new :stop, :parent => self
-        end
-      end
-
-      class Conference < Message
-
-        ##
-        # Creates an Ozone conference message
-        #
-        # @param [String] room id to with which to create or join the conference
-        # @param [Hash] options for conferencing a specific call
-        # @option options [String, Optional] :audio_url URL to play to the caller
-        # @option options [String, Optional] :prompt Text to speak to the caller
-        #
-        # @return [Object] a Blather iq stanza object
-        #
-        # @example
-        #    conference :id => 'Please enter your postal code.',
-        #               :beep => true,
-        #               :terminator => '#'
-        #
-        #    returns:
-        #      <conference xmlns="urn:xmpp:ozone:conference:1" id="1234" beep="true" terminator="#"/>
-        def self.new(name, options = {})
-          super('conference').tap do |msg|
-            prompt    = options.delete :prompt
-            audio_url = options.delete :audio_url
-
-            options[:name] = name
-            msg.set_options options
-
-            Nokogiri::XML::Builder.with(msg.instance_variable_get(:@xml)) do |xml|
-              xml.music {
-                xml.speak prompt if prompt
-                xml.audio(:url => audio_url) if audio_url
-              } if prompt || audio_url
-            end
-          end
-        end
-
-        def set_options(options)
-          options.each do |option, value|
-            @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s
-          end
-        end
-
-        ##
-        # Create an Ozone mute message for the current conference
-        #
-        # @return [Ozone::Message::Conference] an Ozone mute message
-        #
-        # @example
-        #    conf_obj.mute.to_xml
-        #
-        #    returns:
-        #      <mute xmlns="urn:xmpp:ozone:conference:1"/>
-        def mute
-          Conference.new :mute, :parent => self
-        end
-
-        ##
-        # Create an Ozone unmute message for the current conference
-        #
-        # @return [Ozone::Message::Conference] an Ozone unmute message
-        #
-        # @example
-        #    conf_obj.unmute.to_xml
-        #
-        #    returns:
-        #      <unmute xmlns="urn:xmpp:ozone:conference:1"/>
-        def unmute
-          Conference.new :unmute, :parent => self
-        end
-
-        ##
-        # Create an Ozone conference kick message
-        #
-        # @return [Ozone::Message::Conference] an Ozone conference kick message
-        #
-        # @example
-        #    conf_obj.kick.to_xml
-        #
-        #    returns:
-        #      <kick xmlns="urn:xmpp:ozone:conference:1"/>
-        def kick
-          Conference.new :kick, :parent => self
-        end
-
-      end
-
-      class Transfer < Message
-        ##
-        # Creates a transfer message for Ozone
-        #
-        # @param [String] The destination for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com)
-        #
-        # @param [Hash] options for transferring a call
-        # @option options [String, Optional] :terminator
-        #
-        # @return [Ozone::Message::Transfer] an Ozone "transfer" message
-        #
-        # @example
-        #   Transfer.new('sip:myapp@mydomain.com', :terminator => '#').to_xml
-        #
-        #   returns:
-        #     <transfer xmlns="urn:xmpp:ozone:transfer:1" to="sip:myapp@mydomain.com" terminator="#"/>
-        def self.new(to, options = {})
-          super('transfer').tap do |msg|
-            options[:to] = to
-            msg.set_options options
-          end
-        end
-
-        def set_options options
-          options.each do |option, value|
-            @xml.set_attribute option.to_s.gsub('_', '-'), value.to_s
-          end
-        end
-      end
-
-      class Offer < Message
-        ##
-        # Creates an Offer message.
-        # This message may not be sent by a client; this object is used
-        # to represent an offer received from the Ozone server.
-        def self.parse(xml, options)
-          self.new 'offer', options
-        end
-      end
-
-      class End < Message
-        attr_accessor :type
-
-        ##
-        # Creates an End message.  This signifies the end of a call.
-        # This message may not be sent by a client; this object is used
-        # to represent an offer received from the Ozone server.
-        def self.parse(xml, options)
-          self.new('end', options).tap do |info|
-            event = xml.first.children.first
-            info.type = event.name.to_sym
-          end
-        end
-      end
-
-      class Info < Message
-        attr_accessor :type, :attributes
-
-        def self.parse(xml, options)
-          self.new('info', options).tap do |info|
-            event = xml.first.children.first
-            info.type = event.name.to_sym
-            info.attributes = event.attributes.inject({}) do |h, (k, v)|
-              h[k.downcase.to_sym] = v.value
-              h
-            end
-          end
-        end
-      end
-
-      class Complete < Message
-        attr_accessor :attributes, :xmlns
-
-        def self.parse(xml, options)
-          self.new('complete', options).tap do |info|
-            info.attributes = {}
-            xml.first.attributes.each { |k, v| info.attributes[k.to_sym] = v.value }
-            info.xmlns = xml.first.namespace.href
-          end
-          # TODO: Validate response and return response type.
-          # -----
-          # <complete xmlns="urn:xmpp:ozone:say:1" reason="SUCCESS"/>
-        end
-      end
     end
   end
 end
+
+Dir[File.dirname(__FILE__) + '/ozone/*.rb'].each { |file| require file }

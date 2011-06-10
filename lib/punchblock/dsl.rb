@@ -4,8 +4,8 @@
 # THIS IS IMPERMANENT AND WILL DISAPPEAR
 module Punchblock
   class DSL
-    def initialize(transport, protocol, call, queue) # :nodoc:
-      @transport, @protocol, @call, @queue = transport, protocol, call, queue
+    def initialize(connection, protocol, call, queue) # :nodoc:
+      @connection, @protocol, @call, @queue = connection, protocol, call, queue
     end
 
     def accept # :nodoc:
@@ -20,12 +20,12 @@ module Punchblock
       write @protocol::Hangup.new
     end
 
-    def reject(reason = :declined) # :nodoc:
-      write @protocol::Reject.new reason
+    def reject(reason = nil) # :nodoc:
+      write @protocol::Reject.new(:reason => reason)
     end
 
     def redirect(dest) # :nodoc:
-      write @protocol::Redirect.new(dest)
+      write @protocol::Redirect.new(:to => dest)
     end
 
     def say(string, type = :text) # :nodoc:
@@ -36,7 +36,7 @@ module Punchblock
     end
 
     def write(msg) # :nodoc:
-      @transport.write @call, msg
+      @connection.write @call, msg
     end
   end
 end

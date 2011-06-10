@@ -7,55 +7,53 @@ require 'pry'
 
 Thread.abort_on_exception = true
 
-username = ARGV[0] || 'usera@127.0.0.1'
-password = ARGV[1] || '1'
+options = {}
+options[:username] = ARGV[0] || 'usera@127.0.0.1'
+options[:password] = ARGV[1] || '1'
 
-wire_logger = Logger.new('log/ozone-wire.log')
-wire_logger.level = Logger::DEBUG
-wire_logger.debug "Starting up..."
-transport_logger = Logger.new('log/ozone-transport.log')
-transport_logger.level = Logger::DEBUG
-transport_logger.debug "Starting up..."
+options[:wire_logger] = Logger.new 'log/ozone-wire.log'
+options[:wire_logger].level = Logger::DEBUG
+options[:wire_logger].debug "Starting up..."
+options[:transport_logger] = Logger.new 'log/ozone-transport.log'
+options[:transport_logger].level = Logger::DEBUG
+options[:transport_logger].debug "Starting up..."
+
 protocol = Punchblock::Protocol::Ozone
-transport = Punchblock::Transport::XMPP.new protocol,
-  { :username => username,
-    :password => password,
-    :wire_logger => wire_logger,
-    :transport_logger => transport_logger
-  }
+
+connection = protocol::Connection.new options
+
 x = Thread.new do
   begin
-    transport.run
+    connection.run
   rescue => e
     puts "Exception in XMPP thread! #{e.message}"
     puts e.backtrace.join("\t\n")
   end
 end
 
-event_logger = Logger.new('log/ozone-events.log')
-event_logger.level = Logger::DEBUG
 CALL_QUEUES = {}
 INFO_EVENT_QUEUE = Queue.new
 
 # Block on waiting for the XMPP to connect, then show when we are connected
-puts transport.event_queue.pop
+puts connection.event_queue.pop
 
 ### DISPATCHER THREAD
-# This thread multiplexes the event stream from the underlying protocol handler and routes them
+# This thread multiplexes the event stream from the underlying connection handler and routes them
 # to the correct queue for each call.  It also starts a call handler, the run_call method) after creating
 # the queue.
 Thread.new do
   loop do
-    event = transport.event_queue.pop
+    event = connection.event_queue.pop
+    puts "#{event.class} event for call: #{event.call_id}"
     case event
     when Punchblock::Call
       raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
-      run_call transport, protocol, event
+      run_call connection, protocol, event
     when protocol::Info
       INFO_EVENT_QUEUE.push event
-    when protocol::Complete || protocol::End
+    when protocol::Complete, protocol::End
       CALL_QUEUES[event.call_id].push event
     else
       puts "Unknown event: #{event.inspect}"
@@ -64,14 +62,14 @@ Thread.new do
   end
 end
 
-def run_call(transport, protocol, call)
+def run_call(connection, protocol, call)
   ### CALL THREAD
   # One thread is spun up to handle each call.
   Thread.new do
     raise "Unknown call #{call.call_id}" unless CALL_QUEUES.has_key?(call.call_id)
     queue = CALL_QUEUES[call.call_id]
     call = queue.pop
-    dsl = Punchblock::DSL.new transport, protocol, call, queue
+    dsl = Punchblock::DSL.new connection, protocol, call, queue
 
     puts "Incoming call to #{call.to} from #{call.headers[:from]} #{call}"
     dsl.pry

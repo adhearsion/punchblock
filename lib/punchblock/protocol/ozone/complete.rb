@@ -12,6 +12,10 @@ module Punchblock
           Event.import children.select { |c| c.is_a? Nokogiri::XML::Element }.first
         end
 
+        def attributes
+          [:reason] + super
+        end
+
         class Reason < OzoneNode
           def name
             super.to_sym

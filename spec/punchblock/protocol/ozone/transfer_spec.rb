@@ -23,6 +23,8 @@ module Punchblock
           its(:timeout) { should == 120000 }
           its(:answer_on_media) { should == true }
         end
+
+        it_should_behave_like 'command_headers'
       end
 
       describe Transfer::Complete::Success do

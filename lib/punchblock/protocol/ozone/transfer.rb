@@ -4,6 +4,8 @@ module Punchblock
       class Transfer < Command
         register :transfer, :transfer
 
+        include HasHeaders
+
         ##
         # Creates a transfer message for Ozone
         #

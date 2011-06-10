@@ -29,7 +29,8 @@ shared_examples_for 'command_headers' do
 
     options = []
     num_arguments_pre_options.times { options << nil }
-    di = subject.class.new *options, :headers => headers
+    options << {:headers => headers}
+    di = subject.class.new *options
     di.headers.should have(2).items
     di.headers.each { |i| control.include?(i).should be_true }
   end

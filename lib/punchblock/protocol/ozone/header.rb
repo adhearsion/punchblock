@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       class Header < OzoneNode
         def self.new(name, value = '')
           super(:header).tap do |new_node|

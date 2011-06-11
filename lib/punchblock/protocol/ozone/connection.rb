@@ -7,7 +7,7 @@
 
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       class Connection < GenericConnection
         include Blather::DSL
 
@@ -25,7 +25,6 @@ module Punchblock
           @result_queues = {}
 
           @callmap = {} # This hash maps call IDs to their XMPP domain.
-
 
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
         end

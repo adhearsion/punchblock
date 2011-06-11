@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       module Command
         class Ask < OzoneNode
           register :ask, :ask

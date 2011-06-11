@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       class Ref < OzoneNode
         register :ref, :core
 

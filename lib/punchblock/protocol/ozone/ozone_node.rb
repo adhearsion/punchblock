@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       autoload :Niceogiri,  'niceogiri'
       autoload :Nokogiri,   'nokogiri'
 

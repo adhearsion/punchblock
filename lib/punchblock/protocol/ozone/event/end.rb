@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       module Event
         class End < OzoneNode
           register :end, :core

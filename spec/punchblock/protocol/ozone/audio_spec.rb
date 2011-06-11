@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       describe Audio do
         describe "for a URL" do
           subject { Audio.new :url => 'http://whatever.you-say-boss.com' }

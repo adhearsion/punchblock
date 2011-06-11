@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       module Command
         class Transfer < OzoneNode
           register :transfer, :transfer

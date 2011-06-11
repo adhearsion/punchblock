@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       module HasHeaders
         def headers_hash
           headers.inject({}) do |hash, header|

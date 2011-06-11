@@ -4,39 +4,39 @@
 # THIS IS IMPERMANENT AND WILL DISAPPEAR
 module Punchblock
   class DSL
-    def initialize(connection, protocol, call, queue) # :nodoc:
-      @connection, @protocol, @call, @queue = connection, protocol, call, queue
+    def initialize(protocol, call, queue) # :nodoc:
+      @protocol, @call, @queue = protocol, call, queue
     end
 
     def accept # :nodoc:
-      write @protocol::Command::Accept.new
+      write @protocol.class::Command::Accept.new
     end
 
     def answer # :nodoc:
-      write @protocol::Command::Answer.new
+      write @protocol.class::Command::Answer.new
     end
 
     def hangup # :nodoc:
-      write @protocol::Command::Hangup.new
+      write @protocol.class::Command::Hangup.new
     end
 
     def reject(reason = nil) # :nodoc:
-      write @protocol::Command::Reject.new(:reason => reason)
+      write @protocol.class::Command::Reject.new(:reason => reason)
     end
 
     def redirect(dest) # :nodoc:
-      write @protocol::Command::Redirect.new(:to => dest)
+      write @protocol.class::Command::Redirect.new(:to => dest)
     end
 
     def say(string, type = :text) # :nodoc:
-      write @protocol::Command::Say.new(type => string)
+      write @protocol.class::Command::Say.new(type => string)
       puts "Waiting on the queue..."
       response = @queue.pop
       # TODO: Error handling
     end
 
     def write(msg) # :nodoc:
-      @connection.write @call, msg
+      @protocol.write @call, msg
     end
   end
 end

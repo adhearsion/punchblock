@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       module Command
         ##
         # An Ozone answer message.  This is equivalent to a SIP "200 OK"

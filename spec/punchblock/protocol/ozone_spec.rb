@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
 
     end # Ozone
   end # Protocol

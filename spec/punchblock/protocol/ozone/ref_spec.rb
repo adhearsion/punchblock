@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       describe Ref do
         it 'registers itself' do
           OzoneNode.class_from_registration(:ref, 'urn:xmpp:ozone:1').should == Ref

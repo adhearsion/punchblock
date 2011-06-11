@@ -1,27 +1,13 @@
 %w{
-timeout
-blather/client/dsl
+  timeout
+  blather/client/dsl
+  punchblock/core_ext/blather/stanza
+  punchblock/core_ext/blather/stanza/presence
 }.each { |f| require f }
 
 module Punchblock
   module Protocol
     module Ozone
-      class Blather::Stanza
-        def call_id
-          from.node
-        end
-
-        def command_id
-          from.resource
-        end
-      end
-
-      class Blather::Stanza::Presence
-        def event
-          OzoneNode.import children.first, call_id, command_id
-        end
-      end
-
       class Connection < GenericConnection
         attr_accessor :event_queue
 

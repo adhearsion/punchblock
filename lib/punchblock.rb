@@ -1,11 +1,13 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-%w{
-  niceogiri
-  punchblock/call
-  punchblock/dsl
-  punchblock/protocol/ozone
-}.each { |f| require f }
+require 'active_support'
 
-##
-# This exception may be raised if a transport error is detected.
-TransportError = Class.new StandardError
+module Punchblock
+  extend ActiveSupport::Autoload
+
+  autoload :Call
+  autoload :DSL
+  autoload :Protocol
+
+  ##
+  # This exception may be raised if a transport error is detected.
+  TransportError = Class.new StandardError
+end

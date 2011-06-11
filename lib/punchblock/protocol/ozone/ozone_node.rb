@@ -9,7 +9,7 @@ module Punchblock
 
         class_inheritable_accessor :registered_ns, :registered_name
 
-        attr_accessor :call_id, :command_id
+        attr_accessor :call_id, :command_id, :connection
 
         # Register a new stanza class to a name and/or namespace
         #

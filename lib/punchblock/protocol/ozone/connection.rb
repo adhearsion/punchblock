@@ -63,6 +63,7 @@ module Punchblock
             @callmap[msg.call_id] = msg.from.domain
             @logger.debug msg.inspect if @logger
             event = msg.event
+            event.connection = self
             @event_queue.push event.is_a?(Event::Offer) ? Punchblock::Call.new(msg.call_id, msg.to, event.headers_hash) : event
           end
         end
@@ -99,6 +100,7 @@ module Punchblock
         end
 
         def write(call, msg)
+          msg.connection = self
           jid = msg.is_a?(Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
           iq = create_iq jid
           @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger

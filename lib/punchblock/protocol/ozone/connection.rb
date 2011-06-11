@@ -9,9 +9,8 @@ module Punchblock
   module Protocol
     module Ozone
       class Connection < GenericConnection
-        attr_accessor :event_queue
-
         include Blather::DSL
+
         def initialize(options = {})
           super
           raise ArgumentError unless @username = options.delete(:username)

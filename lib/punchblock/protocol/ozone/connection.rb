@@ -32,7 +32,7 @@ module Punchblock
 
         def write(call, msg)
           msg.connection = self
-          jid = msg.is_a?(Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
+          jid = msg.is_a?(Command::Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
           iq = create_iq jid
           @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
           iq << msg

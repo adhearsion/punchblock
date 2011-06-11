@@ -1,7 +1,8 @@
 module Blather
   class Stanza
     def ozone_node
-      Protocol::Ozone::OzoneNode.import children.first, call_id, command_id
+      first_child = children.first
+      Punchblock::Protocol::Ozone::OzoneNode.import first_child, call_id, command_id if first_child
     end
 
     def call_id

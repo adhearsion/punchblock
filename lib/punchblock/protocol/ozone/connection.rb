@@ -39,7 +39,7 @@ module Punchblock
             read msg
           end
 
-          # Force autoload events so they get registered properly
+          # FIXME: Force autoload events so they get registered properly
           [Event::Complete, Event::End, Event::Info, Event::Offer]
 
           # Read/handle presence requests. This is how new calls are set up.

@@ -26,22 +26,8 @@ module Punchblock
 
           @callmap = {} # This hash maps call IDs to their XMPP domain.
 
+
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
-
-          # Push a message to the queue and the log that we connected
-          when_ready do
-            @event_queue.push connected
-            @logger.info "Connected to XMPP as #{@username}" if @logger
-          end
-
-          # Read/handle call control messages. These are mostly just acknowledgement of commands
-          iq { |msg| handle_iq msg }
-
-          # FIXME: Force autoload events so they get registered properly
-          [Event::Complete, Event::End, Event::Info, Event::Offer]
-
-          # Read/handle presence requests. This is how we get events.
-          presence { |msg| handle_presence msg }
         end
 
         def write(call, msg)
@@ -60,6 +46,7 @@ module Punchblock
         end
 
         def run
+          register_handlers
           EM.run { client.run }
         end
 
@@ -107,6 +94,23 @@ module Punchblock
           else
             raise TransportError, iq
           end
+        end
+
+        def register_handlers
+          # Push a message to the queue and the log that we connected
+          when_ready do
+            @event_queue.push connected
+            @logger.info "Connected to XMPP as #{@username}" if @logger
+          end
+
+          # Read/handle call control messages. These are mostly just acknowledgement of commands
+          iq { |msg| handle_iq msg }
+
+          # FIXME: Force autoload events so they get registered properly
+          [Event::Complete, Event::End, Event::Info, Event::Offer]
+
+          # Read/handle presence requests. This is how we get events.
+          presence { |msg| handle_presence msg }
         end
 
         def create_iq(jid = nil)

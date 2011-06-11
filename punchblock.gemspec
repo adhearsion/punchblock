@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<niceogiri>, [">= 0.0.4"]
   s.add_runtime_dependency %q<blather>, [">= 0.5.2"]
   s.add_runtime_dependency %q<pry>, [">= 0.8.3"]
+  s.add_runtime_dependency %q<activesupport>, [">= 3.0.7"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0.0"]
   s.add_development_dependency %q<rspec>, ["~> 2.3.0"]
@@ -33,6 +34,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<rcov>, [">= 0"]
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<flexmock>, [">= 0"]
-  s.add_development_dependency %q<activesupport>, [">= 3.0.7"]
   s.add_development_dependency %q<i18n>, [">= 0"]
 end

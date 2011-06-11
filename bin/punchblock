@@ -4,6 +4,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'punchblock'
 require 'pry'
+require 'logger'
 
 Thread.abort_on_exception = true
 
@@ -51,9 +52,9 @@ Thread.new do
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
       run_call connection, protocol, event
-    when protocol::Info
+    when protocol::Event::Info
       INFO_EVENT_QUEUE.push event
-    when protocol::Complete, protocol::End
+    when protocol::Event::Complete, protocol::Event::End
       CALL_QUEUES[event.call_id].push event
     else
       puts "Unknown event: #{event.inspect}"

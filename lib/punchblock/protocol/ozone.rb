@@ -19,6 +19,7 @@ module Punchblock
       autoload :HasHeaders
       autoload :Header
       autoload :OzoneNode
+      autoload :Ref
     end
   end
 end

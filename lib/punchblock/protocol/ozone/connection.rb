@@ -26,6 +26,9 @@ module Punchblock
 
           @callmap = {} # This hash maps call IDs to their XMPP domain.
 
+          @command_id_to_iq_id = {}
+          @iq_id_to_command = {}
+
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
 
           # FIXME: Force autoload events so they get registered properly
@@ -38,6 +41,7 @@ module Punchblock
           iq = create_iq jid
           @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
           iq << msg
+          @iq_id_to_command[iq.id] = msg
           @result_queues[iq.id] = Queue.new
           write_to_stream iq
           result = read_queue_with_timeout @result_queues[iq.id]
@@ -54,6 +58,10 @@ module Punchblock
 
         def connected?
           client.connected?
+        end
+
+        def original_command_from_id(command_id)
+          @iq_id_to_command[@command_id_to_iq_id[command_id]]
         end
 
         private
@@ -74,6 +82,8 @@ module Punchblock
           when :result
             # Send this result to the waiting queue
             @logger.debug "Command #{iq.id} completed successfully" if @logger
+            ref = iq.ozone_node
+            @command_id_to_iq_id[ref.id] = iq.id if ref.is_a?(Ref)
             @result_queues[iq.id].push iq
           when :error
             # TODO: Example messages to handle:

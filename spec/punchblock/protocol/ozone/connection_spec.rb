@@ -20,6 +20,41 @@ module Punchblock
 
         its(:event_queue) { should be_a Queue }
 
+        it "looking up original command by command ID" do
+          call = Punchblock::Call.new '9f00061', 'sip:whatever@127.0.0.1', {}
+          say = <<-MSG
+<say xmlns='urn:xmpp:ozone:say:1' voice='allison'>
+  <audio url='http://acme.com/greeting.mp3'>
+    Thanks for calling ACME company
+  </audio>
+  <audio url='http://acme.com/package-shipped.mp3'>
+    Your package was shipped on
+  </audio>
+  <say-as interpret-as='date'>12/01/2011</say-as>
+</say>
+          MSG
+          say = OzoneNode.import parse_stanza(say).root
+          flexmock(connection).should_receive(:write_to_stream).once.and_return true
+          iq = Blather::Stanza::Iq.new :set, '9f00061@call.ozone.net'
+          flexmock(connection).should_receive(:create_iq).and_return iq
+
+          Thread.new do
+            connection.write call, say
+          end
+
+          Thread.new do
+            result = import_stanza <<-MSG
+<iq type='result' from='16577@app.ozone.net/1' to='9f00061@call.ozone.net/1'>
+   <ref id='fgh4590' xmlns='urn:xmpp:ozone:1' />
+</iq>
+            MSG
+
+            connection.__send__ :handle_iq, result
+          end
+
+          connection.original_command_from_id('fgh4590').should == say
+        end
+
         describe '#handle_presence' do
           let :offer_xml do
             <<-MSG

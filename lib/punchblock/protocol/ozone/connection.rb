@@ -86,7 +86,7 @@ module Punchblock
             # FIXME: This should probably be parsed by the Protocol layer and return
             # a ProtocolError exception.
             if @result_queues.has_key?(iq.id)
-              @result_queues[iq.id].push TransportError.new iq
+              @result_queues[iq.id].push TransportError.new(iq)
             else
               # Un-associated transport error??
               raise TransportError, iq

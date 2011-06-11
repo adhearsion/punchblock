@@ -4,6 +4,7 @@ Bundler::GemHelper.install_tasks
 
 require 'rspec/core'
 require 'rspec/core/rake_task'
+require 'ci/reporter/rake/rspec'
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = 'spec/**/*_spec.rb'
   spec.rspec_opts = '--color'
@@ -16,6 +17,7 @@ RSpec::Core::RakeTask.new(:rcov) do |spec|
 end
 
 task :default => :spec
+task :hudson => ['ci:setup:rspec', :spec]
 
 require 'yard'
 YARD::Rake::YardocTask.new

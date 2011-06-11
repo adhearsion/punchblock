@@ -44,6 +44,31 @@ module Punchblock
           presence { |msg| handle_presence msg }
         end
 
+        def write(call, msg)
+          msg.connection = self
+          jid = msg.is_a?(Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
+          iq = create_iq jid
+          @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
+          iq << msg
+          @result_queues[iq.id] = Queue.new
+          write_to_stream iq
+          result = read_queue_with_timeout @result_queues[iq.id]
+          @result_queues[iq.id] = nil # Shut down this queue
+          # FIXME: Error handling
+          raise result if result.is_a? Exception
+          true
+        end
+
+        def run
+          EM.run { client.run }
+        end
+
+        def connected?
+          client.connected?
+        end
+
+        private
+
         def handle_presence(p)
           @logger.info "Receiving event for call ID #{p.call_id}"
           @callmap[p.call_id] = p.from.domain
@@ -84,34 +109,9 @@ module Punchblock
           end
         end
 
-        def write(call, msg)
-          msg.connection = self
-          jid = msg.is_a?(Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
-          iq = create_iq jid
-          @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
-          iq << msg
-          @result_queues[iq.id] = Queue.new
-          write_to_stream iq
-          result = read_queue_with_timeout @result_queues[iq.id]
-          @result_queues[iq.id] = nil # Shut down this queue
-          # FIXME: Error handling
-          raise result if result.is_a? Exception
-          true
-        end
-
         def create_iq(jid = nil)
           Blather::Stanza::Iq.new :set, jid || @call_id
         end
-
-        def run
-          EM.run { client.run }
-        end
-
-        def connected?
-          client.connected?
-        end
-
-        private
 
         def read_queue_with_timeout(queue, timeout = 3)
           begin

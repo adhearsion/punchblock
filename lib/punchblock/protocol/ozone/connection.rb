@@ -34,26 +34,26 @@ module Punchblock
             @logger.info "Connected to XMPP as #{@username}" if @logger
           end
 
-          # Read/handle call control messages
-          iq do |msg|
-            read msg
-          end
+          # Read/handle call control messages. These are mostly just acknowledgement of commands
+          iq { |msg| handle_iq msg }
 
           # FIXME: Force autoload events so they get registered properly
           [Event::Complete, Event::End, Event::Info, Event::Offer]
 
-          # Read/handle presence requests. This is how new calls are set up.
-          presence do |msg|
-            @logger.info "Receiving event for call ID #{msg.call_id}"
-            @callmap[msg.call_id] = msg.from.domain
-            @logger.debug msg.inspect if @logger
-            event = msg.event
-            event.connection = self
-            @event_queue.push event.is_a?(Event::Offer) ? Punchblock::Call.new(msg.call_id, msg.to, event.headers_hash) : event
-          end
+          # Read/handle presence requests. This is how we get events.
+          presence { |msg| handle_presence msg }
         end
 
-        def read(iq)
+        def handle_presence(p)
+          @logger.info "Receiving event for call ID #{p.call_id}"
+          @callmap[p.call_id] = p.from.domain
+          @logger.debug p.inspect if @logger
+          event = p.event
+          event.connection = self
+          @event_queue.push event.is_a?(Event::Offer) ? Punchblock::Call.new(p.call_id, p.to, event.headers_hash) : event
+        end
+
+        def handle_iq(iq)
           # FIXME: Do we need to raise a warning if the domain changes?
           @callmap[iq.from.node] = iq.from.domain
           case iq.type

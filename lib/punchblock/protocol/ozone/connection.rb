@@ -6,17 +6,19 @@ blather/client/dsl
 module Punchblock
   module Protocol
     module Ozone
-      class Blather::Stanza::Presence
-        def event
-          OzoneNode.import children.first, call_id, command_id
-        end
-
+      class Blather::Stanza
         def call_id
           from.node
         end
 
         def command_id
           from.resource
+        end
+      end
+
+      class Blather::Stanza::Presence
+        def event
+          OzoneNode.import children.first, call_id, command_id
         end
       end
 

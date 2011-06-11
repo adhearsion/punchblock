@@ -97,14 +97,9 @@ module Punchblock
         end
 
         def write(call, msg)
-          if msg.is_a?(Command::Dial)
-            jid = @client_jid.domain
-            iq = create_iq jid
-            @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
-          else
-            iq = create_iq "#{call.call_id}@#{@callmap[call.call_id]}"
-            @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{call.call_id}" if @logger
-          end
+          jid = msg.is_a?(Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
+          iq = create_iq jid
+          @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
           iq << msg
           @result_queues[iq.id] = Queue.new
           write_to_stream iq
@@ -116,9 +111,7 @@ module Punchblock
         end
 
         def create_iq(jid = nil)
-          Blather::Stanza::Iq.new(:set, jid || @call_id).tap do |iq|
-            iq.from = @client_jid
-          end
+          Blather::Stanza::Iq.new :set, jid || @call_id
         end
 
         def run

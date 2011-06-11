@@ -4,9 +4,9 @@ module Punchblock
   module Protocol
     class Ozone
       describe Connection do
-        let(:generic_connection) { Punchblock::Protocol::GenericConnection }
+        let(:connection) { Connection.new :username => 1, :password => 1 }
 
-        subject { Connection.new :username => 1, :password => 1 }
+        subject { connection }
 
         it 'should require a username and password to be passed in the options' do
           expect { Connection.new :password => 1 }.to raise_error ArgumentError
@@ -14,45 +14,70 @@ module Punchblock
         end
 
         it 'should properly set the Blather logger' do
-          connection = Connection.new :wire_logger => :foo, :username => 1, :password => 1
+          Connection.new :wire_logger => :foo, :username => 1, :password => 1
           Blather.logger.should be :foo
         end
 
         its(:event_queue) { should be_a Queue }
 
-        describe 'Blather messages' do
+        describe '#handle_presence' do
           let :offer_xml do
             <<-MSG
-<iq type="set" from="432ef388-9c53-4e11-b00e-10823988173d@127.0.0.1" to="usera@127.0.0.1/voxeo" id="7efae189-7df4-4b1b-8f8a-690c0efa6208">
-  <offer xmlns="urn:xmpp:ozone:1" to="sip:12345@127.0.0.1" from="sip:bob@127.0.0.1">
+<presence to='16577@app.ozone.net/1' from='9f00061@call.ozone.net'>
+  <offer xmlns="urn:xmpp:ozone:1" to="sip:whatever@127.0.0.1" from="sip:ylcaomxb@192.168.1.9">
     <header name="Max-Forwards" value="70"/>
-    <header name="Content-Length" value="441"/>
-    <header name="Contact" value="&lt;sip:yizjrshk@127.0.0.1:51623&gt;"/>
-    <header name="Supported" value="100rel"/>
-    <header name="Allow" value="SUBSCRIBE"/>
-    <header name="To" value="&lt;sip:12345@127.0.0.1&gt;"/>
-    <header name="CSeq" value="22785 INVITE"/>
-    <header name="User-Agent" value="Blink Pro 1.0.9 (MacOSX)"/>
-    <header name="Via" value="SIP/2.0/UDP 192.168.106.1:51623;rport=51623;branch=z9hG4bKPjLeJH8HnPWY9wqE5E3.IOfX4LlNgjAAnq;received=127.0.0.1"/>
-    <header name="Call-ID" value="C0wfPc9PDHjEac-1XafDgQWjvT1IbWwP"/>
-    <header name="Content-Type" value="application/sdp"/>
-    <header name="From" value="&quot;Ozone Bob&quot; &lt;sip:bob@127.0.0.1&gt;;tag=t0aZe1erkGhIwNhIBH.JkXEjjEsGoAAa"/>
+    <header name="Content-Length" value="367"/>
   </offer>
-</iq>
+</presence>
             MSG
           end
 
-          let(:example_offer) { Nokogiri::XML.parse(offer_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).children.first }
+          let(:example_offer) { import_stanza offer_xml }
 
-          it 'should call the protocol parser with the correct arguments' do
-            pending
-            flexmock(generic_protocol::Message).should_receive(:parse).once.with('432ef388-9c53-4e11-b00e-10823988173d', nil, /^<offer xmlns=/)
-            flexmock(@example_offer).should_receive(:reply!)
-            flexmock(@transport).should_receive(:write_to_stream)
-            subject.read @example_offer
+          it { example_offer.should be_a Blather::Stanza::Presence }
+
+          let :complete_xml do
+            <<-MSG
+<presence to='16577@app.ozone.net/1' from='9f00061@call.ozone.net/fgh4590'>
+  <complete xmlns='urn:xmpp:ozone:ext:1'>
+    <success xmlns='urn:xmpp:ozone:say:complete:1' />
+  </complete>
+</presence>
+            MSG
+          end
+
+          let(:example_complete) { import_stanza complete_xml }
+
+          it { example_complete.should be_a Blather::Stanza::Presence }
+
+          describe "event placed on the event queue" do
+            before do
+              connection.event_queue = []
+              connection.__send__ :handle_presence, example_offer
+              connection.__send__ :handle_presence, example_complete
+            end
+
+            describe "from an offer" do
+              subject { connection.event_queue.first }
+
+              it { should be_instance_of Call }
+              its(:call_id) { should == '9f00061' }
+
+              it "should populate the call map with the domain for the call ID" do
+                callmap = connection.instance_variable_get(:'@callmap')
+                callmap['9f00061'].should == 'call.ozone.net'
+              end
+            end
+
+            describe "from a complete" do
+              subject { connection.event_queue.last }
+
+              it { should be_instance_of Event::Complete }
+              its(:call_id)     { should == '9f00061' }
+              its(:connection)  { should == connection }
+            end
           end
         end
-
       end
     end
   end

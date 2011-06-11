@@ -11,7 +11,11 @@ RSpec.configure do |config|
 end
 
 def parse_stanza(xml)
-  Nokogiri::XML.parse xml
+  Nokogiri::XML.parse xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS
+end
+
+def import_stanza(xml)
+  Blather::Stanza.import parse_stanza(xml).root
 end
 
 shared_examples_for 'event' do

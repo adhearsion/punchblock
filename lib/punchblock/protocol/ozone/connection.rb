@@ -27,6 +27,9 @@ module Punchblock
           @callmap = {} # This hash maps call IDs to their XMPP domain.
 
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
+
+          # FIXME: Force autoload events so they get registered properly
+          [Event::Complete, Event::End, Event::Info, Event::Offer]
         end
 
         def write(call, msg)
@@ -56,7 +59,7 @@ module Punchblock
         private
 
         def handle_presence(p)
-          @logger.info "Receiving event for call ID #{p.call_id}"
+          @logger.info "Receiving event for call ID #{p.call_id}" if @logger
           @callmap[p.call_id] = p.from.domain
           @logger.debug p.inspect if @logger
           event = p.event
@@ -104,9 +107,6 @@ module Punchblock
 
           # Read/handle call control messages. These are mostly just acknowledgement of commands
           iq { |msg| handle_iq msg }
-
-          # FIXME: Force autoload events so they get registered properly
-          [Event::Complete, Event::End, Event::Info, Event::Offer]
 
           # Read/handle presence requests. This is how we get events.
           presence { |msg| handle_presence msg }

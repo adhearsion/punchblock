@@ -31,7 +31,7 @@ module Punchblock
             its(:recognizer)      { should == 'en-US' }
             its(:terminator)      { should == '#' }
             its(:timeout)         { should == 12000 }
-            its(:choices)         { should == Ask::Choices.new('[5 DIGITS]', 'application/grammar+custom') }
+            its(:choices)         { should == Ask::Choices.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
           end
 
           describe "when not passing a grammar" do
@@ -49,7 +49,7 @@ module Punchblock
             pending "Write some proper specs for me!"
 
             describe 'with a GRXML grammar' do
-              subject { Ask::Choices.new grxml, 'application/grammar+grxml' }
+              subject { Ask::Choices.new :value => grxml, :content_type => 'application/grammar+grxml' }
 
               let :grxml do
                 <<-GRXML

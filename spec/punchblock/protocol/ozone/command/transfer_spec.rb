@@ -15,15 +15,18 @@ module Punchblock
                            :from            => 'tel:+14155551212',
                            :terminator      => '*',
                            :timeout         => 120000,
-                           :answer_on_media => true
+                           :answer_on_media => true,
+                           :voice           => 'allison',
+                           :text            => "Welcome to Ozone",
+                           :audio_url       => "http://it.doesnt.matter.does.it/?"
             end
 
-            its(:to) { should == %w{tel:+14045551212} }
-            its(:from) { should == 'tel:+14155551212' }
-            its(:terminator) { should == '*' }
-            its(:timeout) { should == 120000 }
+            its(:to)              { should == %w{tel:+14045551212} }
+            its(:from)            { should == 'tel:+14155551212' }
+            its(:terminator)      { should == '*' }
+            its(:timeout)         { should == 120000 }
             its(:answer_on_media) { should == true }
-            # TODO: Should support <ring/> child
+            its(:ring)            { should == Transfer::Ring.new(:voice => 'allison', :text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?") }
           end
 
           it_should_behave_like 'command_headers'

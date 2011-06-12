@@ -16,6 +16,9 @@ module Punchblock
           # @option options [String, Optional] :terminator The string key press required to abort the transfer.
           # @option options [Integer, Optional] :timeout How long to wait - in seconds - for an answer, busy signal, or other event to occur.
           # @option options [Boolean, Optional] :answer_on_media If set to true, the call will be considered "answered" and audio will begin playing as soon as media is received from the far end (ringing / busy signal / etc)
+          # @option options [String, Optional] :audio_url URL to play to the caller as a ringer
+          # @option options [String, Optional] :text Text to speak to the caller as a ringer
+          # @option options [String, Optional] :voice Voice with which to speak to the caller as a ringer
           #
           # @return [Ozone::Message::Transfer] an Ozone "transfer" message
           #
@@ -29,6 +32,12 @@ module Punchblock
           #
           def self.new(options = {})
             super().tap do |new_node|
+              text      = options.delete(:text)
+              voice     = options.delete(:voice)
+              audio_url = options.delete(:audio_url)
+
+              new_node.ring = {:text => text, :voice => voice, :url => audio_url} if text || audio_url
+
               options.each_pair { |k,v| new_node.send :"#{k}=", v }
             end
           end
@@ -108,6 +117,27 @@ module Punchblock
           #
           def answer_on_media=(aom)
             write_attr 'answer-on-media', aom.to_s
+          end
+
+          ##
+          # @return [Ring] the ringer to play to the caller while transferring
+          #
+          def ring
+            node = find_first '//ns:ring', :ns => self.registered_ns
+            Ring.new node if node
+          end
+
+          ##
+          # @param [Hash] ring
+          # @option ring [String] :text Text to speak to the caller as an announcement
+          # @option ring [String] :url URL to play to the caller as an announcement
+          #
+          def ring=(ring)
+            self << Ring.new(ring)
+          end
+
+          class Ring < Say
+            register :ring, :transfer
           end
 
           def attributes # :nodoc:

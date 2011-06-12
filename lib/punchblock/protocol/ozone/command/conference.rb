@@ -6,22 +6,27 @@ module Punchblock
           register :conference, :conference
 
           ##
-          # Creates an Ozone conference message
+          # Creates an Ozone conference command
           #
-          # @param [Hash] options for conferencing a specific call
+          # @param [Hash] options
           # @option options [String] :name room id to with which to create or join the conference
-          # @option options [String, Optional] :audio_url URL to play to the caller
-          # @option options [String, Optional] :prompt Text to speak to the caller
+          # @option options [String, Optional] :audio_url URL to play to the caller as an announcement
+          # @option options [String, Optional] :prompt Text to speak to the caller as an announcement
+          # @option options [Boolean, Optional] :beep Whether or not the conference should hear a beep on entry/departure
+          # @option options [Boolean, Optional] :mute If set to true, the user will be muted in the conference
+          # @option options [Boolean, Optional] :moderator Whether or not the conference should be moderated
+          # @option options [Boolean, Optional] :tone_passthrough Identifies whether or not conference members can hear the tone generated when a a key on the phone is pressed.
+          # @option options [String, Optional] :terminator This is the touch-tone key (also known as "DTMF digit") used to exit the conference.
           #
-          # @return [Object] a Blather iq stanza object
+          # @return [Ozone::Command::Conference] a formatted Ozone conference command
           #
           # @example
-          #    conference :id => 'Please enter your postal code.',
+          #    conference :name => 'Please enter your postal code.',
           #               :beep => true,
           #               :terminator => '#'
           #
           #    returns:
-          #      <conference xmlns="urn:xmpp:ozone:conference:1" id="1234" beep="true" terminator="#"/>
+          #      <conference xmlns="urn:xmpp:ozone:conference:1" name="1234" beep="true" terminator="#"/>
           def self.new(options = {})
             super().tap do |new_node|
               prompt    = options.delete :prompt
@@ -35,64 +40,108 @@ module Punchblock
             end
           end
 
+          ##
+          # @return [String] the name of the conference
+          #
           def name
             read_attr :name
           end
 
+          ##
+          # @param [String] name of the conference
+          #
           def name=(name)
             write_attr :name, name
           end
 
+          ##
+          # @return [Boolean] Whether or not the conference should hear a beep on entry/departure
+          #
           def beep
             read_attr(:beep) == 'true'
           end
 
+          ##
+          # @param [Boolean] beep Whether or not the conference should hear a beep on entry/departure
+          #
           def beep=(beep)
             write_attr :beep, beep.to_s
           end
 
+          ##
+          # @return [Boolean] If set to true, the user will be muted in the conference.
+          #
           def mute
             read_attr(:mute) == 'true'
           end
 
+          ##
+          # @param [Boolean] mute If set to true, the user will be muted in the conference
+          #
           def mute=(mute)
             write_attr :mute, mute.to_s
           end
 
+          ##
+          # @return [String] This is the touch-tone key (also known as "DTMF digit") used to exit the conference.
+          #
           def terminator
             read_attr :terminator
           end
 
+          ##
+          # @param [String] terminator This is the touch-tone key (also known as "DTMF digit") used to exit the conference.
+          #
           def terminator=(terminator)
             write_attr :terminator, terminator
           end
 
+          ##
+          # @return [Boolean] Identifies whether or not conference members can hear the tone generated when a a key on the phone is pressed.
+          #
           def tone_passthrough
             read_attr('tone-passthrough') == 'true'
           end
 
+          ##
+          # @param [Boolean] tone_passthrough Identifies whether or not conference members can hear the tone generated when a a key on the phone is pressed.
+          #
           def tone_passthrough=(tone_passthrough)
             write_attr 'tone-passthrough', tone_passthrough.to_s
           end
 
+          ##
+          # @return [Boolean] Whether or not the conference should be moderated
+          #
           def moderator
             read_attr(:moderator) == 'true'
           end
 
+          ##
+          # @param [Boolean] moderator Whether or not the conference should be moderated
+          #
           def moderator=(moderator)
             write_attr :moderator, moderator.to_s
           end
 
+          ##
+          # @return [Announcement] the announcement to play to the participant on entry
+          #
           def announcement
             node = find_first '//ns:announcement', :ns => self.registered_ns
             Announcement.new node if node
           end
 
+          ##
+          # @param [Hash] ann
+          # @option ann [String] :text Text to speak to the caller as an announcement
+          # @option ann [String] :url URL to play to the caller as an announcement
+          #
           def announcement=(ann)
             self << Announcement.new(ann)
           end
 
-          def attributes
+          def attributes # :nodoc:
             [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
           end
 
@@ -114,7 +163,7 @@ module Punchblock
 
               alias :details :text
 
-              def attributes
+              def attributes # :nodoc:
                 [:details] + super
               end
             end
@@ -134,6 +183,7 @@ module Punchblock
           #
           #    returns:
           #      <mute xmlns="urn:xmpp:ozone:conference:1"/>
+          #
           def mute!
             Mute.new :command_id => command_id
           end
@@ -148,6 +198,7 @@ module Punchblock
           #
           #    returns:
           #      <unmute xmlns="urn:xmpp:ozone:conference:1"/>
+          #
           def unmute!
             Unmute.new :command_id => command_id
           end
@@ -162,12 +213,16 @@ module Punchblock
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:conference:1"/>
+          #
           def stop!(options = {})
             Stop.new :command_id => command_id
           end
 
           ##
           # Create an Ozone conference kick message
+          #
+          # @param [Hash] options
+          # @option options [String] :message to explain the reason for kicking
           #
           # @return [Ozone::Command::Conference::Kick] an Ozone conference kick message
           #
@@ -176,11 +231,12 @@ module Punchblock
           #
           #    returns:
           #      <kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>
+          #
           def kick!(options = {})
             Kick.new options.merge(:command_id => command_id)
           end
 
-          class Action < OzoneNode
+          class Action < OzoneNode # :nodoc:
             def self.new(options = {})
               super().tap do |new_node|
                 new_node.command_id = options[:command_id]
@@ -188,19 +244,19 @@ module Punchblock
             end
           end
 
-          class Mute < Action
+          class Mute < Action # :nodoc:
             register :mute, :conference
           end
 
-          class Unmute < Action
+          class Unmute < Action # :nodoc:
             register :unmute, :conference
           end
 
-          class Stop < Action
+          class Stop < Action # :nodoc:
             register :stop, :conference
           end
 
-          class Kick < Action
+          class Kick < Action # :nodoc:
             register :kick, :conference
 
             def self.new(options = {})
@@ -215,7 +271,7 @@ module Punchblock
           end
 
         end # Conference
-      end
+      end # Command
     end # Ozone
   end # Protocol
 end # Punchblock

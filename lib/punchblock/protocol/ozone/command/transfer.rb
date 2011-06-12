@@ -8,32 +8,41 @@ module Punchblock
           include HasHeaders
 
           ##
-          # Creates a transfer message for Ozone
+          # Creates an Ozone transfer command
           #
           # @param [Hash] options for transferring a call
-          # @option options [String] :to The destination for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com)
+          # @option options [String, Array[String]] :to The destination(s) for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com). Can be an array to hunt.
           # @option options [String] :from The caller ID for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com)
+          # @option options [String, Optional] :terminator The string key press required to abort the transfer.
           # @option options [Integer, Optional] :timeout How long to wait - in seconds - for an answer, busy signal, or other event to occur.
           # @option options [Boolean, Optional] :answer_on_media If set to true, the call will be considered "answered" and audio will begin playing as soon as media is received from the far end (ringing / busy signal / etc)
-          # @option options [String, Optional] :terminator
           #
           # @return [Ozone::Message::Transfer] an Ozone "transfer" message
           #
           # @example
-          #   Transfer.new(:to => 'sip:myapp@mydomain.com', :terminator => '#').to_xml
+          #   Transfer.new(:to => 'sip:you@yourdomain.com', :from => 'sip:myapp@mydomain.com', :terminator => '#').to_xml
           #
           #   returns:
-          #     <transfer xmlns="urn:xmpp:ozone:transfer:1" to="sip:myapp@mydomain.com" terminator="#"/>
+          #     <transfer xmlns="urn:xmpp:ozone:transfer:1" from="sip:myapp@mydomain.com" terminator="#">
+          #       <to>sip:you@yourdomain.com</to>
+          #     </transfer>
+          #
           def self.new(options = {})
             super().tap do |new_node|
               options.each_pair { |k,v| new_node.send :"#{k}=", v }
             end
           end
 
+          ##
+          # @return [Array[String]] The destination(s) for the call transfer
+          #
           def to
             find('ns:to', :ns => self.class.registered_ns).map &:text
           end
 
+          ##
+          # @param [String, Array[String]] :to The destination(s) for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com). Can be an array to hunt.
+          #
           def to=(transfer_to)
             find('//ns:to', :ns => self.class.registered_ns).each &:remove
             if transfer_to
@@ -45,39 +54,63 @@ module Punchblock
             end
           end
 
+          ##
+          # @return [String] The caller ID for the call transfer
+          #
           def from
             read_attr :from
           end
 
+          ##
+          # @param [String, Array[String]] :to The destination(s) for the call transfer (ie - tel:+14155551212 or sip:you@sip.tropo.com). Can be an array to hunt.
+          #
           def from=(transfer_from)
             write_attr :from, transfer_from
           end
 
+          ##
+          # @return [String] The string key press required to abort the transfer.
+          #
           def terminator
             read_attr :terminator
           end
 
+          ##
+          # @param [String] terminator The string key press required to abort the transfer.
+          #
           def terminator=(terminator)
             write_attr :terminator, terminator
           end
 
+          ##
+          # @return [Integer] How long to wait - in seconds - for an answer, busy signal, or other event to occur.
+          #
           def timeout
             read_attr :timeout, :to_i
           end
 
+          ##
+          # @param [Integer] timeout How long to wait - in seconds - for an answer, busy signal, or other event to occur.
+          #
           def timeout=(timeout)
             write_attr :timeout, timeout
           end
 
+          ##
+          # @return [Boolean] If true, the call will be considered "answered" and audio will begin playing as soon as media is received from the far end (ringing / busy signal / etc)
+          #
           def answer_on_media
             read_attr('answer-on-media') == 'true'
           end
 
+          ##
+          # @param [Boolean] aom If set to true, the call will be considered "answered" and audio will begin playing as soon as media is received from the far end (ringing / busy signal / etc)
+          #
           def answer_on_media=(aom)
             write_attr 'answer-on-media', aom.to_s
           end
 
-          def attributes
+          def attributes # :nodoc:
             [:to, :from, :terminator, :timeout, :answer_on_media] + super
           end
 
@@ -91,11 +124,12 @@ module Punchblock
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:transfer:1"/>
+          #
           def stop!
             Stop.new :command_id => command_id
           end
 
-          class Action < OzoneNode
+          class Action < OzoneNode # :nodoc:
             def self.new(options = {})
               super().tap do |new_node|
                 new_node.command_id = options[:command_id]
@@ -103,7 +137,7 @@ module Punchblock
             end
           end
 
-          class Stop < Action
+          class Stop < Action # :nodoc:
             register :stop, :transfer
           end
 
@@ -129,7 +163,7 @@ module Punchblock
             end
           end
         end # Transfer
-      end
+      end # Command
     end # Ozone
   end # Protocol
 end # Punchblock

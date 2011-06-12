@@ -6,12 +6,15 @@ module Punchblock
           register :say, :say
 
           ##
-          # Creates a say with a text for Ozone
+          # Creates an Ozone Say command
           #
           # @param [Hash] options
-          # @option options [String] :text to speak back to a caller
+          # @option options [String] :text to speak back
+          # @option options [String] :voice with which to render TTS
+          # @option options [String] :url of a recording to play
+          # @option options [String] :ssml document to render TTS
           #
-          # @return [Ozone::Message] an Ozone "say" message
+          # @return [Ozone::Command::Say] an Ozone "say" command
           #
           # @example
           #   say :text => 'Hello brown cow.'
@@ -33,28 +36,47 @@ module Punchblock
             end
           end
 
+          ##
+          # @return [String] the TTS voice to use
+          #
           def voice
             read_attr :voice
           end
 
+          ##
+          # @param [String] voice to use when rendering TTS
+          #
           def voice=(voice)
             write_attr :voice, voice
           end
 
+          ##
+          # @return [Audio] the audio to play
+          #
           def audio
             node = find_first('//ns:audio', :ns => self.registered_ns)
             Audio.new node if node
           end
 
+          ##
+          # @param [Hash] audio
+          # @option audio [String] :url of a recording to play
+          #
           def audio=(audio)
             remove_children :audio
             self << Audio.new(audio) if audio.present?
           end
 
+          ##
+          # @return [String] the SSML document to render TTS
+          #
           def ssml
             content.strip
           end
 
+          ##
+          # @param [String] ssml the SSML document to render TTS
+          #
           def ssml=(ssml)
             if ssml.instance_of?(String)
               self << OzoneNode.new('').parse(ssml) do |config|
@@ -63,13 +85,13 @@ module Punchblock
             end
           end
 
-          def attributes
+          def attributes # :nodoc:
             [:voice, :audio, :ssml] + super
           end
 
           # Pauses a running Say
           #
-          # @return [Ozone::Message::Say] an Ozone pause message for the current Say
+          # @return [Ozone::Command::Say::Pause] an Ozone pause message for the current Say
           #
           # @example
           #    say_obj.pause!.to_xml
@@ -83,7 +105,7 @@ module Punchblock
           ##
           # Create an Ozone resume message for the current Say
           #
-          # @return [Ozone::Message::Say] an Ozone resume message
+          # @return [Ozone::Command::Say::Resume] an Ozone resume message
           #
           # @example
           #    say_obj.resume!.to_xml
@@ -97,7 +119,7 @@ module Punchblock
           ##
           # Creates an Ozone stop message for the current Say
           #
-          # @return [Ozone::Message] an Ozone stop message
+          # @return [Ozone::Command::Say::Stop] an Ozone stop message
           #
           # @example
           #    say_obj.stop!.to_xml
@@ -108,7 +130,7 @@ module Punchblock
             Stop.new :command_id => command_id
           end
 
-          class Action < OzoneNode
+          class Action < OzoneNode # :nodoc:
             def self.new(options = {})
               super().tap do |new_node|
                 new_node.command_id = options[:command_id]
@@ -116,15 +138,15 @@ module Punchblock
             end
           end
 
-          class Pause < Action
+          class Pause < Action # :nodoc:
             register :pause, :say
           end
 
-          class Resume < Action
+          class Resume < Action # :nodoc:
             register :resume, :say
           end
 
-          class Stop < Action
+          class Stop < Action # :nodoc:
             register :stop, :say
           end
 
@@ -134,7 +156,7 @@ module Punchblock
             end
           end
         end # Say
-      end
+      end # Command
     end # Ozone
   end # Protocol
 end # Punchblock

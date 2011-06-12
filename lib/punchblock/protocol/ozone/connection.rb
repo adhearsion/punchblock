@@ -54,8 +54,15 @@ module Punchblock
         end
 
         def run
-          register_handlers
-          EM.run { client.run }
+          Thread.new do
+            begin
+              register_handlers
+              EM.run { client.run }
+            rescue => e
+              puts "Exception in XMPP thread! #{e.message}"
+              puts e.backtrace.join("\t\n")
+            end
+          end
         end
 
         def connected?

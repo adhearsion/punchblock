@@ -21,20 +21,14 @@ options[:transport_logger].debug "Starting up..."
 
 protocol = Punchblock::Protocol::Ozone.new options
 
-x = Thread.new do
-  begin
-    protocol.run
-  rescue => e
-    puts "Exception in XMPP thread! #{e.message}"
-    puts e.backtrace.join("\t\n")
-  end
-end
+protocol_thread = protocol.run
 
 CALL_QUEUES = {}
 INFO_EVENT_QUEUE = Queue.new
 
 # Block on waiting for the XMPP to connect, then show when we are connected
 puts protocol.event_queue.pop
+puts "Waiting for a call..."
 
 ### DISPATCHER THREAD
 # This thread multiplexes the event stream from the underlying connection handler and routes them
@@ -78,4 +72,4 @@ def run_call(protocol, call)
   end
 end
 
-x.join
+protocol_thread.join

@@ -2,20 +2,28 @@ module Punchblock
   module Protocol
     class Ozone
       class Audio < OzoneNode
-        def self.new(src)
+        ##
+        #
+        # Creates a new Ozone audio element
+        #
+        # @param [Hash] options
+        # @option options [String] :url of the audio file
+        # @option options [String] :text
+        #
+        def self.new(options = {})
           super(:audio).tap do |new_node|
-            case src
+            case options
             when Nokogiri::XML::Node
-              new_node.inherit src
+              new_node.inherit options
             when Hash
-              new_node.src = src[:url] if src[:url]
-              new_node << src[:text] if src[:text]
+              new_node.src = options[:url] if options[:url]
+              new_node << options[:text] if options[:text]
             end
           end
         end
 
         # The Audio's source
-        # @return [String]
+        # @return [String] the url of the audio
         def src
           read_attr :src
         end
@@ -33,7 +41,7 @@ module Punchblock
           super o, *(fields + [:src])
         end
 
-        def attributes
+        def attributes # :nodoc:
           [:src] + super
         end
       end

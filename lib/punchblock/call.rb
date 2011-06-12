@@ -6,6 +6,11 @@ module Punchblock
   class Call
     attr_accessor :call_id, :to, :headers
 
+    ##
+    # @param [String] call_id
+    # @param [String] to
+    # @param [Hash] headers
+    #
     def initialize(call_id, to, headers)
       @call_id, @to = call_id, to
       # Ensure all our headers have lowercase names and convert to symbols

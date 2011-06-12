@@ -2,6 +2,10 @@ module Punchblock
   module Protocol
     class Ozone
       class Header < OzoneNode
+        ##
+        # @param [String] name
+        # @param [String] value
+        #
         def self.new(name, value = '')
           super(:header).tap do |new_node|
             case name
@@ -45,7 +49,7 @@ module Punchblock
           super o, *(fields + [:name, :value])
         end
 
-        def attributes
+        def attributes # :nodoc:
           [:name, :value] + super
         end
       end

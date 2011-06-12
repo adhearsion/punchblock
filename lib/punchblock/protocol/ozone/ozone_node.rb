@@ -64,7 +64,7 @@ module Punchblock
           super name, doc, registered_ns
         end
 
-        def attributes
+        def attributes # :nodoc:
           [:call_id, :command_id, :namespace_href]
         end
 
@@ -72,6 +72,9 @@ module Punchblock
           "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" } * ', '}>"
         end
 
+        ##
+        # @return [OzoneNode] the original command issued that lead to this event
+        #
         def source
           connection.original_command_from_id command_id if connection && command_id
         end

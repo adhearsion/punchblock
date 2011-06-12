@@ -11,6 +11,14 @@ module Punchblock
       class Connection < GenericConnection
         include Blather::DSL
 
+        ##
+        # Initialize the required connection attributes
+        #
+        # @param [Hash] options
+        # @option options [String] :username client JID
+        # @option options [String] :password XMPP password
+        # @option options [Logger] :wire_logger to which all XMPP transactions will be logged
+        #
         def initialize(options = {})
           super
           raise ArgumentError unless @username = options.delete(:username)
@@ -35,24 +43,37 @@ module Punchblock
           [Event::Complete, Event::End, Event::Info, Event::Offer, Ref]
         end
 
-        def write(call, msg)
-          msg.connection = self
-          jid = msg.is_a?(Command::Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
+        ##
+        # Write a command to the Ozone server for a particular call
+        #
+        # @param [Call] call the call on which to act
+        # @param [OzoneNode] cmd the command to execute on the call
+        #
+        # @raise Exception if there is a server-side error
+        #
+        # @return true
+        #
+        def write(call, cmd)
+          cmd.connection = self
+          jid = cmd.is_a?(Command::Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
           iq = create_iq jid
-          @logger.debug "Sending IQ ID #{iq.id} #{msg.inspect} to #{jid}" if @logger
-          iq << msg
-          @iq_id_to_command[iq.id] = msg
+          @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
+          iq << cmd
+          @iq_id_to_command[iq.id] = cmd
           @result_queues[iq.id] = Queue.new
           write_to_stream iq
           result = read_queue_with_timeout @result_queues[iq.id]
           ref = result.ozone_node
-          msg.command_id = ref.id if ref.is_a?(Ref)
+          cmd.command_id = ref.id if ref.is_a?(Ref)
           @result_queues[iq.id] = nil # Shut down this queue
           # FIXME: Error handling
           raise result if result.is_a? Exception
           true
         end
 
+        ##
+        # Fire up the connection
+        #
         def run
           Thread.new do
             begin
@@ -69,6 +90,14 @@ module Punchblock
           client.connected?
         end
 
+        ##
+        #
+        # Get the original command issued by command ID
+        #
+        # @param [String] command_id
+        #
+        # @return [OzoneNode]
+        #
         def original_command_from_id(command_id)
           @iq_id_to_command[@command_id_to_iq_id[command_id]]
         end

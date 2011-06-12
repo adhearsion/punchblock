@@ -67,52 +67,72 @@ module Punchblock
             [:voice, :audio, :ssml] + super
           end
 
+          # Pauses a running Say
+          #
+          # @return [Ozone::Message::Say] an Ozone pause message for the current Say
+          #
+          # @example
+          #    say_obj.pause!.to_xml
+          #
+          #    returns:
+          #      <pause xmlns="urn:xmpp:ozone:say:1"/>
+          def pause!
+            Pause.new :command_id => command_id
+          end
+
+          ##
+          # Create an Ozone resume message for the current Say
+          #
+          # @return [Ozone::Message::Say] an Ozone resume message
+          #
+          # @example
+          #    say_obj.resume!.to_xml
+          #
+          #    returns:
+          #      <resume xmlns="urn:xmpp:ozone:say:1"/>
+          def resume!
+            Resume.new :command_id => command_id
+          end
+
+          ##
+          # Creates an Ozone stop message for the current Say
+          #
+          # @return [Ozone::Message] an Ozone stop message
+          #
+          # @example
+          #    say_obj.stop!.to_xml
+          #
+          #    returns:
+          #      <stop xmlns="urn:xmpp:ozone:say:1"/>
+          def stop!
+            Stop.new :command_id => command_id
+          end
+
+          class Action < OzoneNode
+            def self.new(options = {})
+              super().tap do |new_node|
+                new_node.command_id = options[:command_id]
+              end
+            end
+          end
+
+          class Pause < Action
+            register :pause, :say
+          end
+
+          class Resume < Action
+            register :resume, :say
+          end
+
+          class Stop < Action
+            register :stop, :say
+          end
+
           class Complete
             class Success < Ozone::Event::Complete::Reason
               register :success, :say_complete
             end
           end
-
-          # # Pauses a running Say
-          # #
-          # # @return [Ozone::Message::Say] an Ozone pause message for the current Say
-          # #
-          # # @example
-          # #    say_obj.pause.to_xml
-          # #
-          # #    returns:
-          # #      <pause xmlns="urn:xmpp:ozone:say:1"/>
-          # def pause
-          #   Say.new :pause, :parent => self
-          # end
-          #
-          # ##
-          # # Create an Ozone resume message for the current Say
-          # #
-          # # @return [Ozone::Message::Say] an Ozone resume message
-          # #
-          # # @example
-          # #    say_obj.resume.to_xml
-          # #
-          # #    returns:
-          # #      <resume xmlns="urn:xmpp:ozone:say:1"/>
-          # def resume
-          #   Say.new :resume, :parent => self
-          # end
-          #
-          # ##
-          # # Creates an Ozone stop message for the current Say
-          # #
-          # # @return [Ozone::Message] an Ozone stop message
-          # #
-          # # @example
-          # #    stop 'say'
-          # #
-          # #    returns:
-          # #      <stop xmlns="urn:xmpp:ozone:say:1"/>
-          # def stop
-          #   Say.new :stop, :parent => self
-          # end
         end # Say
       end
     end # Ozone

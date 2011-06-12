@@ -45,6 +45,8 @@ module Punchblock
           @result_queues[iq.id] = Queue.new
           write_to_stream iq
           result = read_queue_with_timeout @result_queues[iq.id]
+          ref = result.ozone_node
+          msg.command_id = ref.id if ref.is_a?(Ref)
           @result_queues[iq.id] = nil # Shut down this queue
           # FIXME: Error handling
           raise result if result.is_a? Exception

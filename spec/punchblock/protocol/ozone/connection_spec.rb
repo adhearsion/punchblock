@@ -67,6 +67,8 @@ module Punchblock
 
           connection.__send__ :handle_presence, example_complete
           connection.event_queue.last.source.should == say
+
+          say.command_id.should == 'fgh4590'
         end
 
         describe '#handle_presence' do

@@ -30,19 +30,28 @@ module Punchblock
             its(:moderator)         { should == true }
           end
 
-          it '"mute" message' do
-            pending 'Need to construct the parent object first'
-            mute.to_xml.should == '<mute xmlns="urn:xmpp:ozone:conference:1"/>'
-          end
+          describe "actions" do
+            let(:conference) { Conference.new :name => '1234' }
 
-          it '"unmute" message' do
-            pending 'Need to construct the parent object first'
-            unmute.to_xml.should == '<unmute xmlns="urn:xmpp:ozone:conference:1"/>'
-          end
+            before { conference.command_id = 'abc123' }
 
-          it '"kick" message' do
-            pending 'Need to construct the parent object first'
-            kick.to_xml.should == '<kick xmlns="urn:xmpp:ozone:conference:1"/>'
+            describe '#mute!' do
+              subject { conference.mute! }
+              its(:to_xml) { should == '<mute xmlns="urn:xmpp:ozone:conference:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
+
+            describe '#unmute!' do
+              subject { conference.unmute! }
+              its(:to_xml) { should == '<unmute xmlns="urn:xmpp:ozone:conference:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
+
+            describe '#kick!' do
+              subject { conference.kick! :message => 'bye!' }
+              its(:to_xml) { should == '<kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>' }
+              its(:command_id) { should == 'abc123' }
+            end
           end
 
           describe Conference::OnHold do

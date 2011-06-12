@@ -28,6 +28,18 @@ module Punchblock
           it_should_behave_like 'command_headers'
         end
 
+        describe "actions" do
+          let(:command) { Transfer.new :to => 'tel:+14045551212', :from => 'tel:+14155551212' }
+
+          before { command.command_id = 'abc123' }
+
+          describe '#stop!' do
+            subject { command.stop! }
+            its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:transfer:1"/>' }
+            its(:command_id) { should == 'abc123' }
+          end
+        end
+
         describe Transfer::Complete::Success do
           let :stanza do
             <<-MESSAGE

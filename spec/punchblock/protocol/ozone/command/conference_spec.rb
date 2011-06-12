@@ -52,6 +52,12 @@ module Punchblock
               its(:to_xml) { should == '<kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>' }
               its(:command_id) { should == 'abc123' }
             end
+
+            describe '#stop!' do
+              subject { conference.stop! }
+              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:conference:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
           end
 
           describe Conference::OnHold do

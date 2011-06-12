@@ -86,6 +86,18 @@ module Punchblock
             end
           end
 
+          describe "actions" do
+            let(:command) { Ask.new :choices => '[5 DIGITS]' }
+
+            before { command.command_id = 'abc123' }
+
+            describe '#stop!' do
+              subject { command.stop! }
+              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:ask:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
+          end
+
           describe Ask::Complete::Success do
             let :stanza do
               <<-MESSAGE

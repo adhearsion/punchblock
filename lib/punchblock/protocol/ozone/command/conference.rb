@@ -153,15 +153,29 @@ module Punchblock
           end
 
           ##
+          # Create an Ozone conference stop message
+          #
+          # @return [Ozone::Command::Conference::Stop] an Ozone conference stop message
+          #
+          # @example
+          #    conf_obj.stop!.to_xml
+          #
+          #    returns:
+          #      <stop xmlns="urn:xmpp:ozone:conference:1"/>
+          def stop!(options = {})
+            Stop.new :command_id => command_id
+          end
+
+          ##
           # Create an Ozone conference kick message
           #
           # @return [Ozone::Command::Conference::Kick] an Ozone conference kick message
           #
           # @example
-          #    conf_obj.kick!.to_xml
+          #    conf_obj.kick!(:message => 'bye!').to_xml
           #
           #    returns:
-          #      <kick xmlns="urn:xmpp:ozone:conference:1"/>
+          #      <kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>
           def kick!(options = {})
             Kick.new options.merge(:command_id => command_id)
           end
@@ -180,6 +194,10 @@ module Punchblock
 
           class Unmute < Action
             register :unmute, :conference
+          end
+
+          class Stop < Action
+            register :stop, :conference
           end
 
           class Kick < Action

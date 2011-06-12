@@ -175,6 +175,32 @@ module Punchblock
             end
           end
 
+          ##
+          # Creates an Ozone stop message for the current Ask
+          #
+          # @return [Ozone::Message] an Ozone stop message
+          #
+          # @example
+          #    ask_obj.stop!.to_xml
+          #
+          #    returns:
+          #      <stop xmlns="urn:xmpp:ozone:ask:1"/>
+          def stop!
+            Stop.new :command_id => command_id
+          end
+
+          class Action < OzoneNode
+            def self.new(options = {})
+              super().tap do |new_node|
+                new_node.command_id = options[:command_id]
+              end
+            end
+          end
+
+          class Stop < Action
+            register :stop, :ask
+          end
+
           class Complete
             class Success < Ozone::Event::Complete::Reason
               register :success, :ask_complete

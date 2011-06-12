@@ -38,19 +38,21 @@ module Punchblock
           iq = Blather::Stanza::Iq.new :set, '9f00061@call.ozone.net'
           flexmock(connection).should_receive(:create_iq).and_return iq
 
-          Thread.new do
+          write_thread = Thread.new do
             connection.write call, say
           end
 
-          Thread.new do
-            result = import_stanza <<-MSG
-<iq type='result' from='16577@app.ozone.net/1' to='9f00061@call.ozone.net/1'>
-   <ref id='fgh4590' xmlns='urn:xmpp:ozone:1' />
+          result = import_stanza <<-MSG
+<iq type='result' from='16577@app.ozone.net/1' to='9f00061@call.ozone.net/1' id='#{iq.id}'>
+  <ref id='fgh4590' xmlns='urn:xmpp:ozone:1' />
 </iq>
-            MSG
+          MSG
 
-            connection.__send__ :handle_iq, result
-          end
+          sleep 0.5 # Block so there's enough time for the write thread to get to the point where it's waiting on an IQ
+
+          connection.__send__ :handle_iq, result
+
+          write_thread.join
 
           connection.original_command_from_id('fgh4590').should == say
         end

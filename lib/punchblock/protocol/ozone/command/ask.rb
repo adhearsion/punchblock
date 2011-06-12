@@ -179,12 +179,12 @@ module Punchblock
             #
             def self.new(options = {})
               super(:choices).tap do |new_node|
-                case value
+                case options
                 when Nokogiri::XML::Node
-                  new_node.inherit value
+                  new_node.inherit options
                 when Hash
-                  new_node.content_type = value[:content_type]
-                  new_node.value = value[:value]
+                  new_node.content_type = options[:content_type]
+                  new_node.value = options[:value]
                 end
               end
             end

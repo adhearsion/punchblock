@@ -5,17 +5,47 @@ require 'bundler/setup'
 require 'punchblock'
 require 'pry'
 require 'logger'
+require 'optparse'
 
 Thread.abort_on_exception = true
 
-options = {}
-options[:username] = ARGV[0] || 'usera@127.0.0.1'
-options[:password] = ARGV[1] || '1'
+options = { :username => 'usera@127.0.0.1', :password => '1', :wire_log_file => 'log/ozone-wire.log', :transport_log_file => 'log/ozone-transport.log' }
 
-options[:wire_logger] = Logger.new 'log/ozone-wire.log'
+option_parser = OptionParser.new do |opts|
+  opts.banner = "Usage: punchblock-console [-u usera@127.0.0.1] [-p abc123]"
+  opts.on("-u", "--username USERNAME", String, "Specify the XMPP JID to connect to") do |u|
+    options[:username] = u
+  end
+  opts.on("-p", "--password PASSWORD", String, "Specify the XMPP password to use") do |p|
+    options[:password] = p
+  end
+  opts.on("--wire-log-file log/wirelog.log", String, "Specify the file to which the wire log should be written") do |wlf|
+    options[:wire_log_file] = wlf
+  end
+  opts.on("--transport-log-file log/transportlog.log", String, "Specify the file to which the transport log should be written") do |tlf|
+    options[:transport_log_file] = tlf
+  end
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+  opts.on_tail("-v", "--version", "Show version") do
+    puts Punchblock::VERSION
+    exit
+  end
+end
+
+begin
+  option_parser.parse!
+rescue
+  puts $!
+  option_parser.parse '--help'
+end
+
+options[:wire_logger] = Logger.new options.delete(:wire_log_file)
 options[:wire_logger].level = Logger::DEBUG
 options[:wire_logger].debug "Starting up..."
-options[:transport_logger] = Logger.new 'log/ozone-transport.log'
+options[:transport_logger] = Logger.new options.delete(:transport_log_file)
 options[:transport_logger].level = Logger::DEBUG
 options[:transport_logger].debug "Starting up..."
 

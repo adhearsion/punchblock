@@ -124,47 +124,95 @@ module Punchblock
             end
           end
 
-          # ##
-          # # Create an Ozone mute message for the current conference
-          # #
-          # # @return [Ozone::Message::Conference] an Ozone mute message
-          # #
-          # # @example
-          # #    conf_obj.mute.to_xml
-          # #
-          # #    returns:
-          # #      <mute xmlns="urn:xmpp:ozone:conference:1"/>
-          # def mute
-          #   Conference.new :mute, :parent => self
-          # end
+          ##
+          # Create an Ozone mute message for the current conference
           #
-          # ##
-          # # Create an Ozone unmute message for the current conference
-          # #
-          # # @return [Ozone::Message::Conference] an Ozone unmute message
-          # #
-          # # @example
-          # #    conf_obj.unmute.to_xml
-          # #
-          # #    returns:
-          # #      <unmute xmlns="urn:xmpp:ozone:conference:1"/>
-          # def unmute
-          #   Conference.new :unmute, :parent => self
-          # end
+          # @return [Ozone::Command::Conference::Mute] an Ozone mute message
           #
-          # ##
-          # # Create an Ozone conference kick message
-          # #
-          # # @return [Ozone::Message::Conference] an Ozone conference kick message
-          # #
-          # # @example
-          # #    conf_obj.kick.to_xml
-          # #
-          # #    returns:
-          # #      <kick xmlns="urn:xmpp:ozone:conference:1"/>
-          # def kick
-          #   Conference.new :kick, :parent => self
-          # end
+          # @example
+          #    conf_obj.mute!.to_xml
+          #
+          #    returns:
+          #      <mute xmlns="urn:xmpp:ozone:conference:1"/>
+          def mute!
+            Mute.new :command_id => command_id
+          end
+
+          ##
+          # Create an Ozone unmute message for the current conference
+          #
+          # @return [Ozone::Command::Conference::Unmute] an Ozone unmute message
+          #
+          # @example
+          #    conf_obj.unmute!.to_xml
+          #
+          #    returns:
+          #      <unmute xmlns="urn:xmpp:ozone:conference:1"/>
+          def unmute!
+            Unmute.new :command_id => command_id
+          end
+
+          ##
+          # Create an Ozone conference stop message
+          #
+          # @return [Ozone::Command::Conference::Stop] an Ozone conference stop message
+          #
+          # @example
+          #    conf_obj.stop!.to_xml
+          #
+          #    returns:
+          #      <stop xmlns="urn:xmpp:ozone:conference:1"/>
+          def stop!(options = {})
+            Stop.new :command_id => command_id
+          end
+
+          ##
+          # Create an Ozone conference kick message
+          #
+          # @return [Ozone::Command::Conference::Kick] an Ozone conference kick message
+          #
+          # @example
+          #    conf_obj.kick!(:message => 'bye!').to_xml
+          #
+          #    returns:
+          #      <kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>
+          def kick!(options = {})
+            Kick.new options.merge(:command_id => command_id)
+          end
+
+          class Action < OzoneNode
+            def self.new(options = {})
+              super().tap do |new_node|
+                new_node.command_id = options[:command_id]
+              end
+            end
+          end
+
+          class Mute < Action
+            register :mute, :conference
+          end
+
+          class Unmute < Action
+            register :unmute, :conference
+          end
+
+          class Stop < Action
+            register :stop, :conference
+          end
+
+          class Kick < Action
+            register :kick, :conference
+
+            def self.new(options = {})
+              super.tap do |new_node|
+                new_node.message = options[:message]
+              end
+            end
+
+            def message=(m)
+              self << m
+            end
+          end
 
         end # Conference
       end

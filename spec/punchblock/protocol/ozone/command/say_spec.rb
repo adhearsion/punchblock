@@ -32,19 +32,28 @@ module Punchblock
             end
           end
 
-          it '"pause" message' do
-            pending 'Need to construct the parent object first'
-            pause.to_xml.should == '<pause xmlns="urn:xmpp:ozone:say:1"/>'
-          end
+          describe "actions" do
+            let(:command) { Say.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
 
-          it '"resume" message' do
-            pending 'Need to construct the parent object first'
-            resume(:say).to_xml.should == '<resume xmlns="urn:xmpp:ozone:say:1"/>'
-          end
+            before { command.command_id = 'abc123' }
 
-          it '"stop" message' do
-            pending 'Need to construct the parent object first'
-            stop(:say).to_xml.should == '<stop xmlns="urn:xmpp:ozone:say:1"/>'
+            describe '#pause!' do
+              subject { command.pause! }
+              its(:to_xml) { should == '<pause xmlns="urn:xmpp:ozone:say:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
+
+            describe '#resume!' do
+              subject { command.resume! }
+              its(:to_xml) { should == '<resume xmlns="urn:xmpp:ozone:say:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
+
+            describe '#stop!' do
+              subject { command.stop! }
+              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:say:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
           end
         end
 

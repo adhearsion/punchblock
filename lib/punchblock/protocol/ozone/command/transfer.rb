@@ -81,6 +81,32 @@ module Punchblock
             [:to, :from, :terminator, :timeout, :answer_on_media] + super
           end
 
+          ##
+          # Creates an Ozone stop message for the current Transfer
+          #
+          # @return [Ozone::Command::Transfer::Stop] an Ozone stop command
+          #
+          # @example
+          #    transfer_obj.stop!.to_xml
+          #
+          #    returns:
+          #      <stop xmlns="urn:xmpp:ozone:transfer:1"/>
+          def stop!
+            Stop.new :command_id => command_id
+          end
+
+          class Action < OzoneNode
+            def self.new(options = {})
+              super().tap do |new_node|
+                new_node.command_id = options[:command_id]
+              end
+            end
+          end
+
+          class Stop < Action
+            register :stop, :transfer
+          end
+
           class Complete
             class Success < Ozone::Event::Complete::Reason
               register :success, :transfer_complete

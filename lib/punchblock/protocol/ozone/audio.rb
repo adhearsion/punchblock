@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       class Audio < OzoneNode
         def self.new(src)
           super(:audio).tap do |new_node|

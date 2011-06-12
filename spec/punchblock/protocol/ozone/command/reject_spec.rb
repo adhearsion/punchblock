@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       module Command
         describe Reject do
           it 'registers itself' do

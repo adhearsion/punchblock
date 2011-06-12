@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       extend ActiveSupport::Autoload
 
       BASE_OZONE_NAMESPACE  = 'urn:xmpp:ozone'
@@ -19,6 +19,15 @@ module Punchblock
       autoload :HasHeaders
       autoload :Header
       autoload :OzoneNode
+      autoload :Ref
+
+      def initialize(options = {})
+        @connection = Connection.new options
+      end
+
+      def method_missing(method_name, *args)
+        @connection.__send__ method_name, *args
+      end
     end
   end
 end

@@ -1,6 +1,6 @@
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       autoload :Niceogiri,  'niceogiri'
       autoload :Nokogiri,   'nokogiri'
 
@@ -9,7 +9,7 @@ module Punchblock
 
         class_inheritable_accessor :registered_ns, :registered_name
 
-        attr_accessor :call_id, :command_id
+        attr_accessor :call_id, :command_id, :connection
 
         # Register a new stanza class to a name and/or namespace
         #
@@ -70,6 +70,10 @@ module Punchblock
 
         def inspect
           "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" } * ', '}>"
+        end
+
+        def source
+          connection.original_command_from_id command_id if connection && command_id
         end
 
         alias :to_s :inspect

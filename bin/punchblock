@@ -19,13 +19,11 @@ options[:transport_logger] = Logger.new 'log/ozone-transport.log'
 options[:transport_logger].level = Logger::DEBUG
 options[:transport_logger].debug "Starting up..."
 
-protocol = Punchblock::Protocol::Ozone
-
-connection = protocol::Connection.new options
+protocol = Punchblock::Protocol::Ozone.new options
 
 x = Thread.new do
   begin
-    connection.run
+    protocol.run
   rescue => e
     puts "Exception in XMPP thread! #{e.message}"
     puts e.backtrace.join("\t\n")
@@ -36,7 +34,7 @@ CALL_QUEUES = {}
 INFO_EVENT_QUEUE = Queue.new
 
 # Block on waiting for the XMPP to connect, then show when we are connected
-puts connection.event_queue.pop
+puts protocol.event_queue.pop
 
 ### DISPATCHER THREAD
 # This thread multiplexes the event stream from the underlying connection handler and routes them
@@ -44,17 +42,17 @@ puts connection.event_queue.pop
 # the queue.
 Thread.new do
   loop do
-    event = connection.event_queue.pop
+    event = protocol.event_queue.pop
     puts "#{event.class} event for call: #{event.call_id}"
     case event
     when Punchblock::Call
       raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
-      run_call connection, protocol, event
-    when protocol::Event::Info
+      run_call protocol, event
+    when protocol.class::Event::Info
       INFO_EVENT_QUEUE.push event
-    when protocol::Event::Complete, protocol::Event::End
+    when protocol.class::Event::Complete, protocol.class::Event::End
       CALL_QUEUES[event.call_id].push event
     else
       puts "Unknown event: #{event.inspect}"
@@ -63,14 +61,14 @@ Thread.new do
   end
 end
 
-def run_call(connection, protocol, call)
+def run_call(protocol, call)
   ### CALL THREAD
   # One thread is spun up to handle each call.
   Thread.new do
     raise "Unknown call #{call.call_id}" unless CALL_QUEUES.has_key?(call.call_id)
     queue = CALL_QUEUES[call.call_id]
     call = queue.pop
-    dsl = Punchblock::DSL.new connection, protocol, call, queue
+    dsl = Punchblock::DSL.new protocol, call, queue
 
     puts "Incoming call to #{call.to} from #{call.headers[:from]} #{call}"
     dsl.pry

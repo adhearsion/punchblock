@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   module Protocol
-    module Ozone
+    class Ozone
       describe Header do
         it 'will auto-inherit nodes' do
           n = parse_stanza "<header name='boo' value='bah' />"

@@ -23,6 +23,7 @@ module Punchblock
             its(:terminator) { should == '*' }
             its(:timeout) { should == 120000 }
             its(:answer_on_media) { should == true }
+            # TODO: Should support <ring/> child
           end
 
           it_should_behave_like 'command_headers'

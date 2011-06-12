@@ -72,6 +72,10 @@ module Punchblock
           "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" } * ', '}>"
         end
 
+        def source
+          connection.original_command_from_id command_id if connection && command_id
+        end
+
         alias :to_s :inspect
         alias :xmlns :namespace_href
       end

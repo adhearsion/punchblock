@@ -4,5 +4,6 @@ module Punchblock
 
     autoload :GenericConnection
     autoload :Ozone
+    autoload :ProtocolError
   end
 end

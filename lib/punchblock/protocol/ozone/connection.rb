@@ -63,10 +63,11 @@ module Punchblock
           @result_queues[iq.id] = Queue.new
           write_to_stream iq
           result = read_queue_with_timeout @result_queues[iq.id]
-          ref = result.ozone_node
-          cmd.command_id = ref.id if ref.is_a?(Ref)
+          if result.is_a?(Blather::Stanza::Iq)
+            ref = result.ozone_node
+            cmd.command_id = ref.id if ref.is_a?(Ref)
+          end
           @result_queues[iq.id] = nil # Shut down this queue
-          # FIXME: Error handling
           raise result if result.is_a? Exception
           true
         end
@@ -113,36 +114,26 @@ module Punchblock
           @event_queue.push event.is_a?(Event::Offer) ? Punchblock::Call.new(p.call_id, p.to, event.headers_hash) : event
         end
 
-        def handle_iq(iq)
+        def handle_iq_result(iq)
           # FIXME: Do we need to raise a warning if the domain changes?
           @callmap[iq.from.node] = iq.from.domain
-          case iq.type
-          when :result
-            # Send this result to the waiting queue
-            @logger.debug "Command #{iq.id} completed successfully" if @logger
-            ref = iq.ozone_node
-            @command_id_to_iq_id[ref.id] = iq.id if ref.is_a?(Ref)
-            @result_queues[iq.id].push iq
-          when :error
-            # TODO: Example messages to handle:
-            #------
-            #<iq type="error" id="blather0016" to="usera@127.0.0.1/voxeo" from="15dce14a-778e-42f2-9ac4-501805ec0388@127.0.0.1">
-            #  <answer xmlns="urn:xmpp:ozone:1"/>
-            #  <error type="cancel">
-            #    <item-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
-            #  </error>
-            #</iq>
-            #------
-            # FIXME: This should probably be parsed by the Protocol layer and return
-            # a ProtocolError exception.
-            if @result_queues.has_key?(iq.id)
-              @result_queues[iq.id].push TransportError.new(iq)
-            else
-              # Un-associated transport error??
-              raise TransportError, iq
-            end
+          # Send this result to the waiting queue
+          @logger.debug "Command #{iq.id} completed successfully" if @logger
+          ref = iq.ozone_node
+          @command_id_to_iq_id[ref.id] = iq.id if ref.is_a?(Ref)
+          @result_queues[iq.id].push iq
+        end
+
+        def handle_error(iq)
+          e = Blather::StanzaError.import iq
+
+          protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.command_id
+
+          if @result_queues.has_key?(iq.id)
+            @result_queues[iq.id].push protocol_error
           else
-            raise TransportError, iq
+            # Un-associated transport error??
+            raise protocol_error
           end
         end
 
@@ -154,7 +145,14 @@ module Punchblock
           end
 
           # Read/handle call control messages. These are mostly just acknowledgement of commands
-          iq { |msg| handle_iq msg }
+          iq :result? do |msg|
+            handle_iq_result msg
+          end
+
+          # Read/handle error IQs
+          iq :error? do |e|
+            handle_error e
+          end
 
           # Read/handle presence requests. This is how we get events.
           presence { |msg| handle_presence msg }

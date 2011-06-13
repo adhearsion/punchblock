@@ -1,9 +1,5 @@
 module Punchblock
   module Protocol
-    ##
-    # This exception may be raised if a protocol error is detected.
-    ProtocolError = Class.new StandardError
-
     class GenericConnection
       attr_accessor :event_queue
 

@@ -81,7 +81,7 @@ module Punchblock
               register_handlers
               EM.run { client.run }
             rescue => e
-              puts "Exception in XMPP thread! #{e.message}"
+              puts "Exception in XMPP thread! #{e}"
               puts e.backtrace.join("\t\n")
             end
           end

@@ -76,9 +76,13 @@ module Punchblock
         # Fire up the connection
         #
         def run
+          register_handlers
+          connect
+        end
+
+        def connect
           Thread.new do
             begin
-              register_handlers
               EM.run { client.run }
             rescue => e
               puts "Exception in XMPP thread! #{e}"
@@ -142,6 +146,11 @@ module Punchblock
           when_ready do
             @event_queue.push connected
             @logger.info "Connected to XMPP as #{@username}" if @logger
+          end
+
+          client.register_handler :disconnected do
+            @logger.warn "XMPP Disconnected. Reconnecting." if @logger
+            connect
           end
 
           # Read/handle call control messages. These are mostly just acknowledgement of commands

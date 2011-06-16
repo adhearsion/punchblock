@@ -148,11 +148,6 @@ module Punchblock
             @logger.info "Connected to XMPP as #{@username}" if @logger
           end
 
-          client.register_handler :disconnected do
-            @logger.warn "XMPP Disconnected. Reconnecting." if @logger
-            connect
-          end
-
           # Read/handle call control messages. These are mostly just acknowledgement of commands
           iq :result? do |msg|
             handle_iq_result msg

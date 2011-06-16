@@ -69,7 +69,7 @@ module Punchblock
         end
 
         def inspect
-          "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" } * ', '}>"
+          "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" rescue nil }.compact * ', '}>"
         end
 
         ##

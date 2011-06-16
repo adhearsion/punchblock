@@ -115,6 +115,7 @@ module Punchblock
           @logger.debug p.inspect if @logger
           event = p.event
           event.connection = self
+          event.source.add_event event if event.source
           @event_queue.push event.is_a?(Event::Offer) ? Punchblock::Call.new(p.call_id, p.to, event.headers_hash) : event
         end
 

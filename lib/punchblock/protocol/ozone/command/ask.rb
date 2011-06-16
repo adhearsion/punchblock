@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Ask < OzoneNode
+        class Ask < CommandNode
           register :ask, :ask
 
           ##

@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Hangup < OzoneNode
+        class Hangup < CommandNode
           register :hangup, :core
 
           include HasHeaders

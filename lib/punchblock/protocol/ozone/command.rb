@@ -14,7 +14,21 @@ module Punchblock
         autoload :Reject
         autoload :Say
         autoload :Transfer
-      end
-    end
-  end
-end
+
+        class CommandNode < OzoneNode
+          attr_accessor :events
+
+          def initialize(*args)
+            super
+            @events = []
+          end
+
+          def add_event(event)
+            event.original_command = self
+            @events << event
+          end
+        end # CommandNode
+      end # Command
+    end # Ozone
+  end # Protocol
+end # Punchblock

@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Transfer < OzoneNode
+        class Transfer < CommandNode
           register :transfer, :transfer
 
           include HasHeaders

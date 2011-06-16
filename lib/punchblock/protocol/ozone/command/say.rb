@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Say < OzoneNode
+        class Say < CommandNode
           register :say, :say
 
           ##

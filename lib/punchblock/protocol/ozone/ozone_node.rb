@@ -9,7 +9,7 @@ module Punchblock
 
         class_inheritable_accessor :registered_ns, :registered_name
 
-        attr_accessor :call_id, :command_id, :connection
+        attr_accessor :call_id, :command_id, :connection, :original_command
 
         # Register a new stanza class to a name and/or namespace
         #
@@ -76,7 +76,8 @@ module Punchblock
         # @return [OzoneNode] the original command issued that lead to this event
         #
         def source
-          connection.original_command_from_id command_id if connection && command_id
+          @source ||= original_command
+          @source ||= connection.original_command_from_id command_id if connection && command_id
         end
 
         alias :to_s :inspect

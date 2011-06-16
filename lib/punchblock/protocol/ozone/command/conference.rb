@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Conference < OzoneNode
+        class Conference < CommandNode
           register :conference, :conference
 
           ##

@@ -145,6 +145,36 @@ module Punchblock
             [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
           end
 
+          def transition_state!(event)
+            super
+            case event
+            when OnHold
+              onhold!
+            when OffHold
+              offhold!
+            end
+          end
+
+          state_machine :mute_status, :initial => :unmuted do
+            event :muted do
+              transition :unmuted => :muted
+            end
+
+            event :unmuted do
+              transition :muted => :unmuted
+            end
+          end
+
+          state_machine :hold_status, :initial => :offhold do
+            event :onhold do
+              transition :offhold => :onhold
+            end
+
+            event :offhold do
+              transition :onhold => :offhold
+            end
+          end
+
           class Announcement < Say
             register :announcement, :conference
           end
@@ -185,6 +215,7 @@ module Punchblock
           #      <mute xmlns="urn:xmpp:ozone:conference:1"/>
           #
           def mute!
+            raise InvalidActionError, "Cannot mute a Conference that is already muted" if muted?
             Mute.new :command_id => command_id
           end
 
@@ -200,6 +231,7 @@ module Punchblock
           #      <unmute xmlns="urn:xmpp:ozone:conference:1"/>
           #
           def unmute!
+            raise InvalidActionError, "Cannot unmute a Conference that is not muted" unless muted?
             Unmute.new :command_id => command_id
           end
 
@@ -215,6 +247,7 @@ module Punchblock
           #      <stop xmlns="urn:xmpp:ozone:conference:1"/>
           #
           def stop!(options = {})
+            raise InvalidActionError, "Cannot stop a Conference that is not executing" unless executing?
             Stop.new :command_id => command_id
           end
 
@@ -233,6 +266,7 @@ module Punchblock
           #      <kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>
           #
           def kick!(options = {})
+            raise InvalidActionError, "Cannot kick a Conference that is not executing" unless executing?
             Kick.new options.merge(:command_id => command_id)
           end
 
@@ -266,7 +300,7 @@ module Punchblock
             end
 
             def message=(m)
-              self << m
+              self << m if m
             end
           end
 

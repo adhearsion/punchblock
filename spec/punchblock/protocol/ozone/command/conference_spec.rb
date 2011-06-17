@@ -30,6 +30,50 @@ module Punchblock
             its(:moderator)         { should == true }
           end
 
+          its(:mute_status_name) { should == :unmuted }
+          its(:hold_status_name) { should == :offhold }
+
+          describe "#transition_state!" do
+            describe "with an on-hold" do
+              it "should call #onhold!" do
+                flexmock(subject).should_receive(:onhold!).once
+                subject.transition_state! Conference::OnHold.new
+              end
+            end
+
+            describe "with an off-hold" do
+              it "should call #offhold!" do
+                flexmock(subject).should_receive(:offhold!).once
+                subject.transition_state! Conference::OffHold.new
+              end
+            end
+          end # #transition_state!
+
+          describe "#onhold!" do
+            before do
+              subject.onhold!
+            end
+
+            its(:hold_status_name) { should == :onhold }
+
+            it "should raise a StateMachine::InvalidTransition when received a second time" do
+              lambda { subject.onhold! }.should raise_error(StateMachine::InvalidTransition)
+            end
+          end
+
+          describe "#offhold!" do
+            before do
+              subject.onhold!
+              subject.offhold!
+            end
+
+            its(:hold_status_name) { should == :offhold }
+
+            it "should raise a StateMachine::InvalidTransition when received a second time" do
+              lambda { subject.offhold! }.should raise_error(StateMachine::InvalidTransition)
+            end
+          end
+
           describe "actions" do
             let(:conference) { Conference.new :name => '1234' }
 
@@ -37,27 +81,118 @@ module Punchblock
 
             describe '#mute!' do
               subject { conference.mute! }
-              its(:to_xml) { should == '<mute xmlns="urn:xmpp:ozone:conference:1"/>' }
-              its(:command_id) { should == 'abc123' }
+
+              describe "when unmuted" do
+                before do
+                  conference.request!
+                  conference.execute!
+                end
+
+                its(:to_xml) { should == '<mute xmlns="urn:xmpp:ozone:conference:1"/>' }
+                its(:command_id) { should == 'abc123' }
+              end
+
+              describe "when muted" do
+                before { conference.muted! }
+
+                it "should raise an error" do
+                  lambda { conference.mute! }.should raise_error(InvalidActionError, "Cannot mute a Conference that is already muted")
+                end
+              end
+            end
+
+            describe "#muted!" do
+              before do
+                subject.request!
+                subject.execute!
+                subject.muted!
+              end
+
+              its(:mute_status_name) { should == :muted }
+
+              it "should raise a StateMachine::InvalidTransition when received a second time" do
+                lambda { subject.muted! }.should raise_error(StateMachine::InvalidTransition)
+              end
             end
 
             describe '#unmute!' do
               subject { conference.unmute! }
-              its(:to_xml) { should == '<unmute xmlns="urn:xmpp:ozone:conference:1"/>' }
-              its(:command_id) { should == 'abc123' }
+
+              before do
+                conference.request!
+                conference.execute!
+              end
+
+              describe "when muted" do
+                before do
+                  conference.muted!
+                end
+
+                its(:to_xml) { should == '<unmute xmlns="urn:xmpp:ozone:conference:1"/>' }
+                its(:command_id) { should == 'abc123' }
+              end
+
+              describe "when unmuted" do
+                it "should raise an error" do
+                  lambda { conference.unmute! }.should raise_error(InvalidActionError, "Cannot unmute a Conference that is not muted")
+                end
+              end
             end
 
-            describe '#kick!' do
-              subject { conference.kick! :message => 'bye!' }
-              its(:to_xml) { should == '<kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>' }
-              its(:command_id) { should == 'abc123' }
+            describe "#unmuted!" do
+              before do
+                subject.request!
+                subject.execute!
+                subject.muted!
+                subject.unmuted!
+              end
+
+              its(:mute_status_name) { should == :unmuted }
+
+              it "should raise a StateMachine::InvalidTransition when received a second time" do
+                lambda { subject.unmuted! }.should raise_error(StateMachine::InvalidTransition)
+              end
             end
 
             describe '#stop!' do
               subject { conference.stop! }
-              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:conference:1"/>' }
-              its(:command_id) { should == 'abc123' }
-            end
+
+              describe "when the command is executing" do
+                before do
+                  conference.request!
+                  conference.execute!
+                end
+
+                its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:conference:1"/>' }
+                its(:command_id) { should == 'abc123' }
+              end
+
+              describe "when the command is not executing" do
+                it "should raise an error" do
+                  lambda { conference.stop! }.should raise_error(InvalidActionError, "Cannot stop a Conference that is not executing")
+                end
+              end
+            end # describe #stop!
+
+            describe '#kick!' do
+              subject { conference.kick! :message => 'bye!' }
+
+              describe "when the command is executing" do
+                before do
+                  conference.request!
+                  conference.execute!
+                end
+
+                its(:to_xml) { should == '<kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>' }
+                its(:command_id) { should == 'abc123' }
+              end
+
+              describe "when the command is not executing" do
+                it "should raise an error" do
+                  lambda { conference.kick! }.should raise_error(InvalidActionError, "Cannot kick a Conference that is not executing")
+                end
+              end
+            end # describe #kick!
           end
 
           describe Conference::OnHold do

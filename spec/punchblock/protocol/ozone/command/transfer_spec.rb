@@ -39,8 +39,22 @@ module Punchblock
 
           describe '#stop!' do
             subject { command.stop! }
-            its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:transfer:1"/>' }
-            its(:command_id) { should == 'abc123' }
+
+            describe "when the command is executing" do
+              before do
+                command.request!
+                command.execute!
+              end
+
+              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:transfer:1"/>' }
+              its(:command_id) { should == 'abc123' }
+            end
+
+            describe "when the command is not executing" do
+              it "should raise an error" do
+                lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Transfer that is not executing.")
+              end
+            end
           end
         end
 

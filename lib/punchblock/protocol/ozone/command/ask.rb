@@ -244,6 +244,7 @@ module Punchblock
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:ask:1"/>
           def stop!
+            raise InvalidActionError, "Cannot stop an Ask that is not executing." unless executing?
             Stop.new :command_id => command_id
           end
 

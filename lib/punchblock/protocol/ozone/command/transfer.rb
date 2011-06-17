@@ -156,6 +156,7 @@ module Punchblock
           #      <stop xmlns="urn:xmpp:ozone:transfer:1"/>
           #
           def stop!
+            raise InvalidActionError, "Cannot stop a Transfer that is not executing." unless executing?
             Stop.new :command_id => command_id
           end
 

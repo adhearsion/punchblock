@@ -89,6 +89,16 @@ module Punchblock
             [:voice, :audio, :ssml] + super
           end
 
+          state_machine :state do
+            event :paused do
+              transition :executing => :paused
+            end
+
+            event :resumed do
+              transition :paused => :executing
+            end
+          end
+
           # Pauses a running Say
           #
           # @return [Ozone::Command::Say::Pause] an Ozone pause message for the current Say
@@ -99,6 +109,7 @@ module Punchblock
           #    returns:
           #      <pause xmlns="urn:xmpp:ozone:say:1"/>
           def pause!
+            raise InvalidActionError, "Cannot pause a Say that is not executing." unless executing?
             Pause.new :command_id => command_id
           end
 
@@ -113,6 +124,7 @@ module Punchblock
           #    returns:
           #      <resume xmlns="urn:xmpp:ozone:say:1"/>
           def resume!
+            raise InvalidActionError, "Cannot resume a Say that is not paused." unless paused?
             Resume.new :command_id => command_id
           end
 
@@ -127,6 +139,7 @@ module Punchblock
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:say:1"/>
           def stop!
+            raise InvalidActionError, "Cannot stop a Say that is not executing." unless executing?
             Stop.new :command_id => command_id
           end
 

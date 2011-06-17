@@ -17,6 +17,8 @@ module Punchblock
         autoload :Say
         autoload :Transfer
 
+        InvalidActionError = Class.new StandardError
+
         class CommandNode < OzoneNode
           attr_accessor :events
 

@@ -39,20 +39,92 @@ module Punchblock
 
             describe '#pause!' do
               subject { command.pause! }
-              its(:to_xml) { should == '<pause xmlns="urn:xmpp:ozone:say:1"/>' }
-              its(:command_id) { should == 'abc123' }
+
+              describe "when the command is executing" do
+                before do
+                  command.request!
+                  command.execute!
+                end
+
+                its(:to_xml) { should == '<pause xmlns="urn:xmpp:ozone:say:1"/>' }
+                its(:command_id) { should == 'abc123' }
+              end
+
+              describe "when the command is not executing" do
+                it "should raise an error" do
+                  lambda { command.pause! }.should raise_error(InvalidActionError, "Cannot pause a Say that is not executing.")
+                end
+              end
+            end
+
+            describe "#paused!" do
+              before do
+                subject.request!
+                subject.execute!
+                subject.paused!
+              end
+
+              its(:state_name) { should == :paused }
+
+              it "should raise a StateMachine::InvalidTransition when received a second time" do
+                lambda { subject.paused! }.should raise_error(StateMachine::InvalidTransition)
+              end
             end
 
             describe '#resume!' do
               subject { command.resume! }
-              its(:to_xml) { should == '<resume xmlns="urn:xmpp:ozone:say:1"/>' }
-              its(:command_id) { should == 'abc123' }
+
+              describe "when the command is paused" do
+                before do
+                  command.request!
+                  command.execute!
+                  command.paused!
+                end
+
+                its(:to_xml) { should == '<resume xmlns="urn:xmpp:ozone:say:1"/>' }
+                its(:command_id) { should == 'abc123' }
+              end
+
+              describe "when the command is not paused" do
+                it "should raise an error" do
+                  lambda { command.resume! }.should raise_error(InvalidActionError, "Cannot resume a Say that is not paused.")
+                end
+              end
+            end
+
+            describe "#resumed!" do
+              before do
+                subject.request!
+                subject.execute!
+                subject.paused!
+                subject.resumed!
+              end
+
+              its(:state_name) { should == :executing }
+
+              it "should raise a StateMachine::InvalidTransition when received a second time" do
+                lambda { subject.resumed! }.should raise_error(StateMachine::InvalidTransition)
+              end
             end
 
             describe '#stop!' do
               subject { command.stop! }
-              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:say:1"/>' }
-              its(:command_id) { should == 'abc123' }
+
+              describe "when the command is executing" do
+                before do
+                  command.request!
+                  command.execute!
+                end
+
+                its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:say:1"/>' }
+                its(:command_id) { should == 'abc123' }
+              end
+
+              describe "when the command is not executing" do
+                it "should raise an error" do
+                  lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Say that is not executing.")
+                end
+              end
             end
           end
         end

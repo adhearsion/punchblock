@@ -28,7 +28,7 @@ module Punchblock
             end
 
             it "should trigger state transition" do
-              flexmock(subject).should_receive(:transition_state!).once.with event
+              subject.expects(:transition_state!).once.with event
               subject.add_event event
             end
           end # #add_event
@@ -38,7 +38,7 @@ module Punchblock
           describe "#transition_state!" do
             describe "with a complete" do
               it "should call #complete!" do
-                flexmock(subject).should_receive(:complete!).once
+                subject.expects(:complete!).once
                 subject.transition_state! Event::Complete.new
               end
             end

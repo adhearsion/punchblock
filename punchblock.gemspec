@@ -35,6 +35,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<bluecloth>, [">= 0"]
   s.add_development_dependency %q<rcov>, [">= 0"]
   s.add_development_dependency %q<rake>, [">= 0"]
-  s.add_development_dependency %q<flexmock>, [">= 0"]
+  s.add_development_dependency %q<mocha>, [">= 0"]
   s.add_development_dependency %q<i18n>, [">= 0"]
 end

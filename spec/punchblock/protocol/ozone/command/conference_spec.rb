@@ -36,14 +36,14 @@ module Punchblock
           describe "#transition_state!" do
             describe "with an on-hold" do
               it "should call #onhold!" do
-                flexmock(subject).should_receive(:onhold!).once
+                subject.expects(:onhold!).once
                 subject.transition_state! Conference::OnHold.new
               end
             end
 
             describe "with an off-hold" do
               it "should call #offhold!" do
-                flexmock(subject).should_receive(:offhold!).once
+                subject.expects(:offhold!).once
                 subject.transition_state! Conference::OffHold.new
               end
             end

@@ -36,9 +36,9 @@ module Punchblock
           Command::Say
           say = OzoneNode.import parse_stanza(say).root
           connection.event_queue = []
-          flexmock(connection).should_receive(:write_to_stream).once.and_return true
+          connection.expects(:write_to_stream).once.returns true
           iq = Blather::Stanza::Iq.new :set, '9f00061@call.ozone.net'
-          flexmock(connection).should_receive(:create_iq).and_return iq
+          connection.expects(:create_iq).returns iq
 
           write_thread = Thread.new do
             connection.write call, say

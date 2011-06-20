@@ -4,6 +4,8 @@ require 'punchblock'
 require 'mocha'
 require 'active_support/all'
 
+Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
+
 RSpec.configure do |config|
   config.mock_with :mocha
   config.filter_run :focus => true

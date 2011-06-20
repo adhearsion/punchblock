@@ -1,4 +1,4 @@
-require 'active_support'
+require 'active_support/dependencies/autoload'
 
 module Punchblock
   extend ActiveSupport::Autoload

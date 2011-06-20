@@ -46,26 +46,31 @@ module Punchblock
         ##
         # Write a command to the Ozone server for a particular call
         #
-        # @param [Call] call the call on which to act
-        # @param [OzoneNode] cmd the command to execute on the call
+        # @param [Call, String] call the call on which to act, or its ID
+        # @param [CommandNode] cmd the command to execute on the call
+        # @param [String, Optional] command_id the command_id on which to execute
         #
         # @raise Exception if there is a server-side error
         #
         # @return true
         #
-        def write(call, cmd)
+        def write(call_id, cmd, command_id = nil)
           cmd.connection = self
-          jid = cmd.is_a?(Command::Dial) ? @client_jid.domain : "#{call.call_id}@#{@callmap[call.call_id]}"
+          call_id = call_id.call_id if call_id.is_a? Call
+          jid = cmd.is_a?(Command::Dial) ? @client_jid.domain : "#{call_id}@#{@callmap[call_id]}"
+          jid << "/#{command_id}" if command_id
           iq = create_iq jid
           @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
           iq << cmd
           @iq_id_to_command[iq.id] = cmd
           @result_queues[iq.id] = Queue.new
           write_to_stream iq
+          cmd.request!
           result = read_queue_with_timeout @result_queues[iq.id]
           if result.is_a?(Blather::Stanza::Iq)
             ref = result.ozone_node
             cmd.command_id = ref.id if ref.is_a?(Ref)
+            cmd.execute!
           end
           @result_queues[iq.id] = nil # Shut down this queue
           raise result if result.is_a? Exception

@@ -56,6 +56,8 @@ module Punchblock
 
           write_thread.join
 
+          say.state_name.should == :executing
+
           connection.original_command_from_id('fgh4590').should == say
 
           example_complete = import_stanza <<-MSG

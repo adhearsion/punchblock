@@ -99,7 +99,8 @@ module Punchblock
                 end
 
                 it "should send its command properly" do
-                  Connection.any_instance.expects(:write).with('123abc', conference.mute_action, 'abc123')
+                  Connection.any_instance.expects(:write).with('123abc', conference.mute_action, 'abc123').returns true
+                  conference.expects :muted!
                   conference.mute!
                 end
               end
@@ -147,7 +148,8 @@ module Punchblock
                 end
 
                 it "should send its command properly" do
-                  Connection.any_instance.expects(:write).with('123abc', conference.unmute_action, 'abc123')
+                  Connection.any_instance.expects(:write).with('123abc', conference.unmute_action, 'abc123').returns true
+                  conference.expects :unmuted!
                   conference.unmute!
                 end
               end

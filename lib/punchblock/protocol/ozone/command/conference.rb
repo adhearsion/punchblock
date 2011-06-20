@@ -223,7 +223,8 @@ module Punchblock
           #
           def mute!
             raise InvalidActionError, "Cannot mute a Conference that is already muted" if muted?
-            connection.write call_id, mute_action, command_id
+            result = connection.write call_id, mute_action, command_id
+            muted! if result
           end
 
           ##
@@ -246,7 +247,8 @@ module Punchblock
           #
           def unmute!
             raise InvalidActionError, "Cannot unmute a Conference that is not muted" unless muted?
-            connection.write call_id, unmute_action, command_id
+            result = connection.write call_id, unmute_action, command_id
+            unmuted! if result
           end
 
           ##

@@ -57,7 +57,8 @@ module Punchblock
                 end
 
                 it "should send its command properly" do
-                  Connection.any_instance.expects(:write).with('123abc', command.pause_action, 'abc123')
+                  Connection.any_instance.expects(:write).with('123abc', command.pause_action, 'abc123').returns true
+                  command.expects :paused!
                   command.pause!
                 end
               end
@@ -100,7 +101,8 @@ module Punchblock
                 end
 
                 it "should send its command properly" do
-                  Connection.any_instance.expects(:write).with('123abc', command.resume_action, 'abc123')
+                  Connection.any_instance.expects(:write).with('123abc', command.resume_action, 'abc123').returns true
+                  command.expects :resumed!
                   command.resume!
                 end
               end

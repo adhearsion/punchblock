@@ -117,7 +117,8 @@ module Punchblock
           #
           def pause!
             raise InvalidActionError, "Cannot pause a Say that is not executing." unless executing?
-            connection.write call_id, pause_action, command_id
+            result = connection.write call_id, pause_action, command_id
+            paused! if result
           end
 
           ##
@@ -139,7 +140,8 @@ module Punchblock
           #
           def resume!
             raise InvalidActionError, "Cannot resume a Say that is not paused." unless paused?
-            connection.write call_id, resume_action, command_id
+            result = connection.write call_id, resume_action, command_id
+            resumed! if result
           end
 
           ##

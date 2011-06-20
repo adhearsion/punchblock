@@ -38,9 +38,6 @@ module Punchblock
           @iq_id_to_command = {}
 
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
-
-          # FIXME: Force autoload events so they get registered properly
-          [Event::Complete, Event::End, Event::Info, Event::Offer, Ref]
         end
 
         ##

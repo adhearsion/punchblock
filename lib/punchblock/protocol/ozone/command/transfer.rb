@@ -150,14 +150,21 @@ module Punchblock
           # @return [Ozone::Command::Transfer::Stop] an Ozone stop command
           #
           # @example
-          #    transfer_obj.stop!.to_xml
+          #    transfer_obj.stop_action.to_xml
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:transfer:1"/>
           #
+          def stop_action
+            Stop.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone stop message for the current Transfer
+          #
           def stop!
             raise InvalidActionError, "Cannot stop a Transfer that is not executing." unless executing?
-            Stop.new :command_id => command_id
+            connection.write call_id, stop_action, command_id
           end
 
           class Stop < Action # :nodoc:

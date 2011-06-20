@@ -77,19 +77,31 @@ module Punchblock
           describe "actions" do
             let(:conference) { Conference.new :name => '1234' }
 
-            before { conference.command_id = 'abc123' }
+            before do
+              conference.command_id = 'abc123'
+              conference.call_id = '123abc'
+              conference.connection = Connection.new :username => '123', :password => '123'
+            end
+
+            describe '#mute_action' do
+              subject { conference.mute_action }
+
+              its(:to_xml) { should == '<mute xmlns="urn:xmpp:ozone:conference:1"/>' }
+              its(:command_id) { should == 'abc123' }
+              its(:call_id) { should == '123abc' }
+            end
 
             describe '#mute!' do
-              subject { conference.mute! }
-
               describe "when unmuted" do
                 before do
                   conference.request!
                   conference.execute!
                 end
 
-                its(:to_xml) { should == '<mute xmlns="urn:xmpp:ozone:conference:1"/>' }
-                its(:command_id) { should == 'abc123' }
+                it "should send its command properly" do
+                  Connection.any_instance.expects(:write).with('123abc', conference.mute_action, 'abc123')
+                  conference.mute!
+                end
               end
 
               describe "when muted" do
@@ -115,9 +127,15 @@ module Punchblock
               end
             end
 
-            describe '#unmute!' do
-              subject { conference.unmute! }
+            describe '#unmute_action' do
+              subject { conference.unmute_action }
 
+              its(:to_xml) { should == '<unmute xmlns="urn:xmpp:ozone:conference:1"/>' }
+              its(:command_id) { should == 'abc123' }
+              its(:call_id) { should == '123abc' }
+            end
+
+            describe '#unmute!' do
               before do
                 conference.request!
                 conference.execute!
@@ -128,8 +146,10 @@ module Punchblock
                   conference.muted!
                 end
 
-                its(:to_xml) { should == '<unmute xmlns="urn:xmpp:ozone:conference:1"/>' }
-                its(:command_id) { should == 'abc123' }
+                it "should send its command properly" do
+                  Connection.any_instance.expects(:write).with('123abc', conference.unmute_action, 'abc123')
+                  conference.unmute!
+                end
               end
 
               describe "when unmuted" do
@@ -154,17 +174,25 @@ module Punchblock
               end
             end
 
-            describe '#stop!' do
-              subject { conference.stop! }
+            describe '#stop_action' do
+              subject { conference.stop_action }
 
+              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:conference:1"/>' }
+              its(:command_id) { should == 'abc123' }
+              its(:call_id) { should == '123abc' }
+            end
+
+            describe '#stop!' do
               describe "when the command is executing" do
                 before do
                   conference.request!
                   conference.execute!
                 end
 
-                its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:conference:1"/>' }
-                its(:command_id) { should == 'abc123' }
+                it "should send its command properly" do
+                  Connection.any_instance.expects(:write).with('123abc', conference.stop_action, 'abc123')
+                  conference.stop!
+                end
               end
 
               describe "when the command is not executing" do
@@ -174,17 +202,25 @@ module Punchblock
               end
             end # describe #stop!
 
-            describe '#kick!' do
-              subject { conference.kick! :message => 'bye!' }
+            describe '#kick_action' do
+              subject { conference.kick_action :message => 'bye!' }
 
+              its(:to_xml) { should == '<kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>' }
+              its(:command_id) { should == 'abc123' }
+              its(:call_id) { should == '123abc' }
+            end
+
+            describe '#kick!' do
               describe "when the command is executing" do
                 before do
                   conference.request!
                   conference.execute!
                 end
 
-                its(:to_xml) { should == '<kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>' }
-                its(:command_id) { should == 'abc123' }
+                it "should send its command properly" do
+                  Connection.any_instance.expects(:write).with('123abc', conference.kick_action(:message => 'bye!'), 'abc123')
+                  conference.kick! :message => 'bye!'
+                end
               end
 
               describe "when the command is not executing" do

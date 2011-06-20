@@ -57,6 +57,7 @@ module Punchblock
         def write(call_id, cmd, command_id = nil)
           cmd.connection = self
           call_id = call_id.call_id if call_id.is_a? Call
+          cmd.call_id = call_id
           jid = cmd.is_a?(Command::Dial) ? @client_jid.domain : "#{call_id}@#{@callmap[call_id]}"
           jid << "/#{command_id}" if command_id
           iq = create_iq jid

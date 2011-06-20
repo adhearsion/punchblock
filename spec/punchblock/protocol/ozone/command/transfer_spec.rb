@@ -35,19 +35,31 @@ module Punchblock
         describe "actions" do
           let(:command) { Transfer.new :to => 'tel:+14045551212', :from => 'tel:+14155551212' }
 
-          before { command.command_id = 'abc123' }
+          before do
+            command.command_id = 'abc123'
+            command.call_id = '123abc'
+            command.connection = Connection.new :username => '123', :password => '123'
+          end
+
+          describe '#stop_action' do
+            subject { command.stop_action }
+
+            its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:transfer:1"/>' }
+            its(:command_id) { should == 'abc123' }
+            its(:call_id) { should == '123abc' }
+          end
 
           describe '#stop!' do
-            subject { command.stop! }
-
             describe "when the command is executing" do
               before do
                 command.request!
                 command.execute!
               end
 
-              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:transfer:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              it "should send its command properly" do
+                Connection.any_instance.expects(:write).with('123abc', command.stop_action, 'abc123')
+                command.stop!
+              end
             end
 
             describe "when the command is not executing" do

@@ -104,13 +104,20 @@ module Punchblock
           # @return [Ozone::Command::Say::Pause] an Ozone pause message for the current Say
           #
           # @example
-          #    say_obj.pause!.to_xml
+          #    say_obj.pause_action.to_xml
           #
           #    returns:
           #      <pause xmlns="urn:xmpp:ozone:say:1"/>
+          def pause_action
+            Pause.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone pause message for the current Say
+          #
           def pause!
             raise InvalidActionError, "Cannot pause a Say that is not executing." unless executing?
-            Pause.new :command_id => command_id
+            connection.write call_id, pause_action, command_id
           end
 
           ##
@@ -119,13 +126,20 @@ module Punchblock
           # @return [Ozone::Command::Say::Resume] an Ozone resume message
           #
           # @example
-          #    say_obj.resume!.to_xml
+          #    say_obj.resume_action.to_xml
           #
           #    returns:
           #      <resume xmlns="urn:xmpp:ozone:say:1"/>
+          def resume_action
+            Resume.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone resume message for the current Say
+          #
           def resume!
             raise InvalidActionError, "Cannot resume a Say that is not paused." unless paused?
-            Resume.new :command_id => command_id
+            connection.write call_id, resume_action, command_id
           end
 
           ##
@@ -134,13 +148,20 @@ module Punchblock
           # @return [Ozone::Command::Say::Stop] an Ozone stop message
           #
           # @example
-          #    say_obj.stop!.to_xml
+          #    say_obj.stop_action.to_xml
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:say:1"/>
+          def stop_action
+            Stop.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone stop message for the current Say
+          #
           def stop!
             raise InvalidActionError, "Cannot stop a Say that is not executing." unless executing?
-            Stop.new :command_id => command_id
+            connection.write call_id, stop_action, command_id
           end
 
           class Pause < Action # :nodoc:

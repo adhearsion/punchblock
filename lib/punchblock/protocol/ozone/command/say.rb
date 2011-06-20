@@ -143,14 +143,6 @@ module Punchblock
             Stop.new :command_id => command_id
           end
 
-          class Action < OzoneNode # :nodoc:
-            def self.new(options = {})
-              super().tap do |new_node|
-                new_node.command_id = options[:command_id]
-              end
-            end
-          end
-
           class Pause < Action # :nodoc:
             register :pause, :say
           end

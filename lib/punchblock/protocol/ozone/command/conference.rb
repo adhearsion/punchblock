@@ -270,14 +270,6 @@ module Punchblock
             Kick.new options.merge(:command_id => command_id)
           end
 
-          class Action < OzoneNode # :nodoc:
-            def self.new(options = {})
-              super().tap do |new_node|
-                new_node.command_id = options[:command_id]
-              end
-            end
-          end
-
           class Mute < Action # :nodoc:
             register :mute, :conference
           end

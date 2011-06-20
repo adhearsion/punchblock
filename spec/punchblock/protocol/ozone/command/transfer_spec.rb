@@ -16,6 +16,7 @@ module Punchblock
                            :terminator      => '*',
                            :timeout         => 120000,
                            :answer_on_media => true,
+                           :media           => :direct,
                            :voice           => 'allison',
                            :text            => "Welcome to Ozone",
                            :audio_url       => "http://it.doesnt.matter.does.it/?"
@@ -26,6 +27,7 @@ module Punchblock
             its(:terminator)      { should == '*' }
             its(:timeout)         { should == 120000 }
             its(:answer_on_media) { should == true }
+            its(:media)           { should == :direct }
             its(:ring)            { should == Transfer::Ring.new(:voice => 'allison', :text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?") }
           end
 

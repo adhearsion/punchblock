@@ -16,6 +16,7 @@ module Punchblock
           # @option options [String, Optional] :terminator The string key press required to abort the transfer.
           # @option options [Integer, Optional] :timeout How long to wait - in seconds - for an answer, busy signal, or other event to occur.
           # @option options [Boolean, Optional] :answer_on_media If set to true, the call will be considered "answered" and audio will begin playing as soon as media is received from the far end (ringing / busy signal / etc)
+          # @option options [Symbol, Optional] :media Rules for handling media. Can be :direct, where parties negotiate media directly, or :bridge where the media server will bridge audio, allowing media features like recording and ASR.
           # @option options [String, Optional] :audio_url URL to play to the caller as a ringer
           # @option options [String, Optional] :text Text to speak to the caller as a ringer
           # @option options [String, Optional] :voice Voice with which to speak to the caller as a ringer
@@ -117,6 +118,20 @@ module Punchblock
           #
           def answer_on_media=(aom)
             write_attr 'answer-on-media', aom.to_s
+          end
+
+          ##
+          # @return [Symbol] Rules for handling media. Can be :direct, where parties negotiate media directly, or :bridge where the media server will bridge audio, allowing media features like recording and ASR.
+          #
+          def media
+            read_attr 'media', :to_sym
+          end
+
+          ##
+          # @param [Symbol] media Rules for handling media. Can be :direct, where parties negotiate media directly, or :bridge where the media server will bridge audio, allowing media features like recording and ASR.
+          #
+          def media=(media)
+            write_attr 'media', media
           end
 
           ##

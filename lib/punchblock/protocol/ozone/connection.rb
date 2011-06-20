@@ -58,19 +58,15 @@ module Punchblock
         # @return true
         #
         def write(call_id, cmd, command_id = nil)
-          cmd.connection = self
-          call_id = call_id.call_id if call_id.is_a? Call
-          cmd.call_id = call_id
-          jid = cmd.is_a?(Command::Dial) ? @ozone_domain : "#{call_id}@#{@callmap[call_id]}"
-          jid << "/#{command_id}" if command_id
-          iq = create_iq jid
-          @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
-          iq << cmd
-          @iq_id_to_command[iq.id] = cmd
+          iq = prep_command_for_execution call_id, cmd, command_id
           @result_queues[iq.id] = Queue.new
           write_to_stream iq
           cmd.request!
-          result = read_queue_with_timeout @result_queues[iq.id]
+          result = begin
+            Timeout::timeout(3) { @result_queues[iq.id].pop }
+          rescue Timeout::Error => e
+            e.to_s
+          end
           if result.is_a?(Blather::Stanza::Iq)
             ref = result.ozone_node
             cmd.command_id = ref.id if ref.is_a?(Ref)
@@ -79,6 +75,19 @@ module Punchblock
           @result_queues[iq.id] = nil # Shut down this queue
           raise result if result.is_a? Exception
           true
+        end
+
+        def prep_command_for_execution(call_id, cmd, command_id = nil)
+          cmd.connection = self
+          call_id = call_id.call_id if call_id.is_a? Call
+          cmd.call_id = call_id
+          jid = cmd.is_a?(Command::Dial) ? @ozone_domain : "#{call_id}@#{@callmap[call_id]}"
+          jid << "/#{command_id}" if command_id
+          create_iq(jid).tap do |iq|
+            @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
+            iq << cmd
+            @iq_id_to_command[iq.id] = cmd
+          end
         end
 
         ##
@@ -208,14 +217,6 @@ module Punchblock
 
         def create_iq(jid = nil)
           Blather::Stanza::Iq.new :set, jid || @call_id
-        end
-
-        def read_queue_with_timeout(queue, timeout = 3)
-          begin
-            Timeout::timeout(timeout) { queue.pop }
-          rescue Timeout::Error => e
-            e.to_s
-          end
         end
       end
     end

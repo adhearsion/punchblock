@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Say < OzoneNode
+        class Say < CommandNode
           register :say, :say
 
           ##
@@ -89,17 +89,36 @@ module Punchblock
             [:voice, :audio, :ssml] + super
           end
 
+          state_machine :state do
+            event :paused do
+              transition :executing => :paused
+            end
+
+            event :resumed do
+              transition :paused => :executing
+            end
+          end
+
           # Pauses a running Say
           #
           # @return [Ozone::Command::Say::Pause] an Ozone pause message for the current Say
           #
           # @example
-          #    say_obj.pause!.to_xml
+          #    say_obj.pause_action.to_xml
           #
           #    returns:
           #      <pause xmlns="urn:xmpp:ozone:say:1"/>
+          def pause_action
+            Pause.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone pause message for the current Say
+          #
           def pause!
-            Pause.new :command_id => command_id
+            raise InvalidActionError, "Cannot pause a Say that is not executing." unless executing?
+            result = connection.write call_id, pause_action, command_id
+            paused! if result
           end
 
           ##
@@ -108,12 +127,21 @@ module Punchblock
           # @return [Ozone::Command::Say::Resume] an Ozone resume message
           #
           # @example
-          #    say_obj.resume!.to_xml
+          #    say_obj.resume_action.to_xml
           #
           #    returns:
           #      <resume xmlns="urn:xmpp:ozone:say:1"/>
+          def resume_action
+            Resume.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone resume message for the current Say
+          #
           def resume!
-            Resume.new :command_id => command_id
+            raise InvalidActionError, "Cannot resume a Say that is not paused." unless paused?
+            result = connection.write call_id, resume_action, command_id
+            resumed! if result
           end
 
           ##
@@ -122,20 +150,20 @@ module Punchblock
           # @return [Ozone::Command::Say::Stop] an Ozone stop message
           #
           # @example
-          #    say_obj.stop!.to_xml
+          #    say_obj.stop_action.to_xml
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:say:1"/>
-          def stop!
-            Stop.new :command_id => command_id
+          def stop_action
+            Stop.new :command_id => command_id, :call_id => call_id
           end
 
-          class Action < OzoneNode # :nodoc:
-            def self.new(options = {})
-              super().tap do |new_node|
-                new_node.command_id = options[:command_id]
-              end
-            end
+          ##
+          # Sends an Ozone stop message for the current Say
+          #
+          def stop!
+            raise InvalidActionError, "Cannot stop a Say that is not executing." unless executing?
+            connection.write call_id, stop_action, command_id
           end
 
           class Pause < Action # :nodoc:

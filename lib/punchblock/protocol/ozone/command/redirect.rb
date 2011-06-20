@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Redirect < OzoneNode
+        class Redirect < CommandNode
           register :redirect, :core
 
           include HasHeaders

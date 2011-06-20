@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Conference < OzoneNode
+        class Conference < CommandNode
           register :conference, :conference
 
           ##
@@ -145,6 +145,36 @@ module Punchblock
             [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
           end
 
+          def transition_state!(event)
+            super
+            case event
+            when OnHold
+              onhold!
+            when OffHold
+              offhold!
+            end
+          end
+
+          state_machine :mute_status, :initial => :unmuted do
+            event :muted do
+              transition :unmuted => :muted
+            end
+
+            event :unmuted do
+              transition :muted => :unmuted
+            end
+          end
+
+          state_machine :hold_status, :initial => :offhold do
+            event :onhold do
+              transition :offhold => :onhold
+            end
+
+            event :offhold do
+              transition :onhold => :offhold
+            end
+          end
+
           class Announcement < Say
             register :announcement, :conference
           end
@@ -179,13 +209,22 @@ module Punchblock
           # @return [Ozone::Command::Conference::Mute] an Ozone mute message
           #
           # @example
-          #    conf_obj.mute!.to_xml
+          #    conf_obj.mute_action.to_xml
           #
           #    returns:
           #      <mute xmlns="urn:xmpp:ozone:conference:1"/>
           #
+          def mute_action
+            Mute.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone mute message for the current Conference
+          #
           def mute!
-            Mute.new :command_id => command_id
+            raise InvalidActionError, "Cannot mute a Conference that is already muted" if muted?
+            result = connection.write call_id, mute_action, command_id
+            muted! if result
           end
 
           ##
@@ -194,13 +233,22 @@ module Punchblock
           # @return [Ozone::Command::Conference::Unmute] an Ozone unmute message
           #
           # @example
-          #    conf_obj.unmute!.to_xml
+          #    conf_obj.unmute_action.to_xml
           #
           #    returns:
           #      <unmute xmlns="urn:xmpp:ozone:conference:1"/>
           #
+          def unmute_action
+            Unmute.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone unmute message for the current Conference
+          #
           def unmute!
-            Unmute.new :command_id => command_id
+            raise InvalidActionError, "Cannot unmute a Conference that is not muted" unless muted?
+            result = connection.write call_id, unmute_action, command_id
+            unmuted! if result
           end
 
           ##
@@ -209,13 +257,21 @@ module Punchblock
           # @return [Ozone::Command::Conference::Stop] an Ozone conference stop message
           #
           # @example
-          #    conf_obj.stop!.to_xml
+          #    conf_obj.stop_action.to_xml
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:conference:1"/>
           #
+          def stop_action
+            Stop.new :command_id => command_id, :call_id => call_id
+          end
+
+          ##
+          # Sends an Ozone stop message for the current Conference
+          #
           def stop!(options = {})
-            Stop.new :command_id => command_id
+            raise InvalidActionError, "Cannot stop a Conference that is not executing" unless executing?
+            connection.write call_id, stop_action, command_id
           end
 
           ##
@@ -227,21 +283,24 @@ module Punchblock
           # @return [Ozone::Command::Conference::Kick] an Ozone conference kick message
           #
           # @example
-          #    conf_obj.kick!(:message => 'bye!').to_xml
+          #    conf_obj.kick_action(:message => 'bye!').to_xml
           #
           #    returns:
           #      <kick xmlns="urn:xmpp:ozone:conference:1">bye!</kick>
           #
-          def kick!(options = {})
-            Kick.new options.merge(:command_id => command_id)
+          def kick_action(options = {})
+            Kick.new options.merge(:command_id => command_id, :call_id => call_id)
           end
 
-          class Action < OzoneNode # :nodoc:
-            def self.new(options = {})
-              super().tap do |new_node|
-                new_node.command_id = options[:command_id]
-              end
-            end
+          ##
+          # Sends an Ozone kick message for the current Conference
+          #
+          # @param [Hash] options
+          # @option options [String] :message to explain the reason for kicking
+          #
+          def kick!(options = {})
+            raise InvalidActionError, "Cannot kick a Conference that is not executing" unless executing?
+            connection.write call_id, kick_action, command_id
           end
 
           class Mute < Action # :nodoc:
@@ -266,7 +325,7 @@ module Punchblock
             end
 
             def message=(m)
-              self << m
+              self << m if m
             end
           end
 

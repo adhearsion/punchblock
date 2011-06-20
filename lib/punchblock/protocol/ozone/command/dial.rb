@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Dial < OzoneNode
+        class Dial < CommandNode
           register :dial, :core
 
           include HasHeaders

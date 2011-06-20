@@ -33,11 +33,12 @@ module Punchblock
   <say-as interpret-as='date'>12/01/2011</say-as>
 </say>
           MSG
+          Command::Say
           say = OzoneNode.import parse_stanza(say).root
           connection.event_queue = []
-          flexmock(connection).should_receive(:write_to_stream).once.and_return true
+          connection.expects(:write_to_stream).once.returns true
           iq = Blather::Stanza::Iq.new :set, '9f00061@call.ozone.net'
-          flexmock(connection).should_receive(:create_iq).and_return iq
+          connection.expects(:create_iq).returns iq
 
           write_thread = Thread.new do
             connection.write call, say
@@ -55,6 +56,8 @@ module Punchblock
 
           write_thread.join
 
+          say.state_name.should == :executing
+
           connection.original_command_from_id('fgh4590').should == say
 
           example_complete = import_stanza <<-MSG
@@ -66,7 +69,9 @@ module Punchblock
           MSG
 
           connection.__send__ :handle_presence, example_complete
-          connection.event_queue.last.source.should == say
+          event = connection.event_queue.last
+          event.source.should == say
+          say.events.should == [event]
 
           say.command_id.should == 'fgh4590'
         end

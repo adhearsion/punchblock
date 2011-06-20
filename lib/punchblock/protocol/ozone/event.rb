@@ -8,6 +8,9 @@ module Punchblock
         autoload :End
         autoload :Info
         autoload :Offer
+
+        # FIXME: Force autoload events so they get registered properly
+        [Event::Complete, Event::End, Event::Info, Event::Offer]
       end
     end
   end

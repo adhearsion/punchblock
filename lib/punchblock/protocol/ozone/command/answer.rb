@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Answer < OzoneNode
+        class Answer < CommandNode
           register :answer, :core
 
           include HasHeaders

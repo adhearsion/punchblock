@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Transfer < OzoneNode
+        class Transfer < CommandNode
           register :transfer, :transfer
 
           include HasHeaders
@@ -150,21 +150,21 @@ module Punchblock
           # @return [Ozone::Command::Transfer::Stop] an Ozone stop command
           #
           # @example
-          #    transfer_obj.stop!.to_xml
+          #    transfer_obj.stop_action.to_xml
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:transfer:1"/>
           #
-          def stop!
-            Stop.new :command_id => command_id
+          def stop_action
+            Stop.new :command_id => command_id, :call_id => call_id
           end
 
-          class Action < OzoneNode # :nodoc:
-            def self.new(options = {})
-              super().tap do |new_node|
-                new_node.command_id = options[:command_id]
-              end
-            end
+          ##
+          # Sends an Ozone stop message for the current Transfer
+          #
+          def stop!
+            raise InvalidActionError, "Cannot stop a Transfer that is not executing." unless executing?
+            connection.write call_id, stop_action, command_id
           end
 
           class Stop < Action # :nodoc:

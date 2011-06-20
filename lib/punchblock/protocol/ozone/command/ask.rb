@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Ask < OzoneNode
+        class Ask < CommandNode
           register :ask, :ask
 
           ##
@@ -239,20 +239,20 @@ module Punchblock
           # @return [Ozone::Message] an Ozone stop message
           #
           # @example
-          #    ask_obj.stop!.to_xml
+          #    ask_obj.stop_action.to_xml
           #
           #    returns:
           #      <stop xmlns="urn:xmpp:ozone:ask:1"/>
-          def stop!
-            Stop.new :command_id => command_id
+          def stop_action
+            Stop.new :command_id => command_id, :call_id => call_id
           end
 
-          class Action < OzoneNode # :nodoc:
-            def self.new(options = {})
-              super().tap do |new_node|
-                new_node.command_id = options[:command_id]
-              end
-            end
+          ##
+          # Sends an Ozone stop message for the current Ask
+          #
+          def stop!
+            raise InvalidActionError, "Cannot stop an Ask that is not executing." unless executing?
+            connection.write call_id, stop_action, command_id
           end
 
           class Stop < Action # :nodoc:

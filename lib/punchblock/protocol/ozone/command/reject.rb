@@ -2,7 +2,7 @@ module Punchblock
   module Protocol
     class Ozone
       module Command
-        class Reject < OzoneNode
+        class Reject < CommandNode
           register :reject, :core
 
           include HasHeaders

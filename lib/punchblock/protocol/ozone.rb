@@ -21,6 +21,8 @@ module Punchblock
       autoload :OzoneNode
       autoload :Ref
 
+      [Ref] # FIXME: Force autoload Ref so it gets registered properly
+
       ##
       # Create a new protocol object with which to communicate with the Ozone server.
       # See Ozone::Connection for details of options

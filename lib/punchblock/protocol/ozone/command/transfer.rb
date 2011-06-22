@@ -155,7 +155,7 @@ module Punchblock
             register :ring, :transfer
           end
 
-          def attributes # :nodoc:
+          def inspect_attributes # :nodoc:
             [:to, :from, :terminator, :timeout, :answer_on_media] + super
           end
 

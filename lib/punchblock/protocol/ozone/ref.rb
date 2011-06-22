@@ -21,7 +21,7 @@ module Punchblock
           write_attr :id, ref_id
         end
 
-        def attributes # :nodoc:
+        def inspect_attributes # :nodoc:
           [:id] + super
         end
       end # Offer

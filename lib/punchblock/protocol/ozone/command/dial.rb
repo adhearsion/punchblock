@@ -57,7 +57,7 @@ module Punchblock
             write_attr :from, dial_from
           end
 
-          def attributes # :nodoc:
+          def inspect_attributes # :nodoc:
             [:to, :from] + super
           end
         end # Dial

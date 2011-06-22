@@ -49,7 +49,7 @@ module Punchblock
           super o, *(fields + [:name, :value])
         end
 
-        def attributes # :nodoc:
+        def inspect_attributes # :nodoc:
           [:name, :value] + super
         end
       end

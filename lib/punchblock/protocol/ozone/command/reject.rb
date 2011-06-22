@@ -55,7 +55,7 @@ module Punchblock
             self << OzoneNode.new(reject_reason)
           end
 
-          def attributes # :nodoc:
+          def inspect_attributes # :nodoc:
             [:reason] + super
           end
         end # Reject

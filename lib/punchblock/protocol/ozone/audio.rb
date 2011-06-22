@@ -41,7 +41,7 @@ module Punchblock
           super o, *(fields + [:src])
         end
 
-        def attributes # :nodoc:
+        def inspect_attributes # :nodoc:
           [:src] + super
         end
       end

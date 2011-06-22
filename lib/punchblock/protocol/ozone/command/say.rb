@@ -85,7 +85,7 @@ module Punchblock
             end
           end
 
-          def attributes # :nodoc:
+          def inspect_attributes # :nodoc:
             [:voice, :audio, :ssml] + super
           end
 

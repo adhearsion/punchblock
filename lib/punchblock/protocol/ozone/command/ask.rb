@@ -167,7 +167,7 @@ module Punchblock
             self << Choices.new(choices)
           end
 
-          def attributes # :nodoc:
+          def inspect_attributes # :nodoc:
             [:bargein, :min_confidence, :mode, :recognizer, :terminator, :timeout, :prompt, :choices] + super
           end
 
@@ -228,7 +228,7 @@ module Punchblock
               super o, *(fields + [:content_type, :value])
             end
 
-            def attributes # :nodoc:
+            def inspect_attributes # :nodoc:
               [:content_type, :value] + super
             end
           end # Choices
@@ -291,7 +291,7 @@ module Punchblock
                 find_first('//ns:utterance', :ns => self.registered_ns).text
               end
 
-              def attributes # :nodoc:
+              def inspect_attributes # :nodoc:
                 [:mode, :confidence, :interpretation, :utterance] + super
               end
             end

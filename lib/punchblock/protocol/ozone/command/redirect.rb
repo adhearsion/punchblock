@@ -43,7 +43,7 @@ module Punchblock
             write_attr :to, redirect_to
           end
 
-          def attributes # :nodoc:
+          def inspect_attributes # :nodoc:
             [:to] + super
           end
         end # Redirect

@@ -66,12 +66,12 @@ module Punchblock
           super name, doc, registered_ns
         end
 
-        def attributes # :nodoc:
+        def inspect_attributes # :nodoc:
           [:call_id, :command_id, :namespace_href]
         end
 
         def inspect
-          "#<#{self.class} #{attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" rescue nil }.compact * ', '}>"
+          "#<#{self.class} #{inspect_attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" rescue nil }.compact * ', '}>"
         end
 
         ##

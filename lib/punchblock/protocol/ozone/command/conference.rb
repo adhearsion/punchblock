@@ -141,7 +141,7 @@ module Punchblock
             self << Announcement.new(ann)
           end
 
-          def attributes # :nodoc:
+          def inspect_attributes # :nodoc:
             [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
           end
 
@@ -193,7 +193,7 @@ module Punchblock
 
               alias :details :text
 
-              def attributes # :nodoc:
+              def inspect_attributes # :nodoc:
                 [:details] + super
               end
             end

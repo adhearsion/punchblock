@@ -10,17 +10,16 @@ module Punchblock
           end
 
           describe "for audio" do
-            subject { Say.new :url => 'http://whatever.you-say-boss.com' }
+            subject { Say.new :audio => {:url => 'http://whatever.you-say-boss.com'} }
 
-            its(:audio) { should == Audio.new(:url => 'http://whatever.you-say-boss.com') }
+            it { OzoneNode.import(subject.children.first).should == Audio.new(:url => 'http://whatever.you-say-boss.com') }
           end
 
           describe "for text" do
-            subject { Say.new :text => 'Once upon a time there was a message...', :voice => 'kate', :url => nil }
+            subject { Say.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
 
             its(:voice) { should == 'kate' }
             its(:text) { should == 'Once upon a time there was a message...' }
-            its(:audio) { should == nil }
           end
 
           describe "for SSML" do

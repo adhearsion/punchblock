@@ -9,10 +9,10 @@ module Punchblock
           # Creates an Ozone Say command
           #
           # @param [Hash] options
-          # @option options [String] :text to speak back
-          # @option options [String] :voice with which to render TTS
-          # @option options [String] :url of a recording to play
-          # @option options [String] :ssml document to render TTS
+          # @option options [String, Optional] :text to speak back
+          # @option options [String, Optional] :voice with which to render TTS
+          # @option options [Audio, Optional] :audio to play
+          # @option options [String, Optional] :ssml document to render TTS
           #
           # @return [Ozone::Command::Say] an Ozone "say" command
           #
@@ -26,10 +26,13 @@ module Punchblock
             super().tap do |new_node|
               case options
               when Hash
-                new_node << options.delete(:text) if options[:text]
                 new_node.voice = options.delete(:voice) if options[:voice]
                 new_node.ssml = options.delete(:ssml) if options[:ssml]
-                new_node.audio = options if options[:url]
+                new_node << options.delete(:text) if options[:text]
+                if audio = options[:audio]
+                  audio = Audio.new(audio) unless audio.is_a?(Audio)
+                  new_node << audio
+                end
               when Nokogiri::XML::Element
                 new_node.inherit options
               end
@@ -48,23 +51,6 @@ module Punchblock
           #
           def voice=(voice)
             write_attr :voice, voice
-          end
-
-          ##
-          # @return [Audio] the audio to play
-          #
-          def audio
-            node = find_first('//ns:audio', :ns => self.registered_ns)
-            Audio.new node if node
-          end
-
-          ##
-          # @param [Hash] audio
-          # @option audio [String] :url of a recording to play
-          #
-          def audio=(audio)
-            remove_children :audio
-            self << Audio.new(audio) if audio.present?
           end
 
           ##

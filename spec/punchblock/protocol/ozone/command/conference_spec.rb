@@ -13,11 +13,10 @@ module Punchblock
             subject do
               Conference.new :name              => '1234',
                              :terminator        => '#',
-                             :prompt            => "Welcome to Ozone",
-                             :audio_url         => "http://it.doesnt.matter.does.it/?",
                              :moderator         => true,
                              :tone_passthrough  => true,
-                             :mute              => false
+                             :mute              => false,
+                             :announcement      => {:text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?"}
             end
 
             its(:name)              { should == '1234' }

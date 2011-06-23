@@ -9,26 +9,22 @@ module Punchblock
           # Create an ask message
           #
           # @param [Hash] options for asking/prompting a specific call
-          # @option options [String] :choices to ask the user
-          # @option options [String, Optional] :text to read the caller via TTS as the question
-          # @option options [String, Optional] :url to an audio file to play as the question
+          # @option options [Choices, Hash] :choices to allow the user to input
+          # @option options [Prompt, Hash, Optional] :prompt to play/read to the caller as the question
           # @option options [Symbol, Optional] :mode by which to accept input. Can be :speech, :dtmf or :any
           # @option options [Integer, Optional] :timeout to wait for user input
           # @option options [Boolean, Optional] :bargein wether or not to allow the caller to begin their response before the prompt finishes
           # @option options [String, Optional] :recognizer to use for speech recognition
-          # @option options [String, Optional] :voice to use for speech synthesis
           # @option options [String, Optional] :terminator by which to signal the end of input
           # @option options [Float, Optional] :min_confidence with which to consider a response acceptable
-          # @option options [String, Optional] :grammar to use for speech recognition (ie - application/grammar+voxeo or application/grammar+grxml)
           #
           # @return [Ozone::Command::Ask] a formatted Ozone ask command
           #
           # @example
-          #    ask :text => 'Please enter your postal code.',
-          #        :options => '[5 DIGITS]',
-          #        :timeout => 30,
-          #        :recognizer => 'es-es',
-          #        :voice => 'simon'
+          #    ask :prompt      => {:text => 'Please enter your postal code.', :voice => 'simon'},
+          #        :choices     => {:value => '[5 DIGITS]'},
+          #        :timeout     => 30,
+          #        :recognizer  => 'es-es'
           #
           #    returns:
           #      <ask xmlns="urn:xmpp:ozone:ask:1" timeout="30" recognizer="es-es">
@@ -38,9 +34,6 @@ module Punchblock
           #
           def self.new(options = {})
             super().tap do |new_node|
-              new_node.prompt = {:text => options.delete(:text), :voice => options.delete(:voice), :url => options.delete(:url)}
-              new_node.choices = {:content_type => options.delete(:grammar), :value => options.delete(:choices)}
-
               options.each_pair { |k,v| new_node.send :"#{k}=", v }
             end
           end
@@ -143,7 +136,9 @@ module Punchblock
           # @option p [String] :url to an audio file to play as the question
           #
           def prompt=(p)
-            self << Prompt.new(p)
+            remove_children :prompt
+            p = Prompt.new(p) unless p.is_a?(Prompt)
+            self << p
           end
 
           class Prompt < Say
@@ -164,7 +159,8 @@ module Punchblock
           #
           def choices=(choices)
             remove_children :choices
-            self << Choices.new(choices)
+            choices = Choices.new(choices) unless choices.is_a?(Choices)
+            self << choices
           end
 
           def inspect_attributes # :nodoc:

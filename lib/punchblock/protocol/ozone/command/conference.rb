@@ -10,8 +10,7 @@ module Punchblock
           #
           # @param [Hash] options
           # @option options [String] :name room id to with which to create or join the conference
-          # @option options [String, Optional] :audio_url URL to play to the caller as an announcement
-          # @option options [String, Optional] :prompt Text to speak to the caller as an announcement
+          # @option options [Announcement, Hash, Optional] :announcement to play on entry
           # @option options [Boolean, Optional] :mute If set to true, the user will be muted in the conference
           # @option options [Boolean, Optional] :moderator Whether or not the conference should be moderated
           # @option options [Boolean, Optional] :tone_passthrough Identifies whether or not conference members can hear the tone generated when a a key on the phone is pressed.
@@ -26,11 +25,6 @@ module Punchblock
           #      <conference xmlns="urn:xmpp:ozone:conference:1" name="the_one_true_conference" terminator="#"/>
           def self.new(options = {})
             super().tap do |new_node|
-              prompt    = options.delete :prompt
-              audio_url = options.delete :audio_url
-
-              new_node.announcement = {:text => prompt, :url => audio_url} if prompt || audio_url
-
               options.each_pair do |k,v|
                 new_node.send :"#{k}=", v
               end
@@ -116,12 +110,13 @@ module Punchblock
           end
 
           ##
-          # @param [Hash] ann
+          # @param [Announcement, Hash] ann
           # @option ann [String] :text Text to speak to the caller as an announcement
           # @option ann [String] :url URL to play to the caller as an announcement
           #
           def announcement=(ann)
-            self << Announcement.new(ann)
+            ann = Announcement.new(ann) unless ann.is_a? Announcement
+            self << ann
           end
 
           def inspect_attributes # :nodoc:

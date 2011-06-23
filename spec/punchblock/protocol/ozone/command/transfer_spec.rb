@@ -17,9 +17,7 @@ module Punchblock
                            :timeout         => 120000,
                            :answer_on_media => true,
                            :media           => :direct,
-                           :voice           => 'allison',
-                           :text            => "Welcome to Ozone",
-                           :audio_url       => "http://it.doesnt.matter.does.it/?"
+                           :ring            => {:voice => 'allison', :text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?"}
             end
 
             its(:to)              { should == %w{tel:+14045551212} }

@@ -11,11 +11,8 @@ module Punchblock
 
           describe "when setting options in initializer" do
             subject do
-              Ask.new :text           => 'Please enter your postal code.',
-                      :choices        => '[5 DIGITS]',
-                      :grammar        => 'application/grammar+custom',
-                      :voice          => 'kate',
-                      :url            => "http://it.doesnt.matter.does.it/?",
+              Ask.new :choices        => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'},
+                      :prompt         => {:text => 'Please enter your postal code.', :voice => 'kate', :url => "http://it.doesnt.matter.does.it/?"},
                       :bargein        => true,
                       :min_confidence => 0.3,
                       :mode           => :speech,
@@ -24,6 +21,8 @@ module Punchblock
                       :timeout        => 12000
             end
 
+
+            its(:choices)         { should == Ask::Choices.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
             its(:prompt)          { should == Ask::Prompt.new(:voice => 'kate', :text => 'Please enter your postal code.', :url => "http://it.doesnt.matter.does.it/?") }
             its(:bargein)         { should == true }
             its(:min_confidence)  { should == 0.3 }
@@ -31,22 +30,13 @@ module Punchblock
             its(:recognizer)      { should == 'en-US' }
             its(:terminator)      { should == '#' }
             its(:timeout)         { should == 12000 }
-            its(:choices)         { should == Ask::Choices.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
-          end
-
-          describe "when not passing a grammar" do
-            subject { Ask.new(:choices => '[5 DIGITS]').choices }
-            its(:content_type) { should == 'application/grammar+voxeo' }
-          end
-
-          describe "when not passing a URL" do
-            subject { Ask.new(:choices => '[5 DIGITS]').prompt }
-
-            its(:audio) { should == nil }
           end
 
           describe Ask::Choices do
-            pending "Write some proper specs for me!"
+            describe "when not passing a grammar" do
+              subject { Ask::Choices.new :value => '[5 DIGITS]' }
+              its(:content_type) { should == 'application/grammar+voxeo' }
+            end
 
             describe 'with a GRXML grammar' do
               subject { Ask::Choices.new :value => grxml, :content_type => 'application/grammar+grxml' }

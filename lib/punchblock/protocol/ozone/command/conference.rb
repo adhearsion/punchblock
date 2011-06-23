@@ -12,7 +12,6 @@ module Punchblock
           # @option options [String] :name room id to with which to create or join the conference
           # @option options [String, Optional] :audio_url URL to play to the caller as an announcement
           # @option options [String, Optional] :prompt Text to speak to the caller as an announcement
-          # @option options [Boolean, Optional] :beep Whether or not the conference should hear a beep on entry/departure
           # @option options [Boolean, Optional] :mute If set to true, the user will be muted in the conference
           # @option options [Boolean, Optional] :moderator Whether or not the conference should be moderated
           # @option options [Boolean, Optional] :tone_passthrough Identifies whether or not conference members can hear the tone generated when a a key on the phone is pressed.

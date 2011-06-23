@@ -152,13 +152,19 @@ module Punchblock
             end
           end
 
-          state_machine :mute_status, :initial => :unmuted do
+          state_machine :state do
+            after_transition :new => :requested do |command, transition|
+              command.mute ? command.muted! : command.unmuted!
+            end
+          end
+
+          state_machine :mute_status, :initial => :unknown do
             event :muted do
-              transition :unmuted => :muted
+              transition [:unmuted, :unknown] => :muted
             end
 
             event :unmuted do
-              transition :muted => :unmuted
+              transition [:muted, :unknown] => :unmuted
             end
           end
 

@@ -29,7 +29,7 @@ module Punchblock
             its(:music)             { should == Conference::Music.new(:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :url => "http://www.yanni.com/music/awesome.mp3", :voice => 'frank') }
           end
 
-          its(:mute_status_name) { should == :unmuted }
+          its(:mute_status_name) { should == :unknown }
           its(:hold_status_name) { should == :unknown }
 
           describe "#transition_state!" do
@@ -47,6 +47,20 @@ module Punchblock
               end
             end
           end # #transition_state!
+
+          describe "#requested" do
+            context "when requesting to be muted" do
+              subject { Conference.new :mute => true }
+              before { subject.request! }
+              its(:mute_status_name) { should == :muted }
+            end
+
+            context "when requesting not to be muted" do
+              subject { Conference.new :mute => false }
+              before { subject.request! }
+              its(:mute_status_name) { should == :unmuted }
+            end
+          end
 
           describe "#onhold!" do
             before do

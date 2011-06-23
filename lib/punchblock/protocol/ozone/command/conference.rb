@@ -20,12 +20,10 @@ module Punchblock
           # @return [Ozone::Command::Conference] a formatted Ozone conference command
           #
           # @example
-          #    conference :name => 'Please enter your postal code.',
-          #               :beep => true,
-          #               :terminator => '#'
+          #    conference :name => 'the_one_true_conference', :terminator => '#'
           #
           #    returns:
-          #      <conference xmlns="urn:xmpp:ozone:conference:1" name="1234" beep="true" terminator="#"/>
+          #      <conference xmlns="urn:xmpp:ozone:conference:1" name="the_one_true_conference" terminator="#"/>
           def self.new(options = {})
             super().tap do |new_node|
               prompt    = options.delete :prompt

@@ -23,7 +23,7 @@ module Punchblock
             write_attr :from, offer_from
           end
 
-          def attributes
+          def inspect_attributes # :nodoc:
             [:to, :from] + super
           end
         end # Offer

@@ -13,7 +13,7 @@ module Punchblock
             OzoneNode.import children.select { |c| c.is_a? Nokogiri::XML::Element }.first
           end
 
-          def attributes
+          def inspect_attributes # :nodoc:
             [:reason] + super
           end
 
@@ -22,7 +22,7 @@ module Punchblock
               super.to_sym
             end
 
-            def attributes
+            def inspect_attributes # :nodoc:
               [:name] + super
             end
           end
@@ -42,7 +42,7 @@ module Punchblock
               text.strip
             end
 
-            def attributes
+            def inspect_attributes # :nodoc:
               [:details] + super
             end
           end

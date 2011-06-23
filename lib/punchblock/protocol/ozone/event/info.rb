@@ -9,7 +9,7 @@ module Punchblock
             children.select { |c| c.is_a? Nokogiri::XML::Element }.first.name.to_sym
           end
 
-          def attributes
+          def inspect_attributes # :nodoc:
             [:event_name] + super
           end
         end # Info

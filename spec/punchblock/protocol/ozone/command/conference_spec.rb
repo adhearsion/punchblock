@@ -16,15 +16,17 @@ module Punchblock
                              :moderator         => true,
                              :tone_passthrough  => true,
                              :mute              => false,
-                             :announcement      => {:text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?"}
+                             :announcement      => {:text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?", :voice => 'shelly'},
+                             :music             => {:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :url => "http://www.yanni.com/music/awesome.mp3", :voice => 'frank'}
             end
 
             its(:name)              { should == '1234' }
             its(:mute)              { should == false }
             its(:terminator)        { should == '#' }
-            its(:announcement)      { should == Conference::Announcement.new(:text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?") }
             its(:tone_passthrough)  { should == true }
             its(:moderator)         { should == true }
+            its(:announcement)      { should == Conference::Announcement.new(:text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?", :voice => 'shelly') }
+            its(:music)             { should == Conference::Music.new(:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :url => "http://www.yanni.com/music/awesome.mp3", :voice => 'frank') }
           end
 
           its(:mute_status_name) { should == :unmuted }

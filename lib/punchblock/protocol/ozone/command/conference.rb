@@ -11,6 +11,7 @@ module Punchblock
           # @param [Hash] options
           # @option options [String] :name room id to with which to create or join the conference
           # @option options [Announcement, Hash, Optional] :announcement to play on entry
+          # @option options [Music, Hash, Optional] :music to play to the participant when no moderator is present
           # @option options [Boolean, Optional] :mute If set to true, the user will be muted in the conference
           # @option options [Boolean, Optional] :moderator Whether or not the conference should be moderated
           # @option options [Boolean, Optional] :tone_passthrough Identifies whether or not conference members can hear the tone generated when a a key on the phone is pressed.
@@ -119,6 +120,24 @@ module Punchblock
             self << ann
           end
 
+          ##
+          # @return [Music] the music to play to the participant on entry if there's no moderator present
+          #
+          def music
+            node = find_first '//ns:music', :ns => self.registered_ns
+            Music.new node if node
+          end
+
+          ##
+          # @param [Music, Hash] m
+          # @option m [String] :text Text to speak to the caller
+          # @option m [String] :url URL to play to the caller
+          #
+          def music=(m)
+            m = Music.new(m) unless m.is_a? Announcement
+            self << m
+          end
+
           def inspect_attributes # :nodoc:
             [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
           end
@@ -155,6 +174,10 @@ module Punchblock
 
           class Announcement < Say
             register :announcement, :conference
+          end
+
+          class Music < Say
+            register :music, :conference
           end
 
           class OnHold < OzoneNode

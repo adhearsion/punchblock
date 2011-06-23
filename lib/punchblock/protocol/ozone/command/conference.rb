@@ -55,20 +55,6 @@ module Punchblock
           end
 
           ##
-          # @return [Boolean] Whether or not the conference should hear a beep on entry/departure
-          #
-          def beep
-            read_attr(:beep) == 'true'
-          end
-
-          ##
-          # @param [Boolean] beep Whether or not the conference should hear a beep on entry/departure
-          #
-          def beep=(beep)
-            write_attr :beep, beep.to_s
-          end
-
-          ##
           # @return [Boolean] If set to true, the user will be muted in the conference.
           #
           def mute

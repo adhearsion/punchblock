@@ -12,7 +12,6 @@ module Punchblock
           describe "when setting options in initializer" do
             subject do
               Conference.new :name              => '1234',
-                             :beep              => true,
                              :terminator        => '#',
                              :prompt            => "Welcome to Ozone",
                              :audio_url         => "http://it.doesnt.matter.does.it/?",
@@ -22,7 +21,6 @@ module Punchblock
             end
 
             its(:name)              { should == '1234' }
-            its(:beep)              { should == true }
             its(:mute)              { should == false }
             its(:terminator)        { should == '#' }
             its(:announcement)      { should == Conference::Announcement.new(:text => "Welcome to Ozone", :url => "http://it.doesnt.matter.does.it/?") }

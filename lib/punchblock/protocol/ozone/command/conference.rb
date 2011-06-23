@@ -162,13 +162,13 @@ module Punchblock
             end
           end
 
-          state_machine :hold_status, :initial => :offhold do
+          state_machine :hold_status, :initial => :unknown do
             event :onhold do
-              transition :offhold => :onhold
+              transition [:offhold, :unknown] => :onhold
             end
 
             event :offhold do
-              transition :onhold => :offhold
+              transition [:onhold, :unknown] => :offhold
             end
           end
 

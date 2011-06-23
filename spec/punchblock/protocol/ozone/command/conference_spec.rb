@@ -30,7 +30,7 @@ module Punchblock
           end
 
           its(:mute_status_name) { should == :unmuted }
-          its(:hold_status_name) { should == :offhold }
+          its(:hold_status_name) { should == :unknown }
 
           describe "#transition_state!" do
             describe "with an on-hold" do

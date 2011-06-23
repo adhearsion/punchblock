@@ -17,13 +17,14 @@ module Punchblock
         # @param [Hash] options
         # @option options [String] :username client JID
         # @option options [String] :password XMPP password
+        # @option options [String] :ozone_domain the domain on which Ozone is running
         # @option options [Logger] :wire_logger to which all XMPP transactions will be logged
         #
         def initialize(options = {})
           super
           raise ArgumentError unless @username = options.delete(:username)
           raise ArgumentError unless options.has_key? :password
-          @client_jid = Blather::JID.new @username
+          @ozone_domain = options[:ozone_domain] || Blather::JID.new(@username).domain
 
           setup @username, options.delete(:password)
 
@@ -58,7 +59,7 @@ module Punchblock
           cmd.connection = self
           call_id = call_id.call_id if call_id.is_a? Call
           cmd.call_id = call_id
-          jid = cmd.is_a?(Command::Dial) ? @client_jid.domain : "#{call_id}@#{@callmap[call_id]}"
+          jid = cmd.is_a?(Command::Dial) ? @ozone_domain : "#{call_id}@#{@callmap[call_id]}"
           jid << "/#{command_id}" if command_id
           iq = create_iq jid
           @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger

@@ -19,6 +19,9 @@ option_parser = OptionParser.new do |opts|
   opts.on("-p", "--password PASSWORD", String, "Specify the XMPP password to use") do |p|
     options[:password] = p
   end
+  opts.on("-d", "--ozone-domain DOMAIN", String, "Specify the domain Ozone is running on") do |d|
+    options[:ozone_domain] = d
+  end
   opts.on("--wire-log-file log/wirelog.log", String, "Specify the file to which the wire log should be written") do |wlf|
     options[:wire_log_file] = wlf
   end

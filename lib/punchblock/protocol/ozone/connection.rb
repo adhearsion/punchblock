@@ -38,6 +38,8 @@ module Punchblock
           @command_id_to_iq_id = {}
           @iq_id_to_command = {}
 
+          @reconnect_attempts = 0
+
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
 
           # FIXME: Force autoload events so they get registered properly
@@ -90,6 +92,14 @@ module Punchblock
         def connect
           Thread.new do
             begin
+              trap(:INT) do
+                @reconnect_attempts = nil
+                EM.stop
+              end
+              trap(:TERM) do
+                @reconnect_attempts = nil
+                EM.stop
+              end
               EM.run { client.run }
             rescue => e
               puts "Exception in XMPP thread! #{e}"
@@ -154,6 +164,18 @@ module Punchblock
           when_ready do
             @event_queue.push connected
             @logger.info "Connected to XMPP as #{@username}" if @logger
+            @reconnect_attempts = 0
+          end
+
+          disconnected do
+            if @reconnect_attempts
+              timer = 30 * 2 ** @reconnect_attempts
+              @logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s." if @logger
+              sleep timer
+              @logger.info "Trying to reconnect..." if @logger
+              @reconnect_attempts += 1
+              connect
+            end
           end
 
           # Read/handle call control messages. These are mostly just acknowledgement of commands

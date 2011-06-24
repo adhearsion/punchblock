@@ -59,10 +59,6 @@ protocol_thread = protocol.run
 CALL_QUEUES = {}
 INFO_EVENT_QUEUE = Queue.new
 
-# Block on waiting for the XMPP to connect, then show when we are connected
-puts protocol.event_queue.pop
-puts "Waiting for a call..."
-
 ### DISPATCHER THREAD
 # This thread multiplexes the event stream from the underlying connection handler and routes them
 # to the correct queue for each call.  It also starts a call handler, the run_call method) after creating
@@ -70,6 +66,11 @@ puts "Waiting for a call..."
 Thread.new do
   loop do
     event = protocol.event_queue.pop
+    if event == protocol.connected
+      puts event
+      puts "Waiting for a call..."
+      next
+    end
     puts "#{event.class} event for call: #{event.call_id}"
     case event
     when Punchblock::Call

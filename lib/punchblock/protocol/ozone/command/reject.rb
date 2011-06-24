@@ -7,13 +7,13 @@ module Punchblock
 
           include HasHeaders
 
-          VALID_REASONS = [:busy, :declined, :error].freeze
+          VALID_REASONS = [:busy, :decline, :error].freeze
 
           ##
           # Create an Ozone reject message
           #
           # @param [Hash] options
-          # @option options [Symbol] :reason for rejecting the call. Can be any one of :busy, :declined or :error. Defaults to :declined
+          # @option options [Symbol] :reason for rejecting the call. Can be any one of VALID_REASONS. Defaults to :decline
           # @option options [Array[Header], Hash, Optional] :headers SIP headers to attach to
           #   the call. Can be either a hash of key-value pairs, or an array of
           #   Header objects.
@@ -28,7 +28,7 @@ module Punchblock
           #
           def self.new(options = {})
             super().tap do |new_node|
-              new_node.reason = options[:reason] || :declined
+              new_node.reason = options[:reason] || :decline
               new_node.headers = options[:headers]
             end
           end

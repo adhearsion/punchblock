@@ -18,7 +18,7 @@ module Punchblock
           end
 
           describe "with the reason" do
-            [:declined, :busy, :error].each do |reason|
+            [:decline, :busy, :error].each do |reason|
               describe reason do
                 subject { Reject.new :reason => reason }
 

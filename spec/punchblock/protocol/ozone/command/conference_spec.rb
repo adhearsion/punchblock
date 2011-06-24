@@ -29,8 +29,8 @@ module Punchblock
             its(:music)             { should == Conference::Music.new(:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :url => "http://www.yanni.com/music/awesome.mp3", :voice => 'frank') }
           end
 
-          its(:mute_status_name) { should == :unknown }
-          its(:hold_status_name) { should == :unknown }
+          its(:mute_status_name) { should == :unknown_mute }
+          its(:hold_status_name) { should == :unknown_hold }
 
           describe "#transition_state!" do
             describe "with an on-hold" do

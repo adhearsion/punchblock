@@ -158,23 +158,23 @@ module Punchblock
             end
           end
 
-          state_machine :mute_status, :initial => :unknown do
+          state_machine :mute_status, :initial => :unknown_mute do
             event :muted do
-              transition [:unmuted, :unknown] => :muted
+              transition [:unmuted, :unknown_mute] => :muted
             end
 
             event :unmuted do
-              transition [:muted, :unknown] => :unmuted
+              transition [:muted, :unknown_mute] => :unmuted
             end
           end
 
-          state_machine :hold_status, :initial => :unknown do
+          state_machine :hold_status, :initial => :unknown_hold do
             event :onhold do
-              transition [:offhold, :unknown] => :onhold
+              transition [:offhold, :unknown_hold] => :onhold
             end
 
             event :offhold do
-              transition [:onhold, :unknown] => :offhold
+              transition [:onhold, :unknown_hold] => :offhold
             end
           end
 

@@ -92,6 +92,14 @@ module Punchblock
         def connect
           Thread.new do
             begin
+              trap(:INT) do
+                @reconnect_attempts = nil
+                EM.stop
+              end
+              trap(:TERM) do
+                @reconnect_attempts = nil
+                EM.stop
+              end
               EM.run { client.run }
             rescue => e
               puts "Exception in XMPP thread! #{e}"
@@ -160,12 +168,14 @@ module Punchblock
           end
 
           disconnected do
-            timer = 20 * 2 ** @reconnect_attempts
-            @logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s." if @logger
-            sleep timer
-            @logger.info "Trying to reconnect..." if @logger
-            @reconnect_attempts += 1
-            client.connect
+            if @reconnect_attempts
+              timer = 30 * 2 ** @reconnect_attempts
+              @logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s." if @logger
+              sleep timer
+              @logger.info "Trying to reconnect..." if @logger
+              @reconnect_attempts += 1
+              connect
+            end
           end
 
           # Read/handle call control messages. These are mostly just acknowledgement of commands

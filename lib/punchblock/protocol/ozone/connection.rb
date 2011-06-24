@@ -101,6 +101,8 @@ module Punchblock
                 EM.stop
               end
               EM.run { client.run }
+            rescue Blather::SASLError, Blather::StreamError => e
+              raise ProtocolError.new(e.class.to_s, e.message)
             rescue => e
               puts "Exception in XMPP thread! #{e}"
               puts e.backtrace.join("\t\n")

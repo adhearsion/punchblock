@@ -167,9 +167,11 @@ module Punchblock
             @event_queue.push connected
             @logger.info "Connected to XMPP as #{@username}" if @logger
             @reconnect_attempts = 0
+            @ozone_ping = EM::PeriodicTimer.new(60) { ping_ozone }
           end
 
           disconnected do
+            @ozone_ping.cancel if @ozone_ping
             if @reconnect_attempts
               timer = 30 * 2 ** @reconnect_attempts
               @logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s." if @logger
@@ -192,6 +194,16 @@ module Punchblock
 
           # Read/handle presence requests. This is how we get events.
           presence { |msg| handle_presence msg }
+        end
+
+        def ping_ozone
+          client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, @ozone_domain) do |response|
+            begin
+              handle_error response if response.is_a? Blather::BlatherError
+            rescue ProtocolError => e
+              raise e unless e.name == :feature_not_implemented
+            end
+          end
         end
 
         def create_iq(jid = nil)

@@ -28,10 +28,10 @@ module Punchblock
 
           setup @username, options.delete(:password)
 
-          # This queue is used to synchronize between threads calling #write
+          # This hash is used to synchronize between threads calling #write
           # and the connection-level responses they need to return from the
           # EventMachine loop.
-          @result_queues = {}
+          @command_callbacks = {}
 
           @callmap = {} # This hash maps call IDs to their XMPP domain.
 
@@ -58,27 +58,51 @@ module Punchblock
         # @return true
         #
         def write(call_id, cmd, command_id = nil)
+          queue = async_write call_id, cmd, command_id
+          begin
+            Timeout::timeout(3) { queue.pop }
+          ensure
+            queue = nil # Shut down this queue
+          end.tap { |result| raise result if result.is_a? Exception }
+        end
+
+        ##
+        # @return [Queue] Pop this queue to determine result of command execution. Will be true or an exception
+        def async_write(call_id, cmd, command_id = nil)
+          iq = prep_command_for_execution call_id, cmd, command_id
+
+          Queue.new.tap do |queue|
+            @command_callbacks[iq.id] = lambda do |result|
+              case result
+              when Blather::Stanza::Iq
+                ref = result.ozone_node
+                if ref.is_a?(Ref)
+                  cmd.command_id = ref.id
+                  @command_id_to_iq_id[ref.id] = iq.id
+                end
+                cmd.execute!
+                queue << true
+              when Exception
+                queue << result
+              end
+            end
+
+            write_to_stream iq
+            cmd.request!
+          end
+        end
+
+        def prep_command_for_execution(call_id, cmd, command_id = nil)
           cmd.connection = self
           call_id = call_id.call_id if call_id.is_a? Call
           cmd.call_id = call_id
           jid = cmd.is_a?(Command::Dial) ? @ozone_domain : "#{call_id}@#{@callmap[call_id]}"
           jid << "/#{command_id}" if command_id
-          iq = create_iq jid
-          @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
-          iq << cmd
-          @iq_id_to_command[iq.id] = cmd
-          @result_queues[iq.id] = Queue.new
-          write_to_stream iq
-          cmd.request!
-          result = read_queue_with_timeout @result_queues[iq.id]
-          if result.is_a?(Blather::Stanza::Iq)
-            ref = result.ozone_node
-            cmd.command_id = ref.id if ref.is_a?(Ref)
-            cmd.execute!
+          create_iq(jid).tap do |iq|
+            @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
+            iq << cmd
+            @iq_id_to_command[iq.id] = cmd
           end
-          @result_queues[iq.id] = nil # Shut down this queue
-          raise result if result.is_a? Exception
-          true
         end
 
         ##
@@ -141,11 +165,9 @@ module Punchblock
         def handle_iq_result(iq)
           # FIXME: Do we need to raise a warning if the domain changes?
           @callmap[iq.from.node] = iq.from.domain
-          # Send this result to the waiting queue
           @logger.debug "Command #{iq.id} completed successfully" if @logger
-          ref = iq.ozone_node
-          @command_id_to_iq_id[ref.id] = iq.id if ref.is_a?(Ref)
-          @result_queues[iq.id].push iq
+          callback = @command_callbacks[iq.id]
+          callback.call iq if callback
         end
 
         def handle_error(iq)
@@ -153,8 +175,8 @@ module Punchblock
 
           protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.command_id
 
-          if @result_queues.has_key?(iq.id)
-            @result_queues[iq.id].push protocol_error
+          if callback = @command_callbacks[iq.id]
+            callback.call protocol_error
           else
             # Un-associated transport error??
             raise protocol_error
@@ -208,14 +230,6 @@ module Punchblock
 
         def create_iq(jid = nil)
           Blather::Stanza::Iq.new :set, jid || @call_id
-        end
-
-        def read_queue_with_timeout(queue, timeout = 3)
-          begin
-            Timeout::timeout(timeout) { queue.pop }
-          rescue Timeout::Error => e
-            e.to_s
-          end
         end
       end
     end

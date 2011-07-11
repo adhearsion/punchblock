@@ -6,6 +6,7 @@ module Punchblock
 
         autoload :Answered
         autoload :Complete
+        autoload :DTMF
         autoload :End
         autoload :Info
         autoload :Offer

@@ -19,6 +19,7 @@ module Punchblock
         # @option options [String] :password XMPP password
         # @option options [String] :ozone_domain the domain on which Ozone is running
         # @option options [Logger] :wire_logger to which all XMPP transactions will be logged
+        # @option options [Boolean, Optional] :auto_reconnect whether or not to auto reconnect
         #
         def initialize(options = {})
           super
@@ -38,6 +39,7 @@ module Punchblock
           @command_id_to_iq_id = {}
           @iq_id_to_command = {}
 
+          @auto_reconnect = !!options[:auto_reconnect]
           @reconnect_attempts = 0
 
           Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
@@ -194,7 +196,7 @@ module Punchblock
 
           disconnected do
             @ozone_ping.cancel if @ozone_ping
-            if @reconnect_attempts
+            if @auto_reconnect && @reconnect_attempts
               timer = 30 * 2 ** @reconnect_attempts
               @logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s." if @logger
               sleep timer

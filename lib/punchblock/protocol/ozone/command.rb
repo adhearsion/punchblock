@@ -12,6 +12,7 @@ module Punchblock
         autoload :Conference
         autoload :Dial
         autoload :Hangup
+        autoload :Record
         autoload :Redirect
         autoload :Reject
         autoload :Say

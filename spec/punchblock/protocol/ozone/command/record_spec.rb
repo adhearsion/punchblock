@@ -171,51 +171,78 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
 <complete xmlns='urn:xmpp:ozone:ext:1'>
-  <success xmlns='urn:xmpp:ozone:record:complete:1' uri="file:/tmp/ozone7451601434771683422.mp3"/>
+  <success xmlns='urn:xmpp:ozone:record:complete:1'/>
+  <recording xmlns='urn:xmpp:ozone:record:complete:1' uri="file:/tmp/ozone7451601434771683422.mp3"/>
 </complete>
               MESSAGE
             end
 
-            subject { OzoneNode.import(parse_stanza(stanza).root).reason }
+            describe "#reason" do
+              subject { OzoneNode.import(parse_stanza(stanza).root).reason }
 
-            it { should be_instance_of Record::Complete::Success }
+              it { should be_instance_of Record::Complete::Success }
 
-            its(:name)  { should == :success }
-            its(:uri)   { should == "file:/tmp/ozone7451601434771683422.mp3" }
+              its(:name)  { should == :success }
+            end
+
+            describe "#recording" do
+              subject { OzoneNode.import(parse_stanza(stanza).root).recording }
+
+              it { should be_instance_of Record::Recording }
+              its(:uri) { should == "file:/tmp/ozone7451601434771683422.mp3" }
+            end
           end
 
-          describe Record::Complete::Stop do
+          describe Event::Complete::Stop do
             let :stanza do
               <<-MESSAGE
 <complete xmlns='urn:xmpp:ozone:ext:1'>
-  <stop xmlns='urn:xmpp:ozone:record:complete:1' uri="file:/tmp/ozone7451601434771683422.mp3"/>
+  <stop xmlns='urn:xmpp:ozone:ext:complete:1' />
+  <recording xmlns='urn:xmpp:ozone:record:complete:1' uri="file:/tmp/ozone7451601434771683422.mp3"/>
 </complete>
               MESSAGE
             end
 
-            subject { OzoneNode.import(parse_stanza(stanza).root).reason }
+            describe "#reason" do
+              subject { OzoneNode.import(parse_stanza(stanza).root).reason }
 
-            it { should be_instance_of Record::Complete::Stop }
+              it { should be_instance_of Event::Complete::Stop }
 
-            its(:name)  { should == :stop }
-            its(:uri)   { should == "file:/tmp/ozone7451601434771683422.mp3" }
+              its(:name)  { should == :stop }
+            end
+
+            describe "#recording" do
+              subject { OzoneNode.import(parse_stanza(stanza).root).recording }
+
+              it { should be_instance_of Record::Recording }
+              its(:uri) { should == "file:/tmp/ozone7451601434771683422.mp3" }
+            end
           end
 
-          describe Record::Complete::Hangup do
+          describe Event::Complete::Hangup do
             let :stanza do
               <<-MESSAGE
 <complete xmlns='urn:xmpp:ozone:ext:1'>
-  <hangup xmlns='urn:xmpp:ozone:record:complete:1' uri="file:/tmp/ozone7451601434771683422.mp3"/>
+  <hangup xmlns='urn:xmpp:ozone:ext:complete:1' />
+  <recording xmlns='urn:xmpp:ozone:record:complete:1' uri="file:/tmp/ozone7451601434771683422.mp3"/>
 </complete>
               MESSAGE
             end
 
-            subject { OzoneNode.import(parse_stanza(stanza).root).reason }
+            describe "#reason" do
+              subject { OzoneNode.import(parse_stanza(stanza).root).reason }
 
-            it { should be_instance_of Record::Complete::Hangup }
+              it { should be_instance_of Event::Complete::Hangup }
 
-            its(:name)  { should == :hangup }
-            its(:uri)   { should == "file:/tmp/ozone7451601434771683422.mp3" }
+              its(:name)  { should == :hangup }
+            end
+
+            describe "#recording" do
+              subject { OzoneNode.import(parse_stanza(stanza).root).recording }
+
+              it { should be_instance_of Record::Recording }
+              its(:uri) { should == "file:/tmp/ozone7451601434771683422.mp3" }
+            end
           end
         end
       end

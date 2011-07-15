@@ -303,41 +303,21 @@ module Punchblock
             register :stop, :record
           end
 
+          class Recording < OzoneNode
+            register :recording, :record_complete
+
+            def uri
+              read_attr :uri
+            end
+
+            def inspect_attributes # :nodoc:
+              [:uri] + super
+            end
+          end
+
           class Complete
             class Success < Ozone::Event::Complete::Reason
               register :success, :record_complete
-
-              def uri
-                read_attr :uri
-              end
-
-              def inspect_attributes # :nodoc:
-                [:uri] + super
-              end
-            end
-
-            class Stop < Ozone::Event::Complete::Reason
-              register :stop, :record_complete
-
-              def uri
-                read_attr :uri
-              end
-
-              def inspect_attributes # :nodoc:
-                [:uri] + super
-              end
-            end
-
-            class Hangup < Ozone::Event::Complete::Reason
-              register :hangup, :record_complete
-
-              def uri
-                read_attr :uri
-              end
-
-              def inspect_attributes # :nodoc:
-                [:uri] + super
-              end
             end
           end
         end # Record

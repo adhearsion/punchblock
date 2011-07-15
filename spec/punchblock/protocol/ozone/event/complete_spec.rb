@@ -24,7 +24,7 @@ module Punchblock
 
             it_should_behave_like 'event'
 
-            its(:reason) { should == Command::Say::Complete::Success.new }
+            its(:reason) { should be_instance_of Command::Say::Complete::Success }
           end
         end
 

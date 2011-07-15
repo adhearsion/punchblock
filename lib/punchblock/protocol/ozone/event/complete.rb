@@ -10,11 +10,15 @@ module Punchblock
           register :complete, :ext
 
           def reason
-            OzoneNode.import children.select { |c| c.is_a? Nokogiri::XML::Element }.first
+            OzoneNode.import find_first('*')
+          end
+
+          def recording
+            OzoneNode.import find_first('//ns:recording', :ns => OZONE_NAMESPACES[:record_complete])
           end
 
           def inspect_attributes # :nodoc:
-            [:reason] + super
+            [:reason, :recording] + super
           end
 
           class Reason < OzoneNode

@@ -10,11 +10,13 @@ module Punchblock
           register :complete, :ext
 
           def reason
-            OzoneNode.import find_first('*')
+            element = find_first('*')
+            OzoneNode.import element if element
           end
 
           def recording
-            OzoneNode.import find_first('//ns:recording', :ns => OZONE_NAMESPACES[:record_complete])
+            element = find_first('//ns:recording', :ns => OZONE_NAMESPACES[:record_complete])
+            OzoneNode.import element if element
           end
 
           def inspect_attributes # :nodoc:

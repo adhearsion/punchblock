@@ -221,13 +221,7 @@ module Punchblock
         end
 
         def ping_ozone
-          client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, @ozone_domain) do |response|
-            begin
-              handle_error response if response.is_a? Blather::BlatherError
-            rescue ProtocolError => e
-              raise e unless e.name == :feature_not_implemented
-            end
-          end
+          client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, @ozone_domain) { |response| nil }
         end
 
         def create_iq(jid = nil)

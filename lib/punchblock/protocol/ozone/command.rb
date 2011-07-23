@@ -53,7 +53,7 @@ module Punchblock
           end
         end # CommandNode
 
-        class Action < OzoneNode # :nodoc:
+        class Action < CommandNode # :nodoc:
           def self.new(options = {})
             super().tap do |new_node|
               new_node.command_id = options[:command_id]

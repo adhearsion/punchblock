@@ -131,7 +131,7 @@ module Punchblock
             describe '#stop_action' do
               subject { command.stop_action }
 
-              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:say:1"/>' }
+              its(:to_xml) { should == '<stop xmlns="urn:xmpp:ozone:1"/>' }
               its(:command_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end

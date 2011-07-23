@@ -61,6 +61,10 @@ module Punchblock
             end
           end
         end # Action
+
+        class Stop < Action # :nodoc:
+          register :stop, :core
+        end
       end # Command
     end # Ozone
   end # Protocol

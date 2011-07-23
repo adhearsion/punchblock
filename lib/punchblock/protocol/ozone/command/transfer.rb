@@ -175,10 +175,6 @@ module Punchblock
             connection.write call_id, stop_action, command_id
           end
 
-          class Stop < Action # :nodoc:
-            register :stop, :transfer
-          end
-
           class Complete
             class Success < Ozone::Event::Complete::Reason
               register :success, :transfer_complete

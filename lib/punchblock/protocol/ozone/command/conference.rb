@@ -318,10 +318,6 @@ module Punchblock
             register :unmute, :conference
           end
 
-          class Stop < Action # :nodoc:
-            register :stop, :conference
-          end
-
           class Kick < Action # :nodoc:
             register :kick, :conference
 

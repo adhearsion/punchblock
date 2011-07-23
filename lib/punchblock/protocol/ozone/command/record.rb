@@ -299,10 +299,6 @@ module Punchblock
             register :resume, :record
           end
 
-          class Stop < Action # :nodoc:
-            register :stop, :record
-          end
-
           class Recording < OzoneNode
             register :recording, :record_complete
 

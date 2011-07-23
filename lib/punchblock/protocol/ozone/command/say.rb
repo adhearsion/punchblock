@@ -160,10 +160,6 @@ module Punchblock
             register :resume, :say
           end
 
-          class Stop < Action # :nodoc:
-            register :stop, :say
-          end
-
           class Complete
             class Success < Ozone::Event::Complete::Reason
               register :success, :say_complete

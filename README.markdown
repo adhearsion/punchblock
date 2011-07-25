@@ -21,7 +21,7 @@ Supported Protocols
 Punchblock is still in very early stages so this list
 is what we plan to support:
 
-* Ozone (Tropo, Voxeo Prism)
+* Rayo (Tropo, Voxeo Prism)
 * AGI/AMI (Asterisk)
 * EventSocket (FreeSWITCH, maybe)
 

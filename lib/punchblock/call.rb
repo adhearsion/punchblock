@@ -1,7 +1,7 @@
 module Punchblock
 
   ##
-  # This class represents an active Ozone call
+  # This class represents an active Rayo call
   #
   class Call
     attr_accessor :call_id, :to, :headers

@@ -1,12 +1,12 @@
 module Blather
   class Stanza
     ##
-    # @return [Punchblock::Protocol::Ozone::OzoneNode] a child of OzoneNode
-    #   representing the Ozone command/event contained within the stanza
+    # @return [Punchblock::Protocol::Rayo::RayoNode] a child of RayoNode
+    #   representing the Rayo command/event contained within the stanza
     #
-    def ozone_node
+    def rayo_node
       first_child = children.first
-      Punchblock::Protocol::Ozone::OzoneNode.import first_child, call_id, command_id if first_child
+      Punchblock::Protocol::Rayo::RayoNode.import first_child, call_id, command_id if first_child
     end
 
     ##

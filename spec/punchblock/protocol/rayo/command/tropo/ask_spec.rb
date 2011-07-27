@@ -7,7 +7,7 @@ module Punchblock
         module Tropo
           describe Ask do
             it 'registers itself' do
-              RayoNode.class_from_registration(:ask, 'urn:xmpp:rayo:ask:1').should == Ask
+              RayoNode.class_from_registration(:ask, 'urn:xmpp:tropo:ask:1').should == Ask
             end
 
             describe "when setting options in initializer" do
@@ -119,7 +119,7 @@ module Punchblock
               let :stanza do
                 <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <success mode="speech" confidence="0.45" xmlns='urn:xmpp:rayo:ask:complete:1'>
+      <success mode="speech" confidence="0.45" xmlns='urn:xmpp:tropo:ask:complete:1'>
         <interpretation>1234</interpretation>
         <utterance>one two three four</utterance>
       </success>
@@ -142,7 +142,7 @@ module Punchblock
               let :stanza do
                 <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <nomatch xmlns='urn:xmpp:rayo:ask:complete:1' />
+      <nomatch xmlns='urn:xmpp:tropo:ask:complete:1' />
     </complete>
                 MESSAGE
               end
@@ -158,7 +158,7 @@ module Punchblock
               let :stanza do
                 <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <noinput xmlns='urn:xmpp:rayo:ask:complete:1' />
+      <noinput xmlns='urn:xmpp:tropo:ask:complete:1' />
     </complete>
                 MESSAGE
               end

@@ -13,7 +13,7 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
   <complete xmlns='urn:xmpp:rayo:ext:1'>
-    <success xmlns='urn:xmpp:rayo:say:complete:1' />
+    <success xmlns='urn:xmpp:tropo:say:complete:1' />
   </complete>
               MESSAGE
             end

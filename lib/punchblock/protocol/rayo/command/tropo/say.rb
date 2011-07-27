@@ -21,7 +21,7 @@ module Punchblock
             #   say :text => 'Hello brown cow.'
             #
             #   returns:
-            #     <say xmlns="urn:xmpp:rayo:say:1">Hello brown cow.</say>
+            #     <say xmlns="urn:xmpp:tropo:say:1">Hello brown cow.</say>
             #
             def self.new(options = {})
               super().tap do |new_node|
@@ -94,7 +94,7 @@ module Punchblock
             #    say_obj.pause_action.to_xml
             #
             #    returns:
-            #      <pause xmlns="urn:xmpp:rayo:say:1"/>
+            #      <pause xmlns="urn:xmpp:tropo:say:1"/>
             def pause_action
               Pause.new :command_id => command_id, :call_id => call_id
             end
@@ -117,7 +117,7 @@ module Punchblock
             #    say_obj.resume_action.to_xml
             #
             #    returns:
-            #      <resume xmlns="urn:xmpp:rayo:say:1"/>
+            #      <resume xmlns="urn:xmpp:tropo:say:1"/>
             def resume_action
               Resume.new :command_id => command_id, :call_id => call_id
             end
@@ -140,7 +140,7 @@ module Punchblock
             #    say_obj.stop_action.to_xml
             #
             #    returns:
-            #      <stop xmlns="urn:xmpp:rayo:say:1"/>
+            #      <stop xmlns="urn:xmpp:tropo:say:1"/>
             def stop_action
               Stop.new :command_id => command_id, :call_id => call_id
             end

@@ -28,7 +28,7 @@ module Punchblock
             #        :recognizer  => 'es-es'
             #
             #    returns:
-            #      <ask xmlns="urn:xmpp:rayo:ask:1" timeout="30" recognizer="es-es">
+            #      <ask xmlns="urn:xmpp:tropo:ask:1" timeout="30" recognizer="es-es">
             #        <prompt voice='simon'>Please enter your postal code.</prompt>
             #        <choices content-type="application/grammar+voxeo">[5 DIGITS]</choices>
             #      </ask>
@@ -239,7 +239,7 @@ module Punchblock
             #    ask_obj.stop_action.to_xml
             #
             #    returns:
-            #      <stop xmlns="urn:xmpp:rayo:ask:1"/>
+            #      <stop xmlns="urn:xmpp:tropo:ask:1"/>
             def stop_action
               Stop.new :command_id => command_id, :call_id => call_id
             end

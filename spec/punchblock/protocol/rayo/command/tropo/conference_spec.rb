@@ -7,7 +7,7 @@ module Punchblock
         module Tropo
           describe Conference do
             it 'registers itself' do
-              RayoNode.class_from_registration(:conference, 'urn:xmpp:rayo:conference:1').should == Conference
+              RayoNode.class_from_registration(:conference, 'urn:xmpp:tropo:conference:1').should == Conference
             end
 
             describe "when setting options in initializer" do
@@ -100,7 +100,7 @@ module Punchblock
               describe '#mute_action' do
                 subject { conference.mute_action }
 
-                its(:to_xml) { should == '<mute xmlns="urn:xmpp:rayo:conference:1"/>' }
+                its(:to_xml) { should == '<mute xmlns="urn:xmpp:tropo:conference:1"/>' }
                 its(:command_id) { should == 'abc123' }
                 its(:call_id) { should == '123abc' }
               end
@@ -145,7 +145,7 @@ module Punchblock
               describe '#unmute_action' do
                 subject { conference.unmute_action }
 
-                its(:to_xml) { should == '<unmute xmlns="urn:xmpp:rayo:conference:1"/>' }
+                its(:to_xml) { should == '<unmute xmlns="urn:xmpp:tropo:conference:1"/>' }
                 its(:command_id) { should == 'abc123' }
                 its(:call_id) { should == '123abc' }
               end
@@ -221,7 +221,7 @@ module Punchblock
               describe '#kick_action' do
                 subject { conference.kick_action :message => 'bye!' }
 
-                its(:to_xml) { should == '<kick xmlns="urn:xmpp:rayo:conference:1">bye!</kick>' }
+                its(:to_xml) { should == '<kick xmlns="urn:xmpp:tropo:conference:1">bye!</kick>' }
                 its(:command_id) { should == 'abc123' }
                 its(:call_id) { should == '123abc' }
               end
@@ -249,11 +249,11 @@ module Punchblock
 
             describe Conference::OnHold do
               it 'registers itself' do
-                RayoNode.class_from_registration(:'on-hold', 'urn:xmpp:rayo:conference:1').should == Conference::OnHold
+                RayoNode.class_from_registration(:'on-hold', 'urn:xmpp:tropo:conference:1').should == Conference::OnHold
               end
 
               describe "from a stanza" do
-                let(:stanza) { "<on-hold xmlns='urn:xmpp:rayo:conference:1'/>" }
+                let(:stanza) { "<on-hold xmlns='urn:xmpp:tropo:conference:1'/>" }
 
                 subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
 
@@ -265,11 +265,11 @@ module Punchblock
 
             describe Conference::OffHold do
               it 'registers itself' do
-                RayoNode.class_from_registration(:'off-hold', 'urn:xmpp:rayo:conference:1').should == Conference::OffHold
+                RayoNode.class_from_registration(:'off-hold', 'urn:xmpp:tropo:conference:1').should == Conference::OffHold
               end
 
               describe "from a stanza" do
-                let(:stanza) { "<off-hold xmlns='urn:xmpp:rayo:conference:1'/>" }
+                let(:stanza) { "<off-hold xmlns='urn:xmpp:tropo:conference:1'/>" }
 
                 subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
 
@@ -283,7 +283,7 @@ module Punchblock
               let :stanza do
                 <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <kick xmlns='urn:xmpp:rayo:conference:complete:1'>wouldn't stop talking</kick>
+      <kick xmlns='urn:xmpp:tropo:conference:complete:1'>wouldn't stop talking</kick>
     </complete>
                 MESSAGE
               end
@@ -300,7 +300,7 @@ module Punchblock
               let :stanza do
                 <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <terminator xmlns='urn:xmpp:rayo:conference:complete:1' />
+      <terminator xmlns='urn:xmpp:tropo:conference:complete:1' />
     </complete>
                 MESSAGE
               end

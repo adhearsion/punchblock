@@ -7,7 +7,7 @@ module Punchblock
         module Tropo
           describe Transfer do
             it 'registers itself' do
-              RayoNode.class_from_registration(:transfer, 'urn:xmpp:rayo:transfer:1').should == Transfer
+              RayoNode.class_from_registration(:transfer, 'urn:xmpp:tropo:transfer:1').should == Transfer
             end
 
             describe 'when setting options in initializer' do
@@ -75,7 +75,7 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <success xmlns='urn:xmpp:rayo:transfer:complete:1' />
+      <success xmlns='urn:xmpp:tropo:transfer:complete:1' />
     </complete>
               MESSAGE
             end
@@ -91,7 +91,7 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <timeout xmlns='urn:xmpp:rayo:transfer:complete:1' />
+      <timeout xmlns='urn:xmpp:tropo:transfer:complete:1' />
     </complete>
               MESSAGE
             end
@@ -107,7 +107,7 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <terminator xmlns='urn:xmpp:rayo:transfer:complete:1' />
+      <terminator xmlns='urn:xmpp:tropo:transfer:complete:1' />
     </complete>
               MESSAGE
             end
@@ -123,7 +123,7 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <busy xmlns='urn:xmpp:rayo:transfer:complete:1' />
+      <busy xmlns='urn:xmpp:tropo:transfer:complete:1' />
     </complete>
               MESSAGE
             end
@@ -139,7 +139,7 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <reject xmlns='urn:xmpp:rayo:transfer:complete:1' />
+      <reject xmlns='urn:xmpp:tropo:transfer:complete:1' />
     </complete>
               MESSAGE
             end

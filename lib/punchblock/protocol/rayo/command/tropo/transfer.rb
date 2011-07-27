@@ -26,7 +26,7 @@ module Punchblock
             #   Transfer.new(:to => 'sip:you@yourdomain.com', :from => 'sip:myapp@mydomain.com', :terminator => '#').to_xml
             #
             #   returns:
-            #     <transfer xmlns="urn:xmpp:rayo:transfer:1" from="sip:myapp@mydomain.com" terminator="#">
+            #     <transfer xmlns="urn:xmpp:tropo:transfer:1" from="sip:myapp@mydomain.com" terminator="#">
             #       <to>sip:you@yourdomain.com</to>
             #     </transfer>
             #
@@ -162,7 +162,7 @@ module Punchblock
             #    transfer_obj.stop_action.to_xml
             #
             #    returns:
-            #      <stop xmlns="urn:xmpp:rayo:transfer:1"/>
+            #      <stop xmlns="urn:xmpp:tropo:transfer:1"/>
             #
             def stop_action
               Stop.new :command_id => command_id, :call_id => call_id

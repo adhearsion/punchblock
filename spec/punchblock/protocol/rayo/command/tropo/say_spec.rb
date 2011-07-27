@@ -7,7 +7,7 @@ module Punchblock
         module Tropo
           describe Say do
             it 'registers itself' do
-              RayoNode.class_from_registration(:say, 'urn:xmpp:rayo:say:1').should == Say
+              RayoNode.class_from_registration(:say, 'urn:xmpp:tropo:say:1').should == Say
             end
 
             describe "for audio" do
@@ -44,7 +44,7 @@ module Punchblock
               describe '#pause_action' do
                 subject { command.pause_action }
 
-                its(:to_xml) { should == '<pause xmlns="urn:xmpp:rayo:say:1"/>' }
+                its(:to_xml) { should == '<pause xmlns="urn:xmpp:tropo:say:1"/>' }
                 its(:command_id) { should == 'abc123' }
                 its(:call_id) { should == '123abc' }
               end
@@ -87,7 +87,7 @@ module Punchblock
               describe '#resume_action' do
                 subject { command.resume_action }
 
-                its(:to_xml) { should == '<resume xmlns="urn:xmpp:rayo:say:1"/>' }
+                its(:to_xml) { should == '<resume xmlns="urn:xmpp:tropo:say:1"/>' }
                 its(:command_id) { should == 'abc123' }
                 its(:call_id) { should == '123abc' }
               end
@@ -163,7 +163,7 @@ module Punchblock
             let :stanza do
               <<-MESSAGE
     <complete xmlns='urn:xmpp:rayo:ext:1'>
-      <success xmlns='urn:xmpp:rayo:say:complete:1' />
+      <success xmlns='urn:xmpp:tropo:say:complete:1' />
     </complete>
               MESSAGE
             end

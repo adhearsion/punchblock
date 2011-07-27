@@ -23,7 +23,7 @@ module Punchblock
         it "looking up original command by command ID" do
           call = Punchblock::Call.new '9f00061', 'sip:whatever@127.0.0.1', {}
           say = <<-MSG
-<say xmlns='urn:xmpp:rayo:say:1' voice='allison'>
+<say xmlns='urn:xmpp:tropo:say:1' voice='allison'>
   <audio url='http://acme.com/greeting.mp3'>
     Thanks for calling ACME company
   </audio>
@@ -63,7 +63,7 @@ module Punchblock
           example_complete = import_stanza <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
   <complete xmlns='urn:xmpp:rayo:ext:1'>
-    <success xmlns='urn:xmpp:rayo:say:complete:1' />
+    <success xmlns='urn:xmpp:tropo:say:complete:1' />
   </complete>
 </presence>
           MSG
@@ -96,7 +96,7 @@ module Punchblock
             <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
   <complete xmlns='urn:xmpp:rayo:ext:1'>
-    <success xmlns='urn:xmpp:rayo:say:complete:1' />
+    <success xmlns='urn:xmpp:tropo:say:complete:1' />
   </complete>
 </presence>
             MSG

@@ -24,7 +24,7 @@ module Punchblock
             #    conference :name => 'the_one_true_conference', :terminator => '#'
             #
             #    returns:
-            #      <conference xmlns="urn:xmpp:rayo:conference:1" name="the_one_true_conference" terminator="#"/>
+            #      <conference xmlns="urn:xmpp:tropo:conference:1" name="the_one_true_conference" terminator="#"/>
             def self.new(options = {})
               super().tap do |new_node|
                 options.each_pair do |k,v|
@@ -220,7 +220,7 @@ module Punchblock
             #    conf_obj.mute_action.to_xml
             #
             #    returns:
-            #      <mute xmlns="urn:xmpp:rayo:conference:1"/>
+            #      <mute xmlns="urn:xmpp:tropo:conference:1"/>
             #
             def mute_action
               Mute.new :command_id => command_id, :call_id => call_id
@@ -244,7 +244,7 @@ module Punchblock
             #    conf_obj.unmute_action.to_xml
             #
             #    returns:
-            #      <unmute xmlns="urn:xmpp:rayo:conference:1"/>
+            #      <unmute xmlns="urn:xmpp:tropo:conference:1"/>
             #
             def unmute_action
               Unmute.new :command_id => command_id, :call_id => call_id
@@ -268,7 +268,7 @@ module Punchblock
             #    conf_obj.stop_action.to_xml
             #
             #    returns:
-            #      <stop xmlns="urn:xmpp:rayo:conference:1"/>
+            #      <stop xmlns="urn:xmpp:tropo:conference:1"/>
             #
             def stop_action
               Stop.new :command_id => command_id, :call_id => call_id
@@ -294,7 +294,7 @@ module Punchblock
             #    conf_obj.kick_action(:message => 'bye!').to_xml
             #
             #    returns:
-            #      <kick xmlns="urn:xmpp:rayo:conference:1">bye!</kick>
+            #      <kick xmlns="urn:xmpp:tropo:conference:1">bye!</kick>
             #
             def kick_action(options = {})
               Kick.new options.merge(:command_id => command_id, :call_id => call_id)

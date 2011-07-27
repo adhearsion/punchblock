@@ -28,7 +28,7 @@ shared_examples_for 'command_headers' do
   it 'takes a hash of keys and values for headers' do
     headers = { :x_skill => 'agent', :x_customer_id => '8877' }
 
-    control = [ Punchblock::Protocol::Ozone::Header.new(:x_skill, 'agent'), Punchblock::Protocol::Ozone::Header.new(:x_customer_id, '8877')]
+    control = [ Punchblock::Protocol::Rayo::Header.new(:x_skill, 'agent'), Punchblock::Protocol::Rayo::Header.new(:x_customer_id, '8877')]
 
     di = subject.class.new :headers => headers
     di.headers.should have(2).items
@@ -37,6 +37,6 @@ shared_examples_for 'command_headers' do
 end
 
 shared_examples_for 'event_headers' do
-  its(:headers) { should == [Punchblock::Protocol::Ozone::Header.new(:x_skill, 'agent'), Punchblock::Protocol::Ozone::Header.new(:x_customer_id, '8877')]}
+  its(:headers) { should == [Punchblock::Protocol::Rayo::Header.new(:x_skill, 'agent'), Punchblock::Protocol::Rayo::Header.new(:x_customer_id, '8877')]}
   its(:headers_hash) { should == {:x_skill => 'agent', :x_customer_id => '8877'} }
 end

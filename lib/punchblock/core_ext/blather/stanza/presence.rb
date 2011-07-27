@@ -1,7 +1,7 @@
 module Blather
   class Stanza
     class Presence
-      alias :event :ozone_node
+      alias :event :rayo_node
     end
   end
 end

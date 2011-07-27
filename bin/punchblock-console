@@ -9,7 +9,7 @@ require 'optparse'
 
 Thread.abort_on_exception = true
 
-options = { :username => 'usera@127.0.0.1', :password => '1', :wire_log_file => 'log/ozone-wire.log', :transport_log_file => 'log/ozone-transport.log', :auto_reconnect => false }
+options = { :username => 'usera@127.0.0.1', :password => '1', :wire_log_file => 'log/rayo-wire.log', :transport_log_file => 'log/rayo-transport.log', :auto_reconnect => false }
 
 option_parser = OptionParser.new do |opts|
   opts.banner = "Usage: punchblock-console [-u usera@127.0.0.1] [-p abc123]"
@@ -19,8 +19,8 @@ option_parser = OptionParser.new do |opts|
   opts.on("-p", "--password PASSWORD", String, "Specify the XMPP password to use") do |p|
     options[:password] = p
   end
-  opts.on("-d", "--ozone-domain DOMAIN", String, "Specify the domain Ozone is running on") do |d|
-    options[:ozone_domain] = d
+  opts.on("-d", "--rayo-domain DOMAIN", String, "Specify the domain Rayo is running on") do |d|
+    options[:rayo_domain] = d
   end
   opts.on("--wire-log-file log/wirelog.log", String, "Specify the file to which the wire log should be written") do |wlf|
     options[:wire_log_file] = wlf
@@ -52,7 +52,7 @@ options[:transport_logger] = Logger.new options.delete(:transport_log_file)
 options[:transport_logger].level = Logger::DEBUG
 options[:transport_logger].debug "Starting up..."
 
-protocol = Punchblock::Protocol::Ozone.new options
+protocol = Punchblock::Protocol::Rayo.new options
 
 protocol_thread = protocol.run
 

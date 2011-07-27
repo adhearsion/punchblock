@@ -3,7 +3,7 @@ module Punchblock
     extend ActiveSupport::Autoload
 
     autoload :GenericConnection
-    autoload :Ozone
+    autoload :Rayo
     autoload :ProtocolError
   end
 end

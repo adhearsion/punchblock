@@ -15,7 +15,7 @@ module Punchblock
           end
 
           def recording
-            element = find_first('//ns:recording', :ns => OZONE_NAMESPACES[:record_complete])
+            element = find_first('//ns:recording', :ns => RAYO_NAMESPACES[:record_complete])
             RayoNode.import element if element
           end
 

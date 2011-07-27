@@ -23,7 +23,7 @@ module Punchblock
         # @param [String, nil] ns the namespace the node belongs to
         def self.register(name, ns = nil)
           self.registered_name = name.to_s
-          self.registered_ns = ns.is_a?(Symbol) ? OZONE_NAMESPACES[ns] : ns
+          self.registered_ns = ns.is_a?(Symbol) ? RAYO_NAMESPACES[ns] : ns
           @@registrations[[self.registered_name, self.registered_ns]] = self
         end
 

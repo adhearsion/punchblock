@@ -29,7 +29,7 @@ module Punchblock
     end
 
     def say(string, type = :text) # :nodoc:
-      write @protocol.class::Command::Say.new(type => string)
+      write @protocol.class::Command::Tropo::Say.new(type => string)
       puts "Waiting on the queue..."
       response = @queue.pop
       # TODO: Error handling

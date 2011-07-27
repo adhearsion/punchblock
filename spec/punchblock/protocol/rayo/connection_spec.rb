@@ -33,7 +33,7 @@ module Punchblock
   <say-as interpret-as='date'>12/01/2011</say-as>
 </say>
           MSG
-          Command::Say
+          Command::Tropo::Say
           say = RayoNode.import parse_stanza(say).root
           connection.event_queue = []
           connection.expects(:write_to_stream).once.returns true

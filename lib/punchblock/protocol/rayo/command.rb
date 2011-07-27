@@ -8,15 +8,12 @@ module Punchblock
 
         autoload :Accept
         autoload :Answer
-        autoload :Ask
-        autoload :Conference
         autoload :Dial
         autoload :Hangup
         autoload :Record
         autoload :Redirect
         autoload :Reject
-        autoload :Say
-        autoload :Transfer
+        autoload :Tropo
 
         InvalidActionError = Class.new StandardError
 

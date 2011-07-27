@@ -3,13 +3,19 @@ module Punchblock
     class Rayo
       extend ActiveSupport::Autoload
 
-      BASE_OZONE_NAMESPACE  = 'urn:xmpp:rayo'
-      OZONE_VERSION         = '1'
-      OZONE_NAMESPACES      = {:core => [BASE_OZONE_NAMESPACE, OZONE_VERSION].compact.join(':')}
+      BASE_RAYO_NAMESPACE   = 'urn:xmpp:rayo'
+      BASE_TROPO_NAMESPACE  = 'urn:xmpp:tropo'
+      RAYO_VERSION          = '1'
+      RAYO_NAMESPACES       = {:core => [BASE_RAYO_NAMESPACE, RAYO_VERSION].compact.join(':')}
 
-      [:ext, :transfer, :say, :ask, :conference, :record].each do |ns|
-        OZONE_NAMESPACES[ns] = [BASE_OZONE_NAMESPACE, ns.to_s, OZONE_VERSION].compact.join(':')
-        OZONE_NAMESPACES[:"#{ns}_complete"] = [BASE_OZONE_NAMESPACE, ns.to_s, 'complete', OZONE_VERSION].compact.join(':')
+      [:ext, :record].each do |ns|
+        RAYO_NAMESPACES[ns] = [BASE_RAYO_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
+        RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_RAYO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
+      end
+
+      [:ask, :conference, :say, :transfer].each do |ns|
+        RAYO_NAMESPACES[ns] = [BASE_TROPO_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
+        RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_TROPO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
       end
 
       autoload :Audio

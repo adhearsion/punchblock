@@ -10,6 +10,8 @@ module Punchblock
         autoload :Answer
         autoload :Dial
         autoload :Hangup
+        autoload :Input
+        autoload :Output
         autoload :Record
         autoload :Redirect
         autoload :Reject

@@ -11,7 +11,8 @@ module Punchblock
 
           describe "when setting options in initializer" do
             subject do
-              Input.new :mode                 => :speech,
+              Input.new :grammar              => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'},
+                        :mode                 => :speech,
                         :terminator           => '#',
                         :max_digits           => 10,
                         :recognizer           => 'en-US',
@@ -24,6 +25,7 @@ module Punchblock
                         :min_confidence       => 0.5
             end
 
+            its(:grammar)             { should == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
             its(:mode)                { should == :speech }
             its(:terminator)          { should == '#' }
             its(:max_digits)          { should == 10 }
@@ -37,14 +39,14 @@ module Punchblock
             its(:min_confidence)      { should == 0.5 }
           end
 
-          describe Input::Choices do
+          describe Input::Grammar do
             describe "when not passing a grammar" do
-              subject { Input::Choices.new :value => '[5 DIGITS]' }
+              subject { Input::Grammar.new :value => '[5 DIGITS]' }
               its(:content_type) { should == 'application/grammar+voxeo' }
             end
 
             describe 'with a GRXML grammar' do
-              subject { Input::Choices.new :value => grxml, :content_type => 'application/grammar+grxml' }
+              subject { Input::Grammar.new :value => grxml, :content_type => 'application/grammar+grxml' }
 
               let :grxml do
                 <<-GRXML
@@ -82,7 +84,7 @@ module Punchblock
           end
 
           describe "actions" do
-            let(:command) { Input.new :choices => '[5 DIGITS]' }
+            let(:command) { Input.new :grammar => '[5 DIGITS]' }
 
             before do
               command.command_id = 'abc123'

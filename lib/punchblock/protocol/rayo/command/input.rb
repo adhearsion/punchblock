@@ -195,8 +195,8 @@ module Punchblock
           ##
           # @return [Choices] the choices available
           #
-          def choices
-            Choices.new find_first('ns:choices', :ns => self.class.registered_ns)
+          def grammar
+            Grammar.new find_first('ns:grammar', :ns => self.class.registered_ns)
           end
 
           ##
@@ -204,24 +204,24 @@ module Punchblock
           # @option choices [String] :content_type
           # @option choices [String] :value the choices available
           #
-          def choices=(choices)
-            remove_children :choices
-            choices = Choices.new(choices) unless choices.is_a?(Choices)
-            self << choices
+          def grammar=(other)
+            remove_children :grammar
+            grammar = Grammar.new(other) unless other.is_a?(Grammar)
+            self << grammar
           end
 
           def inspect_attributes # :nodoc:
             [:mode, :terminator, :max_digits, :recognizer, :initial_timeout, :inter_digit_timeout, :term_timeout, :complete_timeout, :incomplete_timeout, :sensitivity, :min_confidence, :choices] + super
           end
 
-          class Choices < RayoNode
+          class Grammar < RayoNode
             ##
             # @param [Hash] options
             # @option options [String] :content_type
             # @option options [String] :value the choices available
             #
             def self.new(options = {})
-              super(:choices).tap do |new_node|
+              super(:grammar).tap do |new_node|
                 case options
                 when Nokogiri::XML::Node
                   new_node.inherit options

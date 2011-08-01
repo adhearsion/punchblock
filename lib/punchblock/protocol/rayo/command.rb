@@ -11,11 +11,13 @@ module Punchblock
         autoload :Dial
         autoload :Hangup
         autoload :Input
+        autoload :Join
         autoload :Output
         autoload :Record
         autoload :Redirect
         autoload :Reject
         autoload :Tropo
+        autoload :Unjoin
 
         InvalidActionError = Class.new StandardError
 

@@ -73,7 +73,7 @@ Thread.new do
     end
     puts "#{event.class} event for call: #{event.call_id}"
     case event
-    when Punchblock::Call
+    when protocol.class::Event::Offer
       raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
@@ -89,20 +89,20 @@ Thread.new do
   end
 end
 
-def run_call(protocol, call)
+def run_call(protocol, offer)
   ### CALL THREAD
   # One thread is spun up to handle each call.
   Thread.new do
-    raise "Unknown call #{call.call_id}" unless CALL_QUEUES.has_key?(call.call_id)
-    queue = CALL_QUEUES[call.call_id]
+    raise "Unknown call #{offer.call_id}" unless CALL_QUEUES.has_key?(offer.call_id)
+    queue = CALL_QUEUES[offer.call_id]
     call = queue.pop
-    dsl = Punchblock::DSL.new protocol, call, queue
+    dsl = Punchblock::DSL.new protocol, offer.call_id, queue
 
-    puts "Incoming call to #{call.to} from #{call.headers[:from]} #{call}"
+    puts "Incoming offer to #{offer.to} from #{offer.headers_hash[:from]} #{offer}"
     dsl.pry
 
     # Clean up the queue.
-    CALL_QUEUES[call.call_id] = nil
+    CALL_QUEUES[offer.call_id] = nil
   end
 end
 

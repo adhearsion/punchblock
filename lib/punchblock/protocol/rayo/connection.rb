@@ -51,7 +51,7 @@ module Punchblock
         ##
         # Write a command to the Rayo server for a particular call
         #
-        # @param [Call, String] call the call on which to act, or its ID
+        # @param [String] call the call ID on which to act
         # @param [CommandNode] cmd the command to execute on the call
         # @param [String, Optional] command_id the command_id on which to execute
         #
@@ -96,7 +96,6 @@ module Punchblock
 
         def prep_command_for_execution(call_id, cmd, command_id = nil)
           cmd.connection = self
-          call_id = call_id.call_id if call_id.is_a? Call
           cmd.call_id = call_id
           jid = cmd.is_a?(Command::Dial) ? @rayo_domain : "#{call_id}@#{@callmap[call_id]}"
           jid << "/#{command_id}" if command_id
@@ -161,7 +160,7 @@ module Punchblock
           event = p.event
           event.connection = self
           event.source.add_event event if event.source
-          @event_queue.push event.is_a?(Event::Offer) ? Punchblock::Call.new(p.call_id, p.to, event.headers_hash) : event
+          @event_queue.push event
         end
 
         def handle_iq_result(iq)

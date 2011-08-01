@@ -4,7 +4,6 @@ require 'active_support/core_ext/object/blank'
 module Punchblock
   extend ActiveSupport::Autoload
 
-  autoload :Call
   autoload :DSL
   autoload :Protocol
 

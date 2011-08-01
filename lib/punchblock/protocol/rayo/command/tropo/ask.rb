@@ -168,65 +168,16 @@ module Punchblock
               [:bargein, :min_confidence, :mode, :recognizer, :terminator, :timeout, :prompt, :choices] + super
             end
 
-            class Choices < RayoNode
+            class Choices < Input::Grammar
               ##
               # @param [Hash] options
               # @option options [String] :content_type
               # @option options [String] :value the choices available
               #
               def self.new(options = {})
-                super(:choices).tap do |new_node|
-                  case options
-                  when Nokogiri::XML::Node
-                    new_node.inherit options
-                  when Hash
-                    new_node.content_type = options[:content_type]
-                    new_node.value = options[:value]
-                  end
+                super(options).tap do |new_node|
+                  new_node.name = 'choices'
                 end
-              end
-
-              ##
-              # @return [String] the choice content type
-              #
-              def content_type
-                read_attr 'content-type'
-              end
-
-              ##
-              # @param [String] content_type Defaults to the Voxeo Simple Grammar
-              #
-              def content_type=(content_type)
-                write_attr 'content-type', content_type || 'application/grammar+voxeo'
-              end
-
-              ##
-              # @return [String] the choices available
-              def value
-                content
-              end
-
-              ##
-              # @param [String] value the choices available
-              def value=(value)
-                Nokogiri::XML::Builder.with(self) do |xml|
-                  if content_type == 'application/grammar+grxml'
-                    xml.cdata value
-                  else
-                    xml.text value
-                  end
-                end
-              end
-
-              # Compare two Choices objects by content type, and value
-              # @param [Header] o the Choices object to compare against
-              # @return [true, false]
-              def eql?(o, *fields)
-                super o, *(fields + [:content_type, :value])
-              end
-
-              def inspect_attributes # :nodoc:
-                [:content_type, :value] + super
               end
             end # Choices
 
@@ -253,47 +204,15 @@ module Punchblock
             end
 
             class Complete
-              class Success < Rayo::Event::Complete::Reason
+              class Success < Input::Complete::Success
                 register :success, :ask_complete
-
-                ##
-                # @return [Symbol] the mode by which the question was answered. May be :speech or :dtmf
-                #
-                def mode
-                  read_attr :mode, :to_sym
-                end
-
-                ##
-                # @return [Float] A measure of the confidence of the result, between 0-1
-                #
-                def confidence
-                  read_attr :confidence, :to_f
-                end
-
-                ##
-                # @return [String] An intelligent interpretation of the meaning of the response.
-                #
-                def interpretation
-                  find_first('//ns:interpretation', :ns => self.registered_ns).text
-                end
-
-                ##
-                # @return [String] The exact response gained
-                #
-                def utterance
-                  find_first('//ns:utterance', :ns => self.registered_ns).text
-                end
-
-                def inspect_attributes # :nodoc:
-                  [:mode, :confidence, :interpretation, :utterance] + super
-                end
               end
 
-              class NoMatch < Rayo::Event::Complete::Reason
+              class NoMatch < Input::Complete::NoMatch
                 register :nomatch, :ask_complete
               end
 
-              class NoInput < Rayo::Event::Complete::Reason
+              class NoInput < Input::Complete::NoInput
                 register :noinput, :ask_complete
               end
             end # Complete

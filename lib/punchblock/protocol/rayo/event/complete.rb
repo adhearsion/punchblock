@@ -11,12 +11,22 @@ module Punchblock
 
           def reason
             element = find_first('*')
-            RayoNode.import element if element
+            if element
+              RayoNode.import(element).tap do |reason|
+                reason.call_id = call_id
+                reason.command_id = command_id
+              end
+            end
           end
 
           def recording
             element = find_first('//ns:recording', :ns => RAYO_NAMESPACES[:record_complete])
-            RayoNode.import element if element
+            if element
+              RayoNode.import(element).tap do |recording|
+                recording.call_id = call_id
+                recording.command_id = command_id
+              end
+            end
           end
 
           def inspect_attributes # :nodoc:

@@ -48,7 +48,7 @@ module Punchblock
           event = if klass && klass != self
             klass.import node, call_id, command_id
           else
-            new(node.element_name).inherit node
+            new.inherit node
           end
           event.tap do |event|
             event.call_id = call_id

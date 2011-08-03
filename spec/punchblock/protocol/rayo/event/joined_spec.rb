@@ -22,6 +22,13 @@ module Punchblock
             its(:mixer_id)      { should == 'm' }
             its(:xmlns)         { should == 'urn:xmpp:rayo:1' }
           end
+
+          describe "when setting options in initializer" do
+            subject { Joined.new :other_call_id => 'abc123', :mixer_id => 'blah' }
+
+            its(:other_call_id) { should == 'abc123' }
+            its(:mixer_id)      { should == 'blah' }
+          end
         end
       end
     end # Rayo

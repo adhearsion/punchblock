@@ -67,7 +67,7 @@ module Punchblock
         end
 
         def inspect_attributes # :nodoc:
-          [:call_id, :command_id, :namespace_href]
+          [:call_id, :command_id]
         end
 
         def inspect

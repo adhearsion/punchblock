@@ -170,7 +170,7 @@ module Punchblock
           # FIXME: Do we need to raise a warning if the domain changes?
           @callmap[iq.from.node] = iq.from.domain
           @logger.debug "Command #{iq.id} completed successfully" if @logger
-          callback = @command_callbacks[iq.id]
+          callback = @command_callbacks.delete(iq.id)
           callback.call iq if callback
         end
 
@@ -179,7 +179,7 @@ module Punchblock
 
           protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.command_id
 
-          if callback = @command_callbacks[iq.id]
+          if callback = @command_callbacks.delete(iq.id)
             callback.call protocol_error
           else
             # Un-associated transport error??

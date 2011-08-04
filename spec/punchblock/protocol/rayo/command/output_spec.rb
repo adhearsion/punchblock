@@ -199,8 +199,10 @@ module Punchblock
                     command.stubs(:seek_action).returns seek_action
                     Connection.any_instance.expects(:write).with('123abc', seek_action, 'abc123').returns true
                     command.expects :seeking!
+                    command.expects :stopped_seeking!
                     command.seek! seek_options
                     seek_action.request!
+                    seek_action.execute!
                   end
                 end
 
@@ -224,6 +226,21 @@ module Punchblock
 
                 it "should raise a StateMachine::InvalidTransition when received a second time" do
                   lambda { subject.seeking! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+
+              describe "#stopped_seeking!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.seeking!
+                  subject.stopped_seeking!
+                end
+
+                its(:seek_status_name) { should == :not_seeking }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.stopped_seeking! }.should raise_error(StateMachine::InvalidTransition)
                 end
               end
             end

@@ -301,6 +301,11 @@ module Punchblock
               source.seeking!
               super
             end
+
+            def execute!
+              source.stopped_seeking!
+              super
+            end
           end
 
           class Complete

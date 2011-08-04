@@ -12,12 +12,14 @@ module Punchblock
         autoload :Hangup
         autoload :Input
         autoload :Join
+        autoload :Mute
         autoload :Output
         autoload :Record
         autoload :Redirect
         autoload :Reject
         autoload :Tropo
         autoload :Unjoin
+        autoload :Unmute
 
         InvalidActionError = Class.new StandardError
 

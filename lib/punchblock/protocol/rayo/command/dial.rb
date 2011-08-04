@@ -16,6 +16,8 @@ module Punchblock
           # @option options [Array[Header], Hash, Optional] :headers SIP headers to attach to
           #   the new call. Can be either a hash of key-value pairs, or an array of
           #   Header objects.
+          # @option options [Join, Hash, Optional] :join a join (or set of join parameters) to
+          #   nest within the dial
           #
           # @return [Rayo::Command::Dial] a formatted Rayo dial command
           #
@@ -27,9 +29,7 @@ module Punchblock
           #
           def self.new(options = {})
             super().tap do |new_node|
-              new_node.to = options[:to]
-              new_node.from = options[:from]
-              new_node.headers = options[:headers]
+              options.each_pair { |k,v| new_node.send :"#{k}=", v }
             end
           end
 
@@ -57,8 +57,25 @@ module Punchblock
             write_attr :from, dial_from
           end
 
+          ##
+          # @return [Join] the nested join
+          #
+          def join
+            element = find_first 'ns:join', :ns => Join.registered_ns
+            Join.new element if element
+          end
+
+          ##
+          # @param [Hash, Join] other a join or hash of join options
+          #
+          def join=(other)
+            remove_children :join
+            join = Join.new(other) unless other.is_a?(Join)
+            self << join
+          end
+
           def inspect_attributes # :nodoc:
-            [:to, :from] + super
+            [:to, :from, :join] + super
           end
         end # Dial
       end # Command

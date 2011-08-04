@@ -9,6 +9,10 @@ module Punchblock
             read_attr :signal
           end
 
+          def signal=(other)
+            write_attr :signal, other
+          end
+
           def inspect_attributes # :nodoc:
             [:signal] + super
           end

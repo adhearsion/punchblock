@@ -176,11 +176,58 @@ module Punchblock
               end
             end # #stop!
 
-            # <!-- Move to another position in the prompt -->
-            # <iq type='set' to='9f00061@call.rayo.net/fgh4590' from='16577@app.rayo.net/1'>
-            #   <seek xmlns='urn:xmpp:rayo:output:1' direction='forward|back' amount='15000' />
-            # </iq>
-            #
+            describe "seeking" do
+              let(:seek_options) { {:direction => :forward, :amount => 1500} }
+
+              describe '#seek_action' do
+                subject { command.seek_action seek_options }
+
+                its(:to_xml) { should == '<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>' }
+                its(:command_id) { should == 'abc123' }
+                its(:call_id) { should == '123abc' }
+              end
+
+              describe '#seek!' do
+                describe "when not seeking" do
+                  before do
+                    command.request!
+                    command.execute!
+                  end
+
+                  it "should send its command properly" do
+                    seek_action = command.seek_action seek_options
+                    command.stubs(:seek_action).returns seek_action
+                    Connection.any_instance.expects(:write).with('123abc', seek_action, 'abc123').returns true
+                    command.expects :seeking!
+                    command.seek! seek_options
+                    seek_action.request!
+                  end
+                end
+
+                describe "when seeking" do
+                  before { command.seeking! }
+
+                  it "should raise an error" do
+                    lambda { command.seek! }.should raise_error(InvalidActionError, "Cannot seek an Output that is already seeking.")
+                  end
+                end
+              end
+
+              describe "#seeking!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.seeking!
+                end
+
+                its(:seek_status_name) { should == :seeking }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.seeking! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+            end
+
             # <!-- Increase playback speed -->
             # <iq type='set' to='9f00061@call.rayo.net/fgh4590' from='16577@app.rayo.net/1'>
             #   <speed-up xmlns='urn:xmpp:rayo:output:1' />

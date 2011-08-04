@@ -215,6 +215,14 @@ module Punchblock
             resumed! if result
           end
 
+          class Pause < Action # :nodoc:
+            register :pause, :output
+          end
+
+          class Resume < Action # :nodoc:
+            register :resume, :output
+          end
+
           ##
           # Creates an Rayo stop message for the current Output
           #
@@ -237,12 +245,62 @@ module Punchblock
             connection.write call_id, stop_action, command_id
           end
 
-          class Pause < Action # :nodoc:
-            register :pause, :output
+          ##
+          # Creates an Rayo seek message for the current Output
+          #
+          # @return [Rayo::Command::Output::Seek] a Rayo seek message
+          #
+          # @example
+          #    output_obj.seek_action.to_xml
+          #
+          #    returns:
+          #      <seek xmlns="urn:xmpp:rayo:output:1"/>
+          def seek_action(options = {})
+            Seek.new({ :command_id => command_id, :call_id => call_id }.merge(options)).tap do |s|
+              s.original_command = self
+            end
           end
 
-          class Resume < Action # :nodoc:
-            register :resume, :output
+          ##
+          # Sends a Rayo seek message for the current Output
+          #
+          def seek!(options = {})
+            raise InvalidActionError, "Cannot seek an Output that is already seeking." if seeking?
+            connection.write call_id, seek_action(options), command_id
+          end
+
+          state_machine :seek_status, :initial => :not_seeking do
+            event :seeking do
+              transition :not_seeking => :seeking
+            end
+
+            event :stopped_seeking do
+              transition :seeking => :not_seeking
+            end
+          end
+
+          class Seek < Action # :nodoc:
+            register :seek, :output
+
+            def self.new(options = {})
+              super.tap do |new_node|
+                new_node.direction  = options[:direction]
+                new_node.amount     = options[:amount]
+              end
+            end
+
+            def direction=(other)
+              write_attr :direction, other
+            end
+
+            def amount=(other)
+              write_attr :amount, other
+            end
+
+            def request!
+              source.seeking!
+              super
+            end
           end
 
           class Complete

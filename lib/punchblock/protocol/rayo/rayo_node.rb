@@ -78,8 +78,8 @@ module Punchblock
         # @return [RayoNode] the original command issued that lead to this event
         #
         def source
-          @source ||= original_command
           @source ||= connection.original_command_from_id command_id if connection && command_id
+          @source ||= original_command
         end
 
         alias :to_s :inspect

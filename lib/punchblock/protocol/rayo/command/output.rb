@@ -308,6 +308,96 @@ module Punchblock
             end
           end
 
+          ##
+          # Creates an Rayo speed up message for the current Output
+          #
+          # @return [Rayo::Command::Output::SpeedUp] a Rayo speed up message
+          #
+          # @example
+          #    output_obj.speed_up_action.to_xml
+          #
+          #    returns:
+          #      <speed-up xmlns="urn:xmpp:rayo:output:1"/>
+          def speed_up_action
+            SpeedUp.new(:command_id => command_id, :call_id => call_id).tap do |s|
+              s.original_command = self
+            end
+          end
+
+          ##
+          # Sends a Rayo speed up message for the current Output
+          #
+          def speed_up!
+            raise InvalidActionError, "Cannot speed up an Output that is already speeding." unless not_speeding?
+            connection.write call_id, speed_up_action, command_id
+          end
+
+          ##
+          # Creates an Rayo slow down message for the current Output
+          #
+          # @return [Rayo::Command::Output::SlowDown] a Rayo slow down message
+          #
+          # @example
+          #    output_obj.slow_down_action.to_xml
+          #
+          #    returns:
+          #      <speed-down xmlns="urn:xmpp:rayo:output:1"/>
+          def slow_down_action
+            SlowDown.new(:command_id => command_id, :call_id => call_id).tap do |s|
+              s.original_command = self
+            end
+          end
+
+          ##
+          # Sends a Rayo slow down message for the current Output
+          #
+          def slow_down!
+            raise InvalidActionError, "Cannot slow down an Output that is already speeding." unless not_speeding?
+            connection.write call_id, slow_down_action, command_id
+          end
+
+          state_machine :speed_status, :initial => :not_speeding do
+            event :speeding_up do
+              transition :not_speeding => :speeding_up
+            end
+
+            event :slowing_down do
+              transition :not_speeding => :slowing_down
+            end
+
+            event :stopped_speeding do
+              transition [:speeding_up, :slowing_down] => :not_speeding
+            end
+          end
+
+          class SpeedUp < Action # :nodoc:
+            register :'speed-up', :output
+
+            def request!
+              source.speeding_up!
+              super
+            end
+
+            def execute!
+              source.stopped_speeding!
+              super
+            end
+          end
+
+          class SlowDown < Action # :nodoc:
+            register :'speed-down', :output
+
+            def request!
+              source.slowing_down!
+              super
+            end
+
+            def execute!
+              source.stopped_speeding!
+              super
+            end
+          end
+
           class Complete
             class Success < Rayo::Event::Complete::Reason
               register :success, :output_complete

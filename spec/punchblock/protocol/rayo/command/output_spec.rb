@@ -245,16 +245,139 @@ module Punchblock
               end
             end
 
-            # <!-- Increase playback speed -->
-            # <iq type='set' to='9f00061@call.rayo.net/fgh4590' from='16577@app.rayo.net/1'>
-            #   <speed-up xmlns='urn:xmpp:rayo:output:1' />
-            # </iq>
-            #
-            # <!-- Decrease playback speed -->
-            # <iq type='set' to='9f00061@call.rayo.net/fgh4590' from='16577@app.rayo.net/1'>
-            #   <speed-down xmlns='urn:xmpp:rayo:output:1' />
-            # </iq>
-            #
+            describe "adjusting speed" do
+              describe '#speed_up_action' do
+                subject { command.speed_up_action }
+
+                its(:to_xml) { should == '<speed-up xmlns="urn:xmpp:rayo:output:1"/>' }
+                its(:command_id) { should == 'abc123' }
+                its(:call_id) { should == '123abc' }
+              end
+
+              describe '#speed_up!' do
+                describe "when not altering speed" do
+                  before do
+                    command.request!
+                    command.execute!
+                  end
+
+                  it "should send its command properly" do
+                    speed_up_action = command.speed_up_action
+                    command.stubs(:speed_up_action).returns speed_up_action
+                    Connection.any_instance.expects(:write).with('123abc', speed_up_action, 'abc123').returns true
+                    command.expects :speeding_up!
+                    command.expects :stopped_speeding!
+                    command.speed_up!
+                    speed_up_action.request!
+                    speed_up_action.execute!
+                  end
+                end
+
+                describe "when speeding up" do
+                  before { command.speeding_up! }
+
+                  it "should raise an error" do
+                    lambda { command.speed_up! }.should raise_error(InvalidActionError, "Cannot speed up an Output that is already speeding.")
+                  end
+                end
+
+                describe "when slowing down" do
+                  before { command.slowing_down! }
+
+                  it "should raise an error" do
+                    lambda { command.speed_up! }.should raise_error(InvalidActionError, "Cannot speed up an Output that is already speeding.")
+                  end
+                end
+              end
+
+              describe "#speeding_up!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.speeding_up!
+                end
+
+                its(:speed_status_name) { should == :speeding_up }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.speeding_up! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+
+              describe '#slow_down_action' do
+                subject { command.slow_down_action }
+
+                its(:to_xml) { should == '<speed-down xmlns="urn:xmpp:rayo:output:1"/>' }
+                its(:command_id) { should == 'abc123' }
+                its(:call_id) { should == '123abc' }
+              end
+
+              describe '#slow_down!' do
+                describe "when not altering speed" do
+                  before do
+                    command.request!
+                    command.execute!
+                  end
+
+                  it "should send its command properly" do
+                    slow_down_action = command.slow_down_action
+                    command.stubs(:slow_down_action).returns slow_down_action
+                    Connection.any_instance.expects(:write).with('123abc', slow_down_action, 'abc123').returns true
+                    command.expects :slowing_down!
+                    command.expects :stopped_speeding!
+                    command.slow_down!
+                    slow_down_action.request!
+                    slow_down_action.execute!
+                  end
+                end
+
+                describe "when speeding up" do
+                  before { command.speeding_up! }
+
+                  it "should raise an error" do
+                    lambda { command.slow_down! }.should raise_error(InvalidActionError, "Cannot slow down an Output that is already speeding.")
+                  end
+                end
+
+                describe "when slowing down" do
+                  before { command.slowing_down! }
+
+                  it "should raise an error" do
+                    lambda { command.slow_down! }.should raise_error(InvalidActionError, "Cannot slow down an Output that is already speeding.")
+                  end
+                end
+              end
+
+              describe "#slowing_down!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.slowing_down!
+                end
+
+                its(:speed_status_name) { should == :slowing_down }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.slowing_down! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+
+              describe "#stopped_speeding!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.speeding_up!
+                  subject.stopped_speeding!
+                end
+
+                its(:speed_status_name) { should == :not_speeding }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.stopped_speeding! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+            end
+
             # <!-- Increase playback volume -->
             # <iq type='set' to='9f00061@call.rayo.net/fgh4590' from='16577@app.rayo.net/1'>
             #   <volume-up xmlns='urn:xmpp:rayo:output:1' />

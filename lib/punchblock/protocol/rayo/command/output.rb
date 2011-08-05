@@ -398,6 +398,96 @@ module Punchblock
             end
           end
 
+          ##
+          # Creates an Rayo volume up message for the current Output
+          #
+          # @return [Rayo::Command::Output::VolumeUp] a Rayo volume up message
+          #
+          # @example
+          #    output_obj.volume_up_action.to_xml
+          #
+          #    returns:
+          #      <volume-up xmlns="urn:xmpp:rayo:output:1"/>
+          def volume_up_action
+            VolumeUp.new(:command_id => command_id, :call_id => call_id).tap do |s|
+              s.original_command = self
+            end
+          end
+
+          ##
+          # Sends a Rayo volume up message for the current Output
+          #
+          def volume_up!
+            raise InvalidActionError, "Cannot volume up an Output that is already voluming." unless not_voluming?
+            connection.write call_id, volume_up_action, command_id
+          end
+
+          ##
+          # Creates an Rayo volume down message for the current Output
+          #
+          # @return [Rayo::Command::Output::VolumeDown] a Rayo volume down message
+          #
+          # @example
+          #    output_obj.volume_down_action.to_xml
+          #
+          #    returns:
+          #      <volume-down xmlns="urn:xmpp:rayo:output:1"/>
+          def volume_down_action
+            VolumeDown.new(:command_id => command_id, :call_id => call_id).tap do |s|
+              s.original_command = self
+            end
+          end
+
+          ##
+          # Sends a Rayo volume down message for the current Output
+          #
+          def volume_down!
+            raise InvalidActionError, "Cannot volume down an Output that is already voluming." unless not_voluming?
+            connection.write call_id, volume_down_action, command_id
+          end
+
+          state_machine :volume_status, :initial => :not_voluming do
+            event :voluming_up do
+              transition :not_voluming => :voluming_up
+            end
+
+            event :voluming_down do
+              transition :not_voluming => :voluming_down
+            end
+
+            event :stopped_voluming do
+              transition [:voluming_up, :voluming_down] => :not_voluming
+            end
+          end
+
+          class VolumeUp < Action # :nodoc:
+            register :'volume-up', :output
+
+            def request!
+              source.voluming_up!
+              super
+            end
+
+            def execute!
+              source.stopped_voluming!
+              super
+            end
+          end
+
+          class VolumeDown < Action # :nodoc:
+            register :'volume-down', :output
+
+            def request!
+              source.voluming_down!
+              super
+            end
+
+            def execute!
+              source.stopped_voluming!
+              super
+            end
+          end
+
           class Complete
             class Success < Rayo::Event::Complete::Reason
               register :success, :output_complete

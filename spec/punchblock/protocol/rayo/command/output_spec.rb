@@ -378,15 +378,138 @@ module Punchblock
               end
             end
 
-            # <!-- Increase playback volume -->
-            # <iq type='set' to='9f00061@call.rayo.net/fgh4590' from='16577@app.rayo.net/1'>
-            #   <volume-up xmlns='urn:xmpp:rayo:output:1' />
-            # </iq>
-            #
-            # <!-- Decrease playback volume -->
-            # <iq type='set' to='9f00061@call.rayo.net/fgh4590' from='16577@app.rayo.net/1'>
-            #   <volume-down xmlns='urn:xmpp:rayo:output:1' />
-            # </iq>
+            describe "adjusting volume" do
+              describe '#volume_up_action' do
+                subject { command.volume_up_action }
+
+                its(:to_xml) { should == '<volume-up xmlns="urn:xmpp:rayo:output:1"/>' }
+                its(:command_id) { should == 'abc123' }
+                its(:call_id) { should == '123abc' }
+              end
+
+              describe '#volume_up!' do
+                describe "when not altering volume" do
+                  before do
+                    command.request!
+                    command.execute!
+                  end
+
+                  it "should send its command properly" do
+                    volume_up_action = command.volume_up_action
+                    command.stubs(:volume_up_action).returns volume_up_action
+                    Connection.any_instance.expects(:write).with('123abc', volume_up_action, 'abc123').returns true
+                    command.expects :voluming_up!
+                    command.expects :stopped_voluming!
+                    command.volume_up!
+                    volume_up_action.request!
+                    volume_up_action.execute!
+                  end
+                end
+
+                describe "when voluming up" do
+                  before { command.voluming_up! }
+
+                  it "should raise an error" do
+                    lambda { command.volume_up! }.should raise_error(InvalidActionError, "Cannot volume up an Output that is already voluming.")
+                  end
+                end
+
+                describe "when voluming down" do
+                  before { command.voluming_down! }
+
+                  it "should raise an error" do
+                    lambda { command.volume_up! }.should raise_error(InvalidActionError, "Cannot volume up an Output that is already voluming.")
+                  end
+                end
+              end
+
+              describe "#voluming_up!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.voluming_up!
+                end
+
+                its(:volume_status_name) { should == :voluming_up }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.voluming_up! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+
+              describe '#volume_down_action' do
+                subject { command.volume_down_action }
+
+                its(:to_xml) { should == '<volume-down xmlns="urn:xmpp:rayo:output:1"/>' }
+                its(:command_id) { should == 'abc123' }
+                its(:call_id) { should == '123abc' }
+              end
+
+              describe '#volume_down!' do
+                describe "when not altering volume" do
+                  before do
+                    command.request!
+                    command.execute!
+                  end
+
+                  it "should send its command properly" do
+                    volume_down_action = command.volume_down_action
+                    command.stubs(:volume_down_action).returns volume_down_action
+                    Connection.any_instance.expects(:write).with('123abc', volume_down_action, 'abc123').returns true
+                    command.expects :voluming_down!
+                    command.expects :stopped_voluming!
+                    command.volume_down!
+                    volume_down_action.request!
+                    volume_down_action.execute!
+                  end
+                end
+
+                describe "when voluming up" do
+                  before { command.voluming_up! }
+
+                  it "should raise an error" do
+                    lambda { command.volume_down! }.should raise_error(InvalidActionError, "Cannot volume down an Output that is already voluming.")
+                  end
+                end
+
+                describe "when voluming down" do
+                  before { command.voluming_down! }
+
+                  it "should raise an error" do
+                    lambda { command.volume_down! }.should raise_error(InvalidActionError, "Cannot volume down an Output that is already voluming.")
+                  end
+                end
+              end
+
+              describe "#voluming_down!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.voluming_down!
+                end
+
+                its(:volume_status_name) { should == :voluming_down }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.voluming_down! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+
+              describe "#stopped_voluming!" do
+                before do
+                  subject.request!
+                  subject.execute!
+                  subject.voluming_up!
+                  subject.stopped_voluming!
+                end
+
+                its(:volume_status_name) { should == :not_voluming }
+
+                it "should raise a StateMachine::InvalidTransition when received a second time" do
+                  lambda { subject.stopped_voluming! }.should raise_error(StateMachine::InvalidTransition)
+                end
+              end
+            end
           end
         end
 

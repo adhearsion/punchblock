@@ -11,34 +11,22 @@ module Punchblock
 
           describe "when setting options in initializer" do
             subject do
-              Record.new :bargein           => true,
-                         :codec             => 'AMR',
-                         :codec_params      => 'bitrate=5.3;annexa=no',
-                         :dtmf_truncate     => true,
-                         :final_timeout     => 30000,
-                         :format            => 'WAV',
-                         :initial_timeout   => 10000,
-                         :min_length        => -1,
-                         :max_length        => 500000,
-                         :sample_rate       => 16000,
-                         :silence_terminate => false,
-                         :start_beep        => true,
-                         :start_pause_mode  => false
+              Record.new :format          => 'WAV',
+                         :start_beep      => true,
+                         :start_paused    => false,
+                         :stop_beep       => true,
+                         :max_duration    => 500000,
+                         :initial_timeout => 10000,
+                         :final_timeout   => 30000
             end
 
-            its(:bargein)           { should == true }
-            its(:codec)             { should == 'AMR' }
-            its(:codec_params)      { should == 'bitrate=5.3;annexa=no' }
-            its(:dtmf_truncate)     { should == true }
-            its(:final_timeout)     { should == 30000 }
-            its(:format)            { should == 'WAV' }
-            its(:initial_timeout)   { should == 10000 }
-            its(:min_length)        { should == -1 }
-            its(:max_length)        { should == 500000 }
-            its(:sample_rate)       { should == 16000 }
-            its(:silence_terminate) { should == false }
-            its(:start_beep)        { should == true }
-            its(:start_pause_mode)  { should == false }
+            its(:format)          { should == 'WAV' }
+            its(:start_beep)      { should == true }
+            its(:start_paused)    { should == false }
+            its(:stop_beep)       { should == true }
+            its(:max_duration)    { should == 500000 }
+            its(:initial_timeout) { should == 10000 }
+            its(:final_timeout)   { should == 30000 }
           end
 
           describe "actions" do

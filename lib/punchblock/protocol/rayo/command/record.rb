@@ -29,62 +29,6 @@ module Punchblock
           end
 
           ##
-          # @return [Boolean] whether or not to allow bargein
-          #
-          def bargein
-            read_attr(:bargein) == 'true'
-          end
-
-          ##
-          # @param [Boolean] bargein whether or not to allow bargein
-          #
-          def bargein=(bargein)
-            write_attr :bargein, bargein.to_s
-          end
-
-          ##
-          # @return [String] the codec to use for recording
-          #
-          def codec
-            read_attr :codec
-          end
-
-          ##
-          # @param [String] codec to use for recording
-          #
-          def codec=(codec)
-            write_attr :codec, codec
-          end
-
-          ##
-          # @return [String] parameters to pass to the codec
-          #
-          def codec_params
-            read_attr :codec_params
-          end
-
-          ##
-          # @param [String] codec_params to pass to the codec
-          #
-          def codec_params=(codec_params)
-            write_attr :codec_params, codec_params
-          end
-
-          ##
-          # @return [String] the codec to use for recording
-          #
-          def dtmf_truncate
-            read_attr(:'dtmf-truncate') == 'true'
-          end
-
-          ##
-          # @param [String] codec to use for recording
-          #
-          def dtmf_truncate=(dt)
-            write_attr :'dtmf-truncate', dt
-          end
-
-          ##
           # @return [String] the codec to use for recording
           #
           def final_timeout
@@ -129,57 +73,15 @@ module Punchblock
           ##
           # @return [String] the codec to use for recording
           #
-          def min_length
-            read_attr :'min-length', :to_i
+          def max_duration
+            read_attr :'max-duration', :to_i
           end
 
           ##
           # @param [String] codec to use for recording
           #
-          def min_length=(min_length)
-            write_attr :'min-length', min_length
-          end
-
-          ##
-          # @return [String] the codec to use for recording
-          #
-          def max_length
-            read_attr :'max-length', :to_i
-          end
-
-          ##
-          # @param [String] codec to use for recording
-          #
-          def max_length=(max_length)
-            write_attr :'max-length', max_length
-          end
-
-          ##
-          # @return [String] the codec to use for recording
-          #
-          def sample_rate
-            read_attr :'sample-rate', :to_i
-          end
-
-          ##
-          # @param [String] codec to use for recording
-          #
-          def sample_rate=(sample_rate)
-            write_attr :'sample-rate', sample_rate
-          end
-
-          ##
-          # @return [String] the codec to use for recording
-          #
-          def silence_terminate
-            read_attr(:'silence-terminate') == 'true'
-          end
-
-          ##
-          # @param [String] codec to use for recording
-          #
-          def silence_terminate=(silence_terminate)
-            write_attr :'silence-terminate', silence_terminate
+          def max_duration=(other)
+            write_attr :'max-duration', other
           end
 
           ##
@@ -199,19 +101,33 @@ module Punchblock
           ##
           # @return [String] the codec to use for recording
           #
-          def start_pause_mode
-            read_attr(:'start-pause-mode') == 'true'
+          def stop_beep
+            read_attr(:'stop-beep') == 'true'
           end
 
           ##
           # @param [String] codec to use for recording
           #
-          def start_pause_mode=(spm)
-            write_attr :'start-pause-mode', spm
+          def stop_beep=(sb)
+            write_attr :'stop-beep', sb
+          end
+
+          ##
+          # @return [String] the codec to use for recording
+          #
+          def start_paused
+            read_attr(:'start-paused') == 'true'
+          end
+
+          ##
+          # @param [String] codec to use for recording
+          #
+          def start_paused=(other)
+            write_attr :'start-paused', other
           end
 
           def inspect_attributes # :nodoc:
-            [:bargein, :codec, :codec_params, :dtmf_truncate, :final_timeout, :format, :initial_timeout, :min_length, :max_length, :sample_rate, :silence_terminate, :start_beep, :start_pause_mode] + super
+            [:final_timeout, :format, :initial_timeout, :max_duration, :start_beep, :start_paused, :stop_beep] + super
           end
 
           state_machine :state do

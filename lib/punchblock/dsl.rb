@@ -28,6 +28,10 @@ module Punchblock
       write @protocol.class::Command::Redirect.new(:to => dest)
     end
 
+    def record(options = {})
+      write @protocol.class::Command::Record.new(options)
+    end
+
     def say(string, type = :text) # :nodoc:
       write @protocol.class::Command::Tropo::Say.new(type => string)
       puts "Waiting on the queue..."

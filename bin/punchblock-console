@@ -52,7 +52,7 @@ options[:transport_logger] = Logger.new options.delete(:transport_log_file)
 options[:transport_logger].level = Logger::DEBUG
 options[:transport_logger].debug "Starting up..."
 
-protocol = Punchblock::Protocol::Rayo.new options
+protocol = Punchblock::Rayo.new options
 
 protocol_thread = protocol.run
 

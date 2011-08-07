@@ -5,7 +5,9 @@ module Punchblock
   extend ActiveSupport::Autoload
 
   autoload :DSL
-  autoload :Protocol
+  autoload :GenericConnection
+  autoload :Rayo
+  autoload :ProtocolError
 
   ##
   # This exception may be raised if a transport error is detected.

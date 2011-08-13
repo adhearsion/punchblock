@@ -20,13 +20,17 @@ module Punchblock
     autoload :Audio
     autoload :Command
     autoload :Connection
-    autoload :Event
     autoload :HasHeaders
     autoload :Header
     autoload :RayoNode
-    autoload :Ref
 
-    Ref # FIXME: Force autoload Ref so it gets registered properly
+    eager_autoload do
+      autoload :Event
+      autoload :Ref
+    end
+
+    ActiveSupport::Autoload.eager_autoload!
+
     ##
     # Create a new protocol object with which to communicate with the Rayo server.
     # See Rayo::Connection for details of options

@@ -6,8 +6,13 @@ module Punchblock
 
   autoload :DSL
   autoload :GenericConnection
-  autoload :Rayo
   autoload :ProtocolError
+
+  eager_autoload do
+    autoload :Rayo
+  end
+
+  ActiveSupport::Autoload.eager_autoload!
 
   ##
   # This exception may be raised if a transport error is detected.

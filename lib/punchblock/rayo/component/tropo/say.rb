@@ -2,7 +2,7 @@ module Punchblock
   class Rayo
     module Component
       module Tropo
-        class Say < CommandNode
+        class Say < ComponentNode
           register :say, :say
 
           ##

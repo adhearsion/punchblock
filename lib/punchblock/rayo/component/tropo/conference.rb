@@ -2,7 +2,7 @@ module Punchblock
   class Rayo
     module Component
       module Tropo
-        class Conference < CommandNode
+        class Conference < ComponentNode
           register :conference, :conference
 
           ##

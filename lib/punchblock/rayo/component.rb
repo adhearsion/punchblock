@@ -10,7 +10,24 @@ module Punchblock
 
       InvalidActionError = Class.new StandardError
 
-      ComponentNode = Class.new CommandNode
+      class ComponentNode < CommandNode
+        attr_accessor :events
+
+        def initialize(*args)
+          super
+          @events = []
+        end
+
+        def add_event(event)
+          event.original_component = self
+          @events << event
+          transition_state! event
+        end
+
+        def transition_state!(event)
+          complete! if event.is_a? Rayo::Event::Complete
+        end
+      end
 
       class Action < CommandNode # :nodoc:
         def self.new(options = {})

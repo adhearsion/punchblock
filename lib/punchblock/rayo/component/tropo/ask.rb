@@ -2,7 +2,7 @@ module Punchblock
   class Rayo
     module Component
       module Tropo
-        class Ask < CommandNode
+        class Ask < ComponentNode
           register :ask, :ask
 
           ##

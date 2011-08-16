@@ -1,7 +1,7 @@
 module Punchblock
   class Rayo
     module Component
-      class Record < CommandNode
+      class Record < ComponentNode
         register :record, :record
 
         ##

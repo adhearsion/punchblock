@@ -1,7 +1,7 @@
 module Punchblock
   class Rayo
     module Component
-      class Output < CommandNode
+      class Output < ComponentNode
         register :output, :output
 
         ##

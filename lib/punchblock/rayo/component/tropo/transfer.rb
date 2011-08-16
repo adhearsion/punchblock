@@ -2,7 +2,7 @@ module Punchblock
   class Rayo
     module Component
       module Tropo
-        class Transfer < CommandNode
+        class Transfer < ComponentNode
           register :transfer, :transfer
 
           include HasHeaders

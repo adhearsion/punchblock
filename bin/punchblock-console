@@ -1,0 +1,109 @@
+#!/usr/bin/env ruby
+$:.push File.join(File.dirname(__FILE__), '..', 'lib')
+require 'rubygems'
+require 'bundler/setup'
+require 'punchblock'
+require 'pry'
+require 'logger'
+require 'optparse'
+
+Thread.abort_on_exception = true
+
+options = { :username => 'usera@127.0.0.1', :password => '1', :wire_log_file => 'log/rayo-wire.log', :transport_log_file => 'log/rayo-transport.log', :auto_reconnect => false }
+
+option_parser = OptionParser.new do |opts|
+  opts.banner = "Usage: punchblock-console [-u usera@127.0.0.1] [-p abc123]"
+  opts.on("-u", "--username USERNAME", String, "Specify the XMPP JID to connect to") do |u|
+    options[:username] = u
+  end
+  opts.on("-p", "--password PASSWORD", String, "Specify the XMPP password to use") do |p|
+    options[:password] = p
+  end
+  opts.on("-d", "--rayo-domain DOMAIN", String, "Specify the domain Rayo is running on") do |d|
+    options[:rayo_domain] = d
+  end
+  opts.on("--wire-log-file log/wirelog.log", String, "Specify the file to which the wire log should be written") do |wlf|
+    options[:wire_log_file] = wlf
+  end
+  opts.on("--transport-log-file log/transportlog.log", String, "Specify the file to which the transport log should be written") do |tlf|
+    options[:transport_log_file] = tlf
+  end
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+  opts.on_tail("-v", "--version", "Show version") do
+    puts Punchblock::VERSION
+    exit
+  end
+end
+
+begin
+  option_parser.parse!
+rescue
+  puts $!
+  option_parser.parse '--help'
+end
+
+options[:wire_logger] = Logger.new options.delete(:wire_log_file)
+options[:wire_logger].level = Logger::DEBUG
+options[:wire_logger].debug "Starting up..."
+options[:transport_logger] = Logger.new options.delete(:transport_log_file)
+options[:transport_logger].level = Logger::DEBUG
+options[:transport_logger].debug "Starting up..."
+
+protocol = Punchblock::Rayo.new options
+
+protocol_thread = protocol.run
+
+CALL_QUEUES = {}
+INFO_EVENT_QUEUE = Queue.new
+
+### DISPATCHER THREAD
+# This thread multiplexes the event stream from the underlying connection handler and routes them
+# to the correct queue for each call.  It also starts a call handler, the run_call method) after creating
+# the queue.
+Thread.new do
+  loop do
+    event = protocol.event_queue.pop
+    if event == protocol.connected
+      puts event
+      puts "Waiting for a call..."
+      next
+    end
+    puts "#{event.class} event for call: #{event.call_id}"
+    case event
+    when protocol.class::Event::Offer
+      raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)
+      CALL_QUEUES[event.call_id] = Queue.new
+      CALL_QUEUES[event.call_id].push event
+      run_call protocol, event
+    when protocol.class::Event::Info
+      INFO_EVENT_QUEUE.push event
+    when protocol.class::Event::Answered, protocol.class::Event::Complete, protocol.class::Event::End, protocol.class::Event::Ringing
+      CALL_QUEUES[event.call_id].push event
+    else
+      puts "Unknown event: #{event.inspect}"
+    end
+
+  end
+end
+
+def run_call(protocol, offer)
+  ### CALL THREAD
+  # One thread is spun up to handle each call.
+  Thread.new do
+    raise "Unknown call #{offer.call_id}" unless CALL_QUEUES.has_key?(offer.call_id)
+    queue = CALL_QUEUES[offer.call_id]
+    call = queue.pop
+    dsl = Punchblock::DSL.new protocol, offer.call_id, queue
+
+    puts "Incoming offer to #{offer.to} from #{offer.headers_hash[:from]} #{offer}"
+    dsl.pry
+
+    # Clean up the queue.
+    CALL_QUEUES[offer.call_id] = nil
+  end
+end
+
+protocol_thread.join

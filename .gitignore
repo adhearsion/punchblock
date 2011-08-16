@@ -8,3 +8,5 @@ pkg/*
 .yardoc
 doc
 log/*
+spec/reports
+vendor

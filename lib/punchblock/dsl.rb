@@ -29,11 +29,11 @@ module Punchblock
     end
 
     def record(options = {})
-      write @protocol.class::Command::Record.new(options)
+      write @protocol.class::Component::Record.new(options)
     end
 
     def say(string, type = :text) # :nodoc:
-      write @protocol.class::Command::Tropo::Say.new(type => string)
+      write @protocol.class::Component::Tropo::Say.new(type => string)
       puts "Waiting on the queue..."
       response = @queue.pop
       # TODO: Error handling

@@ -1,6 +1,6 @@
 module Punchblock
   class Rayo
-    module Command
+    module Component
       class Input < CommandNode
         register :input, :input
 
@@ -286,7 +286,7 @@ module Punchblock
         #    returns:
         #      <stop xmlns="urn:xmpp:tropo:input:1"/>
         def stop_action
-          Stop.new :command_id => command_id, :call_id => call_id
+          Stop.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -294,7 +294,7 @@ module Punchblock
         #
         def stop!
           raise InvalidActionError, "Cannot stop an Input that is not executing." unless executing?
-          connection.write call_id, stop_action, command_id
+          connection.write call_id, stop_action, component_id
         end
 
         class Complete

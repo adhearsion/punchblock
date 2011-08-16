@@ -36,7 +36,7 @@ module Punchblock
 
         @callmap = {} # This hash maps call IDs to their XMPP domain.
 
-        @command_id_to_iq_id = {}
+        @component_id_to_iq_id = {}
         @iq_id_to_command = {}
 
         @auto_reconnect = !!options[:auto_reconnect]
@@ -52,14 +52,14 @@ module Punchblock
       #
       # @param [String] call the call ID on which to act
       # @param [CommandNode] cmd the command to execute on the call
-      # @param [String, Optional] command_id the command_id on which to execute
+      # @param [String, Optional] component_id the component_id on which to execute
       #
       # @raise Exception if there is a server-side error
       #
       # @return true
       #
-      def write(call_id, cmd, command_id = nil)
-        queue = async_write call_id, cmd, command_id
+      def write(call_id, cmd, component_id = nil)
+        queue = async_write call_id, cmd, component_id
         begin
           Timeout::timeout(@write_timeout) { queue.pop }
         ensure
@@ -69,8 +69,8 @@ module Punchblock
 
       ##
       # @return [Queue] Pop this queue to determine result of command execution. Will be true or an exception
-      def async_write(call_id, cmd, command_id = nil)
-        iq = prep_command_for_execution call_id, cmd, command_id
+      def async_write(call_id, cmd, component_id = nil)
+        iq = prep_command_for_execution call_id, cmd, component_id
 
         Queue.new.tap do |queue|
           @command_callbacks[iq.id] = lambda do |result|
@@ -78,8 +78,8 @@ module Punchblock
             when Blather::Stanza::Iq
               ref = result.rayo_node
               if ref.is_a?(Ref)
-                cmd.command_id = ref.id
-                @command_id_to_iq_id[ref.id] = iq.id
+                cmd.component_id = ref.id
+                @component_id_to_iq_id[ref.id] = iq.id
               end
               cmd.execute!
               queue << true
@@ -93,11 +93,11 @@ module Punchblock
         end
       end
 
-      def prep_command_for_execution(call_id, cmd, command_id = nil)
+      def prep_command_for_execution(call_id, cmd, component_id = nil)
         cmd.connection = self
         cmd.call_id = call_id
         jid = cmd.is_a?(Command::Dial) ? @rayo_domain : "#{call_id}@#{@callmap[call_id]}"
-        jid << "/#{command_id}" if command_id
+        jid << "/#{component_id}" if component_id
         create_iq(jid).tap do |iq|
           @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
           iq << cmd
@@ -142,12 +142,12 @@ module Punchblock
       #
       # Get the original command issued by command ID
       #
-      # @param [String] command_id
+      # @param [String] component_id
       #
       # @return [RayoNode]
       #
-      def original_command_from_id(command_id)
-        @iq_id_to_command[@command_id_to_iq_id[command_id]]
+      def original_component_from_id(component_id)
+        @iq_id_to_command[@component_id_to_iq_id[component_id]]
       end
 
       private
@@ -173,7 +173,7 @@ module Punchblock
       def handle_error(iq)
         e = Blather::StanzaError.import iq
 
-        protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.command_id
+        protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.component_id
 
         if callback = @command_callbacks.delete(iq.id)
           callback.call protocol_error

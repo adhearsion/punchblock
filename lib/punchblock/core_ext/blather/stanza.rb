@@ -6,7 +6,7 @@ module Blather
     #
     def rayo_node
       first_child = children.first
-      Punchblock::Rayo::RayoNode.import first_child, call_id, command_id if first_child
+      Punchblock::Rayo::RayoNode.import first_child, call_id, component_id if first_child
     end
 
     ##
@@ -19,7 +19,7 @@ module Blather
     ##
     # @return [String] the command ID this stanza applies to
     #
-    def command_id
+    def component_id
       from.resource
     end
   end

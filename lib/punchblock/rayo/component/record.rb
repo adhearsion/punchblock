@@ -1,6 +1,6 @@
 module Punchblock
   class Rayo
-    module Command
+    module Component
       class Record < CommandNode
         register :record, :record
 
@@ -149,7 +149,7 @@ module Punchblock
         #    returns:
         #      <pause xmlns="urn:xmpp:rayo:record:1"/>
         def pause_action
-          Pause.new :command_id => command_id, :call_id => call_id
+          Pause.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -157,7 +157,7 @@ module Punchblock
         #
         def pause!
           raise InvalidActionError, "Cannot pause a Record that is not executing." unless executing?
-          result = connection.write call_id, pause_action, command_id
+          result = connection.write call_id, pause_action, component_id
           paused! if result
         end
 
@@ -172,7 +172,7 @@ module Punchblock
         #    returns:
         #      <resume xmlns="urn:xmpp:rayo:record:1"/>
         def resume_action
-          Resume.new :command_id => command_id, :call_id => call_id
+          Resume.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -180,7 +180,7 @@ module Punchblock
         #
         def resume!
           raise InvalidActionError, "Cannot resume a Record that is not paused." unless paused?
-          result = connection.write call_id, resume_action, command_id
+          result = connection.write call_id, resume_action, component_id
           resumed! if result
         end
 
@@ -195,7 +195,7 @@ module Punchblock
         #    returns:
         #      <stop xmlns="urn:xmpp:rayo:record:1"/>
         def stop_action
-          Stop.new :command_id => command_id, :call_id => call_id
+          Stop.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -203,7 +203,7 @@ module Punchblock
         #
         def stop!
           raise InvalidActionError, "Cannot stop a Record that is not executing." unless executing?
-          connection.write call_id, stop_action, command_id
+          connection.write call_id, stop_action, component_id
         end
 
         class Pause < Action # :nodoc:

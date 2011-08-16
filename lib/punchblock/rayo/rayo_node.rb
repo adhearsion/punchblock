@@ -10,7 +10,7 @@ module Punchblock
 
       class_inheritable_accessor :registered_ns, :registered_name
 
-      attr_accessor :call_id, :command_id, :connection, :original_command
+      attr_accessor :call_id, :component_id, :connection, :original_component
 
       # Register a new stanza class to a name and/or namespace
       #
@@ -41,17 +41,17 @@ module Punchblock
       # elements of the XML::Node
       # @param [XML::Node] node the node to import
       # @return the appropriate object based on the node name and namespace
-      def self.import(node, call_id = nil, command_id = nil)
+      def self.import(node, call_id = nil, component_id = nil)
         ns = (node.namespace.href if node.namespace)
         klass = class_from_registration(node.element_name, ns)
         event = if klass && klass != self
-          klass.import node, call_id, command_id
+          klass.import node, call_id, component_id
         else
           new.inherit node
         end
         event.tap do |event|
           event.call_id = call_id
-          event.command_id = command_id
+          event.component_id = component_id
         end
       end
 
@@ -66,7 +66,7 @@ module Punchblock
       end
 
       def inspect_attributes # :nodoc:
-        [:call_id, :command_id]
+        [:call_id, :component_id]
       end
 
       def inspect
@@ -77,8 +77,8 @@ module Punchblock
       # @return [RayoNode] the original command issued that lead to this event
       #
       def source
-        @source ||= connection.original_command_from_id command_id if connection && command_id
-        @source ||= original_command
+        @source ||= connection.original_component_from_id component_id if connection && component_id
+        @source ||= original_component
       end
 
       alias :to_s :inspect

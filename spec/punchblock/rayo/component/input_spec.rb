@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   class Rayo
-    module Command
+    module Component
       describe Input do
         it 'registers itself' do
           RayoNode.class_from_registration(:input, 'urn:xmpp:rayo:input:1').should == Input
@@ -86,7 +86,7 @@ module Punchblock
           let(:command) { Input.new :grammar => '[5 DIGITS]' }
 
           before do
-            command.command_id = 'abc123'
+            command.component_id = 'abc123'
             command.call_id = '123abc'
             command.connection = Connection.new :username => '123', :password => '123'
           end
@@ -95,7 +95,7 @@ module Punchblock
             subject { command.stop_action }
 
             its(:to_xml) { should == '<stop xmlns="urn:xmpp:rayo:1"/>' }
-            its(:command_id) { should == 'abc123' }
+            its(:component_id) { should == 'abc123' }
             its(:call_id) { should == '123abc' }
           end
 

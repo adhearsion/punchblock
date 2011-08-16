@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   class Rayo
-    module Command
+    module Component
       describe Output do
         it 'registers itself' do
           RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should == Output
@@ -54,7 +54,7 @@ module Punchblock
           let(:command) { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
 
           before do
-            command.command_id = 'abc123'
+            command.component_id = 'abc123'
             command.call_id = '123abc'
             command.connection = Connection.new :username => '123', :password => '123'
           end
@@ -63,7 +63,7 @@ module Punchblock
             subject { command.pause_action }
 
             its(:to_xml) { should == '<pause xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:command_id) { should == 'abc123' }
+            its(:component_id) { should == 'abc123' }
             its(:call_id) { should == '123abc' }
           end
 
@@ -106,7 +106,7 @@ module Punchblock
             subject { command.resume_action }
 
             its(:to_xml) { should == '<resume xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:command_id) { should == 'abc123' }
+            its(:component_id) { should == 'abc123' }
             its(:call_id) { should == '123abc' }
           end
 
@@ -151,7 +151,7 @@ module Punchblock
             subject { command.stop_action }
 
             its(:to_xml) { should == '<stop xmlns="urn:xmpp:rayo:1"/>' }
-            its(:command_id) { should == 'abc123' }
+            its(:component_id) { should == 'abc123' }
             its(:call_id) { should == '123abc' }
           end
 
@@ -182,7 +182,7 @@ module Punchblock
               subject { command.seek_action seek_options }
 
               its(:to_xml) { should == '<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 
@@ -249,7 +249,7 @@ module Punchblock
               subject { command.speed_up_action }
 
               its(:to_xml) { should == '<speed-up xmlns="urn:xmpp:rayo:output:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 
@@ -307,7 +307,7 @@ module Punchblock
               subject { command.slow_down_action }
 
               its(:to_xml) { should == '<speed-down xmlns="urn:xmpp:rayo:output:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 
@@ -382,7 +382,7 @@ module Punchblock
               subject { command.volume_up_action }
 
               its(:to_xml) { should == '<volume-up xmlns="urn:xmpp:rayo:output:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 
@@ -440,7 +440,7 @@ module Punchblock
               subject { command.volume_down_action }
 
               its(:to_xml) { should == '<volume-down xmlns="urn:xmpp:rayo:output:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 

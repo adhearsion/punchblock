@@ -23,7 +23,7 @@ module Punchblock
 
           it "should set the original event on the command" do
             add_event
-            event.original_command.should == subject
+            event.original_component.should == subject
           end
 
           it "should trigger state transition" do

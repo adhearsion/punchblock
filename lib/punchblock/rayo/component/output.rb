@@ -1,6 +1,6 @@
 module Punchblock
   class Rayo
-    module Command
+    module Component
       class Output < CommandNode
         register :output, :output
 
@@ -179,7 +179,7 @@ module Punchblock
         #    returns:
         #      <pause xmlns="urn:xmpp:tropo:output:1"/>
         def pause_action
-          Pause.new :command_id => command_id, :call_id => call_id
+          Pause.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -187,7 +187,7 @@ module Punchblock
         #
         def pause!
           raise InvalidActionError, "Cannot pause a Output that is not executing." unless executing?
-          result = connection.write call_id, pause_action, command_id
+          result = connection.write call_id, pause_action, component_id
           paused! if result
         end
 
@@ -202,7 +202,7 @@ module Punchblock
         #    returns:
         #      <resume xmlns="urn:xmpp:tropo:output:1"/>
         def resume_action
-          Resume.new :command_id => command_id, :call_id => call_id
+          Resume.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -210,7 +210,7 @@ module Punchblock
         #
         def resume!
           raise InvalidActionError, "Cannot resume a Output that is not paused." unless paused?
-          result = connection.write call_id, resume_action, command_id
+          result = connection.write call_id, resume_action, component_id
           resumed! if result
         end
 
@@ -233,7 +233,7 @@ module Punchblock
         #    returns:
         #      <stop xmlns="urn:xmpp:tropo:output:1"/>
         def stop_action
-          Stop.new :command_id => command_id, :call_id => call_id
+          Stop.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -241,7 +241,7 @@ module Punchblock
         #
         def stop!
           raise InvalidActionError, "Cannot stop a Output that is not executing." unless executing?
-          connection.write call_id, stop_action, command_id
+          connection.write call_id, stop_action, component_id
         end
 
         ##
@@ -255,8 +255,8 @@ module Punchblock
         #    returns:
         #      <seek xmlns="urn:xmpp:rayo:output:1"/>
         def seek_action(options = {})
-          Seek.new({ :command_id => command_id, :call_id => call_id }.merge(options)).tap do |s|
-            s.original_command = self
+          Seek.new({ :component_id => component_id, :call_id => call_id }.merge(options)).tap do |s|
+            s.original_component = self
           end
         end
 
@@ -265,7 +265,7 @@ module Punchblock
         #
         def seek!(options = {})
           raise InvalidActionError, "Cannot seek an Output that is already seeking." if seeking?
-          connection.write call_id, seek_action(options), command_id
+          connection.write call_id, seek_action(options), component_id
         end
 
         state_machine :seek_status, :initial => :not_seeking do
@@ -318,8 +318,8 @@ module Punchblock
         #    returns:
         #      <speed-up xmlns="urn:xmpp:rayo:output:1"/>
         def speed_up_action
-          SpeedUp.new(:command_id => command_id, :call_id => call_id).tap do |s|
-            s.original_command = self
+          SpeedUp.new(:component_id => component_id, :call_id => call_id).tap do |s|
+            s.original_component = self
           end
         end
 
@@ -328,7 +328,7 @@ module Punchblock
         #
         def speed_up!
           raise InvalidActionError, "Cannot speed up an Output that is already speeding." unless not_speeding?
-          connection.write call_id, speed_up_action, command_id
+          connection.write call_id, speed_up_action, component_id
         end
 
         ##
@@ -342,8 +342,8 @@ module Punchblock
         #    returns:
         #      <speed-down xmlns="urn:xmpp:rayo:output:1"/>
         def slow_down_action
-          SlowDown.new(:command_id => command_id, :call_id => call_id).tap do |s|
-            s.original_command = self
+          SlowDown.new(:component_id => component_id, :call_id => call_id).tap do |s|
+            s.original_component = self
           end
         end
 
@@ -352,7 +352,7 @@ module Punchblock
         #
         def slow_down!
           raise InvalidActionError, "Cannot slow down an Output that is already speeding." unless not_speeding?
-          connection.write call_id, slow_down_action, command_id
+          connection.write call_id, slow_down_action, component_id
         end
 
         state_machine :speed_status, :initial => :not_speeding do
@@ -408,8 +408,8 @@ module Punchblock
         #    returns:
         #      <volume-up xmlns="urn:xmpp:rayo:output:1"/>
         def volume_up_action
-          VolumeUp.new(:command_id => command_id, :call_id => call_id).tap do |s|
-            s.original_command = self
+          VolumeUp.new(:component_id => component_id, :call_id => call_id).tap do |s|
+            s.original_component = self
           end
         end
 
@@ -418,7 +418,7 @@ module Punchblock
         #
         def volume_up!
           raise InvalidActionError, "Cannot volume up an Output that is already voluming." unless not_voluming?
-          connection.write call_id, volume_up_action, command_id
+          connection.write call_id, volume_up_action, component_id
         end
 
         ##
@@ -432,8 +432,8 @@ module Punchblock
         #    returns:
         #      <volume-down xmlns="urn:xmpp:rayo:output:1"/>
         def volume_down_action
-          VolumeDown.new(:command_id => command_id, :call_id => call_id).tap do |s|
-            s.original_command = self
+          VolumeDown.new(:component_id => component_id, :call_id => call_id).tap do |s|
+            s.original_component = self
           end
         end
 
@@ -442,7 +442,7 @@ module Punchblock
         #
         def volume_down!
           raise InvalidActionError, "Cannot volume down an Output that is already voluming." unless not_voluming?
-          connection.write call_id, volume_down_action, command_id
+          connection.write call_id, volume_down_action, component_id
         end
 
         state_machine :volume_status, :initial => :not_voluming do

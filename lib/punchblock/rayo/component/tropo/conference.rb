@@ -1,6 +1,6 @@
 module Punchblock
   class Rayo
-    module Command
+    module Component
       module Tropo
         class Conference < CommandNode
           register :conference, :conference
@@ -222,7 +222,7 @@ module Punchblock
           #      <mute xmlns="urn:xmpp:tropo:conference:1"/>
           #
           def mute_action
-            Mute.new :command_id => command_id, :call_id => call_id
+            Mute.new :component_id => component_id, :call_id => call_id
           end
 
           ##
@@ -230,7 +230,7 @@ module Punchblock
           #
           def mute!
             raise InvalidActionError, "Cannot mute a Conference that is already muted" if muted?
-            result = connection.write call_id, mute_action, command_id
+            result = connection.write call_id, mute_action, component_id
             muted! if result
           end
 
@@ -246,7 +246,7 @@ module Punchblock
           #      <unmute xmlns="urn:xmpp:tropo:conference:1"/>
           #
           def unmute_action
-            Unmute.new :command_id => command_id, :call_id => call_id
+            Unmute.new :component_id => component_id, :call_id => call_id
           end
 
           ##
@@ -254,7 +254,7 @@ module Punchblock
           #
           def unmute!
             raise InvalidActionError, "Cannot unmute a Conference that is not muted" unless muted?
-            result = connection.write call_id, unmute_action, command_id
+            result = connection.write call_id, unmute_action, component_id
             unmuted! if result
           end
 
@@ -270,7 +270,7 @@ module Punchblock
           #      <stop xmlns="urn:xmpp:tropo:conference:1"/>
           #
           def stop_action
-            Stop.new :command_id => command_id, :call_id => call_id
+            Stop.new :component_id => component_id, :call_id => call_id
           end
 
           ##
@@ -278,7 +278,7 @@ module Punchblock
           #
           def stop!(options = {})
             raise InvalidActionError, "Cannot stop a Conference that is not executing" unless executing?
-            connection.write call_id, stop_action, command_id
+            connection.write call_id, stop_action, component_id
           end
 
           ##
@@ -296,7 +296,7 @@ module Punchblock
           #      <kick xmlns="urn:xmpp:tropo:conference:1">bye!</kick>
           #
           def kick_action(options = {})
-            Kick.new options.merge(:command_id => command_id, :call_id => call_id)
+            Kick.new options.merge(:component_id => component_id, :call_id => call_id)
           end
 
           ##
@@ -307,7 +307,7 @@ module Punchblock
           #
           def kick!(options = {})
             raise InvalidActionError, "Cannot kick a Conference that is not executing" unless executing?
-            connection.write call_id, kick_action, command_id
+            connection.write call_id, kick_action, component_id
           end
 
           class Mute < Action # :nodoc:

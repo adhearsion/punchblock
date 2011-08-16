@@ -13,7 +13,7 @@ module Punchblock
           if element
             RayoNode.import(element).tap do |reason|
               reason.call_id = call_id
-              reason.command_id = command_id
+              reason.component_id = component_id
             end
           end
         end
@@ -23,7 +23,7 @@ module Punchblock
           if element
             RayoNode.import(element).tap do |recording|
               recording.call_id = call_id
-              recording.command_id = command_id
+              recording.component_id = component_id
             end
           end
         end

@@ -34,7 +34,7 @@ module Punchblock
 <say-as interpret-as='date'>12/01/2011</say-as>
 </say>
         MSG
-        Command::Tropo::Say
+        Component::Tropo::Say
         say = RayoNode.import parse_stanza(say).root
         connection.event_queue = []
         connection.expects(:write_to_stream).once.returns true
@@ -59,7 +59,7 @@ module Punchblock
 
         say.state_name.should == :executing
 
-        connection.original_command_from_id('fgh4590').should == say
+        connection.original_component_from_id('fgh4590').should == say
 
         example_complete = import_stanza <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
@@ -74,7 +74,7 @@ module Punchblock
         event.source.should == say
         say.events.should == [event]
 
-        say.command_id.should == 'fgh4590'
+        say.component_id.should == 'fgh4590'
       end
 
       describe '#handle_presence' do
@@ -170,7 +170,7 @@ module Punchblock
         subject { raised_exception }
 
         its(:call_id)     { should == 'f6d437f4-1e18-457b-99f8-b5d853f50347' }
-        its(:command_id)  { should == 'abc123' }
+        its(:component_id)  { should == 'abc123' }
         its(:name)        { should == :item_not_found }
         its(:text)        { should == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
       end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Punchblock
   class Rayo
-    module Command
+    module Component
       module Tropo
         describe Conference do
           it 'registers itself' do
@@ -91,7 +91,7 @@ module Punchblock
             let(:conference) { Conference.new :name => '1234' }
 
             before do
-              conference.command_id = 'abc123'
+              conference.component_id = 'abc123'
               conference.call_id = '123abc'
               conference.connection = Connection.new :username => '123', :password => '123'
             end
@@ -100,7 +100,7 @@ module Punchblock
               subject { conference.mute_action }
 
               its(:to_xml) { should == '<mute xmlns="urn:xmpp:tropo:conference:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 
@@ -145,7 +145,7 @@ module Punchblock
               subject { conference.unmute_action }
 
               its(:to_xml) { should == '<unmute xmlns="urn:xmpp:tropo:conference:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 
@@ -193,7 +193,7 @@ module Punchblock
               subject { conference.stop_action }
 
               its(:to_xml) { should == '<stop xmlns="urn:xmpp:rayo:1"/>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 
@@ -221,7 +221,7 @@ module Punchblock
               subject { conference.kick_action :message => 'bye!' }
 
               its(:to_xml) { should == '<kick xmlns="urn:xmpp:tropo:conference:1">bye!</kick>' }
-              its(:command_id) { should == 'abc123' }
+              its(:component_id) { should == 'abc123' }
               its(:call_id) { should == '123abc' }
             end
 

@@ -19,6 +19,8 @@ module Punchblock
 
     autoload :Audio
     autoload :Command
+    autoload :CommandNode
+    autoload :Component
     autoload :Connection
     autoload :HasHeaders
     autoload :Header

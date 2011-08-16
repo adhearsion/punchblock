@@ -23,7 +23,7 @@ module Punchblock
 
           it_should_behave_like 'event'
 
-          its(:reason) { should be_instance_of Command::Tropo::Say::Complete::Success }
+          its(:reason) { should be_instance_of Component::Tropo::Say::Complete::Success }
         end
       end
 

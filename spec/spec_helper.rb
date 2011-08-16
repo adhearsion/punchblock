@@ -21,7 +21,7 @@ end
 
 shared_examples_for 'event' do
   its(:call_id) { should == '9f00061' }
-  its(:command_id) { should == '1' }
+  its(:component_id) { should == '1' }
 end
 
 shared_examples_for 'command_headers' do

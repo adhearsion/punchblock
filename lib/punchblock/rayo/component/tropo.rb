@@ -1,6 +1,6 @@
 module Punchblock
   class Rayo
-    module Command
+    module Component
       module Tropo
         extend ActiveSupport::Autoload
 

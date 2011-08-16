@@ -14,6 +14,10 @@ module Punchblock
           it "should raise a StateMachine::InvalidTransition when received a second time" do
             lambda { subject.request! }.should raise_error(StateMachine::InvalidTransition)
           end
+
+          it "should prevent altering attributes" do
+            lambda { subject.write_attr :foo, 'bar' }.should raise_error(StandardError, "Cannot alter attributes of a requested command")
+          end
         end
 
         describe "#execute!" do

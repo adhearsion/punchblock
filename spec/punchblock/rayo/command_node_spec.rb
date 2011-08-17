@@ -50,6 +50,13 @@ module Punchblock
             lambda { subject.complete! }.should raise_error(StateMachine::InvalidTransition)
           end
         end # #complete!
+
+        describe "#response=" do
+          it "should set the command to executing status" do
+            subject.expects(:execute!).once
+            subject.response = :foo
+          end
+        end
       end # CommandNode
     end # Command
   end # Rayo

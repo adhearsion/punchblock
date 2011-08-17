@@ -73,6 +73,14 @@ module Punchblock
           self << join
         end
 
+        def response=(other)
+          super
+          if other.is_a?(Blather::Stanza::Iq)
+            ref = other.rayo_node
+            @call_id = ref.id if ref.is_a?(Ref)
+          end
+        end
+
         def inspect_attributes # :nodoc:
           [:to, :from, :join] + super
         end

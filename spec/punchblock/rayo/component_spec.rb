@@ -1,5 +1,11 @@
 require 'spec_helper'
 
+%w{
+  blather/client/dsl
+  punchblock/core_ext/blather/stanza
+  punchblock/core_ext/blather/stanza/presence
+}.each { |f| require f }
+
 module Punchblock
   class Rayo
     module Component
@@ -40,6 +46,33 @@ module Punchblock
             end
           end
         end # #transition_state!
+
+        describe "#response=" do
+          before do
+            subject.request!
+            subject.connection = mock(:record_command_id_for_iq_id => true)
+          end
+
+          let(:component_id) { 'abc123' }
+
+          let :ref do
+            Ref.new.tap do |ref|
+              ref.id = component_id
+            end
+          end
+
+          let :iq do
+            Blather::Stanza::Iq.new(:result, 'blah').tap do |iq|
+              iq.from = "12345@call.rayo.net"
+              iq << ref
+            end
+          end
+
+          it "should set the component ID from the ref" do
+            subject.response = iq
+            subject.component_id.should == component_id
+          end
+        end
       end # ComponentNode
     end # Component
   end # Rayo

@@ -29,11 +29,6 @@ module Punchblock
 
         setup @username, options.delete(:password)
 
-        # This hash is used to synchronize between threads calling #write
-        # and the connection-level responses they need to return from the
-        # EventMachine loop.
-        @command_callbacks = {}
-
         @callmap = {} # This hash maps call IDs to their XMPP domain.
 
         @component_id_to_iq_id = {}
@@ -59,38 +54,16 @@ module Punchblock
       # @return true
       #
       def write(call_id, cmd, component_id = nil)
-        queue = async_write call_id, cmd, component_id
-        begin
-          Timeout::timeout(@write_timeout) { queue.pop }
-        ensure
-          queue = nil # Shut down this queue
-        end.tap { |result| raise result if result.is_a? Exception }
+        async_write call_id, cmd, component_id
+        cmd.response(@write_timeout).tap { |result| raise result if result.is_a? Exception }
       end
 
       ##
       # @return [Queue] Pop this queue to determine result of command execution. Will be true or an exception
       def async_write(call_id, cmd, component_id = nil)
         iq = prep_command_for_execution call_id, cmd, component_id
-
-        Queue.new.tap do |queue|
-          @command_callbacks[iq.id] = lambda do |result|
-            case result
-            when Blather::Stanza::Iq
-              ref = result.rayo_node
-              if ref.is_a?(Ref)
-                cmd.component_id = ref.id
-                @component_id_to_iq_id[ref.id] = iq.id
-              end
-              cmd.execute!
-              queue << true
-            when Exception
-              queue << result
-            end
-          end
-
-          write_to_stream iq
-          cmd.request!
-        end
+        write_to_stream iq
+        cmd.request!
       end
 
       def prep_command_for_execution(call_id, cmd, component_id = nil)
@@ -150,6 +123,10 @@ module Punchblock
         @iq_id_to_command[@component_id_to_iq_id[component_id]]
       end
 
+      def record_command_id_for_iq_id(command_id, iq_id)
+        @component_id_to_iq_id[command_id] = iq_id
+      end
+
       private
 
       def handle_presence(p)
@@ -166,8 +143,7 @@ module Punchblock
         # FIXME: Do we need to raise a warning if the domain changes?
         @callmap[iq.from.node] = iq.from.domain
         @logger.debug "Command #{iq.id} completed successfully" if @logger
-        callback = @command_callbacks.delete(iq.id)
-        callback.call iq if callback
+        @iq_id_to_command[iq.id].response = iq
       end
 
       def handle_error(iq)
@@ -175,8 +151,8 @@ module Punchblock
 
         protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.component_id
 
-        if callback = @command_callbacks.delete(iq.id)
-          callback.call protocol_error
+        if command = @iq_id_to_command[iq.id]
+          command.response = protocol_error
         else
           # Un-associated transport error??
           raise protocol_error

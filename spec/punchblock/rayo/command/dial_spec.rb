@@ -1,5 +1,11 @@
 require 'spec_helper'
 
+%w{
+  blather/client/dsl
+  punchblock/core_ext/blather/stanza
+  punchblock/core_ext/blather/stanza/presence
+}.each { |f| require f }
+
 module Punchblock
   class Rayo
     module Command
@@ -19,6 +25,30 @@ module Punchblock
           its(:to)    { should == 'tel:+14155551212' }
           its(:from)  { should == 'tel:+13035551212' }
           its(:join)  { should == Join.new(join_params) }
+        end
+
+        describe "#response=" do
+          before { subject.request! }
+
+          let(:call_id) { 'abc123' }
+
+          let :ref do
+            Ref.new.tap do |ref|
+              ref.id = call_id
+            end
+          end
+
+          let :iq do
+            Blather::Stanza::Iq.new(:result, 'blah').tap do |iq|
+              iq.from = "call.rayo.net"
+              iq << ref
+            end
+          end
+
+          it "should set the call ID from the ref" do
+            subject.response = iq
+            subject.call_id.should == call_id
+          end
         end
       end
     end

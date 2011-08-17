@@ -27,6 +27,17 @@ module Punchblock
         def transition_state!(event)
           complete! if event.is_a? Rayo::Event::Complete
         end
+
+        def response=(other)
+          super
+          if other.is_a?(Blather::Stanza::Iq)
+            ref = other.rayo_node
+            if ref.is_a?(Ref)
+              @component_id = ref.id
+              @connection.record_command_id_for_iq_id @component_id, other.id
+            end
+          end
+        end
       end
 
       class Action < CommandNode # :nodoc:

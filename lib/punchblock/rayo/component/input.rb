@@ -275,28 +275,6 @@ module Punchblock
           end
         end # Choices
 
-        ##
-        # Creates an Rayo stop message for the current Input
-        #
-        # @return [Rayo::Message] an Rayo stop message
-        #
-        # @example
-        #    input_obj.stop_action.to_xml
-        #
-        #    returns:
-        #      <stop xmlns="urn:xmpp:tropo:input:1"/>
-        def stop_action
-          Stop.new :component_id => component_id, :call_id => call_id
-        end
-
-        ##
-        # Sends an Rayo stop message for the current Input
-        #
-        def stop!
-          raise InvalidActionError, "Cannot stop an Input that is not executing." unless executing?
-          connection.write call_id, stop_action, component_id
-        end
-
         class Complete
           class Success < Rayo::Event::Complete::Reason
             register :success, :input_complete

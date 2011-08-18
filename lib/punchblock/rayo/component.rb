@@ -28,6 +28,10 @@ module Punchblock
           complete! if event.is_a? Rayo::Event::Complete
         end
 
+        def write_action(action)
+          connection.write call_id, action, component_id
+        end
+
         def response=(other)
           super
           if other.is_a?(Blather::Stanza::Iq)
@@ -37,6 +41,23 @@ module Punchblock
               @connection.record_command_id_for_iq_id @component_id, other.id
             end
           end
+        end
+
+        ##
+        # Create an Rayo stop message
+        #
+        # @return [Stop] an Rayo stop message
+        #
+        def stop_action
+          Stop.new :component_id => component_id, :call_id => call_id
+        end
+
+        ##
+        # Sends an Rayo stop message for the current component
+        #
+        def stop!(options = {})
+          raise InvalidActionError, "Cannot stop a #{self.class.name.split("::").last} that is not executing" unless executing?
+          stop_action.tap { |action| write_action action }
         end
       end
 

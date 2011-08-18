@@ -230,8 +230,10 @@ module Punchblock
           #
           def mute!
             raise InvalidActionError, "Cannot mute a Conference that is already muted" if muted?
-            result = connection.write call_id, mute_action, component_id
-            muted! if result
+            mute_action.tap do |action|
+              result = write_action action
+              muted! if result
+            end
           end
 
           ##
@@ -254,31 +256,10 @@ module Punchblock
           #
           def unmute!
             raise InvalidActionError, "Cannot unmute a Conference that is not muted" unless muted?
-            result = connection.write call_id, unmute_action, component_id
-            unmuted! if result
-          end
-
-          ##
-          # Create an Rayo conference stop message
-          #
-          # @return [Rayo::Command::Conference::Stop] an Rayo conference stop message
-          #
-          # @example
-          #    conf_obj.stop_action.to_xml
-          #
-          #    returns:
-          #      <stop xmlns="urn:xmpp:tropo:conference:1"/>
-          #
-          def stop_action
-            Stop.new :component_id => component_id, :call_id => call_id
-          end
-
-          ##
-          # Sends an Rayo stop message for the current Conference
-          #
-          def stop!(options = {})
-            raise InvalidActionError, "Cannot stop a Conference that is not executing" unless executing?
-            connection.write call_id, stop_action, component_id
+            unmute_action.tap do |action|
+              result = write_action action
+              unmuted! if result
+            end
           end
 
           ##
@@ -307,7 +288,9 @@ module Punchblock
           #
           def kick!(options = {})
             raise InvalidActionError, "Cannot kick a Conference that is not executing" unless executing?
-            connection.write call_id, kick_action, component_id
+            kick_action.tap do |action|
+              write_action action
+            end
           end
 
           class Mute < Action # :nodoc:

@@ -102,9 +102,11 @@ module Punchblock
           # Sends an Rayo pause message for the current Say
           #
           def pause!
-            raise InvalidActionError, "Cannot pause a Say that is not executing." unless executing?
-            result = connection.write call_id, pause_action, component_id
-            paused! if result
+            raise InvalidActionError, "Cannot pause a Say that is not executing" unless executing?
+            pause_action.tap do |action|
+              result = write_action action
+              paused! if result
+            end
           end
 
           ##
@@ -126,30 +128,10 @@ module Punchblock
           #
           def resume!
             raise InvalidActionError, "Cannot resume a Say that is not paused." unless paused?
-            result = connection.write call_id, resume_action, component_id
-            resumed! if result
-          end
-
-          ##
-          # Creates an Rayo stop message for the current Say
-          #
-          # @return [Rayo::Command::Say::Stop] an Rayo stop message
-          #
-          # @example
-          #    say_obj.stop_action.to_xml
-          #
-          #    returns:
-          #      <stop xmlns="urn:xmpp:tropo:say:1"/>
-          def stop_action
-            Stop.new :component_id => component_id, :call_id => call_id
-          end
-
-          ##
-          # Sends an Rayo stop message for the current Say
-          #
-          def stop!
-            raise InvalidActionError, "Cannot stop a Say that is not executing." unless executing?
-            connection.write call_id, stop_action, component_id
+            resume_action.tap do |action|
+              result = write_action action
+              resumed! if result
+            end
           end
 
           class Pause < Action # :nodoc:

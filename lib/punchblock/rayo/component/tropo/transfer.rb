@@ -152,29 +152,6 @@ module Punchblock
             [:to, :from, :terminator, :timeout, :answer_on_media] + super
           end
 
-          ##
-          # Creates an Rayo stop message for the current Transfer
-          #
-          # @return [Rayo::Command::Transfer::Stop] an Rayo stop command
-          #
-          # @example
-          #    transfer_obj.stop_action.to_xml
-          #
-          #    returns:
-          #      <stop xmlns="urn:xmpp:tropo:transfer:1"/>
-          #
-          def stop_action
-            Stop.new :component_id => component_id, :call_id => call_id
-          end
-
-          ##
-          # Sends an Rayo stop message for the current Transfer
-          #
-          def stop!
-            raise InvalidActionError, "Cannot stop a Transfer that is not executing." unless executing?
-            connection.write call_id, stop_action, component_id
-          end
-
           class Complete
             class Success < Rayo::Event::Complete::Reason
               register :success, :transfer_complete

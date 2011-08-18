@@ -26,13 +26,6 @@ module Punchblock
     autoload :Header
     autoload :RayoNode
 
-    eager_autoload do
-      autoload :Event
-      autoload :Ref
-    end
-
-    ActiveSupport::Autoload.eager_autoload!
-
     ##
     # Create a new protocol object with which to communicate with the Rayo server.
     # See Rayo::Connection for details of options
@@ -46,3 +39,6 @@ module Punchblock
     end
   end
 end
+
+require 'punchblock/rayo/event'
+require 'punchblock/rayo/ref'

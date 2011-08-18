@@ -186,9 +186,11 @@ module Punchblock
         # Sends an Rayo pause message for the current Output
         #
         def pause!
-          raise InvalidActionError, "Cannot pause a Output that is not executing." unless executing?
-          result = connection.write call_id, pause_action, component_id
-          paused! if result
+          raise InvalidActionError, "Cannot pause a Output that is not executing" unless executing?
+          pause_action.tap do |action|
+            result = write_action action
+            paused! if result
+          end
         end
 
         ##
@@ -210,8 +212,10 @@ module Punchblock
         #
         def resume!
           raise InvalidActionError, "Cannot resume a Output that is not paused." unless paused?
-          result = connection.write call_id, resume_action, component_id
-          resumed! if result
+          resume_action.tap do |action|
+            result = write_action action
+            resumed! if result
+          end
         end
 
         class Pause < Action # :nodoc:
@@ -220,28 +224,6 @@ module Punchblock
 
         class Resume < Action # :nodoc:
           register :resume, :output
-        end
-
-        ##
-        # Creates an Rayo stop message for the current Output
-        #
-        # @return [Rayo::Command::Output::Stop] an Rayo stop message
-        #
-        # @example
-        #    output_obj.stop_action.to_xml
-        #
-        #    returns:
-        #      <stop xmlns="urn:xmpp:tropo:output:1"/>
-        def stop_action
-          Stop.new :component_id => component_id, :call_id => call_id
-        end
-
-        ##
-        # Sends an Rayo stop message for the current Output
-        #
-        def stop!
-          raise InvalidActionError, "Cannot stop a Output that is not executing." unless executing?
-          connection.write call_id, stop_action, component_id
         end
 
         ##
@@ -265,7 +247,9 @@ module Punchblock
         #
         def seek!(options = {})
           raise InvalidActionError, "Cannot seek an Output that is already seeking." if seeking?
-          connection.write call_id, seek_action(options), component_id
+          seek_action(options).tap do |action|
+            write_action action
+          end
         end
 
         state_machine :seek_status, :initial => :not_seeking do
@@ -328,7 +312,9 @@ module Punchblock
         #
         def speed_up!
           raise InvalidActionError, "Cannot speed up an Output that is already speeding." unless not_speeding?
-          connection.write call_id, speed_up_action, component_id
+          speed_up_action.tap do |action|
+            write_action action
+          end
         end
 
         ##
@@ -352,7 +338,9 @@ module Punchblock
         #
         def slow_down!
           raise InvalidActionError, "Cannot slow down an Output that is already speeding." unless not_speeding?
-          connection.write call_id, slow_down_action, component_id
+          slow_down_action.tap do |action|
+            write_action action
+          end
         end
 
         state_machine :speed_status, :initial => :not_speeding do
@@ -418,7 +406,9 @@ module Punchblock
         #
         def volume_up!
           raise InvalidActionError, "Cannot volume up an Output that is already voluming." unless not_voluming?
-          connection.write call_id, volume_up_action, component_id
+          volume_up_action.tap do |action|
+            write_action action
+          end
         end
 
         ##
@@ -442,7 +432,9 @@ module Punchblock
         #
         def volume_down!
           raise InvalidActionError, "Cannot volume down an Output that is already voluming." unless not_voluming?
-          connection.write call_id, volume_down_action, component_id
+          volume_down_action.tap do |action|
+            write_action action
+          end
         end
 
         state_machine :volume_status, :initial => :not_voluming do

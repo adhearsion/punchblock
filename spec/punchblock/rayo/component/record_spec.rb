@@ -61,7 +61,7 @@ module Punchblock
 
             describe "when the command is not executing" do
               it "should raise an error" do
-                lambda { command.pause! }.should raise_error(InvalidActionError, "Cannot pause a Record that is not executing.")
+                lambda { command.pause! }.should raise_error(InvalidActionError, "Cannot pause a Record that is not executing")
               end
             end
           end
@@ -148,7 +148,7 @@ module Punchblock
 
             describe "when the command is not executing" do
               it "should raise an error" do
-                lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Record that is not executing.")
+                lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Record that is not executing")
               end
             end
           end

@@ -180,28 +180,6 @@ module Punchblock
             end
           end # Choices
 
-          ##
-          # Creates an Rayo stop message for the current Ask
-          #
-          # @return [Rayo::Message] an Rayo stop message
-          #
-          # @example
-          #    ask_obj.stop_action.to_xml
-          #
-          #    returns:
-          #      <stop xmlns="urn:xmpp:tropo:ask:1"/>
-          def stop_action
-            Stop.new :component_id => component_id, :call_id => call_id
-          end
-
-          ##
-          # Sends an Rayo stop message for the current Ask
-          #
-          def stop!
-            raise InvalidActionError, "Cannot stop an Ask that is not executing." unless executing?
-            connection.write call_id, stop_action, component_id
-          end
-
           class Complete
             class Success < Input::Complete::Success
               register :success, :ask_complete

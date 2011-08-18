@@ -114,7 +114,7 @@ module Punchblock
 
             describe "when the command is not executing" do
               it "should raise an error" do
-                lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop an Input that is not executing.")
+                lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Input that is not executing")
               end
             end
           end

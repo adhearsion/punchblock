@@ -1,12 +1,12 @@
 module Blather
   class Stanza
     ##
-    # @return [Punchblock::Rayo::RayoNode] a child of RayoNode
+    # @return [Punchblock::RayoNode] a child of RayoNode
     #   representing the Rayo command/event contained within the stanza
     #
     def rayo_node
       first_child = children.first
-      Punchblock::Rayo::RayoNode.import first_child, call_id, component_id if first_child
+      Punchblock::RayoNode.import first_child, call_id, component_id if first_child
     end
 
     ##

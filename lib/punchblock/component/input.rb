@@ -254,7 +254,7 @@ module Punchblock
         # @param [String] value the choices available
         def value=(value)
           Nokogiri::XML::Builder.with(self) do |xml|
-            xml.cdata value
+            xml.cdata " #{value} "
           end
         end
 

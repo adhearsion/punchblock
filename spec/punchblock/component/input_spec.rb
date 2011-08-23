@@ -46,7 +46,7 @@ module Punchblock
         describe 'with a simple grammar' do
           subject { Input::Grammar.new :value => '[5 DIGITS]', :content_type => 'application/grammar+custom' }
 
-          let(:expected_message) { "<![CDATA[[5 DIGITS]]]>" }
+          let(:expected_message) { "<![CDATA[ [5 DIGITS] ]]>" }
 
           it "should wrap grammar in CDATA" do
             subject.child.to_xml.should == expected_message.strip
@@ -83,7 +83,7 @@ module Punchblock
             GRXML
           end
 
-          let(:expected_message) { "<![CDATA[#{grxml}]]>" }
+          let(:expected_message) { "<![CDATA[ #{grxml} ]]>" }
 
           it "should wrap GRXML in CDATA" do
             subject.child.to_xml.should == expected_message.strip

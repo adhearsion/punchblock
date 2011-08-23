@@ -254,11 +254,7 @@ module Punchblock
         # @param [String] value the choices available
         def value=(value)
           Nokogiri::XML::Builder.with(self) do |xml|
-            if content_type == 'application/grammar+grxml'
-              xml.cdata value
-            else
-              xml.text value
-            end
+            xml.cdata value
           end
         end
 

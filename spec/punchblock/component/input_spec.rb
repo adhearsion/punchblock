@@ -43,6 +43,16 @@ module Punchblock
           its(:content_type) { should == 'application/grammar+voxeo' }
         end
 
+        describe 'with a simple grammar' do
+          subject { Input::Grammar.new :value => '[5 DIGITS]', :content_type => 'application/grammar+custom' }
+
+          let(:expected_message) { "<![CDATA[[5 DIGITS]]]>" }
+
+          it "should wrap grammar in CDATA" do
+            subject.child.to_xml.should == expected_message.strip
+          end
+        end
+
         describe 'with a GRXML grammar' do
           subject { Input::Grammar.new :value => grxml, :content_type => 'application/grammar+grxml' }
 

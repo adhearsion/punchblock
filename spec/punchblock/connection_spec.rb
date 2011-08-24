@@ -109,11 +109,13 @@ module Punchblock
       describe "event placed on the event queue" do
         before do
           connection.event_queue = []
-          connection.__send__ :handle_presence, example_offer
-          connection.__send__ :handle_presence, example_complete
         end
 
         describe "from an offer" do
+          before do
+            connection.__send__ :handle_presence, example_offer
+          end
+
           subject { connection.event_queue.first }
 
           it { should be_instance_of Event::Offer }
@@ -126,11 +128,35 @@ module Punchblock
         end
 
         describe "from a complete" do
-          subject { connection.event_queue.last }
+          before do
+            connection.__send__ :handle_presence, example_complete
+          end
+
+          subject { connection.event_queue.first }
 
           it { should be_instance_of Event::Complete }
           its(:call_id)     { should == '9f00061' }
           its(:connection)  { should == connection }
+        end
+
+        describe "from something that's not a real event" do
+          let :irrelevant_xml do
+            <<-MSG
+<presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
+  <foo/>
+</presence>
+            MSG
+          end
+
+          let(:example_irrelevant_event) { import_stanza irrelevant_xml }
+
+          before do
+            connection.__send__ :handle_presence, example_irrelevant_event
+          end
+
+          subject { connection.event_queue }
+
+          it { should be_empty }
         end
       end
     end

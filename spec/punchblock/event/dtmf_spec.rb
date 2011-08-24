@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module Punchblock
-  module Event
+  class Event
     describe DTMF do
       it 'registers itself' do
         RayoNode.class_from_registration(:dtmf, 'urn:xmpp:rayo:1').should == DTMF

@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class Offer < RayoNode
+  class Event
+    class Offer < Event
       register :offer, :core
 
       include HasHeaders

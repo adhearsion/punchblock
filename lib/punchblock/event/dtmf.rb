@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class DTMF < RayoNode
+  class Event
+    class DTMF < Event
       register :dtmf, :core
 
       def signal

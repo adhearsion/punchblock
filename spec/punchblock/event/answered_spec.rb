@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module Punchblock
-  module Event
+  class Event
     describe Answered do
       it 'registers itself' do
         RayoNode.class_from_registration(:answered, 'urn:xmpp:rayo:1').should == Answered

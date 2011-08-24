@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class Answered < RayoNode
+  class Event
+    class Answered < Event
       register :answered, :core
     end # End
   end # Event

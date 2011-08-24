@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class Joined < RayoNode
+  class Event
+    class Joined < Event
       register :joined, :core
 
       ##

@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class Ringing < RayoNode
+  class Event
+    class Ringing < Event
       register :ringing, :core
     end # End
   end # Event

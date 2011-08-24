@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class End < RayoNode
+  class Event
+    class End < Event
       register :end, :core
 
       def reason

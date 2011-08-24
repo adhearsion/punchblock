@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class Unjoined < RayoNode
+  class Event
+    class Unjoined < Event
       register :unjoined, :core
 
       ##

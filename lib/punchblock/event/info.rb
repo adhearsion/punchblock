@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class Info < RayoNode
+  class Event
+    class Info < Event
       register :info, :core
 
       def event_name

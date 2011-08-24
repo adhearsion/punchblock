@@ -1,3 +1,8 @@
+module Punchblock
+  class Event < RayoNode
+  end
+end
+
 %w{
   answered
   complete

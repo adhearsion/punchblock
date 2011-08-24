@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module Punchblock
-  module Event
+  class Event
     describe Joined do
       it 'registers itself' do
         RayoNode.class_from_registration(:joined, 'urn:xmpp:rayo:1').should == Joined

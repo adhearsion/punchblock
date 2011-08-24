@@ -1,6 +1,6 @@
 module Punchblock
-  module Event
-    class Complete < RayoNode
+  class Event
+    class Complete < Event
       # TODO: Validate response and return response type.
       # -----
       # <complete xmlns="urn:xmpp:rayo:ext:1"/>

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module Punchblock
-  module Event
+  class Event
     describe Complete do
       it 'registers itself' do
         RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1').should == Complete

@@ -133,6 +133,7 @@ module Punchblock
       @callmap[p.call_id] = p.from.domain
       @logger.debug p.inspect if @logger
       event = p.event
+      return unless event.is_a?(Event)
       event.connection = self
       event.source.add_event event if event.source
       @event_queue.push event

@@ -11,6 +11,10 @@ module Punchblock
     describe ComponentNode do
       its(:events) { should == [] }
 
+      it "should not initially have a complete event set" do
+        subject.complete_event.set_yet?.should == false
+      end
+
       describe "#add_event" do
         let(:event) { Event::Complete.new }
 
@@ -33,7 +37,24 @@ module Punchblock
 
         it "should trigger state transition" do
           subject.expects(:transition_state!).once.with event
-          subject.add_event event
+          add_event
+        end
+
+        describe "with a complete event" do
+          it "should set the complete event resource" do
+            add_event
+            subject.complete_event.set_yet?.should == true
+            subject.complete_event.resource.should == event
+          end
+        end
+
+        describe "with another event" do
+          let(:event) { Event::Answered.new }
+
+          it "should not set the complete event resource" do
+            add_event
+            subject.complete_event.set_yet?.should == false
+          end
         end
       end # #add_event
 

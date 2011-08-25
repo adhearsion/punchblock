@@ -135,8 +135,11 @@ module Punchblock
       event = p.event
       return unless event.is_a?(Event)
       event.connection = self
-      event.source.add_event event if event.source
-      @event_queue.push event
+      if event.source
+        event.source.add_event event
+      else
+        @event_queue.push event
+      end
     end
 
     def handle_iq_result(iq)

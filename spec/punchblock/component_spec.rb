@@ -56,6 +56,23 @@ module Punchblock
             subject.complete_event.set_yet?.should == false
           end
         end
+
+        describe "with an event callback set" do
+          let(:latch) { CountDownLatch.new 1 }
+
+          before do
+            subject.event_callback = lambda { |event| latch.countdown! }
+          end
+
+          it "should trigger the callback" do
+            Thread.new { add_event }
+            latch.wait(2).should == true
+          end
+
+          it "should not write the event to the event queue" do
+            subject.event_queue.should be_empty
+          end
+        end
       end # #add_event
 
       describe "#transition_state!" do

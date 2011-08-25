@@ -38,4 +38,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<mocha>, [">= 0"]
   s.add_development_dependency %q<i18n>, [">= 0"]
+  s.add_development_dependency %q<countdownlatch>, [">= 0"]
 end

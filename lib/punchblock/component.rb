@@ -23,10 +23,9 @@ module Punchblock
         event.original_component = self
         transition_state! event
         if event_callback.respond_to?(:call)
-          event_callback.call event
-        else
-          @event_queue << event
+          add_event_to_queue = event_callback.call event
         end
+        @event_queue << event unless add_event_to_queue
         complete_event.resource = event if event.is_a? Event::Complete
       end
 

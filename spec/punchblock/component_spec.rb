@@ -58,19 +58,30 @@ module Punchblock
         end
 
         describe "with an event callback set" do
-          let(:latch) { CountDownLatch.new 1 }
+          let(:event_callback) { lambda { |event| @foo = :bar } }
 
           before do
-            subject.event_callback = lambda { |event| latch.countdown! }
+            @foo = nil
+            subject.event_callback = event_callback
+            add_event
           end
 
           it "should trigger the callback" do
-            Thread.new { add_event }
-            latch.wait(2).should == true
+            @foo.should == :bar
           end
 
           it "should not write the event to the event queue" do
             subject.event_queue.should be_empty
+          end
+
+          describe "which returns a falsy value" do
+            let(:event_callback) do
+              lambda { |event| false }
+            end
+
+            it "should add the event to the event queue" do
+              subject.event_queue.should_not be_empty
+            end
           end
         end
       end # #add_event

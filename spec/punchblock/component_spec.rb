@@ -9,7 +9,7 @@ require 'spec_helper'
 module Punchblock
   module Component
     describe ComponentNode do
-      its(:events) { should == [] }
+      its(:event_queue) { should be_empty }
 
       it "should not initially have a complete event set" do
         subject.complete_event.set_yet?.should == false
@@ -25,9 +25,9 @@ module Punchblock
 
         let(:add_event) { subject.add_event event }
 
-        it "should add the event to the command's events" do
+        it "should add the event to the component's event queue" do
           add_event
-          subject.events.should == [event]
+          subject.event_queue.pop(false).should == event
         end
 
         it "should set the original event on the command" do

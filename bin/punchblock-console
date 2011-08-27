@@ -7,6 +7,8 @@ require 'pry'
 require 'logger'
 require 'optparse'
 
+include Punchblock
+
 Thread.abort_on_exception = true
 
 options = { :username => 'usera@127.0.0.1', :password => '1', :wire_log_file => 'log/rayo-wire.log', :transport_log_file => 'log/rayo-transport.log', :auto_reconnect => false }
@@ -33,7 +35,7 @@ option_parser = OptionParser.new do |opts|
     exit
   end
   opts.on_tail("-v", "--version", "Show version") do
-    puts Punchblock::VERSION
+    puts VERSION
     exit
   end
 end
@@ -52,7 +54,7 @@ options[:transport_logger] = Logger.new options.delete(:transport_log_file)
 options[:transport_logger].level = Logger::DEBUG
 options[:transport_logger].debug "Starting up..."
 
-protocol = Punchblock::Rayo.new options
+protocol = Connection.new options
 
 protocol_thread = protocol.run
 
@@ -73,14 +75,14 @@ Thread.new do
     end
     puts "#{event.class} event for call: #{event.call_id}"
     case event
-    when protocol.class::Event::Offer
+    when Event::Offer
       raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
       run_call protocol, event
-    when protocol.class::Event::Info
+    when Event::Info
       INFO_EVENT_QUEUE.push event
-    when protocol.class::Event::Answered, protocol.class::Event::Complete, protocol.class::Event::End, protocol.class::Event::Ringing
+    when Event::Answered, Event::Complete, Event::End, Event::Ringing
       CALL_QUEUES[event.call_id].push event
     else
       puts "Unknown event: #{event.inspect}"
@@ -96,7 +98,7 @@ def run_call(protocol, offer)
     raise "Unknown call #{offer.call_id}" unless CALL_QUEUES.has_key?(offer.call_id)
     queue = CALL_QUEUES[offer.call_id]
     call = queue.pop
-    dsl = Punchblock::DSL.new protocol, offer.call_id, queue
+    dsl = DSL.new protocol, offer.call_id, queue
 
     puts "Incoming offer to #{offer.to} from #{offer.headers_hash[:from]} #{offer}"
     dsl.pry

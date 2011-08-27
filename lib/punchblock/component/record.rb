@@ -195,7 +195,7 @@ module Punchblock
         register :resume, :record
       end
 
-      class Recording < RayoNode
+      class Recording < Event
         register :recording, :record_complete
 
         def uri

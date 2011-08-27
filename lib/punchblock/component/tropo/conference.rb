@@ -185,11 +185,11 @@ module Punchblock
           register :music, :conference
         end
 
-        class OnHold < RayoNode
+        class OnHold < Event
           register :'on-hold', :conference
         end
 
-        class OffHold < RayoNode
+        class OffHold < Event
           register :'off-hold', :conference
         end
 

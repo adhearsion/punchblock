@@ -9,7 +9,11 @@ require 'spec_helper'
 module Punchblock
   module Component
     describe ComponentNode do
-      its(:events) { should == [] }
+      its(:event_queue) { should be_empty }
+
+      it "should not initially have a complete event set" do
+        subject.complete_event.set_yet?.should == false
+      end
 
       describe "#add_event" do
         let(:event) { Event::Complete.new }
@@ -21,9 +25,9 @@ module Punchblock
 
         let(:add_event) { subject.add_event event }
 
-        it "should add the event to the command's events" do
+        it "should add the event to the component's event queue" do
           add_event
-          subject.events.should == [event]
+          subject.event_queue.pop(false).should == event
         end
 
         it "should set the original event on the command" do
@@ -33,7 +37,52 @@ module Punchblock
 
         it "should trigger state transition" do
           subject.expects(:transition_state!).once.with event
-          subject.add_event event
+          add_event
+        end
+
+        describe "with a complete event" do
+          it "should set the complete event resource" do
+            add_event
+            subject.complete_event.set_yet?.should == true
+            subject.complete_event.resource.should == event
+          end
+        end
+
+        describe "with another event" do
+          let(:event) { Event::Answered.new }
+
+          it "should not set the complete event resource" do
+            add_event
+            subject.complete_event.set_yet?.should == false
+          end
+        end
+
+        describe "with an event callback set" do
+          let(:event_callback) { lambda { |event| @foo = :bar } }
+
+          before do
+            @foo = nil
+            subject.event_callback = event_callback
+            add_event
+          end
+
+          it "should trigger the callback" do
+            @foo.should == :bar
+          end
+
+          it "should not write the event to the event queue" do
+            subject.event_queue.should be_empty
+          end
+
+          describe "which returns a falsy value" do
+            let(:event_callback) do
+              lambda { |event| false }
+            end
+
+            it "should add the event to the event queue" do
+              subject.event_queue.should_not be_empty
+            end
+          end
         end
       end # #add_event
 

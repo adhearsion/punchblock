@@ -137,6 +137,14 @@ module Punchblock
           self << m
         end
 
+        class Announcement < MediaNode
+          register :announcement, :conference
+        end
+
+        class Music < MediaNode
+          register :music, :conference
+        end
+
         def inspect_attributes # :nodoc:
           [:name, :mute, :terminator, :tone_passthrough, :moderator, :announcement, :music] + super
         end
@@ -175,14 +183,6 @@ module Punchblock
           event :offhold do
             transition [:onhold, :unknown_hold] => :offhold
           end
-        end
-
-        class Announcement < MediaNode
-          register :announcement, :conference
-        end
-
-        class Music < MediaNode
-          register :music, :conference
         end
 
         class OnHold < Event

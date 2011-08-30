@@ -132,7 +132,6 @@ module Punchblock
         # @param [Hash] p
         # @option p [String] :text to read the caller via TTS as the question
         # @option p [String] :voice to use for speech synthesis
-        # @option p [String] :url to an audio file to play as the question
         #
         def prompt=(p)
           remove_children :prompt
@@ -140,8 +139,10 @@ module Punchblock
           self << p
         end
 
-        class Prompt < Say
+        class Prompt < RayoNode
           register :prompt, :ask
+
+          include MediaContainer
         end
 
         ##

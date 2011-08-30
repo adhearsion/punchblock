@@ -3,13 +3,14 @@ module Punchblock
     class Output < ComponentNode
       register :output, :output
 
+      include MediaContainer
+
       ##
       # Creates an Rayo Output command
       #
       # @param [Hash] options
       # @option options [String, Optional] :text to speak back
       # @option options [String, Optional] :voice with which to render TTS
-      # @option options [Audio, Optional] :audio to play
       # @option options [String, Optional] :ssml document to render TTS
       #
       # @return [Command::Output] an Rayo "output" command
@@ -27,10 +28,6 @@ module Punchblock
             new_node.voice = options.delete(:voice) if options[:voice]
             new_node.ssml = options.delete(:ssml) if options[:ssml]
             new_node << options.delete(:text) if options[:text]
-            if audio = options.delete(:audio)
-              audio = Audio.new(audio) unless audio.is_a?(Audio)
-              new_node << audio
-            end
             options.each_pair { |k,v| new_node.send :"#{k}=", v }
           when Nokogiri::XML::Element
             new_node.inherit options
@@ -120,42 +117,6 @@ module Punchblock
       #
       def max_time=(other)
         write_attr :'max-time', other
-      end
-
-      ##
-      # @return [String] the TTS voice to use
-      #
-      def voice
-        read_attr :voice
-      end
-
-      ##
-      # @param [String] voice to use when rendering TTS
-      #
-      def voice=(other)
-        write_attr :voice, other
-      end
-
-      ##
-      # @return [String] the SSML document to render TTS
-      #
-      def ssml
-        content.strip
-      end
-
-      ##
-      # @param [String] ssml the SSML document to render TTS
-      #
-      def ssml=(ssml)
-        if ssml.instance_of?(String)
-          self << RayoNode.new('').parse(ssml) do |config|
-            config.noblanks.strict
-          end
-        end
-      end
-
-      def inspect_attributes # :nodoc:
-        [:voice, :audio, :ssml] + super
       end
 
       state_machine :state do

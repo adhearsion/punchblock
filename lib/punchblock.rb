@@ -5,7 +5,6 @@ require 'future-resource'
 module Punchblock
   extend ActiveSupport::Autoload
 
-  autoload :Audio
   autoload :Command
   autoload :CommandNode
   autoload :Component
@@ -14,6 +13,7 @@ module Punchblock
   autoload :GenericConnection
   autoload :HasHeaders
   autoload :Header
+  autoload :MediaContainer
   autoload :ProtocolError
   autoload :RayoNode
 

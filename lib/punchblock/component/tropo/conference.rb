@@ -138,7 +138,7 @@ module Punchblock
         end
 
         def inspect_attributes # :nodoc:
-          [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
+          [:name, :mute, :terminator, :tone_passthrough, :moderator, :announcement, :music] + super
         end
 
         def transition_state!(event)
@@ -177,11 +177,27 @@ module Punchblock
           end
         end
 
-        class Announcement < Say
+        class MediaNode < RayoNode
+          include MediaContainer
+
+          def self.new(options = {})
+            super().tap do |new_node|
+              case options
+              when Hash
+                new_node << options.delete(:text) if options[:text]
+                options.each_pair { |k,v| new_node.send :"#{k}=", v }
+              when Nokogiri::XML::Element
+                new_node.inherit options
+              end
+            end
+          end
+        end
+
+        class Announcement < MediaNode
           register :announcement, :conference
         end
 
-        class Music < Say
+        class Music < MediaNode
           register :music, :conference
         end
 

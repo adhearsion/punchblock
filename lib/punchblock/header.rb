@@ -40,13 +40,6 @@ module Punchblock
       write_attr :value, value
     end
 
-    # Compare two Header objects by name, and value
-    # @param [Header] o the Header object to compare against
-    # @return [true, false]
-    def eql?(o, *fields)
-      super o, *(fields + [:name, :value])
-    end
-
     def inspect_attributes # :nodoc:
       [:name, :value] + super
     end

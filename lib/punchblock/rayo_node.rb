@@ -70,6 +70,10 @@ module Punchblock
       "#<#{self.class} #{inspect_attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" rescue nil }.compact * ', '}>"
     end
 
+    def eql?(o, *fields)
+      super o, *fields, *inspect_attributes
+    end
+
     ##
     # @return [RayoNode] the original command issued that lead to this event
     #

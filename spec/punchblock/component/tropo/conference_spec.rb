@@ -31,6 +31,15 @@ module Punchblock
         its(:mute_status_name) { should == :unknown_mute }
         its(:hold_status_name) { should == :unknown_hold }
 
+        describe "#==" do
+          subject { Conference.new :name => 'the-conference' }
+          let(:conference2) { Conference.new :name => 'the-conference' }
+          let(:conference3) { Conference.new :name => 'other-conference' }
+
+          it { should == conference2 }
+          it { should_not == conference3 }
+        end
+
         describe "#transition_state!" do
           describe "with an on-hold" do
             it "should call #onhold!" do

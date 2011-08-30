@@ -138,7 +138,7 @@ module Punchblock
         end
 
         def inspect_attributes # :nodoc:
-          [:name, :beep, :mute, :terminator, :tone_passthrough, :moderator, :announcement] + super
+          [:name, :mute, :terminator, :tone_passthrough, :moderator, :announcement, :music] + super
         end
 
         def transition_state!(event)

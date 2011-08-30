@@ -139,10 +139,8 @@ module Punchblock
           self << p
         end
 
-        class Prompt < RayoNode
+        class Prompt < MediaNode
           register :prompt, :ask
-
-          include MediaContainer
         end
 
         ##

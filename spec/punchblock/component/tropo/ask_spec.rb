@@ -11,7 +11,7 @@ module Punchblock
         describe "when setting options in initializer" do
           subject do
             Ask.new :choices        => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'},
-                    :prompt         => {:text => 'Please enter your postal code.', :voice => 'kate', :url => "http://it.doesnt.matter.does.it/?"},
+                    :prompt         => {:text => 'Please enter your postal code.', :voice => 'kate'},
                     :bargein        => true,
                     :min_confidence => 0.3,
                     :mode           => :speech,
@@ -22,7 +22,7 @@ module Punchblock
 
 
           its(:choices)         { should == Ask::Choices.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
-          its(:prompt)          { should == Ask::Prompt.new(:voice => 'kate', :text => 'Please enter your postal code.', :url => "http://it.doesnt.matter.does.it/?") }
+          its(:prompt)          { should == Ask::Prompt.new(:voice => 'kate', :text => 'Please enter your postal code.') }
           its(:bargein)         { should == true }
           its(:min_confidence)  { should == 0.3 }
           its(:mode)            { should == :speech }

@@ -27,12 +27,6 @@ module Punchblock
         its(:voice)            { should == 'allison' }
       end
 
-      describe "for audio" do
-        subject { Output.new :audio => {:url => 'http://whatever.you-output-boss.com'} }
-
-        it { RayoNode.import(subject.children.first).should == Audio.new(:url => 'http://whatever.you-output-boss.com') }
-      end
-
       describe "for text" do
         subject { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
 

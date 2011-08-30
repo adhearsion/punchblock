@@ -9,7 +9,6 @@ module Punchblock
       # @param [Hash] options
       # @option options [String, Optional] :text to speak back
       # @option options [String, Optional] :voice with which to render TTS
-      # @option options [Audio, Optional] :audio to play
       # @option options [String, Optional] :ssml document to render TTS
       #
       # @return [Command::Record] an Rayo "record" command

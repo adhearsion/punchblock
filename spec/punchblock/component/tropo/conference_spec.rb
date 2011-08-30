@@ -15,8 +15,8 @@ module Punchblock
                            :moderator         => true,
                            :tone_passthrough  => true,
                            :mute              => false,
-                           :announcement      => {:text => "Welcome to Rayo", :url => "http://it.doesnt.matter.does.it/?", :voice => 'shelly'},
-                           :music             => {:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :url => "http://www.yanni.com/music/awesome.mp3", :voice => 'frank'}
+                           :announcement      => {:text => "Welcome to Rayo", :voice => 'shelly'},
+                           :music             => {:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :voice => 'frank'}
           end
 
           its(:name)              { should == '1234' }
@@ -24,8 +24,8 @@ module Punchblock
           its(:terminator)        { should == '#' }
           its(:tone_passthrough)  { should == true }
           its(:moderator)         { should == true }
-          its(:announcement)      { should == Conference::Announcement.new(:text => "Welcome to Rayo", :url => "http://it.doesnt.matter.does.it/?", :voice => 'shelly') }
-          its(:music)             { should == Conference::Music.new(:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :url => "http://www.yanni.com/music/awesome.mp3", :voice => 'frank') }
+          its(:announcement)      { should == Conference::Announcement.new(:text => "Welcome to Rayo", :voice => 'shelly') }
+          its(:music)             { should == Conference::Music.new(:text => "The moderator how not yet joined.. Listen to this awesome music while you wait.", :voice => 'frank') }
         end
 
         its(:mute_status_name) { should == :unknown_mute }

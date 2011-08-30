@@ -38,8 +38,15 @@ module Punchblock
         subject { Output.new :ssml => '<output-as interpret-as="ordinal">100</output-as>', :voice => 'kate' }
 
         its(:voice) { should == 'kate' }
-        it "should have the correct content" do
-          subject.child.to_s.should == '<output-as interpret-as="ordinal">100</output-as>'
+
+        its(:ssml) { should == '<output-as interpret-as="ordinal">100</output-as>' }
+
+        describe "comparison" do
+          let(:output2) { Output.new :ssml => '<output-as interpret-as="ordinal">100</output-as>', :voice => 'kate'  }
+          let(:output3) { Output.new :ssml => '<output-as interpret-as="number">100</output-as>', :voice => 'kate'  }
+
+          it { should == output2 }
+          it { should_not == output3 }
         end
       end
 

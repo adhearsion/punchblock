@@ -18,7 +18,7 @@ module Punchblock
     # @return [String] the SSML document to render TTS
     #
     def ssml
-      content.strip
+      children.to_xml
     end
 
     ##

@@ -71,7 +71,7 @@ module Punchblock
     end
 
     def eql?(o, *fields)
-      super o, *fields, *inspect_attributes
+      super o, *(fields + inspect_attributes)
     end
 
     ##

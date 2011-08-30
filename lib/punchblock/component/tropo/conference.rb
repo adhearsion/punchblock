@@ -193,6 +193,22 @@ module Punchblock
           register :'off-hold', :conference
         end
 
+        module ActiveSpeaker
+          def speaking_call_id
+            read_attr :'call-id'
+          end
+        end
+
+        class Speaking < Event
+          register :speaking, :conference
+          include ActiveSpeaker
+        end
+
+        class FinishedSpeaking < Event
+          register :'finished-speaking', :conference
+          include ActiveSpeaker
+        end
+
         class Complete
           class Kick < Event::Complete::Reason
             register :kick, :conference_complete

@@ -277,6 +277,42 @@ module Punchblock
           end
         end
 
+        describe Conference::Speaking do
+          it 'registers itself' do
+            RayoNode.class_from_registration(:speaking, 'urn:xmpp:tropo:conference:1').should == Conference::Speaking
+          end
+
+          describe "from a stanza" do
+            let(:stanza) { "<speaking xmlns='urn:xmpp:tropo:conference:1' call-id='abc123'/>" }
+
+            subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+            it { should be_instance_of Conference::Speaking }
+
+            it_should_behave_like 'event'
+
+            its(:speaking_call_id) { should == 'abc123' }
+          end
+        end
+
+        describe Conference::FinishedSpeaking do
+          it 'registers itself' do
+            RayoNode.class_from_registration(:'finished-speaking', 'urn:xmpp:tropo:conference:1').should == Conference::FinishedSpeaking
+          end
+
+          describe "from a stanza" do
+            let(:stanza) { "<finished-speaking xmlns='urn:xmpp:tropo:conference:1' call-id='abc123'/>" }
+
+            subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+            it { should be_instance_of Conference::FinishedSpeaking }
+
+            it_should_behave_like 'event'
+
+            its(:speaking_call_id) { should == 'abc123' }
+          end
+        end
+
         describe Conference::Complete::Kick do
           let :stanza do
             <<-MESSAGE

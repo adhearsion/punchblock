@@ -88,14 +88,6 @@ module Punchblock
     def connect
       Thread.new do
         begin
-          trap(:INT) do
-            @reconnect_attempts = nil
-            EM.stop
-          end
-          trap(:TERM) do
-            @reconnect_attempts = nil
-            EM.stop
-          end
           EM.run { client.run }
         rescue Blather::SASLError, Blather::StreamError => e
           raise ProtocolError.new(e.class.to_s, e.message)
@@ -104,6 +96,11 @@ module Punchblock
           puts e.backtrace.join("\t\n")
         end
       end
+    end
+
+    def stop
+      @reconnect_attempts = nil
+      client.close
     end
 
     def connected?

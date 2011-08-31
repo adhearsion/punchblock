@@ -56,6 +56,13 @@ options[:transport_logger].debug "Starting up..."
 
 protocol = Connection.new options
 
+[:INT, :TERM].each do |signal|
+  trap signal do
+    puts "Shutting down!"
+    protocol.stop
+  end
+end
+
 protocol_thread = protocol.run
 
 CALL_QUEUES = {}

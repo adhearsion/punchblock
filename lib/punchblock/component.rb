@@ -66,16 +66,7 @@ module Punchblock
       end
     end
 
-    class Action < CommandNode # :nodoc:
-      def self.new(options = {})
-        super().tap do |new_node|
-          new_node.component_id = options[:component_id]
-          new_node.call_id = options[:call_id]
-        end
-      end
-    end # Action
-
-    class Stop < Action # :nodoc:
+    class Stop < CommandNode # :nodoc:
       register :stop, :core
     end
   end # Component

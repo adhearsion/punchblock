@@ -5,6 +5,19 @@ module Punchblock
     describe CommandNode do
       its(:state_name) { should == :new }
 
+      describe "#new" do
+        describe "with a call/component ID" do
+          let(:call_id)       { 'abc123' }
+          let(:component_id)  { 'abc123' }
+          let(:args)          { [{:call_id => call_id, :component_id => component_id}] }
+
+          subject { CommandNode.new *args }
+
+          its(:call_id)       { should == call_id }
+          its(:component_id)  { should == component_id }
+        end
+      end
+
       describe "#request!" do
         before { subject.request! }
 

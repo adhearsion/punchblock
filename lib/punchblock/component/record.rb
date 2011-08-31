@@ -186,11 +186,11 @@ module Punchblock
         end
       end
 
-      class Pause < Action # :nodoc:
+      class Pause < CommandNode # :nodoc:
         register :pause, :record
       end
 
-      class Resume < Action # :nodoc:
+      class Resume < CommandNode # :nodoc:
         register :resume, :record
       end
 

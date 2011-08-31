@@ -309,11 +309,11 @@ module Punchblock
         end
 
         class Mute < Action # :nodoc:
-          register :mute, :conference
+          register :mute, :core
         end
 
         class Unmute < Action # :nodoc:
-          register :unmute, :conference
+          register :unmute, :core
         end
 
         class Kick < Action # :nodoc:

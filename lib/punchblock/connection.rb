@@ -130,7 +130,6 @@ module Punchblock
       @callmap[p.call_id] = p.from.domain
       @logger.debug p.inspect if @logger
       event = p.event
-      return unless event.is_a?(Event)
       event.connection = self
       if event.source
         event.source.add_event event
@@ -191,7 +190,9 @@ module Punchblock
       end
 
       # Read/handle presence requests. This is how we get events.
-      presence { |msg| handle_presence msg }
+      presence :rayo_event? do |msg|
+        handle_presence msg
+      end
     end
 
     def ping_rayo

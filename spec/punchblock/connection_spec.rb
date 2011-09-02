@@ -149,7 +149,7 @@ module Punchblock
           let(:example_irrelevant_event) { import_stanza irrelevant_xml }
 
           before do
-            connection.__send__ :handle_presence, example_irrelevant_event
+            lambda { connection.__send__ :handle_presence, example_irrelevant_event }.should throw_symbol(:pass)
           end
 
           subject { connection.event_queue }

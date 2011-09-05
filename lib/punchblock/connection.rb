@@ -141,9 +141,10 @@ module Punchblock
 
     def handle_iq_result(iq)
       # FIXME: Do we need to raise a warning if the domain changes?
+      throw :pass unless command = @iq_id_to_command[iq.id]
       @callmap[iq.from.node] = iq.from.domain
       @logger.debug "Command #{iq.id} completed successfully" if @logger
-      @iq_id_to_command[iq.id].response = iq
+      command.response = iq
     end
 
     def handle_error(iq)
@@ -151,12 +152,9 @@ module Punchblock
 
       protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.component_id
 
-      if command = @iq_id_to_command[iq.id]
-        command.response = protocol_error
-      else
-        # Un-associated transport error??
-        raise protocol_error
-      end
+      throw :pass unless command = @iq_id_to_command[iq.id]
+
+      command.response = protocol_error
     end
 
     def register_handlers

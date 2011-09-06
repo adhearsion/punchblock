@@ -19,6 +19,7 @@ module Punchblock
     # @option options [Logger] :wire_logger to which all XMPP transactions will be logged
     # @option options [Boolean, Optional] :auto_reconnect whether or not to auto reconnect
     # @option options [Numeric, Optional] :write_timeout for which to wait on a command response
+    # @option options [Numeric, nil, Optional] :ping_period interval in seconds on which to ping the server. Nil or false to disable
     #
     def initialize(options = {})
       super
@@ -37,6 +38,8 @@ module Punchblock
       @reconnect_attempts = 0
 
       @write_timeout = options[:write_timeout] || 3
+
+      @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
       Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
     end
@@ -163,7 +166,7 @@ module Punchblock
         @event_queue.push connected
         @logger.info "Connected to XMPP as #{@username}" if @logger
         @reconnect_attempts = 0
-        @rayo_ping = EM::PeriodicTimer.new(60) { ping_rayo }
+        @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
       end
 
       disconnected do

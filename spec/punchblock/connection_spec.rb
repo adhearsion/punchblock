@@ -160,10 +160,12 @@ module Punchblock
     end
 
     describe "#handle_error" do
+      let(:call_id)       { "f6d437f4-1e18-457b-99f8-b5d853f50347" }
+      let(:component_id)  { 'abc123' }
       let :error_xml do
         <<-MSG
 <iq type="error" id="blather000e" from="f6d437f4-1e18-457b-99f8-b5d853f50347@10.0.1.11/abc123" to="usera@10.0.1.11/voxeo">
-  <hangup xmlns="urn:xmpp:rayo:1"/>
+  <output xmlns="urn:xmpp:rayo:output:1"/>
   <error type="cancel">
     <item-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
     <text xmlns="urn:ietf:params:xml:ns:xmpp-stanzas" lang="en">Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]</text>
@@ -173,29 +175,20 @@ module Punchblock
       end
 
       let(:example_error) { import_stanza error_xml }
+      let(:cmd) { Component::Output.new }
 
-      let :receive_error do
-        lambda { connection.__send__ :handle_error, example_error }
+      before(:all) do
+        cmd.request!
+        connection.instance_variable_get(:'@iq_id_to_command')['blather000e'] = cmd
+        connection.__send__ :handle_error, example_error
       end
 
-      let :raised_exception do
-        begin
-          receive_error.call
-        rescue => e
-          e
-        end
-      end
+      subject { cmd.response }
 
-      it "should raise a ProtocolError" do
-        receive_error.should raise_error ProtocolError
-      end
-
-      subject { raised_exception }
-
-      its(:call_id)     { should == 'f6d437f4-1e18-457b-99f8-b5d853f50347' }
-      its(:component_id)  { should == 'abc123' }
-      its(:name)        { should == :item_not_found }
-      its(:text)        { should == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
+      its(:call_id)       { should == call_id }
+      its(:component_id)  { should == component_id }
+      its(:name)          { should == :item_not_found }
+      its(:text)          { should == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
     end
   end # describe Connection
 end # Punchblock

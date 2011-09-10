@@ -34,7 +34,7 @@ module Punchblock
       end
 
       def write_action(action)
-        connection.write call_id, action, component_id
+        connection.async_write call_id, action, component_id
       end
 
       def response=(other)

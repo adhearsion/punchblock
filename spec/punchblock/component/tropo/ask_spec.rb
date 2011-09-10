@@ -34,7 +34,7 @@ module Punchblock
         describe Ask::Choices do
           describe "when not passing a grammar" do
             subject { Ask::Choices.new :value => '[5 DIGITS]' }
-            its(:content_type) { should == 'application/grammar+voxeo' }
+            its(:content_type) { should == 'application/grammar+grxml' }
           end
 
           describe 'with a simple grammar' do

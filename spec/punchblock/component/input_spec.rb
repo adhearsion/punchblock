@@ -40,7 +40,7 @@ module Punchblock
       describe Input::Grammar do
         describe "when not passing a grammar" do
           subject { Input::Grammar.new :value => '[5 DIGITS]' }
-          its(:content_type) { should == 'application/grammar+voxeo' }
+          its(:content_type) { should == 'application/grammar+grxml' }
         end
 
         describe 'with a simple grammar' do

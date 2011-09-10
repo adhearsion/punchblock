@@ -89,15 +89,10 @@ module Punchblock
     end
 
     def connect
-      Thread.new do
-        begin
-          EM.run { client.run }
-        rescue Blather::SASLError, Blather::StreamError => e
-          raise ProtocolError.new(e.class.to_s, e.message)
-        rescue => e
-          puts "Exception in XMPP thread! #{e}"
-          puts e.backtrace.join("\t\n")
-        end
+      begin
+        EM.run { client.run }
+      rescue Blather::SASLError, Blather::StreamError => e
+        raise ProtocolError.new(e.class.to_s, e.message)
       end
     end
 

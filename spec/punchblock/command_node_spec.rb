@@ -68,6 +68,12 @@ module Punchblock
           subject.expects(:execute!).once
           subject.response = :foo
         end
+
+        it "should be a no-op if the response has already been set" do
+          subject.expects(:execute!).once
+          subject.response = :foo
+          lambda { subject.response = :bar }.should_not raise_error
+        end
       end
     end # CommandNode
   end # Command

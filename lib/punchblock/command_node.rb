@@ -38,6 +38,7 @@ module Punchblock
     end
 
     def response=(other)
+      return if @response.set_yet?
       @response.resource = other
       execute!
     end

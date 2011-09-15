@@ -237,7 +237,7 @@ module Punchblock
         #      <mute xmlns="urn:xmpp:tropo:conference:1"/>
         #
         def mute_action
-          Mute.new :component_id => component_id, :call_id => call_id
+          Command::Mute.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -263,7 +263,7 @@ module Punchblock
         #      <unmute xmlns="urn:xmpp:tropo:conference:1"/>
         #
         def unmute_action
-          Unmute.new :component_id => component_id, :call_id => call_id
+          Command::Unmute.new :component_id => component_id, :call_id => call_id
         end
 
         ##
@@ -308,15 +308,7 @@ module Punchblock
           end
         end
 
-        class Mute < Action # :nodoc:
-          register :mute, :conference
-        end
-
-        class Unmute < Action # :nodoc:
-          register :unmute, :conference
-        end
-
-        class Kick < Action # :nodoc:
+        class Kick < CommandNode # :nodoc:
           register :kick, :conference
 
           def self.new(options = {})

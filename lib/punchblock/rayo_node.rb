@@ -1,11 +1,11 @@
-require 'active_support/core_ext/class/inheritable_attributes'
+require 'active_support/core_ext/class/attribute'
 require 'niceogiri'
 
 module Punchblock
   class RayoNode < Niceogiri::XML::Node
     @@registrations = {}
 
-    class_inheritable_accessor :registered_ns, :registered_name
+    class_attribute :registered_ns, :registered_name
 
     attr_accessor :call_id, :component_id, :connection, :original_component
 

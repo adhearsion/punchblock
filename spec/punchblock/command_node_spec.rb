@@ -5,6 +5,19 @@ module Punchblock
     describe CommandNode do
       its(:state_name) { should == :new }
 
+      describe "#new" do
+        describe "with a call/component ID" do
+          let(:call_id)       { 'abc123' }
+          let(:component_id)  { 'abc123' }
+          let(:args)          { [{:call_id => call_id, :component_id => component_id}] }
+
+          subject { CommandNode.new *args }
+
+          its(:call_id)       { should == call_id }
+          its(:component_id)  { should == component_id }
+        end
+      end
+
       describe "#request!" do
         before { subject.request! }
 
@@ -54,6 +67,12 @@ module Punchblock
         it "should set the command to executing status" do
           subject.expects(:execute!).once
           subject.response = :foo
+        end
+
+        it "should be a no-op if the response has already been set" do
+          subject.expects(:execute!).once
+          subject.response = :foo
+          lambda { subject.response = :bar }.should_not raise_error
         end
       end
     end # CommandNode

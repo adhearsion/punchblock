@@ -107,7 +107,7 @@ module Punchblock
           describe '#mute_action' do
             subject { conference.mute_action }
 
-            its(:to_xml) { should == '<mute xmlns="urn:xmpp:tropo:conference:1"/>' }
+            it { should be_a Command::Mute }
             its(:component_id) { should == 'abc123' }
             its(:call_id) { should == '123abc' }
           end
@@ -152,7 +152,7 @@ module Punchblock
           describe '#unmute_action' do
             subject { conference.unmute_action }
 
-            its(:to_xml) { should == '<unmute xmlns="urn:xmpp:tropo:conference:1"/>' }
+            it { should be_a Command::Unmute }
             its(:component_id) { should == 'abc123' }
             its(:call_id) { should == '123abc' }
           end

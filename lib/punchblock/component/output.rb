@@ -178,11 +178,11 @@ module Punchblock
         end
       end
 
-      class Pause < Action # :nodoc:
+      class Pause < CommandNode # :nodoc:
         register :pause, :output
       end
 
-      class Resume < Action # :nodoc:
+      class Resume < CommandNode # :nodoc:
         register :resume, :output
       end
 
@@ -222,7 +222,7 @@ module Punchblock
         end
       end
 
-      class Seek < Action # :nodoc:
+      class Seek < CommandNode # :nodoc:
         register :seek, :output
 
         def self.new(options = {})
@@ -317,7 +317,7 @@ module Punchblock
         end
       end
 
-      class SpeedUp < Action # :nodoc:
+      class SpeedUp < CommandNode # :nodoc:
         register :'speed-up', :output
 
         def request!
@@ -331,7 +331,7 @@ module Punchblock
         end
       end
 
-      class SlowDown < Action # :nodoc:
+      class SlowDown < CommandNode # :nodoc:
         register :'speed-down', :output
 
         def request!
@@ -411,7 +411,7 @@ module Punchblock
         end
       end
 
-      class VolumeUp < Action # :nodoc:
+      class VolumeUp < CommandNode # :nodoc:
         register :'volume-up', :output
 
         def request!
@@ -425,7 +425,7 @@ module Punchblock
         end
       end
 
-      class VolumeDown < Action # :nodoc:
+      class VolumeDown < CommandNode # :nodoc:
         register :'volume-down', :output
 
         def request!

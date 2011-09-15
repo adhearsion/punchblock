@@ -19,6 +19,7 @@ module Punchblock
     # @option options [Logger] :wire_logger to which all XMPP transactions will be logged
     # @option options [Boolean, Optional] :auto_reconnect whether or not to auto reconnect
     # @option options [Numeric, Optional] :write_timeout for which to wait on a command response
+    # @option options [Numeric, nil, Optional] :ping_period interval in seconds on which to ping the server. Nil or false to disable
     #
     def initialize(options = {})
       super
@@ -37,6 +38,8 @@ module Punchblock
       @reconnect_attempts = 0
 
       @write_timeout = options[:write_timeout] || 3
+
+      @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
       Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
     end
@@ -86,24 +89,16 @@ module Punchblock
     end
 
     def connect
-      Thread.new do
-        begin
-          trap(:INT) do
-            @reconnect_attempts = nil
-            EM.stop
-          end
-          trap(:TERM) do
-            @reconnect_attempts = nil
-            EM.stop
-          end
-          EM.run { client.run }
-        rescue Blather::SASLError, Blather::StreamError => e
-          raise ProtocolError.new(e.class.to_s, e.message)
-        rescue => e
-          puts "Exception in XMPP thread! #{e}"
-          puts e.backtrace.join("\t\n")
-        end
+      begin
+        EM.run { client.run }
+      rescue Blather::SASLError, Blather::StreamError => e
+        raise ProtocolError.new(e.class.to_s, e.message)
       end
+    end
+
+    def stop
+      @reconnect_attempts = nil
+      client.close
     end
 
     def connected?
@@ -129,11 +124,11 @@ module Punchblock
     private
 
     def handle_presence(p)
+      throw :pass unless p.rayo_event?
       @logger.info "Receiving event for call ID #{p.call_id}" if @logger
       @callmap[p.call_id] = p.from.domain
       @logger.debug p.inspect if @logger
       event = p.event
-      return unless event.is_a?(Event)
       event.connection = self
       if event.source
         event.source.add_event event
@@ -144,9 +139,10 @@ module Punchblock
 
     def handle_iq_result(iq)
       # FIXME: Do we need to raise a warning if the domain changes?
+      throw :pass unless command = @iq_id_to_command[iq.id]
       @callmap[iq.from.node] = iq.from.domain
       @logger.debug "Command #{iq.id} completed successfully" if @logger
-      @iq_id_to_command[iq.id].response = iq
+      command.response = iq
     end
 
     def handle_error(iq)
@@ -154,12 +150,9 @@ module Punchblock
 
       protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.component_id
 
-      if command = @iq_id_to_command[iq.id]
-        command.response = protocol_error
-      else
-        # Un-associated transport error??
-        raise protocol_error
-      end
+      throw :pass unless command = @iq_id_to_command[iq.id]
+
+      command.response = protocol_error
     end
 
     def register_handlers
@@ -168,7 +161,7 @@ module Punchblock
         @event_queue.push connected
         @logger.info "Connected to XMPP as #{@username}" if @logger
         @reconnect_attempts = 0
-        @rayo_ping = EM::PeriodicTimer.new(60) { ping_rayo }
+        @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
       end
 
       disconnected do
@@ -194,7 +187,9 @@ module Punchblock
       end
 
       # Read/handle presence requests. This is how we get events.
-      presence { |msg| handle_presence msg }
+      presence do |msg|
+        handle_presence msg
+      end
     end
 
     def ping_rayo

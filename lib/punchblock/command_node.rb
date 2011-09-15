@@ -2,6 +2,13 @@ require 'state_machine'
 
 module Punchblock
   class CommandNode < RayoNode
+    def self.new(options = {})
+      super().tap do |new_node|
+        new_node.call_id = options[:call_id]
+        new_node.component_id = options[:component_id]
+      end
+    end
+
     def initialize(*args)
       super
       @response = FutureResource.new
@@ -31,6 +38,7 @@ module Punchblock
     end
 
     def response=(other)
+      return if @response.set_yet?
       @response.resource = other
       execute!
     end

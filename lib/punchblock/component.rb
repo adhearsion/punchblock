@@ -22,11 +22,11 @@ module Punchblock
       def add_event(event)
         event.original_component = self
         transition_state! event
+        complete_event.resource = event if event.is_a? Event::Complete
         if event_callback.respond_to?(:call)
           add_event_to_queue = event_callback.call event
         end
         @event_queue << event unless add_event_to_queue
-        complete_event.resource = event if event.is_a? Event::Complete
       end
 
       def transition_state!(event)
@@ -66,16 +66,7 @@ module Punchblock
       end
     end
 
-    class Action < CommandNode # :nodoc:
-      def self.new(options = {})
-        super().tap do |new_node|
-          new_node.component_id = options[:component_id]
-          new_node.call_id = options[:call_id]
-        end
-      end
-    end # Action
-
-    class Stop < Action # :nodoc:
+    class Stop < CommandNode # :nodoc:
       register :stop, :core
     end
   end # Component

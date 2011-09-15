@@ -241,7 +241,7 @@ module Punchblock
         # @param [String] content_type Defaults to the Voxeo Simple Grammar
         #
         def content_type=(content_type)
-          write_attr 'content-type', content_type || 'application/grammar+voxeo'
+          write_attr 'content-type', content_type || 'application/grammar+grxml'
         end
 
         ##

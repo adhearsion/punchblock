@@ -40,21 +40,21 @@ module Punchblock
           it { should_not == conference3 }
         end
 
-        describe "#transition_state!" do
+        describe "#add_event" do
           describe "with an on-hold" do
             it "should call #onhold!" do
               subject.expects(:onhold!).once
-              subject.transition_state! Conference::OnHold.new
+              subject.add_event Conference::OnHold.new
             end
           end
 
           describe "with an off-hold" do
             it "should call #offhold!" do
               subject.expects(:offhold!).once
-              subject.transition_state! Conference::OffHold.new
+              subject.add_event Conference::OffHold.new
             end
           end
-        end # #transition_state!
+        end
 
         describe "#requested" do
           context "when requesting to be muted" do

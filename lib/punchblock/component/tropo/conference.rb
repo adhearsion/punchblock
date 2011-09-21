@@ -149,13 +149,15 @@ module Punchblock
           [:name, :mute, :terminator, :tone_passthrough, :moderator, :announcement, :music] + super
         end
 
-        def transition_state!(event)
-          super
-          case event
-          when OnHold
+        def register_initial_handlers
+          register_event_handler OnHold do |event|
             onhold!
-          when OffHold
+            throw :pass
+          end
+
+          register_event_handler OffHold do |event|
             offhold!
+            throw :pass
           end
         end
 

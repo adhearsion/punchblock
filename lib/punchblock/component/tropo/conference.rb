@@ -28,6 +28,7 @@ module Punchblock
             options.each_pair do |k,v|
               new_node.send :"#{k}=", v
             end
+            new_node.register_hold_status_handlers
           end
         end
 
@@ -149,7 +150,7 @@ module Punchblock
           [:name, :mute, :terminator, :tone_passthrough, :moderator, :announcement, :music] + super
         end
 
-        def register_initial_handlers
+        def register_hold_status_handlers
           register_event_handler OnHold do |event|
             onhold!
             throw :pass

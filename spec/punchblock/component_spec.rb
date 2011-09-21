@@ -23,14 +23,9 @@ module Punchblock
 
         let(:add_event) { subject.add_event event }
 
-        it "should set the original coponent on the event" do
+        it "should set the original component on the event" do
           add_event
           event.original_component.should == subject
-        end
-
-        it "should trigger state transition" do
-          subject.expects(:transition_state!).once.with event
-          add_event
         end
 
         describe "with a complete event" do
@@ -38,6 +33,11 @@ module Punchblock
             add_event
             subject.complete_event.set_yet?.should == true
             subject.complete_event.resource.should == event
+          end
+
+          it "should call #complete!" do
+            subject.expects(:complete!).once
+            add_event
           end
         end
 
@@ -63,15 +63,6 @@ module Punchblock
           end
         end
       end # #add_event
-
-      describe "#transition_state!" do
-        describe "with a complete" do
-          it "should call #complete!" do
-            subject.expects(:complete!).once
-            subject.transition_state! Event::Complete.new
-          end
-        end
-      end # #transition_state!
 
       describe "#response=" do
         before do

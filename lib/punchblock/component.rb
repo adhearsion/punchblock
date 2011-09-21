@@ -22,6 +22,7 @@ module Punchblock
 
       def register_initial_handlers
         register_event_handler Event::Complete do |event|
+          complete!
           complete_event.resource = event
           throw :pass
         end
@@ -29,16 +30,11 @@ module Punchblock
 
       def add_event(event)
         event.original_component = self
-        transition_state! event
         trigger_handler :event, event
       end
 
       def register_event_handler(*guards, &block)
         register_handler :event, *guards, &block
-      end
-
-      def transition_state!(event)
-        complete! if event.is_a? Event::Complete
       end
 
       def write_action(action)

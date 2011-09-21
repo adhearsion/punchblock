@@ -17,12 +17,19 @@ module Punchblock
       def initialize(*args)
         super
         @complete_event = FutureResource.new
+        register_initial_handlers
+      end
+
+      def register_initial_handlers
+        register_event_handler Event::Complete do |event|
+          complete_event.resource = event
+          throw :pass
+        end
       end
 
       def add_event(event)
         event.original_component = self
         transition_state! event
-        complete_event.resource = event if event.is_a? Event::Complete
         trigger_handler :event, event
       end
 

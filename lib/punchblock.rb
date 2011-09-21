@@ -1,6 +1,9 @@
-require 'active_support/dependencies/autoload'
-require 'active_support/core_ext/object/blank'
-require 'future-resource'
+%w{
+  active_support/dependencies/autoload
+  active_support/core_ext/object/blank
+  future-resource
+  has_guarded_handlers
+}.each { |l| require l }
 
 module Punchblock
   extend ActiveSupport::Autoload

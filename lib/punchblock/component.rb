@@ -10,23 +10,24 @@ module Punchblock
     InvalidActionError = Class.new StandardError
 
     class ComponentNode < CommandNode
-      attr_accessor :event_queue, :complete_event, :event_callback
+      include HasGuardedHandlers
+
+      attr_accessor :complete_event
 
       def initialize(*args)
         super
-        @event_queue    = Queue.new
         @complete_event = FutureResource.new
-        @event_callback = nil
       end
 
       def add_event(event)
         event.original_component = self
         transition_state! event
         complete_event.resource = event if event.is_a? Event::Complete
-        if event_callback.respond_to?(:call)
-          add_event_to_queue = event_callback.call event
-        end
-        @event_queue << event unless add_event_to_queue
+        trigger_handler :event, event
+      end
+
+      def register_event_handler(*guards, &block)
+        register_handler :event, *guards, &block
       end
 
       def transition_state!(event)

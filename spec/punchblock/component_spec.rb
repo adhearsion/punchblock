@@ -9,8 +9,6 @@ require 'spec_helper'
 module Punchblock
   module Component
     describe ComponentNode do
-      its(:event_queue) { should be_empty }
-
       it "should not initially have a complete event set" do
         subject.complete_event.set_yet?.should == false
       end
@@ -25,12 +23,7 @@ module Punchblock
 
         let(:add_event) { subject.add_event event }
 
-        it "should add the event to the component's event queue" do
-          add_event
-          subject.event_queue.pop(false).should == event
-        end
-
-        it "should set the original event on the command" do
+        it "should set the original coponent on the event" do
           add_event
           event.original_component.should == subject
         end
@@ -57,31 +50,16 @@ module Punchblock
           end
         end
 
-        describe "with an event callback set" do
-          let(:event_callback) { lambda { |event| @foo = :bar } }
+        describe "with an event handler set" do
+          let(:handler) { mock 'Response' }
 
           before do
-            @foo = nil
-            subject.event_callback = event_callback
-            add_event
+            handler.expects(:call).once.with(event)
+            subject.register_event_handler { |event| handler.call event }
           end
 
           it "should trigger the callback" do
-            @foo.should == :bar
-          end
-
-          it "should not write the event to the event queue" do
-            subject.event_queue.should be_empty
-          end
-
-          describe "which returns a falsy value" do
-            let(:event_callback) do
-              lambda { |event| false }
-            end
-
-            it "should add the event to the event queue" do
-              subject.event_queue.should_not be_empty
-            end
+            add_event
           end
         end
       end # #add_event

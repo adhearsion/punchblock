@@ -69,7 +69,7 @@ module Punchblock
       MSG
 
       connection.__send__ :handle_presence, example_complete
-      say.event_queue.pop(false).source.should == say
+      say.complete_event.resource.source.should == say
 
       say.component_id.should == 'fgh4590'
     end

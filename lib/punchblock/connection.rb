@@ -27,7 +27,7 @@ module Punchblock
       blather_keys = [:username, :password, :host, :port, :certs]
       blather_options = options.select { |key, value| blather_keys.include? key }
       options.reject! { |key, value| blather_keys.include? key }
-      raise ArgumentError unless @username = blather_options[:username] && blather_options[:password]
+      raise ArgumentError unless (@username = blather_options[:username]) && blather_options[:password]
 
       setup *blather_options.values
 

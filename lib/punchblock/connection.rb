@@ -23,11 +23,15 @@ module Punchblock
     #
     def initialize(options = {})
       super
-      raise ArgumentError unless @username = options.delete(:username)
-      raise ArgumentError unless options.has_key? :password
-      @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain
 
-      setup @username, options.delete(:password)
+      blather_keys = [:username, :password, :host, :port, :certs]
+      blather_options = options.select { |key, value| blather_keys.include? key }
+      options.reject! { |key, value| blather_keys.include? key }
+      raise ArgumentError unless @username = blather_options[:username] && blather_options[:password]
+
+      setup *blather_options.values
+
+      @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain
 
       @callmap = {} # This hash maps call IDs to their XMPP domain.
 

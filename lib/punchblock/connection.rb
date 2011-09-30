@@ -23,11 +23,12 @@ module Punchblock
     #
     def initialize(options = {})
       super
-      raise ArgumentError unless @username = options.delete(:username)
-      raise ArgumentError unless options.has_key? :password
-      @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain
 
-      setup @username, options.delete(:password)
+      raise ArgumentError unless (@username = options[:username]) && options[:password]
+
+      setup *[:username, :password, :host, :port, :certs].map { |key| options.delete key }
+
+      @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain
 
       @callmap = {} # This hash maps call IDs to their XMPP domain.
 
@@ -124,7 +125,7 @@ module Punchblock
     private
 
     def handle_presence(p)
-      throw :pass unless p.rayo_event?
+      throw :pass unless p.rayo_event? && p.from.domain == @rayo_domain
       @logger.info "Receiving event for call ID #{p.call_id}" if @logger
       @callmap[p.call_id] = p.from.domain
       @logger.debug p.inspect if @logger

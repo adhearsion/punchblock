@@ -201,8 +201,16 @@ module Punchblock
           read_attr :uri
         end
 
+        def duration
+          read_attr :duration, :to_i
+        end
+
+        def size
+          read_attr :size, :to_i
+        end
+
         def inspect_attributes # :nodoc:
-          [:uri] + super
+          [:uri, :duration, :size] + super
         end
       end
 

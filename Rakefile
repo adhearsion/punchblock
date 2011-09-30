@@ -17,7 +17,8 @@ RSpec::Core::RakeTask.new(:rcov) do |spec|
 end
 
 task :default => :spec
-task :hudson => ['ci:setup:rspec', :spec]
+task :ci => ['ci:setup:rspec', :spec]
+task :hudson => :ci
 
 require 'yard'
 YARD::Rake::YardocTask.new

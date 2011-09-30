@@ -158,7 +158,7 @@ module Punchblock
           <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
 <success xmlns='urn:xmpp:rayo:record:complete:1'/>
-<recording xmlns='urn:xmpp:rayo:record:complete:1' uri="file:/tmp/rayo7451601434771683422.mp3"/>
+<recording xmlns='urn:xmpp:rayo:record:complete:1' uri="file:/tmp/rayo7451601434771683422.mp3" duration="34000" size="23450"/>
 </complete>
           MESSAGE
         end
@@ -175,7 +175,9 @@ module Punchblock
           subject { RayoNode.import(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
-          its(:uri) { should == "file:/tmp/rayo7451601434771683422.mp3" }
+          its(:uri)       { should == "file:/tmp/rayo7451601434771683422.mp3" }
+          its(:duration)  { should == 34000 }
+          its(:size)      { should == 23450 }
         end
       end
 

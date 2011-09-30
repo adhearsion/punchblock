@@ -26,7 +26,6 @@ module Punchblock
 
       raise ArgumentError unless (@username = options[:username]) && options[:password]
 
-
       setup *[:username, :password, :host, :port, :certs].map { |key| options.delete key }
 
       @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain

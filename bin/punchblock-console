@@ -73,7 +73,6 @@ connection_thread = Thread.new do
 end
 
 CALL_QUEUES = {}
-INFO_EVENT_QUEUE = Queue.new
 
 ### DISPATCHER THREAD
 # This thread multiplexes the event stream from the underlying connection handler and routes them
@@ -94,14 +93,11 @@ Thread.new do
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
       run_call connection, event
-    when Event::Info
-      INFO_EVENT_QUEUE.push event
-    when Event::Answered, Event::Complete, Event::End, Event::Ringing
+    when Event
       CALL_QUEUES[event.call_id].push event
     else
       puts "Unknown event: #{event.inspect}"
     end
-
   end
 end
 

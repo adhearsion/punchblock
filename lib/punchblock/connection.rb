@@ -24,12 +24,10 @@ module Punchblock
     def initialize(options = {})
       super
 
-      blather_keys = [:username, :password, :host, :port, :certs]
-      blather_options = options.select { |key, value| blather_keys.include? key }
-      options.reject! { |key, value| blather_keys.include? key }
-      raise ArgumentError unless (@username = blather_options[:username]) && blather_options[:password]
+      raise ArgumentError unless (@username = options[:username]) && options[:password]
 
-      setup *blather_options.values
+
+      setup *[:username, :password, :host, :port, :certs].map { |key| options.delete key }
 
       @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain
 

@@ -96,12 +96,13 @@ module Punchblock
         end
 
         describe "actions" do
+          let(:mock_client) { mock 'Client' }
           let(:conference) { Conference.new :name => '1234' }
 
           before do
             conference.component_id = 'abc123'
             conference.call_id = '123abc'
-            conference.connection = Connection.new :username => '123', :password => '123'
+            conference.connection = mock_client
           end
 
           describe '#mute_action' do
@@ -120,7 +121,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                Connection.any_instance.expects(:write).with('123abc', conference.mute_action, 'abc123').returns true
+                mock_client.expects(:write).with('123abc', conference.mute_action, 'abc123').returns true
                 conference.expects :muted!
                 conference.mute!
               end
@@ -169,7 +170,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                Connection.any_instance.expects(:write).with('123abc', conference.unmute_action, 'abc123').returns true
+                mock_client.expects(:write).with('123abc', conference.unmute_action, 'abc123').returns true
                 conference.expects :unmuted!
                 conference.unmute!
               end
@@ -213,7 +214,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                Connection.any_instance.expects(:write).with('123abc', conference.stop_action, 'abc123')
+                mock_client.expects(:write).with('123abc', conference.stop_action, 'abc123')
                 conference.stop!
               end
             end
@@ -241,7 +242,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                Connection.any_instance.expects(:write).with('123abc', conference.kick_action(:message => 'bye!'), 'abc123')
+                mock_client.expects(:write).with('123abc', conference.kick_action(:message => 'bye!'), 'abc123')
                 conference.kick! :message => 'bye!'
               end
             end

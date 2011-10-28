@@ -92,12 +92,13 @@ module Punchblock
       end
 
       describe "actions" do
+        let(:mock_client) { mock 'Client' }
         let(:command) { Input.new :grammar => '[5 DIGITS]' }
 
         before do
           command.component_id = 'abc123'
           command.call_id = '123abc'
-          command.connection = Connection.new :username => '123', :password => '123'
+          command.connection = mock_client
         end
 
         describe '#stop_action' do
@@ -116,7 +117,7 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              Connection.any_instance.expects(:write).with('123abc', command.stop_action, 'abc123')
+              mock_client.expects(:write).with('123abc', command.stop_action, 'abc123')
               command.stop!
             end
           end

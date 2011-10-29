@@ -102,7 +102,7 @@ module Punchblock
           before do
             conference.component_id = 'abc123'
             conference.call_id = '123abc'
-            conference.connection = mock_client
+            conference.client = mock_client
           end
 
           describe '#mute_action' do
@@ -121,7 +121,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                mock_client.expects(:write).with('123abc', conference.mute_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(conference.mute_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 conference.expects :muted!
                 conference.mute!
               end
@@ -170,7 +170,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                mock_client.expects(:write).with('123abc', conference.unmute_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(conference.unmute_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 conference.expects :unmuted!
                 conference.unmute!
               end
@@ -214,7 +214,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                mock_client.expects(:write).with('123abc', conference.stop_action, 'abc123')
+                mock_client.expects(:execute_command).with(conference.stop_action, :call_id => '123abc', :component_id => 'abc123')
                 conference.stop!
               end
             end
@@ -242,7 +242,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                mock_client.expects(:write).with('123abc', conference.kick_action(:message => 'bye!'), 'abc123')
+                mock_client.expects(:execute_command).with(conference.kick_action(:message => 'bye!'), :call_id => '123abc', :component_id => 'abc123')
                 conference.kick! :message => 'bye!'
               end
             end

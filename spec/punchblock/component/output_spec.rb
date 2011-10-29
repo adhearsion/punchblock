@@ -57,7 +57,7 @@ module Punchblock
         before do
           command.component_id = 'abc123'
           command.call_id = '123abc'
-          command.connection = mock_client
+          command.client = mock_client
         end
 
         describe '#pause_action' do
@@ -76,7 +76,7 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.expects(:write).with('123abc', command.pause_action, 'abc123').returns true
+              mock_client.expects(:execute_command).with(command.pause_action, :call_id => '123abc', :component_id => 'abc123').returns true
               command.expects :paused!
               command.pause!
             end
@@ -120,7 +120,7 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.expects(:write).with('123abc', command.resume_action, 'abc123').returns true
+              mock_client.expects(:execute_command).with(command.resume_action, :call_id => '123abc', :component_id => 'abc123').returns true
               command.expects :resumed!
               command.resume!
             end
@@ -164,7 +164,7 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.expects(:write).with('123abc', command.stop_action, 'abc123')
+              mock_client.expects(:execute_command).with(command.stop_action, :call_id => '123abc', :component_id => 'abc123')
               command.stop!
             end
           end
@@ -197,7 +197,7 @@ module Punchblock
               it "should send its command properly" do
                 seek_action = command.seek_action seek_options
                 command.stubs(:seek_action).returns seek_action
-                mock_client.expects(:write).with('123abc', seek_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(seek_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 command.expects :seeking!
                 command.expects :stopped_seeking!
                 command.seek! seek_options
@@ -264,7 +264,7 @@ module Punchblock
               it "should send its command properly" do
                 speed_up_action = command.speed_up_action
                 command.stubs(:speed_up_action).returns speed_up_action
-                mock_client.expects(:write).with('123abc', speed_up_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(speed_up_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 command.expects :speeding_up!
                 command.expects :stopped_speeding!
                 command.speed_up!
@@ -322,7 +322,7 @@ module Punchblock
               it "should send its command properly" do
                 slow_down_action = command.slow_down_action
                 command.stubs(:slow_down_action).returns slow_down_action
-                mock_client.expects(:write).with('123abc', slow_down_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(slow_down_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 command.expects :slowing_down!
                 command.expects :stopped_speeding!
                 command.slow_down!
@@ -397,7 +397,7 @@ module Punchblock
               it "should send its command properly" do
                 volume_up_action = command.volume_up_action
                 command.stubs(:volume_up_action).returns volume_up_action
-                mock_client.expects(:write).with('123abc', volume_up_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(volume_up_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 command.expects :voluming_up!
                 command.expects :stopped_voluming!
                 command.volume_up!
@@ -455,7 +455,7 @@ module Punchblock
               it "should send its command properly" do
                 volume_down_action = command.volume_down_action
                 command.stubs(:volume_down_action).returns volume_down_action
-                mock_client.expects(:write).with('123abc', volume_down_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(volume_down_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 command.expects :voluming_down!
                 command.expects :stopped_voluming!
                 command.volume_down!

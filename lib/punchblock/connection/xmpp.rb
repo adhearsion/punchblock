@@ -7,8 +7,9 @@
 
 module Punchblock
   module Connection
-    class XMPP < GenericConnection
+    class XMPP
       include Blather::DSL
+      attr_accessor :event_handler
 
       ##
       # Initialize the required connection attributes
@@ -23,8 +24,6 @@ module Punchblock
       # @option options [Numeric, nil, Optional] :ping_period interval in seconds on which to ping the server. Nil or false to disable
       #
       def initialize(options = {})
-        super
-
         raise ArgumentError unless (@username = options[:username]) && options[:password]
 
         setup *[:username, :password, :host, :port, :certs].map { |key| options.delete key }
@@ -33,52 +32,37 @@ module Punchblock
 
         @callmap = {} # This hash maps call IDs to their XMPP domain.
 
-        @component_id_to_iq_id = {}
-        @iq_id_to_command = {}
-
         @auto_reconnect = !!options[:auto_reconnect]
         @reconnect_attempts = 0
 
-        @write_timeout = options[:write_timeout] || 3
-
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
+
+        @event_handler = lambda { |event| raise 'No event handler set' }
 
         Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
       end
 
-      ##
-      # Write a command to the Rayo server for a particular call
-      #
-      # @param [String] call the call ID on which to act
-      # @param [CommandNode] cmd the command to execute on the call
-      # @param [String, Optional] component_id the component_id on which to execute
-      #
-      # @raise Exception if there is a server-side error
-      #
-      # @return true
-      #
-      def write(call_id, cmd, component_id = nil)
-        async_write call_id, cmd, component_id
-        cmd.response(@write_timeout).tap { |result| raise result if result.is_a? Exception }
+      def write(command, options = {})
+        iq = prep_command_for_execution command, options
+        client.write_with_handler iq do |response|
+          if response.result?
+            handle_iq_result response, command
+          elsif response.error?
+            handle_error response, command
+          end
+        end
+        command.request!
       end
 
-      ##
-      # @return [Queue] Pop this queue to determine result of command execution. Will be true or an exception
-      def async_write(call_id, cmd, component_id = nil)
-        iq = prep_command_for_execution call_id, cmd, component_id
-        write_to_stream iq
-        cmd.request!
-      end
-
-      def prep_command_for_execution(call_id, cmd, component_id = nil)
-        cmd.connection = self
-        cmd.call_id = call_id
-        jid = cmd.is_a?(Command::Dial) ? @rayo_domain : "#{call_id}@#{@callmap[call_id]}"
+      def prep_command_for_execution(command, options = {})
+        call_id, component_id = options.values_at :call_id, :component_id
+        command.connection = self
+        command.call_id = call_id
+        jid = command.is_a?(Command::Dial) ? @rayo_domain : "#{call_id}@#{@callmap[call_id]}"
         jid << "/#{component_id}" if component_id
         create_iq(jid).tap do |iq|
-          @logger.debug "Sending IQ ID #{iq.id} #{cmd.inspect} to #{jid}" if @logger
-          iq << cmd
-          @iq_id_to_command[iq.id] = cmd
+          @logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{jid}" if @logger
+          iq << command
         end
       end
 
@@ -107,22 +91,6 @@ module Punchblock
         client.connected?
       end
 
-      ##
-      #
-      # Get the original command issued by command ID
-      #
-      # @param [String] component_id
-      #
-      # @return [RayoNode]
-      #
-      def original_component_from_id(component_id)
-        @iq_id_to_command[@component_id_to_iq_id[component_id]]
-      end
-
-      def record_command_id_for_iq_id(command_id, iq_id)
-        @component_id_to_iq_id[command_id] = iq_id
-      end
-
       private
 
       def handle_presence(p)
@@ -132,35 +100,26 @@ module Punchblock
         @logger.debug p.inspect if @logger
         event = p.event
         event.connection = self
-        if event.source
-          event.source.add_event event
-        else
-          @event_queue.push event
-        end
+        event_handler.call event
       end
 
-      def handle_iq_result(iq)
+      def handle_iq_result(iq, command)
         # FIXME: Do we need to raise a warning if the domain changes?
-        throw :pass unless command = @iq_id_to_command[iq.id]
         @callmap[iq.from.node] = iq.from.domain
         @logger.debug "Command #{iq.id} completed successfully" if @logger
-        command.response = iq
+        command.response = iq.rayo_node.is_a?(Ref) ? iq.rayo_node : true
       end
 
-      def handle_error(iq)
+      def handle_error(iq, command = nil)
         e = Blather::StanzaError.import iq
-
         protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.component_id
-
-        throw :pass unless command = @iq_id_to_command[iq.id]
-
-        command.response = protocol_error
+        command.response = protocol_error if command
       end
 
       def register_handlers
         # Push a message to the queue and the log that we connected
         when_ready do
-          @event_queue.push connected
+          event_handler.call Connected
           @logger.info "Connected to XMPP as #{@username}" if @logger
           @reconnect_attempts = 0
           @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
@@ -176,16 +135,6 @@ module Punchblock
             @reconnect_attempts += 1
             connect
           end
-        end
-
-        # Read/handle call control messages. These are mostly just acknowledgement of commands
-        iq :result? do |msg|
-          handle_iq_result msg
-        end
-
-        # Read/handle error IQs
-        iq :error? do |e|
-          handle_error e
         end
 
         # Read/handle presence requests. This is how we get events.

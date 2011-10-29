@@ -54,18 +54,19 @@ options[:transport_logger] = Logger.new options.delete(:transport_log_file)
 options[:transport_logger].level = Logger::DEBUG
 options[:transport_logger].debug "Starting up..."
 
-connection = Connection.new options
+connection = Connection::XMPP.new options
+client = Client.new :connection => connection
 
 [:INT, :TERM].each do |signal|
   trap signal do
     puts "Shutting down!"
-    connection.stop
+    client.stop
   end
 end
 
-connection_thread = Thread.new do
+client_thread = Thread.new do
   begin
-    connection.run
+    client.run
   rescue => e
     puts "Exception in XMPP thread! #{e.message}"
     puts e.backtrace.join("\t\n")
@@ -80,8 +81,8 @@ CALL_QUEUES = {}
 # the queue.
 Thread.new do
   loop do
-    event = connection.event_queue.pop
-    if event == connection.connected
+    event = client.event_queue.pop
+    if event == Connection::Connected
       puts event
       puts "Waiting for a call..."
       next
@@ -92,7 +93,7 @@ Thread.new do
       raise "Duplicate call ID for #{event.call_id}" if CALL_QUEUES.has_key?(event.call_id)
       CALL_QUEUES[event.call_id] = Queue.new
       CALL_QUEUES[event.call_id].push event
-      run_call connection, event
+      run_call client, event
     when Event
       CALL_QUEUES[event.call_id].push event
     else
@@ -101,14 +102,14 @@ Thread.new do
   end
 end
 
-def run_call(connection, offer)
+def run_call(client, offer)
   ### CALL THREAD
   # One thread is spun up to handle each call.
   Thread.new do
     raise "Unknown call #{offer.call_id}" unless CALL_QUEUES.has_key?(offer.call_id)
     queue = CALL_QUEUES[offer.call_id]
     call = queue.pop
-    dsl = DSL.new connection, offer.call_id, queue
+    dsl = DSL.new client, offer.call_id, queue
 
     puts "Incoming offer to #{offer.to} from #{offer.headers_hash[:from]} #{offer}"
     dsl.pry
@@ -118,4 +119,4 @@ def run_call(connection, offer)
   end
 end
 
-connection_thread.join
+client_thread.join

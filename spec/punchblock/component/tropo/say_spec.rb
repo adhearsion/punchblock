@@ -31,7 +31,7 @@ module Punchblock
           before do
             command.component_id = 'abc123'
             command.call_id = '123abc'
-            command.connection = mock_client
+            command.client = mock_client
           end
 
           describe '#pause_action' do
@@ -50,7 +50,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                mock_client.expects(:write).with('123abc', command.pause_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(command.pause_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 command.expects :paused!
                 command.pause!
               end
@@ -94,7 +94,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                mock_client.expects(:write).with('123abc', command.resume_action, 'abc123').returns true
+                mock_client.expects(:execute_command).with(command.resume_action, :call_id => '123abc', :component_id => 'abc123').returns true
                 command.expects :resumed!
                 command.resume!
               end
@@ -138,7 +138,7 @@ module Punchblock
               end
 
               it "should send its command properly" do
-                mock_client.expects(:write).with('123abc', command.stop_action, 'abc123')
+                mock_client.expects(:execute_command).with(command.stop_action, :call_id => '123abc', :component_id => 'abc123')
                 command.stop!
               end
             end

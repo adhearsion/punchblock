@@ -7,7 +7,7 @@ module Punchblock
 
     class_attribute :registered_ns, :registered_name
 
-    attr_accessor :call_id, :component_id, :connection, :original_component
+    attr_accessor :call_id, :component_id, :connection, :client, :original_component
 
     # Register a new stanza class to a name and/or namespace
     #
@@ -78,7 +78,7 @@ module Punchblock
     # @return [RayoNode] the original command issued that lead to this event
     #
     def source
-      @source ||= connection.original_component_from_id component_id if connection && component_id
+      @source ||= client.find_component_by_id component_id if client && component_id
       @source ||= original_component
     end
 

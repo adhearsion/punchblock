@@ -38,18 +38,16 @@ module Punchblock
       end
 
       def write_action(action)
-        connection.write call_id, action, component_id
+        client.execute_command action, :call_id => call_id, :component_id => component_id
+        action
       end
 
       def response=(other)
-        super
-        if other.is_a?(Blather::Stanza::Iq)
-          ref = other.rayo_node
-          if ref.is_a?(Ref)
-            @component_id = ref.id
-            @connection.record_command_id_for_iq_id @component_id, other.id
-          end
+        if other.is_a?(Ref)
+          @component_id = other.id
+          client.register_component self
         end
+        super
       end
 
       ##

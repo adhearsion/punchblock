@@ -37,15 +37,8 @@ module Punchblock
           end
         end
 
-        let :iq do
-          Blather::Stanza::Iq.new(:result, 'blah').tap do |iq|
-            iq.from = "call.rayo.net"
-            iq << ref
-          end
-        end
-
         it "should set the call ID from the ref" do
-          subject.response = iq
+          subject.response = ref
           subject.call_id.should == call_id
         end
       end

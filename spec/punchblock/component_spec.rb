@@ -67,7 +67,7 @@ module Punchblock
       describe "#response=" do
         before do
           subject.request!
-          subject.connection = mock(:record_command_id_for_iq_id => true)
+          subject.client = Client.new
         end
 
         let(:component_id) { 'abc123' }
@@ -78,16 +78,10 @@ module Punchblock
           end
         end
 
-        let :iq do
-          Blather::Stanza::Iq.new(:result, 'blah').tap do |iq|
-            iq.from = "12345@call.rayo.net"
-            iq << ref
-          end
-        end
-
         it "should set the component ID from the ref" do
-          subject.response = iq
+          subject.response = ref
           subject.component_id.should == component_id
+          subject.client.find_component_by_id(component_id).should be subject
         end
       end
     end # ComponentNode

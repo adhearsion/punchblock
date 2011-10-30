@@ -4,8 +4,8 @@
 # THIS IS IMPERMANENT AND WILL DISAPPEAR
 module Punchblock
   class DSL
-    def initialize(connection, call, queue) # :nodoc:
-      @connection, @call, @queue = connection, call, queue
+    def initialize(client, call_id, queue) # :nodoc:
+      @client, @call_id, @queue = client, call_id, queue
     end
 
     def accept # :nodoc:
@@ -38,8 +38,8 @@ module Punchblock
       component.complete_event.resource
     end
 
-    def write(msg) # :nodoc:
-      @connection.write @call, msg
+    def write(command) # :nodoc:
+      @client.execute_command command, :call_id => @call_id, :async => false
     end
   end
 end

@@ -52,6 +52,11 @@ module Punchblock
     def execute_command(command, options = {})
       async = options.has_key?(:async) ? options.delete(:async) : true
       command.client = self
+      if command.respond_to?(:register_event_handler)
+        command.register_event_handler do |event|
+          trigger_handler :event, event
+        end
+      end
       connection.write command, options
       command.response(@write_timeout).tap { |result| raise result if result.is_a? Exception } unless async
     end

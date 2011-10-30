@@ -94,11 +94,31 @@ module Punchblock
 
     describe '#execute_command' do
       let(:component) { Component::Output.new }
+      let(:event)     { Event::Complete.new }
+
+      before do
+        connection.expects(:write).once.with component, :call_id => call_id
+      end
+
+      let :execute_command do
+        subject.execute_command component, :call_id => call_id
+      end
 
       it 'should write the command to the connection' do
-        connection.expects(:write).once.with component, :call_id => call_id
-        subject.execute_command component, :call_id => call_id
+        execute_command
+      end
+
+      it "should set the command's client" do
+        execute_command
         component.client.should be subject
+      end
+
+      it "should handle a component's events" do
+        subject.expects(:trigger_handler).with(:event, event).once
+        execute_command
+        component.request!
+        component.execute!
+        component.add_event event
       end
     end
   end # describe Client

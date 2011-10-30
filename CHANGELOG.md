@@ -1,5 +1,8 @@
 # develop
 
+# v0.5.0
+  * Refactoring/API change: Client and connection level concerns are now separated, and one must create a Connection to be passed to a Client on creation. Client now has the choice between an event queue and guarded event handlers.
+
 # v0.4.3
   * Feature: Support for meta-data on recordings (size & duration)
   * Feature: Allow specifying all of Blather's setup options (required to use PB as an XMPP component)

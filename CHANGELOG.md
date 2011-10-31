@@ -1,5 +1,8 @@
 # develop
 
+# v0.5.1
+  API change: Connections now raise a Punchblock::Connection::Connected instance as an event, rather than the class itself
+
 # v0.5.0
   * Refactoring/API change: Client and connection level concerns are now separated, and one must create a Connection to be passed to a Client on creation. Client now has the choice between an event queue and guarded event handlers.
 

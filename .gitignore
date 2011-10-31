@@ -10,3 +10,5 @@ doc
 log/*
 spec/reports
 vendor
+.rbx/
+*.rbc

@@ -119,7 +119,7 @@ module Punchblock
       def register_handlers
         # Push a message to the queue and the log that we connected
         when_ready do
-          event_handler.call Connected
+          event_handler.call Connected.new
           @logger.info "Connected to XMPP as #{@username}" if @logger
           @reconnect_attempts = 0
           @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period

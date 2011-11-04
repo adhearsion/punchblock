@@ -34,6 +34,7 @@ module Punchblock
   autoload :MediaNode
   autoload :ProtocolError
   autoload :RayoNode
+  autoload :Translator
 
   ##
   # This exception may be raised if a transport error is detected.

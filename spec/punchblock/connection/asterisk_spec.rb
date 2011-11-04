@@ -21,7 +21,10 @@ module Punchblock
       end
 
       its(:ami_client) { should be_a RubyAMI::Client }
-      its(:translator) { should be_a Translator::Asterisk }
+
+      it 'should set the connection on the translator' do
+        subject.translator.connection.should be subject
+      end
 
       describe '#run' do
         it 'starts the RubyAMI::Client' do

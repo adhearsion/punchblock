@@ -22,10 +22,10 @@ module Punchblock
       autoload :Call
       autoload :Component
 
-      attr_reader :ami_client
+      attr_reader :ami_client, :connection
 
-      def initialize(ami_client)
-        @ami_client = ami_client
+      def initialize(ami_client, connection)
+        @ami_client, @connection = ami_client, connection
         @calls = {}
       end
 

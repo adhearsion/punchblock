@@ -4,10 +4,12 @@ module Punchblock
   module Translator
     describe Asterisk do
       let(:ami_client) { mock 'RubyAMI::Client' }
+      let(:connection) { mock 'Connection::Asterisk' }
 
-      subject { Asterisk.new ami_client }
+      subject { Asterisk.new ami_client, connection }
 
       its(:ami_client) { should be ami_client }
+      its(:connection) { should be connection }
 
       describe '#execute_command' do
         describe 'with a call command' do

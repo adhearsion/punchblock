@@ -8,7 +8,7 @@ module Punchblock
 
       def initialize(options = {})
         @ami_client = RubyAMI::Client.new options.merge(:event_handler => lambda { |event| translator.handle_ami_event! event })
-        @translator = Translator::Asterisk.new @ami_client
+        @translator = Translator::Asterisk.new @ami_client, self
       end
 
       def run

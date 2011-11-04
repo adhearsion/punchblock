@@ -17,10 +17,24 @@ module Punchblock
     class Asterisk
       include Celluloid
 
+      extend ActiveSupport::Autoload
+
+      autoload :Call
+      autoload :Component
+
       attr_reader :ami_client
 
       def initialize(ami_client)
         @ami_client = ami_client
+        @calls = {}
+      end
+
+      def register_call(call)
+        @calls[call.id] ||= call
+      end
+
+      def call_with_id(call_id)
+        @calls[call_id]
       end
 
       def handle_ami_event(event)
@@ -41,11 +55,11 @@ module Punchblock
       end
 
       def execute_call_command(command)
-
+        call_with_id(command.call_id).execute_command command
       end
 
       def execute_component_command(command)
-
+        call_with_id(command.call_id).execute_component_command command
       end
 
       def execute_global_command(command)

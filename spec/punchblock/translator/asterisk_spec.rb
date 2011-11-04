@@ -15,7 +15,7 @@ module Punchblock
           let(:call_id) { 'abc123' }
 
           it 'executes the call command' do
-            subject.expects(:execute_call_command).with do |c|
+            subject.actor_subject.expects(:execute_call_command).with do |c|
               c.should be command
               c.call_id.should == call_id
             end
@@ -29,7 +29,7 @@ module Punchblock
           let(:component_id)  { '123abc' }
 
           it 'executes the component command' do
-            subject.expects(:execute_component_command).with do |c|
+            subject.actor_subject.expects(:execute_component_command).with do |c|
               c.should be command
               c.call_id.should == call_id
               c.component_id.should == component_id
@@ -42,7 +42,7 @@ module Punchblock
           let(:command) { Command::Dial.new }
 
           it 'executes the command directly' do
-            subject.expects(:execute_global_command).with command
+            subject.actor_subject.expects(:execute_global_command).with command
             subject.execute_command command
           end
         end

@@ -15,7 +15,7 @@ end
 module Punchblock
   module Translator
     class Asterisk
-      # include Celluloid
+      include Celluloid
 
       attr_reader :ami_client
 
@@ -38,6 +38,14 @@ module Punchblock
         else
           execute_global_command command
         end
+      end
+
+      def execute_call_command(command)
+
+      end
+
+      def execute_component_command(command)
+
       end
 
       def execute_global_command(command)

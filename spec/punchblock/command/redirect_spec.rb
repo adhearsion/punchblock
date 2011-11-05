@@ -14,6 +14,27 @@ module Punchblock
 
         its(:to) { should == 'tel:+14045551234' }
       end
+
+      describe "from a stanza" do
+        let :stanza do
+          <<-MESSAGE
+<redirect xmlns='urn:xmpp:rayo:1'
+    to='tel:+14045551234'>
+  <!-- Signaling (e.g. SIP) Headers -->
+  <header name="x-skill" value="agent" />
+  <header name="x-customer-id" value="8877" />
+</redirect>
+          MESSAGE
+        end
+
+        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Redirect }
+
+        it_should_behave_like 'command_headers'
+
+        its(:to) { should == 'tel:+14045551234' }
+      end
     end # Redirect
   end # Command
 end # Punchblock

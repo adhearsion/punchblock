@@ -9,19 +9,6 @@ module Punchblock
             RayoNode.class_from_registration(:action, 'urn:xmpp:rayo:asterisk:ami:1').should == Action
           end
 
-#           describe "from a stanza" do
-#             let :stanza do
-#               <<-MESSAGE
-# <event xmlns="urn:xmpp:rayo:asterisk:ami:1" name="Newchannel">
-#   <attribute name="Channel" value="SIP/101-3f3f"/>
-#   <attribute name="State" value="Ring"/>
-#   <attribute name="Callerid" value="101"/>
-#   <attribute name="Uniqueid" value="1094154427.10"/>
-# </event>
-#               MESSAGE
-#             end
-
- 
           describe "from a stanza" do
             let :stanza do
               <<-MESSAGE

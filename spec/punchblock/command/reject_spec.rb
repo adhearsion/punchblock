@@ -15,18 +15,29 @@ module Punchblock
         its(:reason) { should == :busy }
       end
 
+      describe "from a stanza" do
+        let :stanza do
+          <<-MESSAGE
+<reject xmlns='urn:xmpp:rayo:1'>
+  <busy />
+  <!-- Sample Headers (optional) -->
+  <header name="x-reason-internal" value="bad-skill" />
+</reject>
+          MESSAGE
+        end
+
+        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Reject }
+
+        its(:reason) { should == :busy }
+        its(:headers_hash) { should == { :x_reason_internal => 'bad-skill' } }
+      end
+
       describe "with the reason" do
         [:decline, :busy, :error].each do |reason|
           describe reason do
             subject { Reject.new :reason => reason }
-
-            let :expected_message do
-              <<-MESSAGE
-<reject xmlns="urn:xmpp:rayo:1">
-  <#{reason}/>
-</reject>
-              MESSAGE
-            end
 
             its(:reason) { should == reason }
           end

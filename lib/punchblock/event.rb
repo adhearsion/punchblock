@@ -8,7 +8,6 @@ end
   complete
   dtmf
   end
-  info
   joined
   offer
   ringing

@@ -25,6 +25,14 @@ module Punchblock
         its(:reason) { should == :timeout }
         its(:xmlns) { should == 'urn:xmpp:rayo:1' }
       end
+
+      describe "when setting options in initializer" do
+        subject do
+          End.new :reason => :hangup
+        end
+
+        its(:reason) { should == :hangup }
+      end
     end
   end
 end # Punchblock

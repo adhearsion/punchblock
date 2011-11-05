@@ -16,6 +16,27 @@ module Punchblock
         its(:direction)     { should == :duplex }
         its(:media)         { should == :bridge }
       end
+
+      describe "from a stanza" do
+        let :stanza do
+          <<-MESSAGE
+<join xmlns="urn:xmpp:rayo:1"
+      call-id="abc123"
+      mixer-id="blah"
+      direction="duplex"
+      media="bridge" />
+          MESSAGE
+        end
+
+        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Join }
+
+        its(:other_call_id) { should == 'abc123' }
+        its(:mixer_id)      { should == 'blah' }
+        its(:direction)     { should == :duplex }
+        its(:media)         { should == :bridge }
+      end
     end
   end
 end # Punchblock

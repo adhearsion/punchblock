@@ -27,6 +27,33 @@ module Punchblock
         its(:final_timeout)   { should == 30000 }
       end
 
+      describe "from a stanza" do
+        let :stanza do
+          <<-MESSAGE
+<record xmlns="urn:xmpp:rayo:record:1"
+        format="WAV"
+        start-beep="true"
+        start-paused="false"
+        stop-beep="true"
+        max-duration="500000"
+        initial-timeout="10000"
+        final-timeout="30000"/>
+          MESSAGE
+        end
+
+        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Record }
+
+        its(:format)          { should == 'WAV' }
+        its(:start_beep)      { should == true }
+        its(:start_paused)    { should == false }
+        its(:stop_beep)       { should == true }
+        its(:max_duration)    { should == 500000 }
+        its(:initial_timeout) { should == 10000 }
+        its(:final_timeout)   { should == 30000 }
+      end
+
       describe "actions" do
         let(:mock_client) { mock 'Client' }
         let(:command) { Record.new }

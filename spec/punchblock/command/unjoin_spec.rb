@@ -14,6 +14,23 @@ module Punchblock
         its(:other_call_id) { should == 'abc123' }
         its(:mixer_id)      { should == 'blah' }
       end
+
+      describe "from a stanza" do
+        let :stanza do
+          <<-MESSAGE
+<unjoin xmlns="urn:xmpp:rayo:1"
+      call-id="abc123"
+      mixer-id="blah" />
+          MESSAGE
+        end
+
+        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Unjoin }
+
+        its(:other_call_id) { should == 'abc123' }
+        its(:mixer_id)      { should == 'blah' }
+      end
     end
   end
 end # Punchblock

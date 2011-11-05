@@ -5,6 +5,12 @@ module Punchblock
         class Action < ComponentNode
           register :action, :ami
 
+          def self.new(options = {})
+            super().tap do |new_node|
+              options.each_pair { |k,v| new_node.send :"#{k}=", v }
+            end
+          end
+
           def name
             read_attr :name
           end
@@ -44,7 +50,7 @@ module Punchblock
             end
           end
 
-          def inspect_params # :nodoc:
+          def inspect_attributes # :nodoc:
             [:name] + super
           end
 
@@ -90,14 +96,51 @@ module Punchblock
               write_attr :value, value
             end
 
-            def inspect_params # :nodoc:
+            def inspect_attributes # :nodoc:
               [:name, :value] + super
             end
           end
 
           class Complete
             class Success < Event::Complete::Reason
-              register :success, :action_complete
+              register :success, :ami_complete
+
+              def self.new(options = {})
+                super().tap do |new_node|
+                  case options
+                  when Nokogiri::XML::Node
+                    new_node.inherit options
+                  else
+                    options.each_pair { |k,v| new_node.send :"#{k}=", v }
+                  end
+                end
+              end
+
+              def message_node
+                mn = if self.class.registered_ns
+                  find_first 'ns:message', :ns => self.class.registered_ns
+                else
+                  find_first 'message'
+                end
+
+                unless mn
+                  self << (mn = RayoNode.new('message', self.document))
+                  mn.namespace = self.class.registered_ns
+                end
+                mn
+              end
+
+              def message
+                message_node.text
+              end
+
+              def message=(other)
+                message_node.content = other
+              end
+
+              def inspect_attributes
+                [:message]
+              end
             end
           end # Complete
         end # Action

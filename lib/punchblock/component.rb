@@ -2,6 +2,7 @@ module Punchblock
   module Component
     extend ActiveSupport::Autoload
 
+    autoload :Asterisk
     autoload :Input
     autoload :Output
     autoload :Record

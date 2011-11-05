@@ -20,6 +20,7 @@ def import_stanza(xml)
   Blather::Stanza.import parse_stanza(xml).root
 end
 
+# FIXME: change this to rayo_event?  It can be ambigous
 shared_examples_for 'event' do
   its(:call_id) { should == '9f00061' }
   its(:component_id) { should == '1' }

@@ -27,6 +27,34 @@ module Punchblock
         its(:voice)            { should == 'allison' }
       end
 
+      describe "from a stanza" do
+        let :stanza do
+          <<-MESSAGE
+<output xmlns='urn:xmpp:rayo:output:1'
+        interrupt-on='speech'
+        start-offset='2000'
+        start-paused='false'
+        repeat-interval='2000'
+        repeat-times='10'
+        max-time='30000'
+        voice='allison'>Hello world</output>
+          MESSAGE
+        end
+
+        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Output }
+
+        its(:interrupt_on)     { should == :speech }
+        its(:start_offset)     { should == 2000 }
+        its(:start_paused)     { should == false }
+        its(:repeat_interval)  { should == 2000 }
+        its(:repeat_times)     { should == 10 }
+        its(:max_time)         { should == 30000 }
+        its(:voice)            { should == 'allison' }
+        its(:text)             { should == 'Hello world' }
+      end
+
       describe "for text" do
         subject { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
 

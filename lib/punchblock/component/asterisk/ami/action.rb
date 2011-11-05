@@ -98,19 +98,6 @@ module Punchblock
           class Complete
             class Success < Event::Complete::Reason
               register :success, :action_complete
-
-              def inspect_params # :nodoc:
-                #[:foo] + super
-                super
-              end
-            end
-
-            class NoMatch < Event::Complete::Reason
-              register :nomatch, :action_complete
-            end
-
-            class NoAction < Event::Complete::Reason
-              register :noaction, :input_complete
             end
           end # Complete
         end # Action

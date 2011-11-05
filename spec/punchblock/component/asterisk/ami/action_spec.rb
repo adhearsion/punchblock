@@ -52,6 +52,8 @@ module Punchblock
           end
 
 
+
+
           class Action
             describe Param do
               it 'will auto-inherit nodes' do
@@ -94,9 +96,27 @@ module Punchblock
                 a.should_not == Param.new(:boo, 'boo')
               end
             end
-          end
-         end # Action
-      end #  AMI
-    end # Asterisk
+
+#             describe Complete::Success
+#               let :stanza do
+#           <<-MESSAGE
+# <complete xmlns="urn:xmpp:rayo:ext:1">
+#   <success xmlns="urn:xmpp:rayo:asterisk:ami:complete:1">
+#     <message>Originate successfully queued</message>
+#   </success>
+# </complete>
+#           MESSAGE
+#               end
+# 
+#               subject { RayoNode.import(parse_stanza(stanza).root).reason }
+# 
+#               it { should be_instance_of Action::Complete::Success }
+# 
+#               its(:name)            { should == :success }
+#             end
+      end
+    end # Action
+  end #  AMI
+end # Asterisk
   end # Component
 end # Punchblock

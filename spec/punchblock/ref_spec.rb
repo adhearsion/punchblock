@@ -17,5 +17,11 @@ module Punchblock
 
       its(:id) { should == 'fgh4590' }
     end
+
+    describe "when setting options in initializer" do
+      subject { Ref.new :id => 'foo' }
+
+      its(:id) { should == 'foo' }
+    end
   end
 end # Punchblock

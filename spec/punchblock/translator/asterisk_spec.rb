@@ -100,6 +100,30 @@ module Punchblock
           pending
         end
       end
+
+      describe '#handle_ami_event' do
+        let :ami_event do
+          RubyAMI::Event.new('Newchannel').tap do |e|
+            e['Channel']  = "SIP/101-3f3f"
+            e['State']    = "Ring"
+            e['Callerid'] = "101"
+            e['Uniqueid'] = "1094154427.10"
+          end
+        end
+
+        let :expected_pb_event do
+          Event::Asterisk::AMI::Event.new :name => 'Newchannel',
+                                          :attributes => { :channel  => "SIP/101-3f3f",
+                                                           :state    => "Ring",
+                                                           :callerid => "101",
+                                                           :uniqueid => "1094154427.10"}
+        end
+
+        it 'should create a Punchblock AMI event object and pass it to the connection' do
+          subject.connection.expects(:handle_event).once.with expected_pb_event
+          subject.handle_ami_event ami_event
+        end
+      end
     end
   end
 end

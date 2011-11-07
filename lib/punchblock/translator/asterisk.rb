@@ -1,16 +1,6 @@
 require 'celluloid'
-
-module Celluloid
-  class Actor
-    attr_reader :subject
-  end
-
-  class ActorProxy
-    def actor_subject
-      @actor.subject
-    end
-  end
-end
+require 'punchblock/core_ext/celluloid'
+require 'ruby_ami'
 
 module Punchblock
   module Translator
@@ -38,6 +28,7 @@ module Punchblock
       end
 
       def handle_ami_event(event)
+        connection.handle_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 
       def execute_command(command, options = {})

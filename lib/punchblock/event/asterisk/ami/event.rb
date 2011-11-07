@@ -7,6 +7,12 @@ module Punchblock
         class Event < Punchblock::Event
           register :event, :ami
 
+          def self.new(options = {})
+            super().tap do |new_node|
+              options.each_pair { |k,v| new_node.send :"#{k}=", v }
+            end
+          end
+
           def name
             read_attr :name
           end
@@ -47,7 +53,7 @@ module Punchblock
           end
 
           def inspect_attributes # :nodoc:
-            [:name] + super
+            [:name, :attributes_hash] + super
           end
 
           class Attribute < RayoNode

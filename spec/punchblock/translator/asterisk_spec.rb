@@ -123,6 +123,13 @@ module Punchblock
           subject.connection.expects(:handle_event).once.with expected_pb_event
           subject.handle_ami_event ami_event
         end
+
+        context 'with something that is not a RubyAMI::Event' do
+          it 'does not send anything to the connection' do
+            subject.connection.expects(:handle_event).never
+            subject.handle_ami_event :foo
+          end
+        end
       end
     end
   end

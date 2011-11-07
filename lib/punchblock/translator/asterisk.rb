@@ -28,6 +28,7 @@ module Punchblock
       end
 
       def handle_ami_event(event)
+        return unless event.is_a? RubyAMI::Event
         connection.handle_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 

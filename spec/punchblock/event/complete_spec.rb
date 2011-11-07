@@ -75,6 +75,14 @@ module Punchblock
 
       its(:name) { should == :error }
       its(:details) { should == "Something really bad happened" }
+
+      describe "when setting options in initializer" do
+        subject do
+          Complete::Error.new :details => 'Ooops'
+        end
+
+        its(:details) { should == 'Ooops' }
+      end
     end
   end
 end # Punchblock

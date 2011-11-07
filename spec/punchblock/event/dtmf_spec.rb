@@ -19,6 +19,14 @@ module Punchblock
         its(:signal) { should == '#' }
         its(:xmlns) { should == 'urn:xmpp:rayo:1' }
       end
+
+      describe "when setting options in initializer" do
+        subject do
+          DTMF.new :signal => '#'
+        end
+
+        its(:signal) { should == '#' }
+      end
     end
   end
 end # Punchblock

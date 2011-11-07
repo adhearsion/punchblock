@@ -5,10 +5,10 @@ end
 
 %w{
   answered
+  asterisk
   complete
   dtmf
   end
-  info
   joined
   offer
   ringing

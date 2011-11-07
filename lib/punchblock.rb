@@ -55,7 +55,7 @@ module Punchblock
     RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_TROPO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
   end
 
-  [:ami].each do |ns|
+  [:agi, :ami].each do |ns|
     RAYO_NAMESPACES[ns] = [BASE_ASTERISK_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
     RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_ASTERISK_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
   end

@@ -65,45 +65,9 @@ module Punchblock
 
           class Action
             describe Param do
-              it 'will auto-inherit nodes' do
-                n = parse_stanza "<param name='boo' value='bah' />"
-                h = Param.new n.root
-                h.name.should == :boo
-                h.value.should == 'bah'
-              end
-
-              it 'has a name attribute' do
-                n = Param.new :boo, 'bah'
-                n.name.should == :boo
-                n.name = :foo
-                n.name.should == :foo
-              end
-
-              it "substitutes - for _ on the name attribute when reading" do
-                n = parse_stanza "<param name='boo-bah' value='foo' />"
-                h = Param.new n.root
-                h.name.should == :boo_bah
-              end
-
-              it "substitutes _ for - on the name attribute when writing" do
-                h = Param.new :boo_bah, 'foo'
-                h.to_xml.should == '<param name="boo-bah" value="foo"/>'
-              end
-
-              it 'has a value param' do
-                n = Param.new :boo, 'en'
-                n.value.should == 'en'
-                n.value = 'de'
-                n.value.should == 'de'
-              end
-
-              it 'can determine equality' do
-                pending "It's broken"
-                a = Param.new :boo, 'bah'
-                a.should == Param.new(:boo, 'bah')
-                a.should_not == Param.new(:bah, 'bah')
-                a.should_not == Param.new(:boo, 'boo')
-              end
+              let(:class_name)    { Param }
+              let(:element_name)  { 'param' }
+              it_should_behave_like 'key_value_pairs'
             end
 
             describe Complete::Success do

@@ -34,44 +34,9 @@ module Punchblock
 
           class Event
             describe Attribute do
-              it 'will auto-inherit nodes' do
-                n = parse_stanza "<attribute name='boo' value='bah' />"
-                h = Attribute.new n.root
-                h.name.should == :boo
-                h.value.should == 'bah'
-              end
-
-              it 'has a name attribute' do
-                n = Attribute.new :boo, 'bah'
-                n.name.should == :boo
-                n.name = :foo
-                n.name.should == :foo
-              end
-
-              it "substitutes - for _ on the name attribute when reading" do
-                n = parse_stanza "<attribute name='boo-bah' value='foo' />"
-                h = Attribute.new n.root
-                h.name.should == :boo_bah
-              end
-
-              it "substitutes _ for - on the name attribute when writing" do
-                h = Attribute.new :boo_bah, 'foo'
-                h.to_xml.should == '<attribute name="boo-bah" value="foo"/>'
-              end
-
-              it 'has a value attribute' do
-                n = Attribute.new :boo, 'en'
-                n.value.should == 'en'
-                n.value = 'de'
-                n.value.should == 'de'
-              end
-
-              it 'can determine equality' do
-                a = Attribute.new :boo, 'bah'
-                a.should == Attribute.new(:boo, 'bah')
-                a.should_not == Attribute.new(:bah, 'bah')
-                a.should_not == Attribute.new(:boo, 'boo')
-              end
+              let(:class_name)    { Attribute }
+              let(:element_name)  { 'attribute' }
+              it_should_behave_like 'key_value_pairs'
             end
           end
         end

@@ -316,5 +316,5 @@ module Punchblock
         end
       end # Complete
     end # Input
-  end # Command
+  end # Component
 end # Punchblock

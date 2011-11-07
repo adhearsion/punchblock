@@ -5,6 +5,7 @@ end
 
 %w{
   answered
+  asterisk
   complete
   dtmf
   end

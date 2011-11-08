@@ -7,6 +7,12 @@ require 'pry'
 require 'logger'
 require 'optparse'
 
+puts <<-DEPRECATION
+********************
+WARNING: This utility is deprecated and will be removed from a future version of Punchblock without further notice. You should use the punchblock-console gem instead.
+********************
+DEPRECATION
+
 include Punchblock
 
 Thread.abort_on_exception = true

@@ -1,5 +1,11 @@
 # develop
 
+# v0.6.1
+  * Feature: Allow instructing the connection we are ready. An XMPP connection will send initial presence with a status of 'chat' to the rayo domain
+  * Bugfix: When running on Asterisk, two FullyBooted events will now trigger a connected event
+  * Bugfix: No longer ignore offers from the specified rayo domain on XMPP connections
+  * Feature: Tag all event objects with the XMPP domain they came from
+
 # v0.6.0
   * API change: Punchblock consumers now need to instantiate both a Connection and a Client (see the punchblock-console gem for an example)
   * Feature: Added a Connection for Asterisk, utilising RubyAMI to open an AMI connection to Asterisk, and allowing AMI actions to be executed. AMI events are handled by the client event handler.

@@ -144,6 +144,26 @@ module Punchblock
             subject.handle_ami_event :foo
           end
         end
+
+
+        describe 'with a FullyBooted event' do
+          let(:ami_event) { RubyAMI::Event.new 'FullyBooted' }
+
+          context 'once' do
+            it 'does not send anything to the connection' do
+              subject.connection.expects(:handle_event).never
+              subject.handle_ami_event ami_event
+            end
+          end
+
+          context 'twice' do
+            it 'sends a connected event to the event handler' do
+              subject.connection.expects(:handle_event).once.with Connection::Connected.new
+              subject.handle_ami_event ami_event
+              subject.handle_ami_event ami_event
+            end
+          end
+        end
       end
     end
   end

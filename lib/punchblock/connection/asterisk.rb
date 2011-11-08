@@ -2,13 +2,15 @@ require 'ruby_ami'
 
 module Punchblock
   module Connection
-    class Asterisk
+    class Asterisk < GenericConnection
       attr_reader :ami_client, :translator
       attr_accessor :event_handler
 
       def initialize(options = {})
+        options[:logger] = options[:wire_logger]
         @ami_client = RubyAMI::Client.new options.merge(:event_handler => lambda { |event| translator.handle_ami_event! event })
         @translator = Translator::Asterisk.new @ami_client, self
+        super()
       end
 
       def run

@@ -117,6 +117,7 @@ module Punchblock
               mock_event_handler.expects(:call).once.with do |event|
                 event.should be_instance_of Event::Offer
                 event.call_id.should == '9f00061'
+                event.domain.should == 'call.rayo.net'
               end
               handle_presence
             end
@@ -133,25 +134,6 @@ module Punchblock
               <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
   <foo/>
-</presence>
-              MSG
-            end
-
-            let(:example_irrelevant_event) { import_stanza irrelevant_xml }
-
-            it 'should not handle the event' do
-              mock_event_handler.expects(:call).never
-              lambda { connection.__send__ :handle_presence, example_irrelevant_event }.should throw_symbol(:pass)
-            end
-          end
-
-          describe "from someone other than the rayo domain" do
-            let :irrelevant_xml do
-              <<-MSG
-<presence to='16577@app.rayo.net/1' from='9f00061@jabber.org/fgh4590'>
-  <complete xmlns='urn:xmpp:rayo:ext:1'>
-    <success xmlns='urn:xmpp:tropo:say:complete:1' />
-  </complete>
 </presence>
               MSG
             end

@@ -101,7 +101,7 @@ module Punchblock
       private
 
       def handle_presence(p)
-        throw :pass unless p.rayo_event? && p.from.domain == @rayo_domain
+        throw :pass unless p.rayo_event?
         @logger.info "Receiving event for call ID #{p.call_id}" if @logger
         @callmap[p.call_id] = p.from.domain
         @logger.debug p.inspect if @logger

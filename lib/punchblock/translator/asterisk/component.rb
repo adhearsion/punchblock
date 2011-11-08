@@ -3,6 +3,8 @@ module Punchblock
     class Asterisk
       class Component
         include Celluloid
+
+        attr_reader :id
       end
     end
   end

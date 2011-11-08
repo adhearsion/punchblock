@@ -99,6 +99,20 @@ module Punchblock
         context 'with a Dial' do
           pending
         end
+
+        context 'with an AMI action' do
+          let :command do
+            Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
+          end
+
+          let(:mock_action) { mock 'Asterisk::AMIAction' }
+
+          it 'should create a component actor and execute it asynchronously' do
+            Asterisk::AMIAction.expects(:new).once.with(command, subject.ami_client).returns mock_action
+            mock_action.expects(:execute!).once
+            subject.execute_global_command command
+          end
+        end
       end
 
       describe '#handle_ami_event' do

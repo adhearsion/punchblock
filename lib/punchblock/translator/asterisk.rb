@@ -9,6 +9,7 @@ module Punchblock
 
       extend ActiveSupport::Autoload
 
+      autoload :AMIAction
       autoload :Call
       autoload :Component
 
@@ -16,7 +17,7 @@ module Punchblock
 
       def initialize(ami_client, connection)
         @ami_client, @connection = ami_client, connection
-        @calls = {}
+        @calls, @components = {}, {}
       end
 
       def register_call(call)
@@ -27,12 +28,21 @@ module Punchblock
         @calls[call_id]
       end
 
+      def register_component(component)
+        @components[component.id] ||= component
+      end
+
+      def component_with_id(component_id)
+        @components[component_id]
+      end
+
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
         connection.handle_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 
       def execute_command(command, options = {})
+        command.request!
         if command.call_id || options[:call_id]
           command.call_id ||= options[:call_id]
           if command.component_id || options[:component_id]
@@ -55,7 +65,9 @@ module Punchblock
       end
 
       def execute_global_command(command)
-
+        component = AMIAction.new command, ami_client
+        # register_component component
+        component.execute!
       end
     end
   end

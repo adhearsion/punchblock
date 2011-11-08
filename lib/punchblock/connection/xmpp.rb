@@ -7,7 +7,7 @@
 
 module Punchblock
   module Connection
-    class XMPP
+    class XMPP < GenericConnection
       include Blather::DSL
       attr_accessor :event_handler
 
@@ -37,9 +37,9 @@ module Punchblock
 
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
-        @event_handler = lambda { |event| raise 'No event handler set' }
-
         Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
+
+        super()
       end
 
       def write(command, options = {})
@@ -89,6 +89,13 @@ module Punchblock
 
       def connected?
         client.connected?
+      end
+
+      def ready!
+        status = Blather::Stanza::Presence::Status.new :chat
+        status.to = @rayo_domain
+        client.write status
+        super
       end
 
       private

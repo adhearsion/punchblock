@@ -23,8 +23,7 @@ module Punchblock
             headers[key.to_s.capitalize] = value
           end
           RubyAMI::Action.new @component_node.name, headers do |response|
-            send_events
-            send_complete_event
+            handle_response response
           end
         end
 
@@ -36,8 +35,24 @@ module Punchblock
           @component_node.response = Ref.new :id => @action.action_id
         end
 
-        def complete_event
-          headers = @action.response.headers
+        def handle_response(response)
+          case response
+          when RubyAMI::Error
+            send_event error_event(response)
+          when RubyAMI::Response
+            send_events
+            send_event complete_event(response)
+          end
+        end
+
+        def error_event(response)
+          Punchblock::Event::Complete.new.tap do |c|
+            c.reason = Punchblock::Event::Complete::Error.new :details => response.message
+          end
+        end
+
+        def complete_event(response)
+          headers = response.headers
           headers.merge! @extra_complete_attributes if @extra_complete_attributes
           headers.delete 'ActionID'
           Punchblock::Event::Complete.new.tap do |c|
@@ -64,10 +79,6 @@ module Punchblock
 
         def send_event(event)
           @component_node.add_event event
-        end
-
-        def send_complete_event
-          send_event complete_event
         end
       end
     end

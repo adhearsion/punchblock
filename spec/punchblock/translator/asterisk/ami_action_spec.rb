@@ -126,6 +126,22 @@ module Punchblock
               command.complete_event.resource(0.5).reason.should == expected_complete_reason
             end
           end
+
+          context 'with an error' do
+            let :error do
+              RubyAMI::Error.new.tap { |e| e.message = 'Action failed' }
+            end
+
+            let :expected_complete_reason do
+              Punchblock::Event::Complete::Error.new :details => 'Action failed'
+            end
+
+            it 'should send a complete event to the component node' do
+              subject.action << error
+
+              command.complete_event.resource(0.5).reason.should == expected_complete_reason
+            end
+          end
         end
       end
     end

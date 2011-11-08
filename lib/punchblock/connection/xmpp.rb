@@ -107,6 +107,7 @@ module Punchblock
         @logger.debug p.inspect if @logger
         event = p.event
         event.connection = self
+        event.domain = p.from.domain
         event_handler.call event
       end
 

@@ -117,6 +117,7 @@ module Punchblock
               mock_event_handler.expects(:call).once.with do |event|
                 event.should be_instance_of Event::Offer
                 event.call_id.should == '9f00061'
+                event.domain.should == 'call.rayo.net'
               end
               handle_presence
             end

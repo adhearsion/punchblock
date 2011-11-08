@@ -18,6 +18,7 @@ module Punchblock
       def initialize(ami_client, connection)
         @ami_client, @connection = ami_client, connection
         @calls, @components = {}, {}
+        @fully_booted_count = 0
       end
 
       def register_call(call)
@@ -38,7 +39,15 @@ module Punchblock
 
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
-        connection.handle_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+        if event.name.downcase == "fullybooted"
+          @fully_booted_count += 1
+          if @fully_booted_count >= 2
+            connection.handle_event Connection::Connected.new
+            @fully_booted_count = 0
+          end
+        else
+          connection.handle_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+        end
       end
 
       def execute_command(command, options = {})

@@ -1,5 +1,3 @@
-require 'punchblock/key_value_pair_node'
-
 module Punchblock
   module Component
     module Asterisk

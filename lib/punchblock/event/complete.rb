@@ -17,6 +17,11 @@ module Punchblock
         end
       end
 
+      def reason=(other)
+        children.map &:remove
+        self << other
+      end
+
       def recording
         element = find_first('//ns:recording', :ns => RAYO_NAMESPACES[:record_complete])
         if element

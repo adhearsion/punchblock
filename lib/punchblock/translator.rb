@@ -1,9 +1,7 @@
 module Punchblock
-  module Connection
+  module Translator
     extend ActiveSupport::Autoload
 
     autoload :Asterisk
-    autoload :Connected
-    autoload :XMPP
   end
 end

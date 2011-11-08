@@ -27,8 +27,22 @@ module Punchblock
 
             it_should_behave_like 'event'
 
-            its(:name) { should == 'Newchannel' }
-            its(:attributes) { should == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
+            its(:name)            { should == 'Newchannel' }
+            its(:attributes)      { should == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
+            its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
+          end
+
+          describe "when setting options in initializer" do
+            subject do
+              Event.new :name => 'Newchannel',
+                        :attributes => {:channel  => 'SIP/101-3f3f',
+                                        :state    => 'Ring',
+                                        :callerid => '101',
+                                        :uniqueid => '1094154427.10'}
+            end
+
+            its(:name)            { should == 'Newchannel' }
+            its(:attributes)      { should == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
             its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
           end
 

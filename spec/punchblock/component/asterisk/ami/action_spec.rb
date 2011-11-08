@@ -70,30 +70,44 @@ module Punchblock
               it_should_behave_like 'key_value_pairs'
             end
 
-            describe Complete::Success do
-              let :stanza do
-                <<-MESSAGE
+            class Complete
+              describe Success do
+                let :stanza do
+                  <<-MESSAGE
 <complete xmlns="urn:xmpp:rayo:ext:1">
   <success xmlns="urn:xmpp:rayo:asterisk:ami:complete:1">
     <message>Originate successfully queued</message>
+    <attribute name="Channel" value="SIP/101-3f3f"/>
+    <attribute name="State" value="Ring"/>
   </success>
 </complete>
-                MESSAGE
-              end
-
-              subject { RayoNode.import(parse_stanza(stanza).root).reason }
-
-              it { should be_instance_of Complete::Success }
-
-              its(:name)    { should == :success }
-              its(:message) { should == "Originate successfully queued" }
-
-              describe "when setting options in initializer" do
-                subject do
-                  Complete::Success.new :message => 'Originate successfully queued'
+                  MESSAGE
                 end
 
-                its(:message) { should == 'Originate successfully queued' }
+                subject { RayoNode.import(parse_stanza(stanza).root).reason }
+
+                it { should be_instance_of Success }
+
+                its(:name)            { should == :success }
+                its(:message)         { should == "Originate successfully queued" }
+                its(:attributes)      { should == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
+                its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
+
+                describe "when setting options in initializer" do
+                  subject do
+                    Success.new :message => 'Originate successfully queued', :attributes => {:channel => 'SIP/101-3f3f', :state => 'Ring'}
+                  end
+
+                  its(:message)         { should == 'Originate successfully queued' }
+                  its(:attributes)      { should == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
+                  its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
+                end
+              end
+
+              describe Attribute do
+                let(:class_name)    { Attribute }
+                let(:element_name)  { 'attribute' }
+                it_should_behave_like 'key_value_pairs'
               end
             end
           end

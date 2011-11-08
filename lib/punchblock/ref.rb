@@ -5,6 +5,12 @@ module Punchblock
   class Ref < RayoNode
     register :ref, :core
 
+    def self.new(options = {})
+      super().tap do |new_node|
+        options.each_pair { |k,v| new_node.send :"#{k}=", v }
+      end
+    end
+
     ##
     # @return [String] the command ID
     #

@@ -13,6 +13,8 @@ Thread.abort_on_exception = true
 
 options = { :username => 'usera@127.0.0.1', :password => '1', :wire_log_file => 'log/rayo-wire.log', :transport_log_file => 'log/rayo-transport.log', :auto_reconnect => false }
 
+connection_class = Connection::XMPP
+
 option_parser = OptionParser.new do |opts|
   opts.banner = "Usage: punchblock-console [-u usera@127.0.0.1] [-p abc123]"
   opts.on("-u", "--username USERNAME", String, "Specify the XMPP JID to connect to") do |u|
@@ -29,6 +31,11 @@ option_parser = OptionParser.new do |opts|
   end
   opts.on("--transport-log-file log/transportlog.log", String, "Specify the file to which the transport log should be written") do |tlf|
     options[:transport_log_file] = tlf
+  end
+  opts.on("--asterisk", "Use Asterisk") do |tlf|
+    connection_class = Connection::Asterisk
+    options[:host] = '127.0.0.1'
+    options[:port] = 5038
   end
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
@@ -53,8 +60,9 @@ options[:wire_logger].debug "Starting up..."
 options[:transport_logger] = Logger.new options.delete(:transport_log_file)
 options[:transport_logger].level = Logger::DEBUG
 options[:transport_logger].debug "Starting up..."
+options[:logger] = options[:wire_logger]
 
-connection = Connection::XMPP.new options
+connection = connection_class.new options
 client = Client.new :connection => connection
 
 [:INT, :TERM].each do |signal|
@@ -85,6 +93,10 @@ Thread.new do
     if event == Connection::Connected
       puts event
       puts "Waiting for a call..."
+      next
+    end
+    unless event.call_id
+      puts "Ad-hoc event: #{event.inspect}"
       next
     end
     puts "#{event.class} event for call: #{event.call_id}"

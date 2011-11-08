@@ -7,17 +7,17 @@ module Punchblock
         let(:mock_ami_client) { mock 'RubyAMI::Client' }
 
         let :command do
-          Punchblock::Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
+          Punchblock::Component::Asterisk::AMI::Action.new :name => 'ExtensionStatus', :params => { :context => 'default', :exten => 'idonno' }
         end
 
         subject { AMIAction.new command, mock_ami_client }
 
         let :expected_action do
-          RubyAMI::Action.new 'Status', 'Channel' => 'foo'
+          RubyAMI::Action.new 'ExtensionStatus', 'Context' => 'default', 'Exten' => 'idonno'
         end
 
         let :expected_complete_event do
-          Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => 'Channel status will follow'
+          Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => 'Channel status will follow', :attributes => {:exten => "idonno", :context => "default", :hint => "", :status => "-1"}
         end
 
         context 'initial execution' do
@@ -39,7 +39,12 @@ module Punchblock
         context 'when the AMI action completes' do
           let(:response) do
             RubyAMI::Response.new.tap do |r|
-              r['Message'] = 'Channel status will follow'
+              r['ActionID'] = "552a9d9f-46d7-45d8-a257-06fe95f48d99"
+              r['Message']  = 'Channel status will follow'
+              r["Exten"]    = "idonno"
+              r["Context"]  = "default"
+              r["Hint"]     = ""
+              r["Status"]   = "-1"
             end
           end
 

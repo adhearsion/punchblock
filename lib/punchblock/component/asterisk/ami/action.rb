@@ -97,9 +97,44 @@ module Punchblock
                 message_node.content = other
               end
 
-              def inspect_attributes
-                [:message]
+              ##
+              # @return [Hash] hash of key-value pairs of attributes
+              #
+              def attributes_hash
+                attributes.inject({}) do |hash, attribute|
+                  hash[attribute.name] = attribute.value
+                  hash
+                end
               end
+
+              ##
+              # @return [Array[Attribute]] attributes
+              #
+              def attributes
+                find('//ns:attribute', :ns => self.class.registered_ns).map do |i|
+                  Attribute.new i
+                end
+              end
+
+              ##
+              # @param [Hash, Array] attributes A hash of key-value attribute pairs, or an array of Attribute objects
+              #
+              def attributes=(attributes)
+                find('//ns:attribute', :ns => self.class.registered_ns).each &:remove
+                if attributes.is_a? Hash
+                  attributes.each_pair { |k,v| self << Attribute.new(k, v) }
+                elsif attributes.is_a? Array
+                  [attributes].flatten.each { |i| self << Attribute.new(i) }
+                end
+              end
+
+              def inspect_attributes
+                [:message, :attributes_hash]
+              end
+            end
+
+            class Attribute < RayoNode
+              include KeyValuePairNode
             end
           end # Complete
         end # Action

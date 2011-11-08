@@ -36,7 +36,9 @@ module Punchblock
         end
 
         def complete_event
-          Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => @action.response['Message']
+          headers = @action.response.headers
+          headers.delete 'ActionID'
+          Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => headers.delete('Message'), :attributes => headers
         end
 
         def send_complete_event

@@ -67,7 +67,7 @@ module Punchblock
     end
 
     def inspect
-      "#<#{self.class} #{inspect_attributes.map { |c| "#{c}=#{self.__send__(c).inspect}" rescue nil }.compact * ', '}>"
+      "#<#{self.class} #{inspect_attributes.map { |c| "#{c}=#{self.__send__(c).inspect rescue nil}" }.compact * ', '}>"
     end
 
     def eql?(o, *fields)

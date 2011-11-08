@@ -37,6 +37,46 @@ module Punchblock
         its(:min_confidence)      { should == 0.5 }
       end
 
+      describe "from a stanza" do
+        let :stanza do
+          <<-MESSAGE
+<input xmlns="urn:xmpp:rayo:input:1"
+       mode="speech"
+       terminator="#"
+       max-digits="10"
+       recognizer="en-US"
+       initial-timeout="2000"
+       inter-digit-timeout="2000"
+       term-timeout="2000"
+       complete-timeout="2000"
+       incomplete-timeout="2000"
+       sensitivity="0.5"
+       min-confidence="0.5">
+  <grammar content-type="application/grammar+custom">
+    <![CDATA[ [5 DIGITS] ]]>
+  </grammar>
+</input>
+          MESSAGE
+        end
+
+        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Input }
+
+        its(:grammar)             { should == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
+        its(:mode)                { should == :speech }
+        its(:terminator)          { should == '#' }
+        its(:max_digits)          { should == 10 }
+        its(:recognizer)          { should == 'en-US' }
+        its(:initial_timeout)     { should == 2000 }
+        its(:inter_digit_timeout) { should == 2000 }
+        its(:term_timeout)        { should == 2000 }
+        its(:complete_timeout)    { should == 2000 }
+        its(:incomplete_timeout)  { should == 2000 }
+        its(:sensitivity)         { should == 0.5 }
+        its(:min_confidence)      { should == 0.5 }
+      end
+
       describe Input::Grammar do
         describe "when not passing a grammar" do
           subject { Input::Grammar.new :value => '[5 DIGITS]' }

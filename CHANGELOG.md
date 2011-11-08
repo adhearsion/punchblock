@@ -1,5 +1,10 @@
 # develop
 
+# v0.6.0
+  * API change: Punchblock consumers now need to instantiate both a Connection and a Client (see the punchblock-console gem for an example)
+  * Feature: Added a Connection for Asterisk, utilising RubyAMI to open an AMI connection to Asterisk, and allowing AMI actions to be executed. AMI events are handled by the client event handler.
+  * Deprecation: The punchblock-console and the associated DSL are now deprecated and the punchblock-console gem should be used instead
+
 # v0.5.1
   API change: Connections now raise a Punchblock::Connection::Connected instance as an event, rather than the class itself
 

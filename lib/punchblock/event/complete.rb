@@ -17,6 +17,11 @@ module Punchblock
         end
       end
 
+      def reason=(other)
+        children.map &:remove
+        self << other
+      end
+
       def recording
         element = find_first('//ns:recording', :ns => RAYO_NAMESPACES[:record_complete])
         if element
@@ -32,6 +37,17 @@ module Punchblock
       end
 
       class Reason < RayoNode
+        def self.new(options = {})
+          super().tap do |new_node|
+            case options
+            when Nokogiri::XML::Node
+              new_node.inherit options
+            when Hash
+              options.each_pair { |k,v| new_node.send :"#{k}=", v }
+            end
+          end
+        end
+
         def name
           super.to_sym
         end
@@ -54,6 +70,10 @@ module Punchblock
 
         def details
           text.strip
+        end
+
+        def details=(other)
+          self << other
         end
 
         def inspect_attributes # :nodoc:

@@ -1,4 +1,6 @@
-Copyright (c) 2011 Jason Goecke
+Copyright (C) 2011 Ben Klang
+Copyright (C) 2011 Ben Langfeld
+Copyright (C) 2011 Jason Goecke
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

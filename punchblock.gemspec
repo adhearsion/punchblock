@@ -29,9 +29,11 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<state_machine>, [">= 1.0.1"]
   s.add_runtime_dependency %q<future-resource>, [">= 0.0.2"]
   s.add_runtime_dependency %q<has-guarded-handlers>, [">= 0.1.0"]
+  s.add_runtime_dependency %q<celluloid>, [">= 0.5.0"]
+  s.add_runtime_dependency %q<ruby_ami>, [">= 0.1.2"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0.0"]
-  s.add_development_dependency %q<rspec>, ["~> 2.3.0"]
+  s.add_development_dependency %q<rspec>, [">= 2.5.0"]
   s.add_development_dependency %q<ci_reporter>, [">= 1.6.3"]
   s.add_development_dependency %q<yard>, ["~> 0.6.0"]
   s.add_development_dependency %q<rcov>, [">= 0"]

@@ -116,10 +116,10 @@ module Punchblock
             Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
           end
 
-          let(:mock_action) { mock 'Asterisk::AMIAction' }
+          let(:mock_action) { mock 'Asterisk::Component::Asterisk::AMIAction' }
 
           it 'should create a component actor and execute it asynchronously' do
-            Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
+            Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
             mock_action.expects(:execute!).once
             subject.execute_global_command command
           end

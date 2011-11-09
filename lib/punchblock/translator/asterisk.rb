@@ -9,7 +9,6 @@ module Punchblock
 
       extend ActiveSupport::Autoload
 
-      autoload :AMIAction
       autoload :Call
       autoload :Component
 
@@ -89,7 +88,7 @@ module Punchblock
       end
 
       def execute_global_command(command)
-        component = AMIAction.new command, current_actor
+        component = Component::Asterisk::AMIAction.new command, current_actor
         # register_component component
         component.execute!
       end

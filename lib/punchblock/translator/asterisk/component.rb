@@ -1,10 +1,16 @@
 module Punchblock
   module Translator
     class Asterisk
-      class Component
-        include Celluloid
+      module Component
+        extend ActiveSupport::Autoload
 
-        attr_reader :id
+        autoload :Asterisk
+
+        class Component
+          include Celluloid
+
+          attr_reader :id
+        end
       end
     end
   end

@@ -13,20 +13,25 @@ module Punchblock
       autoload :Call
       autoload :Component
 
-      attr_reader :ami_client, :connection
+      attr_reader :ami_client, :connection, :calls
 
       def initialize(ami_client, connection)
         @ami_client, @connection = ami_client, connection
-        @calls, @components = {}, {}
+        @calls, @components, @channel_to_call_id = {}, {}, {}
         @fully_booted_count = 0
       end
 
       def register_call(call)
+        @channel_to_call_id[call.channel] = call.id
         @calls[call.id] ||= call
       end
 
       def call_with_id(call_id)
         @calls[call_id]
+      end
+
+      def call_for_channel(channel)
+        call_with_id @channel_to_call_id[channel]
       end
 
       def register_component(component)
@@ -39,15 +44,22 @@ module Punchblock
 
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
-        if event.name.downcase == "fullybooted"
+        case event.name.downcase
+        when "fullybooted"
           @fully_booted_count += 1
           if @fully_booted_count >= 2
-            connection.handle_event Connection::Connected.new
+            handle_pb_event Connection::Connected.new
             @fully_booted_count = 0
           end
+        when "asyncagi"
+          handle_async_agi_event event
         else
-          connection.handle_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+          handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
         end
+      end
+
+      def handle_pb_event(event)
+        connection.handle_event event
       end
 
       def execute_command(command, options = {})
@@ -77,6 +89,17 @@ module Punchblock
         component = AMIAction.new command, ami_client
         # register_component component
         component.execute!
+      end
+
+      private
+
+      def handle_async_agi_event(event)
+        case event['SubEvent']
+        when 'Start'
+          call = Call.new event['Channel'], current_actor, event['Env']
+          register_call call
+          call.send_offer!
+        end
       end
     end
   end

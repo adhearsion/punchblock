@@ -30,5 +30,9 @@ module Punchblock
         [headers].flatten.each { |i| self << Header.new(i) }
       end
     end
+
+    def inspect_attributes # :nodoc:
+      [:headers_hash] + super
+    end
   end
 end

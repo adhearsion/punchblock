@@ -37,6 +37,34 @@ module Punchblock
           end
         end
 
+        def execute_command(command)
+          case command
+          when Command::Accept
+            send_agi_action 'EXEC RINGING' do |response|
+              command.response = true
+            end
+          when Command::Answer
+            send_agi_action 'EXEC ANSWER' do |response|
+              command.response = true
+            end
+          when Command::Hangup
+            send_ami_action 'Hangup', 'Channel' => channel do |response|
+              command.response = true
+            end
+          end
+        end
+
+        def send_agi_action(command, &block)
+          send_ami_action 'AGI', 'Command' => command, 'Channel' => channel, &block
+        end
+
+        def send_ami_action(name, headers = {}, &block)
+          RubyAMI::Action.new(name, headers, &block).tap do |action|
+            @current_ami_action = action
+            translator.send_ami_action! action
+          end
+        end
+
         private
 
         def send_pb_event(event)

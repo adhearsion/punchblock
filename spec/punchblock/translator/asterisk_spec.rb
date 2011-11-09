@@ -119,7 +119,7 @@ module Punchblock
           let(:mock_action) { mock 'Asterisk::AMIAction' }
 
           it 'should create a component actor and execute it asynchronously' do
-            Asterisk::AMIAction.expects(:new).once.with(command, subject.ami_client).returns mock_action
+            Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
             mock_action.expects(:execute!).once
             subject.execute_global_command command
           end
@@ -236,6 +236,13 @@ module Punchblock
             call.expects(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end
+        end
+      end
+
+      describe '#send_ami_action' do
+        it 'should send the action to the AMI client' do
+          ami_client.expects(:send_action).once.with 'foo', :foo => :bar
+          subject.send_ami_action 'foo', :foo => :bar
         end
       end
     end

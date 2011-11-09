@@ -4,13 +4,13 @@ module Punchblock
   module Translator
     class Asterisk
       describe AMIAction do
-        let(:mock_ami_client) { mock 'RubyAMI::Client' }
+        let(:mock_translator) { mock 'RubyAMI::Client' }
 
         let :command do
           Punchblock::Component::Asterisk::AMI::Action.new :name => 'ExtensionStatus', :params => { :context => 'default', :exten => 'idonno' }
         end
 
-        subject { AMIAction.new command, mock_ami_client }
+        subject { AMIAction.new command, mock_translator }
 
         let :expected_action do
           RubyAMI::Action.new 'ExtensionStatus', 'Context' => 'default', 'Exten' => 'idonno'
@@ -26,7 +26,7 @@ module Punchblock
           before { UUIDTools::UUID.stubs :random_create => component_id }
 
           it 'should send the appropriate RubyAMI::Action and send the component node a ref with the action ID' do
-            mock_ami_client.expects(:send_action).once.with(expected_action).returns(expected_action)
+            mock_translator.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
             command.expects(:response=).once.with(expected_response)
             subject.execute
           end
@@ -59,7 +59,10 @@ module Punchblock
 
               command.should be_complete
 
-              command.complete_event.resource(0.5).reason.should == expected_complete_reason
+              complete_event = command.complete_event.resource(0.5)
+
+              complete_event.component_id.should == subject.id
+              complete_event.reason.should == expected_complete_reason
             end
           end
 
@@ -94,7 +97,7 @@ module Punchblock
             end
 
             let :event_node do
-              Punchblock::Event::Asterisk::AMI::Event.new :name => 'CoreShowChannel', :attributes => {
+              Punchblock::Event::Asterisk::AMI::Event.new :name => 'CoreShowChannel', :component_id => subject.id, :attributes => {
                 :channel          => 'SIP/127.0.0.1-00000013',
                 :uniqueid         => '1287686437.19',
                 :context          => 'adhearsion',
@@ -133,13 +136,16 @@ module Punchblock
             end
 
             let :expected_complete_reason do
-              Punchblock::Event::Complete::Error.new :details => 'Action failed'
+              Punchblock::Event::Complete::Error.new :component_id => subject.id, :details => 'Action failed'
             end
 
             it 'should send a complete event to the component node' do
               subject.action << error
 
-              command.complete_event.resource(0.5).reason.should == expected_complete_reason
+              complete_event = command.complete_event.resource(0.5)
+
+              complete_event.component_id.should == subject.id
+              complete_event.reason.should == expected_complete_reason
             end
           end
         end

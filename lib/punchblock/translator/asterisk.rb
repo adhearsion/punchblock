@@ -89,9 +89,13 @@ module Punchblock
       end
 
       def execute_global_command(command)
-        component = AMIAction.new command, ami_client
+        component = AMIAction.new command, current_actor
         # register_component component
         component.execute!
+      end
+
+      def send_ami_action(name, headers = {}, &block)
+        ami_client.send_action name, headers, &block
       end
 
       private

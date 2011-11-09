@@ -4,8 +4,8 @@ module Punchblock
       class AMIAction < Component
         attr_reader :action
 
-        def initialize(component_node, ami_client)
-          @component_node, @ami_client = component_node, ami_client
+        def initialize(component_node, translator)
+          @component_node, @translator = component_node, translator
           @action = create_action
           @id = @action.action_id
         end
@@ -28,7 +28,7 @@ module Punchblock
         end
 
         def send_action
-          @ami_client.send_action @action
+          @translator.send_ami_action! @action
         end
 
         def send_ref
@@ -38,25 +38,27 @@ module Punchblock
         def handle_response(response)
           case response
           when RubyAMI::Error
-            send_event error_event(response)
+            send_event complete_event(error_reason(response))
           when RubyAMI::Response
             send_events
-            send_event complete_event(response)
+            send_event complete_event(success_reason(response))
           end
         end
 
-        def error_event(response)
-          Punchblock::Event::Complete.new.tap do |c|
-            c.reason = Punchblock::Event::Complete::Error.new :details => response.message
-          end
+        def error_reason(response)
+          Punchblock::Event::Complete::Error.new :details => response.message
         end
 
-        def complete_event(response)
+        def success_reason(response)
           headers = response.headers
           headers.merge! @extra_complete_attributes if @extra_complete_attributes
           headers.delete 'ActionID'
+          Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => headers.delete('Message'), :attributes => headers
+        end
+
+        def complete_event(reason)
           Punchblock::Event::Complete.new.tap do |c|
-            c.reason = Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => headers.delete('Message'), :attributes => headers
+            c.reason = reason
           end
         end
 
@@ -78,7 +80,7 @@ module Punchblock
         end
 
         def send_event(event)
-          @component_node.add_event event
+          @component_node.add_event event.tap { |e| e.component_id = id }
         end
       end
     end

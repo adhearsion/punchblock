@@ -83,6 +83,28 @@ module Punchblock
             subject.send_offer
           end
         end
+
+        describe '#process_ami_event' do
+          context 'with a Hangup event' do
+            let :ami_event do
+              RubyAMI::Event.new('Hangup').tap do |e|
+                e['Uniqueid']     = "1320842458.8"
+                e['Calleridnum']  = "5678"
+                e['Calleridname'] = "Jane Smith"
+                e['Cause']        = "0"
+                e['Cause-txt']    = "Unknown"
+                e['Channel']      = "SIP/1234-00000000"
+              end
+            end
+
+            it 'should send an end event to the translator' do
+              expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+                                                              :call_id  => subject.id
+              translator.expects(:handle_pb_event!).with expected_end_event
+              subject.process_ami_event ami_event
+            end
+          end
+        end
       end
     end
   end

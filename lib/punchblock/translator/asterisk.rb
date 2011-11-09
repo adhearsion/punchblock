@@ -44,18 +44,21 @@ module Punchblock
 
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
-        case event.name.downcase
-        when "fullybooted"
+        if event.name.downcase == "fullybooted"
           @fully_booted_count += 1
           if @fully_booted_count >= 2
             handle_pb_event Connection::Connected.new
             @fully_booted_count = 0
           end
-        when "asyncagi"
-          handle_async_agi_event event
-        else
-          handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+          return
         end
+        if event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
+          handle_async_agi_start_event event
+        end
+        if call = call_for_channel(event['Channel'])
+          call.process_ami_event! event
+        end
+        handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 
       def handle_pb_event(event)
@@ -78,11 +81,11 @@ module Punchblock
       end
 
       def execute_call_command(command)
-        call_with_id(command.call_id).execute_command command
+        call_with_id(command.call_id).execute_command! command
       end
 
       def execute_component_command(command)
-        call_with_id(command.call_id).execute_component_command command
+        call_with_id(command.call_id).execute_component_command! command
       end
 
       def execute_global_command(command)
@@ -93,13 +96,10 @@ module Punchblock
 
       private
 
-      def handle_async_agi_event(event)
-        case event['SubEvent']
-        when 'Start'
-          call = Call.new event['Channel'], current_actor, event['Env']
-          register_call call
-          call.send_offer!
-        end
+      def handle_async_agi_start_event(event)
+        call = Call.new event['Channel'], current_actor, event['Env']
+        register_call call
+        call.send_offer!
       end
     end
   end

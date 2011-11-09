@@ -23,18 +23,28 @@ module Punchblock
         end
 
         def execute_component_command(command)
-          component_with_id(command.component_id).execute_command command
+          component_with_id(command.component_id).execute_command! command
         end
 
         def send_offer
-          translator.handle_pb_event! offer_event
+          send_pb_event offer_event
+        end
+
+        def process_ami_event(ami_event)
+          case ami_event.name
+          when 'Hangup'
+            send_pb_event Event::End.new(:reason => :hangup)
+          end
         end
 
         private
 
+        def send_pb_event(event)
+          translator.handle_pb_event! event.tap { |e| e.call_id = id }
+        end
+
         def offer_event
-          Event::Offer.new :call_id => id,
-                           :to      => agi_env[:agi_dnid],
+          Event::Offer.new :to      => agi_env[:agi_dnid],
                            :from    => [agi_env[:agi_type].downcase, agi_env[:agi_callerid]].join(':'),
                            :headers => sip_headers
         end

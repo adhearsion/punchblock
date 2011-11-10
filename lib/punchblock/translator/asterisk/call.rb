@@ -56,14 +56,17 @@ module Punchblock
               command.response = true
             end
           when Punchblock::Component::Asterisk::AGI::Command
-            component = Component::Asterisk::AGICommand.new command, current_actor
-            register_component component
-            component.execute!
+            execute_agi_command command
           end
         end
 
         def send_agi_action(command, &block)
-          send_ami_action 'AGI', 'Command' => command, 'Channel' => channel, &block
+          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :call_id => id
+          @current_agi_command.request!
+          @current_agi_command.register_event_handler Punchblock::Event::Complete do |e|
+            block.call e
+          end
+          execute_agi_command @current_agi_command
         end
 
         def send_ami_action(name, headers = {}, &block)
@@ -74,6 +77,13 @@ module Punchblock
         end
 
         private
+
+        def execute_agi_command(command)
+          Component::Asterisk::AGICommand.new(command, current_actor).tap do |component|
+            register_component component
+            component.execute!
+          end
+        end
 
         def send_pb_event(event)
           translator.handle_pb_event! event.tap { |e| e.call_id = id }

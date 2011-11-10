@@ -135,19 +135,27 @@ module Punchblock
         end
 
         describe '#execute_command' do
+          let :expected_agi_complete_event do
+            Punchblock::Event::Complete.new.tap do |c|
+              c.reason = Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code    => 200,
+                                                                                              :result  => 'Success',
+                                                                                              :data    => 'FOO'
+            end
+          end
+
+          before do
+            command.request!
+          end
+
           context 'with an accept command' do
             let(:command) { Command::Accept.new }
 
-            before do
-              command.request!
-            end
-
             it "should send an EXEC RINGING AGI command and set the command's response" do
               subject.execute_command command
-              ami_action = subject.actor_subject.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "agi"
-              ami_action.headers['Command'].should == "EXEC RINGING"
-              ami_action << RubyAMI::Response.new
+              agi_command = subject.actor_subject.instance_variable_get(:'@current_agi_command')
+              agi_command.name.should == "EXEC RINGING"
+              agi_command.execute!
+              agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
           end
@@ -155,26 +163,18 @@ module Punchblock
           context 'with an answer command' do
             let(:command) { Command::Answer.new }
 
-            before do
-              command.request!
-            end
-
             it "should send an EXEC ANSWER AGI command and set the command's response" do
               subject.execute_command command
-              ami_action = subject.actor_subject.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "agi"
-              ami_action.headers['Command'].should == "EXEC ANSWER"
-              ami_action << RubyAMI::Response.new
+              agi_command = subject.actor_subject.instance_variable_get(:'@current_agi_command')
+              agi_command.name.should == "EXEC ANSWER"
+              agi_command.execute!
+              agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
           end
 
           context 'with a hangup command' do
             let(:command) { Command::Hangup.new }
-
-            before do
-              command.request!
-            end
 
             it "should send a Hangup AMI command and set the command's response" do
               subject.execute_command command
@@ -202,6 +202,7 @@ module Punchblock
 
         describe '#send_agi_action' do
           it 'should send an appropriate AsyncAGI AMI action' do
+            pending
             subject.actor_subject.expects(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
             subject.send_agi_action 'FOO'
           end

@@ -34,6 +34,10 @@ module Punchblock
           case ami_event.name
           when 'Hangup'
             send_pb_event Event::End.new(:reason => :hangup)
+          when 'AGIExec'
+            if component = component_with_id(ami_event['CommandId'])
+              component.handle_ami_event! ami_event
+            end
           end
         end
 
@@ -51,6 +55,10 @@ module Punchblock
             send_ami_action 'Hangup', 'Channel' => channel do |response|
               command.response = true
             end
+          when Punchblock::Component::Asterisk::AGI::Command
+            component = Component::Asterisk::AGICommand.new command, current_actor
+            register_component component
+            component.execute!
           end
         end
 
@@ -59,7 +67,7 @@ module Punchblock
         end
 
         def send_ami_action(name, headers = {}, &block)
-          RubyAMI::Action.new(name, headers, &block).tap do |action|
+          (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
             translator.send_ami_action! action
           end

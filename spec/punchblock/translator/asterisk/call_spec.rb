@@ -104,6 +104,34 @@ module Punchblock
               subject.process_ami_event ami_event
             end
           end
+
+          context 'with an event for a known AGI command component' do
+            let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER' }
+            let :component do
+              Component::Asterisk::AGICommand.new mock_component_node, subject.translator
+            end
+
+            let(:ami_event) do
+              RubyAMI::Event.new("AGIExec").tap do |e|
+                e["SubEvent"]   = "End"
+                e["Channel"]    = "SIP/1234-00000000"
+                e["CommandId"]  = component.id
+                e["Command"]    = "EXEC ANSWER"
+                e["ResultCode"] = "200"
+                e["Result"]     = "Success"
+                e["Data"]       = "FOO"
+              end
+            end
+
+            before do
+              subject.register_component component
+            end
+
+            it 'should send the event to the component' do
+              component.expects(:handle_ami_event!).once.with ami_event
+              subject.process_ami_event ami_event
+            end
+          end
         end
 
         describe '#execute_command' do
@@ -154,6 +182,20 @@ module Punchblock
               ami_action.name.should == "hangup"
               ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
+            end
+          end
+
+          context 'with a component' do
+            let :command do
+              Punchblock::Component::Asterisk::AGI::Command.new :name => 'Answer'
+            end
+
+            let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
+
+            it 'should create a component actor and execute it asynchronously' do
+              Component::Asterisk::AGICommand.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:execute!).once
+              subject.execute_command command
             end
           end
         end

@@ -6,7 +6,7 @@ module Punchblock
       module Component
         module Asterisk
           describe AMIAction do
-            let(:mock_translator) { mock 'RubyAMI::Client' }
+            let(:mock_translator) { mock 'Translator::Asterisk' }
 
             let :command do
               Punchblock::Component::Asterisk::AMI::Action.new :name => 'ExtensionStatus', :params => { :context => 'default', :exten => 'idonno' }

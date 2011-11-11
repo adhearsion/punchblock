@@ -1,3 +1,5 @@
+require 'uri'
+
 module Punchblock
   module Translator
     class Asterisk
@@ -17,13 +19,18 @@ module Punchblock
             end
 
             def handle_ami_event(event)
-              if event.name == 'AGIExec'
-                if event['SubEvent'] == 'End'
-                  case event['ResultCode']
-                  when '200'
-                    send_event complete_event(success_reason(event))
-                  end
+              if event.name == 'AsyncAGI'
+                if event['SubEvent'] == 'Exec'
+                  send_event complete_event(success_reason(event))
                 end
+              end
+            end
+
+            def parse_agi_result(result)
+              match = URI.decode(result).chomp.match(/^(\d{3}) result=(-?\d*) ?(\(?.*\)?)?$/)
+              if match
+                data = match[3] ? match[3].gsub(/(^\()|(\)$)/, '') : nil
+                [match[1].to_i, match[2].to_i, data]
               end
             end
 
@@ -45,7 +52,7 @@ module Punchblock
             end
 
             def success_reason(event)
-              code, result, data = event.headers.values_at 'ResultCode', 'Result', 'Data'
+              code, result, data = parse_agi_result event['Result']
               Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code => code, :result => result, :data => data
             end
 

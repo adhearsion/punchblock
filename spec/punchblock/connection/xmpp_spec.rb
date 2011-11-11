@@ -19,8 +19,10 @@ module Punchblock
       end
 
       it 'should properly set the Blather logger' do
-        XMPP.new :wire_logger => :foo, :username => 1, :password => 1
+        Punchblock.logger = :foo
+        XMPP.new :username => '1@call.rayo.net', :password => 1
         Blather.logger.should be :foo
+        Punchblock.reset_logger
       end
 
       it "looking up original command by command ID" do

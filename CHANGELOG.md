@@ -1,5 +1,6 @@
 # develop
   # Feature: Added basic support for running Punchblock apps on Asterisk. Calls coming in to AsyncAGI result in the client receiving an Offer, hangup events are sent, and accept/answer/hangup commands work.
+  # API change: The logger is now set using Punchblock.logger= rather than as a hash key to Connection.new
 
 # v0.6.1
   * Feature: Allow instructing the connection we are ready. An XMPP connection will send initial presence with a status of 'chat' to the rayo domain

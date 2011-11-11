@@ -37,9 +37,9 @@ module Punchblock
           when 'Hangup'
             pb_logger.debug "Received a Hangup AMI event. Sending End event."
             send_pb_event Event::End.new(:reason => :hangup)
-          when 'AGIExec'
-            if component = component_with_id(ami_event['CommandId'])
+          when 'AsyncAGI'
             pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
+            if component = component_with_id(ami_event['CommandID'])
               pb_logger.debug "Found component #{component.id} for event. Forwarding event..."
               component.handle_ami_event! ami_event
             end

@@ -4,20 +4,8 @@
   active_support/core_ext/module/delegation
   future-resource
   has_guarded_handlers
+  punchblock/core_ext/ruby
 }.each { |l| require l }
-
-class Hash
-  def select(&block)
-    val = super(&block)
-    if val.is_a?(Array)
-      val = val.inject({}) do |accumulator, element|
-        accumulator[element[0]] = element[1]
-        accumulator
-      end
-    end
-    val
-  end
-end
 
 module Punchblock
   extend ActiveSupport::Autoload
@@ -35,6 +23,20 @@ module Punchblock
   autoload :ProtocolError
   autoload :RayoNode
   autoload :Translator
+
+  class << self
+    def logger
+      @logger || reset_logger
+    end
+
+    def logger=(other)
+      @logger = other
+    end
+
+    def reset_logger
+      @logger = NullObject.new
+    end
+  end
 
   ##
   # This exception may be raised if a transport error is detected.

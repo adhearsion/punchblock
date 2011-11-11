@@ -18,7 +18,6 @@ module Punchblock
       # @option options [String] :username client JID
       # @option options [String] :password XMPP password
       # @option options [String] :rayo_domain the domain on which Rayo is running
-      # @option options [Logger] :wire_logger to which all XMPP transactions will be logged
       # @option options [Boolean, Optional] :auto_reconnect whether or not to auto reconnect
       # @option options [Numeric, Optional] :write_timeout for which to wait on a command response
       # @option options [Numeric, nil, Optional] :ping_period interval in seconds on which to ping the server. Nil or false to disable
@@ -37,7 +36,7 @@ module Punchblock
 
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
-        Blather.logger = options.delete(:wire_logger) if options.has_key?(:wire_logger)
+        Blather.logger = pb_logger
 
         super()
       end
@@ -61,7 +60,7 @@ module Punchblock
         jid = command.is_a?(Command::Dial) ? @rayo_domain : "#{call_id}@#{@callmap[call_id]}"
         jid << "/#{component_id}" if component_id
         create_iq(jid).tap do |iq|
-          @logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{jid}" if @logger
+          pb_logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{jid}"
           iq << command
         end
       end
@@ -102,9 +101,9 @@ module Punchblock
 
       def handle_presence(p)
         throw :pass unless p.rayo_event?
-        @logger.info "Receiving event for call ID #{p.call_id}" if @logger
+        pb_logger.info "Receiving event for call ID #{p.call_id}"
         @callmap[p.call_id] = p.from.domain
-        @logger.debug p.inspect if @logger
+        pb_logger.debug p.inspect
         event = p.event
         event.connection = self
         event.domain = p.from.domain
@@ -114,7 +113,7 @@ module Punchblock
       def handle_iq_result(iq, command)
         # FIXME: Do we need to raise a warning if the domain changes?
         @callmap[iq.from.node] = iq.from.domain
-        @logger.debug "Command #{iq.id} completed successfully" if @logger
+        pb_logger.debug "Command #{iq.id} completed successfully"
         command.response = iq.rayo_node.is_a?(Ref) ? iq.rayo_node : true
       end
 
@@ -128,7 +127,7 @@ module Punchblock
         # Push a message to the queue and the log that we connected
         when_ready do
           event_handler.call Connected.new
-          @logger.info "Connected to XMPP as #{@username}" if @logger
+          pb_logger.info "Connected to XMPP as #{@username}"
           @reconnect_attempts = 0
           @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
         end
@@ -137,9 +136,9 @@ module Punchblock
           @rayo_ping.cancel if @rayo_ping
           if @auto_reconnect && @reconnect_attempts
             timer = 30 * 2 ** @reconnect_attempts
-            @logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s." if @logger
+            pb_logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s."
             sleep timer
-            @logger.info "Trying to reconnect..." if @logger
+            pb_logger.info "Trying to reconnect..."
             @reconnect_attempts += 1
             connect
           end

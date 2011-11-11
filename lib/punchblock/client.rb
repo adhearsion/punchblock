@@ -50,6 +50,7 @@ module Punchblock
     end
 
     def execute_command(command, options = {})
+      logger.debug "Executing command: #{command.inspect} with options #{options.inspect}"
       async = options.has_key?(:async) ? options.delete(:async) : true
       command.client = self
       if command.respond_to?(:register_event_handler)

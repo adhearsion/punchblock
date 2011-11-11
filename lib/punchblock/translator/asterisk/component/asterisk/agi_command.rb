@@ -49,10 +49,15 @@ module Punchblock
               pb_logger.debug "Handling response: #{response.inspect}"
               case response
               when RubyAMI::Error
-                @component_node.response = false
+                set_node_response false
               when RubyAMI::Response
-                @component_node.response = Ref.new :id => id
+                set_node_response Ref.new :id => id
               end
+            end
+
+            def set_node_response(value)
+              pb_logger.debug "Setting response on component node to #{value}"
+              @component_node.response = value
             end
 
             def success_reason(event)

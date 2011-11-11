@@ -10,6 +10,7 @@ module Punchblock
               @component_node, @translator = component_node, translator
               @action = create_action
               @id = @action.action_id
+              pb_logger.debug "Starting up..."
             end
 
             def execute
@@ -38,6 +39,7 @@ module Punchblock
             end
 
             def handle_response(response)
+              pb_logger.debug "Handling response #{response.inspect}"
               case response
               when RubyAMI::Error
                 send_event complete_event(error_reason(response))
@@ -82,7 +84,9 @@ module Punchblock
             end
 
             def send_event(event)
-              @component_node.add_event event.tap { |e| e.component_id = id }
+              event.component_id = id
+              pb_logger.debug "Sending event #{event}"
+              @component_node.add_event event
             end
           end
         end

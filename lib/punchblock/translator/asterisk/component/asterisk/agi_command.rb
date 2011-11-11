@@ -12,6 +12,7 @@ module Punchblock
               @component_node, @call = component_node, call
               @id = UUIDTools::UUID.random_create.to_s
               @action = create_action
+              pb_logger.debug "Starting up..."
             end
 
             def execute
@@ -19,8 +20,10 @@ module Punchblock
             end
 
             def handle_ami_event(event)
+              pb_logger.debug "Handling AMI event: #{event.inspect}"
               if event.name == 'AsyncAGI'
                 if event['SubEvent'] == 'Exec'
+                  pb_logger.debug "Received AsyncAGI:Exec event, sending complete event."
                   send_event complete_event(success_reason(event))
                 end
               end
@@ -43,6 +46,7 @@ module Punchblock
             end
 
             def handle_response(response)
+              pb_logger.debug "Handling response: #{response.inspect}"
               case response
               when RubyAMI::Error
                 @component_node.response = false
@@ -63,7 +67,9 @@ module Punchblock
             end
 
             def send_event(event)
-              @component_node.add_event event.tap { |e| e.component_id = id }
+              event.component_id = id
+              pb_logger.debug "Sending event #{event.inspect}"
+              @component_node.add_event event
             end
           end
         end

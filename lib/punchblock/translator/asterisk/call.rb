@@ -12,6 +12,7 @@ module Punchblock
           @channel, @translator = channel, translator
           @agi_env = parse_environment agi_env
           @id, @components = UUIDTools::UUID.random_create.to_s, {}
+          pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
         end
 
         def register_component(component)
@@ -31,17 +32,22 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
+          pb_logger.trace "Processing AMI event #{ami_event.inspect}"
           case ami_event.name
           when 'Hangup'
+            pb_logger.debug "Received a Hangup AMI event. Sending End event."
             send_pb_event Event::End.new(:reason => :hangup)
           when 'AGIExec'
             if component = component_with_id(ami_event['CommandId'])
+            pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
+              pb_logger.debug "Found component #{component.id} for event. Forwarding event..."
               component.handle_ami_event! ami_event
             end
           end
         end
 
         def execute_command(command)
+          pb_logger.debug "Executing command: #{command.inspect}"
           case command
           when Command::Accept
             send_agi_action 'EXEC RINGING' do |response|
@@ -61,9 +67,11 @@ module Punchblock
         end
 
         def send_agi_action(command, &block)
+          pb_logger.debug "Sending AGI action #{command}"
           @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :call_id => id
           @current_agi_command.request!
           @current_agi_command.register_event_handler Punchblock::Event::Complete do |e|
+            pb_logger.debug "AGI action received complete event #{e.inspect}"
             block.call e
           end
           execute_agi_command @current_agi_command
@@ -72,6 +80,7 @@ module Punchblock
         def send_ami_action(name, headers = {}, &block)
           (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
+            pb_logger.debug "Sending AMI action #{action.inspect}"
             translator.send_ami_action! action
           end
         end
@@ -86,7 +95,9 @@ module Punchblock
         end
 
         def send_pb_event(event)
-          translator.handle_pb_event! event.tap { |e| e.call_id = id }
+          event.call_id = id
+          pb_logger.debug "Sending Punchblock event: #{event.inspect}"
+          translator.handle_pb_event! event
         end
 
         def offer_event

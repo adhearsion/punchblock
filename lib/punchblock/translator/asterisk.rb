@@ -15,6 +15,7 @@ module Punchblock
       attr_reader :ami_client, :connection, :calls
 
       def initialize(ami_client, connection)
+        pb_logger.debug "Starting up..."
         @ami_client, @connection = ami_client, connection
         @calls, @components, @channel_to_call_id = {}, {}, {}
         @fully_booted_count = 0
@@ -43,7 +44,9 @@ module Punchblock
 
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
+        pb_logger.trace "Handling AMI event #{event.inspect}"
         if event.name.downcase == "fullybooted"
+          pb_logger.trace "Counting FullyBooted event"
           @fully_booted_count += 1
           if @fully_booted_count >= 2
             handle_pb_event Connection::Connected.new
@@ -55,6 +58,7 @@ module Punchblock
           handle_async_agi_start_event event
         end
         if call = call_for_channel(event['Channel'])
+          pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
           call.process_ami_event! event
         end
         handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
@@ -65,6 +69,7 @@ module Punchblock
       end
 
       def execute_command(command, options = {})
+        pb_logger.debug "Executing command #{command.inspect}"
         command.request!
         if command.call_id || options[:call_id]
           command.call_id ||= options[:call_id]

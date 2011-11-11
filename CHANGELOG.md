@@ -1,4 +1,6 @@
 # develop
+
+# v0.6.2
   # Feature: Added basic support for running Punchblock apps on Asterisk. Calls coming in to AsyncAGI result in the client receiving an Offer, hangup events are sent, and accept/answer/hangup commands work.
   # API change: The logger is now set using Punchblock.logger= rather than as a hash key to Connection.new
 

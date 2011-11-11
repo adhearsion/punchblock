@@ -7,8 +7,7 @@ module Punchblock
       attr_accessor :event_handler
 
       def initialize(options = {})
-        options[:logger] = options[:wire_logger]
-        @ami_client = RubyAMI::Client.new options.merge(:event_handler => lambda { |event| translator.handle_ami_event! event })
+        @ami_client = RubyAMI::Client.new options.merge(:event_handler => lambda { |event| translator.handle_ami_event! event }, :logger => pb_logger)
         @translator = Translator::Asterisk.new @ami_client, self
         super()
       end

@@ -6,10 +6,14 @@ module Punchblock
       let(:ami_client) { mock 'RubyAMI::Client' }
       let(:connection) { mock 'Connection::Asterisk' }
 
-      subject { Asterisk.new ami_client, connection }
+      let(:translator) { Asterisk.new ami_client, connection }
+
+      subject { translator }
 
       its(:ami_client) { should be ami_client }
       its(:connection) { should be connection }
+
+      after { translator.terminate }
 
       describe '#execute_command' do
         describe 'with a call command' do

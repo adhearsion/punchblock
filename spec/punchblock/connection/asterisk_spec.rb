@@ -14,13 +14,17 @@ module Punchblock
 
       let(:mock_event_handler) { stub_everything 'Event Handler' }
 
-      subject { Asterisk.new options }
+      let(:connection) { Asterisk.new options }
+
+      subject { connection }
 
       before do
         subject.event_handler = mock_event_handler
       end
 
       its(:ami_client) { should be_a RubyAMI::Client }
+
+      after { connection.translator.terminate }
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject

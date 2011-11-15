@@ -196,6 +196,25 @@ module Punchblock
               subject.execute_command command
             end
           end
+
+          context 'with a component command' do
+            let(:component_id) { 'foobar' }
+
+            let :command do
+              Punchblock::Component::Stop.new :component_id => component_id
+            end
+
+            let :mock_component do
+              mock 'Component', :id => component_id
+            end
+
+            before { subject.register_component mock_component }
+
+            it 'should send the command to the component for execution' do
+              mock_component.expects(:execute_command!).once
+              subject.execute_command command
+            end
+          end
         end
 
         describe '#send_agi_action' do

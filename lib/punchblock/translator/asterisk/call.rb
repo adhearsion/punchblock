@@ -23,10 +23,6 @@ module Punchblock
           @components[component_id]
         end
 
-        def execute_component_command(command)
-          component_with_id(command.component_id).execute_command! command
-        end
-
         def send_offer
           send_pb_event offer_event
         end
@@ -50,6 +46,9 @@ module Punchblock
 
         def execute_command(command)
           pb_logger.debug "Executing command: #{command.inspect}"
+          if command.component_id
+            component_with_id(command.component_id).execute_command! command
+          end
           case command
           when Command::Accept
             send_agi_action 'EXEC RINGING' do |response|

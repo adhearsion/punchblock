@@ -42,6 +42,8 @@ module Punchblock
             if component = component_with_id(ami_event['CommandID'])
               pb_logger.debug "Found component #{component.id} for event. Forwarding event..."
               component.handle_ami_event! ami_event
+            else
+              pb_logger.debug "Could not find component for AMI event: #{ami_event}"
             end
           end
         end

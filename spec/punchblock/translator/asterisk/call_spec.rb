@@ -112,14 +112,12 @@ module Punchblock
             end
 
             let(:ami_event) do
-              RubyAMI::Event.new("AGIExec").tap do |e|
+              RubyAMI::Event.new("AsyncAGI").tap do |e|
                 e["SubEvent"]   = "End"
                 e["Channel"]    = "SIP/1234-00000000"
-                e["CommandId"]  = component.id
+                e["CommandID"]  = component.id
                 e["Command"]    = "EXEC ANSWER"
-                e["ResultCode"] = "200"
-                e["Result"]     = "Success"
-                e["Data"]       = "FOO"
+                e["Result"]     = "200%20result=123%20(timeout)%0A"
               end
             end
 

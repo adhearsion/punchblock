@@ -1,11 +1,5 @@
 require 'spec_helper'
 
-%w{
-  blather/client/dsl
-  punchblock/core_ext/blather/stanza
-  punchblock/core_ext/blather/stanza/presence
-}.each { |f| require f }
-
 module Punchblock
   module Component
     describe ComponentNode do

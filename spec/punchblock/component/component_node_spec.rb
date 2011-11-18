@@ -9,9 +9,7 @@ require 'spec_helper'
 module Punchblock
   module Component
     describe ComponentNode do
-      it "should not initially have a complete event set" do
-        subject.complete_event.set_yet?.should == false
-      end
+      it { should be_new }
 
       describe "#add_event" do
         let(:event) { Event::Complete.new }
@@ -31,8 +29,7 @@ module Punchblock
         describe "with a complete event" do
           it "should set the complete event resource" do
             add_event
-            subject.complete_event.set_yet?.should == true
-            subject.complete_event.resource.should == event
+            subject.complete_event(0.5).should == event
           end
 
           it "should call #complete!" do
@@ -46,7 +43,7 @@ module Punchblock
 
           it "should not set the complete event resource" do
             add_event
-            subject.complete_event.set_yet?.should == false
+            subject.should_not be_complete
           end
         end
 
@@ -82,6 +79,24 @@ module Punchblock
           subject.response = ref
           subject.component_id.should == component_id
           subject.client.find_component_by_id(component_id).should be subject
+        end
+      end
+
+      describe "#complete_event=" do
+        before do
+          subject.request!
+          subject.execute!
+        end
+
+        it "should set the command to executing status" do
+          subject.complete_event = :foo
+          subject.should be_complete
+        end
+
+        it "should be a no-op if the response has already been set" do
+          subject.complete_event = :foo
+          lambda { subject.complete_event = :bar }.should_not raise_error
+          subject.complete_event(0.5).should == :foo
         end
       end
     end # ComponentNode

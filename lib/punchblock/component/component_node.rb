@@ -3,18 +3,15 @@ module Punchblock
     class ComponentNode < CommandNode
       include HasGuardedHandlers
 
-      attr_accessor :complete_event
-
       def initialize(*args)
         super
-        @complete_event = FutureResource.new
+        @complete_event_resource = FutureResource.new
         register_initial_handlers
       end
 
       def register_initial_handlers
         register_event_handler Event::Complete do |event|
-          complete!
-          complete_event.resource = event
+          self.complete_event = event
           throw :pass
         end
       end
@@ -39,6 +36,16 @@ module Punchblock
           client.register_component self if client
         end
         super
+      end
+
+      def complete_event(timeout = nil)
+        @complete_event_resource.resource timeout
+      end
+
+      def complete_event=(other)
+        return if @complete_event_resource.set_yet?
+        @complete_event_resource.resource = other
+        complete!
       end
 
       ##

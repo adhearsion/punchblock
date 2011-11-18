@@ -51,6 +51,20 @@ module Punchblock
       end
 
       ##
+      # @return [Integer] the amount of time in milliseconds that an input command will wait until considered that a silence becomes a NO-MATCH
+      #
+      def max_silence
+        read_attr :'max-silence', :to_i
+      end
+
+      ##
+      # @param [Integer] other the amount of time in milliseconds that an input command will wait until considered that a silence becomes a NO-MATCH
+      #
+      def max_silence=(other)
+        write_attr :'max-silence', other
+      end
+
+      ##
       # @return [Float] Confidence with which to consider a response acceptable
       #
       def min_confidence

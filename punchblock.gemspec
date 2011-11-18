@@ -24,7 +24,6 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency %q<niceogiri>, [">= 0.0.4"]
   s.add_runtime_dependency %q<blather>, [">= 0.5.7"]
-  s.add_runtime_dependency %q<pry>, [">= 0.8.3"]
   s.add_runtime_dependency %q<activesupport>, [">= 2.1.0"]
   s.add_runtime_dependency %q<state_machine>, [">= 1.0.1"]
   s.add_runtime_dependency %q<future-resource>, [">= 0.0.2"]

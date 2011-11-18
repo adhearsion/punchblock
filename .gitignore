@@ -7,7 +7,6 @@ pkg/*
 .rvmrc
 .yardoc
 doc
-log/*
 spec/reports
 vendor
 .rbx/

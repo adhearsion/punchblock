@@ -150,7 +150,7 @@ module Punchblock
 
             it "should send an EXEC RINGING AGI command and set the command's response" do
               subject.execute_command command
-              agi_command = subject.actor_subject.instance_variable_get(:'@current_agi_command')
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC RINGING"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
@@ -163,7 +163,7 @@ module Punchblock
 
             it "should send an EXEC ANSWER AGI command and set the command's response" do
               subject.execute_command command
-              agi_command = subject.actor_subject.instance_variable_get(:'@current_agi_command')
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC ANSWER"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
@@ -176,7 +176,7 @@ module Punchblock
 
             it "should send a Hangup AMI command and set the command's response" do
               subject.execute_command command
-              ami_action = subject.actor_subject.instance_variable_get(:'@current_ami_action')
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should == "hangup"
               ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
@@ -220,7 +220,7 @@ module Punchblock
         describe '#send_agi_action' do
           it 'should send an appropriate AsyncAGI AMI action' do
             pending
-            subject.actor_subject.expects(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
+            subject.wrapped_object.expects(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
             subject.send_agi_action 'FOO'
           end
         end

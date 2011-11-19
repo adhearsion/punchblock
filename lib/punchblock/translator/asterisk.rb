@@ -1,5 +1,4 @@
 require 'celluloid'
-require 'punchblock/core_ext/celluloid'
 require 'ruby_ami'
 
 module Punchblock

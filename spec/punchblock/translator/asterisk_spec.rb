@@ -21,7 +21,7 @@ module Punchblock
           let(:call_id) { 'abc123' }
 
           it 'executes the call command' do
-            subject.actor_subject.expects(:execute_call_command).with do |c|
+            subject.wrapped_object.expects(:execute_call_command).with do |c|
               c.should be command
               c.call_id.should == call_id
             end
@@ -34,7 +34,7 @@ module Punchblock
           let(:component_id)  { '123abc' }
 
           it 'executes the component command' do
-            subject.actor_subject.expects(:execute_component_command).with do |c|
+            subject.wrapped_object.expects(:execute_component_command).with do |c|
               c.should be command
               c.component_id.should == component_id
             end
@@ -46,7 +46,7 @@ module Punchblock
           let(:command) { Command::Dial.new }
 
           it 'executes the command directly' do
-            subject.actor_subject.expects(:execute_global_command).with command
+            subject.wrapped_object.expects(:execute_global_command).with command
             subject.execute_command command
           end
         end
@@ -133,7 +133,7 @@ module Punchblock
 
           it 'registers the component' do
             Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
-            subject.actor_subject.expects(:register_component).with mock_action
+            subject.wrapped_object.expects(:register_component).with mock_action
             subject.execute_global_command command
           end
         end
@@ -205,12 +205,12 @@ module Punchblock
             end
           end
 
-          before { subject.actor_subject.stubs :handle_pb_event }
+          before { subject.wrapped_object.stubs :handle_pb_event }
 
           it 'should be able to look up the call by channel ID' do
             subject.handle_ami_event ami_event
             call_actor = subject.call_for_channel('SIP/1234-00000000')
-            call_actor.actor_subject.should be_a Asterisk::Call
+            call_actor.wrapped_object.should be_a Asterisk::Call
             call_actor.agi_env.should be_a Hash
             call_actor.agi_env[:agi_request].should == 'async'
           end
@@ -240,12 +240,12 @@ module Punchblock
           end
 
           before do
-            subject.actor_subject.stubs :handle_pb_event
+            subject.wrapped_object.stubs :handle_pb_event
             subject.register_call call
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event' do
-            subject.actor_subject.expects(:handle_pb_event).once
+            subject.wrapped_object.expects(:handle_pb_event).once
             call.expects(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end

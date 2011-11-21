@@ -71,7 +71,7 @@ module Punchblock
           pb_logger.debug "Sending AGI action #{command}"
           @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :call_id => id
           @current_agi_command.request!
-          @current_agi_command.register_event_handler Punchblock::Event::Complete do |e|
+          @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
             pb_logger.debug "AGI action received complete event #{e.inspect}"
             block.call e
           end

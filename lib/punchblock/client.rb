@@ -53,8 +53,8 @@ module Punchblock
       pb_logger.debug "Executing command: #{command.inspect} with options #{options.inspect}"
       async = options.has_key?(:async) ? options.delete(:async) : true
       command.client = self
-      if command.respond_to?(:register_event_handler)
-        command.register_event_handler do |event|
+      if command.respond_to?(:register_handler)
+        command.register_handler :internal do |event|
           trigger_handler :event, event
         end
       end

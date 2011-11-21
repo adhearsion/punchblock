@@ -6,18 +6,21 @@ module Punchblock
       def initialize(*args)
         super
         @complete_event_resource = FutureResource.new
-        register_initial_handlers
+        register_internal_handlers
       end
 
-      def register_initial_handlers
-        register_event_handler Event::Complete do |event|
+      def register_internal_handlers
+        register_handler :internal, Event::Complete do |event|
           self.complete_event = event
           throw :pass
         end
       end
 
       def add_event(event)
-        event.original_component = self
+        trigger_handler :internal, event
+      end
+
+      def trigger_event_handler(event)
         trigger_handler :event, event
       end
 

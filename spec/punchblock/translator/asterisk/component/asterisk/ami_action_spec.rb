@@ -115,7 +115,7 @@ module Punchblock
                 end
 
                 it 'should send events to the component node' do
-                  command.register_event_handler Punchblock::Event::Asterisk::AMI::Event do |event|
+                  command.register_handler :internal, Punchblock::Event::Asterisk::AMI::Event do |event|
                     @event = event
                   end
                   subject.action << event

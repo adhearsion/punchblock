@@ -15,11 +15,6 @@ module Punchblock
 
         let(:add_event) { subject.add_event event }
 
-        it "should set the original component on the event" do
-          add_event
-          event.original_component.should == subject
-        end
-
         describe "with a complete event" do
           it "should set the complete event resource" do
             add_event
@@ -40,6 +35,15 @@ module Punchblock
             subject.should_not be_complete
           end
         end
+      end # #add_event
+
+      describe "#trigger_event_handler" do
+        let(:event) { Event::Complete.new }
+
+        before do
+          subject.request!
+          subject.execute!
+        end
 
         describe "with an event handler set" do
           let(:handler) { mock 'Response' }
@@ -50,10 +54,10 @@ module Punchblock
           end
 
           it "should trigger the callback" do
-            add_event
+            subject.trigger_event_handler event
           end
         end
-      end # #add_event
+      end # #trigger_event_handler
 
       describe "#response=" do
         before do

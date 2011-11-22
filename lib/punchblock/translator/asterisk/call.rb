@@ -64,6 +64,8 @@ module Punchblock
             end
           when Punchblock::Component::Asterisk::AGI::Command
             execute_agi_command command
+          when Punchblock::Component::Output
+            execute_component Component::Asterisk::Output, command
           end
         end
 
@@ -89,7 +91,11 @@ module Punchblock
         private
 
         def execute_agi_command(command)
-          Component::Asterisk::AGICommand.new(command, current_actor).tap do |component|
+          execute_component Component::Asterisk::AGICommand, command
+        end
+
+        def execute_component(type, command)
+          type.new(command, current_actor).tap do |component|
             register_component component
             component.execute!
           end

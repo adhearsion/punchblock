@@ -1,5 +1,14 @@
 # develop
 
+# v0.7.0 - 2011-11-22
+  * Bugfix: Some spec mistakes
+  * Feature: Allow execution of actions against global components on Asterisk
+  * API change: The console has been removed
+  * API change: Components no longer expose a FutureResource at #complete_event, and instead wrap its API in the same way as #response and #response=. Any consumer code which does some_component.complete_event.resource or some_component.complete_event.resource= should now use some_component.complete_event and some_component.complete_event=
+  * Feature: Added the max-silence attribute to the Input component
+  * Bugfix: Bump the Celluloid dependency to avoid spec failures on JRuby and monkey-patching for mockability
+  * API change: Event handlers registered on components are no longer triggered by incoming events internally to Punchblock. These events must be consumed via a Client's event handlers or event queue and manually triggered on a component using ComponentNode#trigger_event_handler
+
 # v0.6.2
   # Feature: Added basic support for running Punchblock apps on Asterisk. Calls coming in to AsyncAGI result in the client receiving an Offer, hangup events are sent, and accept/answer/hangup commands work.
   # API change: The logger is now set using Punchblock.logger= rather than as a hash key to Connection.new

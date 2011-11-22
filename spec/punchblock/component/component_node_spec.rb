@@ -1,17 +1,9 @@
 require 'spec_helper'
 
-%w{
-  blather/client/dsl
-  punchblock/core_ext/blather/stanza
-  punchblock/core_ext/blather/stanza/presence
-}.each { |f| require f }
-
 module Punchblock
   module Component
     describe ComponentNode do
-      it "should not initially have a complete event set" do
-        subject.complete_event.set_yet?.should == false
-      end
+      it { should be_new }
 
       describe "#add_event" do
         let(:event) { Event::Complete.new }
@@ -23,16 +15,10 @@ module Punchblock
 
         let(:add_event) { subject.add_event event }
 
-        it "should set the original component on the event" do
-          add_event
-          event.original_component.should == subject
-        end
-
         describe "with a complete event" do
           it "should set the complete event resource" do
             add_event
-            subject.complete_event.set_yet?.should == true
-            subject.complete_event.resource.should == event
+            subject.complete_event(0.5).should == event
           end
 
           it "should call #complete!" do
@@ -46,8 +32,17 @@ module Punchblock
 
           it "should not set the complete event resource" do
             add_event
-            subject.complete_event.set_yet?.should == false
+            subject.should_not be_complete
           end
+        end
+      end # #add_event
+
+      describe "#trigger_event_handler" do
+        let(:event) { Event::Complete.new }
+
+        before do
+          subject.request!
+          subject.execute!
         end
 
         describe "with an event handler set" do
@@ -59,10 +54,10 @@ module Punchblock
           end
 
           it "should trigger the callback" do
-            add_event
+            subject.trigger_event_handler event
           end
         end
-      end # #add_event
+      end # #trigger_event_handler
 
       describe "#response=" do
         before do
@@ -82,6 +77,24 @@ module Punchblock
           subject.response = ref
           subject.component_id.should == component_id
           subject.client.find_component_by_id(component_id).should be subject
+        end
+      end
+
+      describe "#complete_event=" do
+        before do
+          subject.request!
+          subject.execute!
+        end
+
+        it "should set the command to executing status" do
+          subject.complete_event = :foo
+          subject.should be_complete
+        end
+
+        it "should be a no-op if the response has already been set" do
+          subject.complete_event = :foo
+          lambda { subject.complete_event = :bar }.should_not raise_error
+          subject.complete_event(0.5).should == :foo
         end
       end
     end # ComponentNode

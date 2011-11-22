@@ -24,13 +24,12 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency %q<niceogiri>, [">= 0.0.4"]
   s.add_runtime_dependency %q<blather>, [">= 0.5.7"]
-  s.add_runtime_dependency %q<pry>, [">= 0.8.3"]
   s.add_runtime_dependency %q<activesupport>, [">= 2.1.0"]
   s.add_runtime_dependency %q<state_machine>, [">= 1.0.1"]
   s.add_runtime_dependency %q<future-resource>, [">= 0.0.2"]
   s.add_runtime_dependency %q<has-guarded-handlers>, [">= 0.1.0"]
-  s.add_runtime_dependency %q<celluloid>, [">= 0.5.0"]
-  s.add_runtime_dependency %q<ruby_ami>, [">= 0.1.2"]
+  s.add_runtime_dependency %q<celluloid>, [">= 0.6.0"]
+  s.add_runtime_dependency %q<ruby_ami>, [">= 0.1.3"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0.0"]
   s.add_development_dependency %q<rspec>, [">= 2.5.0"]
@@ -41,4 +40,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<mocha>, [">= 0"]
   s.add_development_dependency %q<i18n>, [">= 0"]
   s.add_development_dependency %q<countdownlatch>, [">= 0"]
+  s.add_development_dependency %q<guard-rspec>
 end

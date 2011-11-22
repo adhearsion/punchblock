@@ -112,14 +112,12 @@ module Punchblock
             end
 
             let(:ami_event) do
-              RubyAMI::Event.new("AGIExec").tap do |e|
+              RubyAMI::Event.new("AsyncAGI").tap do |e|
                 e["SubEvent"]   = "End"
                 e["Channel"]    = "SIP/1234-00000000"
-                e["CommandId"]  = component.id
+                e["CommandID"]  = component.id
                 e["Command"]    = "EXEC ANSWER"
-                e["ResultCode"] = "200"
-                e["Result"]     = "Success"
-                e["Data"]       = "FOO"
+                e["Result"]     = "200%20result=123%20(timeout)%0A"
               end
             end
 
@@ -152,7 +150,7 @@ module Punchblock
 
             it "should send an EXEC RINGING AGI command and set the command's response" do
               subject.execute_command command
-              agi_command = subject.actor_subject.instance_variable_get(:'@current_agi_command')
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC RINGING"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
@@ -165,7 +163,7 @@ module Punchblock
 
             it "should send an EXEC ANSWER AGI command and set the command's response" do
               subject.execute_command command
-              agi_command = subject.actor_subject.instance_variable_get(:'@current_agi_command')
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC ANSWER"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
@@ -178,7 +176,7 @@ module Punchblock
 
             it "should send a Hangup AMI command and set the command's response" do
               subject.execute_command command
-              ami_action = subject.actor_subject.instance_variable_get(:'@current_ami_action')
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should == "hangup"
               ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
@@ -198,12 +196,31 @@ module Punchblock
               subject.execute_command command
             end
           end
+
+          context 'with a component command' do
+            let(:component_id) { 'foobar' }
+
+            let :command do
+              Punchblock::Component::Stop.new :component_id => component_id
+            end
+
+            let :mock_component do
+              mock 'Component', :id => component_id
+            end
+
+            before { subject.register_component mock_component }
+
+            it 'should send the command to the component for execution' do
+              mock_component.expects(:execute_command!).once
+              subject.execute_command command
+            end
+          end
         end
 
         describe '#send_agi_action' do
           it 'should send an appropriate AsyncAGI AMI action' do
             pending
-            subject.actor_subject.expects(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
+            subject.wrapped_object.expects(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
             subject.send_agi_action 'FOO'
           end
         end

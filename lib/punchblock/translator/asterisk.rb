@@ -1,5 +1,4 @@
 require 'celluloid'
-require 'punchblock/core_ext/celluloid'
 require 'ruby_ami'
 
 module Punchblock
@@ -71,14 +70,14 @@ module Punchblock
       def execute_command(command, options = {})
         pb_logger.debug "Executing command #{command.inspect}"
         command.request!
-        if command.call_id || options[:call_id]
-          command.call_id ||= options[:call_id]
-          if command.component_id || options[:component_id]
-            command.component_id ||= options[:component_id]
-            execute_component_command command
-          else
-            execute_call_command command
-          end
+
+        command.call_id ||= options[:call_id]
+        command.component_id ||= options[:component_id]
+
+        if command.call_id
+          execute_call_command command
+        elsif command.component_id
+          execute_component_command command
         else
           execute_global_command command
         end
@@ -89,12 +88,12 @@ module Punchblock
       end
 
       def execute_component_command(command)
-        call_with_id(command.call_id).execute_component_command! command
+        component_with_id(command.component_id).execute_command! command
       end
 
       def execute_global_command(command)
         component = Component::Asterisk::AMIAction.new command, current_actor
-        # register_component component
+        register_component component
         component.execute!
       end
 

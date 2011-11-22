@@ -15,7 +15,6 @@ module Punchblock
   autoload :CommandNode
   autoload :Component
   autoload :Connection
-  autoload :DSL
   autoload :HasHeaders
   autoload :Header
   autoload :MediaContainer

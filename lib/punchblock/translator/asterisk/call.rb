@@ -23,10 +23,6 @@ module Punchblock
           @components[component_id]
         end
 
-        def execute_component_command(command)
-          component_with_id(command.component_id).execute_command! command
-        end
-
         def send_offer
           send_pb_event offer_event
         end
@@ -42,12 +38,17 @@ module Punchblock
             if component = component_with_id(ami_event['CommandID'])
               pb_logger.debug "Found component #{component.id} for event. Forwarding event..."
               component.handle_ami_event! ami_event
+            else
+              pb_logger.debug "Could not find component for AMI event: #{ami_event}"
             end
           end
         end
 
         def execute_command(command)
           pb_logger.debug "Executing command: #{command.inspect}"
+          if command.component_id
+            component_with_id(command.component_id).execute_command! command
+          end
           case command
           when Command::Accept
             send_agi_action 'EXEC RINGING' do |response|
@@ -70,7 +71,7 @@ module Punchblock
           pb_logger.debug "Sending AGI action #{command}"
           @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :call_id => id
           @current_agi_command.request!
-          @current_agi_command.register_event_handler Punchblock::Event::Complete do |e|
+          @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
             pb_logger.debug "AGI action received complete event #{e.inspect}"
             block.call e
           end

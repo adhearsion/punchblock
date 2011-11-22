@@ -13,7 +13,7 @@ module Punchblock
       end
 
       def run
-        logger.debug "Starting the RubyAMI client"
+        pb_logger.debug "Starting the RubyAMI client"
         ami_client.start
       end
 

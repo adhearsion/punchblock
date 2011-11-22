@@ -6,10 +6,14 @@ module Punchblock
       let(:ami_client) { mock 'RubyAMI::Client' }
       let(:connection) { mock 'Connection::Asterisk' }
 
-      subject { Asterisk.new ami_client, connection }
+      let(:translator) { Asterisk.new ami_client, connection }
+
+      subject { translator }
 
       its(:ami_client) { should be ami_client }
       its(:connection) { should be connection }
+
+      after { translator.terminate }
 
       describe '#execute_command' do
         describe 'with a call command' do
@@ -17,7 +21,7 @@ module Punchblock
           let(:call_id) { 'abc123' }
 
           it 'executes the call command' do
-            subject.actor_subject.expects(:execute_call_command).with do |c|
+            subject.wrapped_object.expects(:execute_call_command).with do |c|
               c.should be command
               c.call_id.should == call_id
             end
@@ -25,18 +29,16 @@ module Punchblock
           end
         end
 
-        describe 'with a component command' do
+        describe 'with a global component command' do
           let(:command)       { Component::Stop.new }
-          let(:call_id)       { 'abc123' }
           let(:component_id)  { '123abc' }
 
           it 'executes the component command' do
-            subject.actor_subject.expects(:execute_component_command).with do |c|
+            subject.wrapped_object.expects(:execute_component_command).with do |c|
               c.should be command
-              c.call_id.should == call_id
               c.component_id.should == component_id
             end
-            subject.execute_command command, :call_id => call_id, :component_id => component_id
+            subject.execute_command command, :component_id => component_id
           end
         end
 
@@ -44,7 +46,7 @@ module Punchblock
           let(:command) { Command::Dial.new }
 
           it 'executes the command directly' do
-            subject.actor_subject.expects(:execute_global_command).with command
+            subject.wrapped_object.expects(:execute_global_command).with command
             subject.execute_command command
           end
         end
@@ -64,8 +66,18 @@ module Punchblock
           subject.call_with_id(call_id).should be call
         end
 
-        it 'should make the call accessible by ID' do
+        it 'should make the call accessible by channel' do
           subject.call_for_channel(channel).should be call
+        end
+      end
+
+      describe '#register_component' do
+        let(:component_id) { 'abc123' }
+        let(:component)    { mock 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }
+
+        it 'should make the component accessible by ID' do
+          subject.register_component component
+          subject.component_with_id(component_id).should be component
         end
       end
 
@@ -86,18 +98,13 @@ module Punchblock
       end
 
       describe '#execute_component_command' do
-        let(:call_id) { 'abc123' }
-        let(:call)    { Translator::Asterisk::Call.new 'SIP/foo', subject }
-
         let(:component_id)  { '123abc' }
         let(:component)     { mock 'Translator::Asterisk::Component', :id => component_id }
 
-        let(:command) { mock 'Component::Stop', :call_id => call_id, :component_id => component_id }
+        let(:command) { mock 'Component::Stop', :component_id => component_id }
 
         before do
-          call.stubs(:id).returns call_id
-          call.register_component component
-          subject.register_call call
+          subject.register_component component
         end
 
         it 'sends the command to the component for execution' do
@@ -116,11 +123,17 @@ module Punchblock
             Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
           end
 
-          let(:mock_action) { mock 'Asterisk::Component::Asterisk::AMIAction' }
+          let(:mock_action) { stub_everything 'Asterisk::Component::Asterisk::AMIAction' }
 
           it 'should create a component actor and execute it asynchronously' do
             Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
             mock_action.expects(:execute!).once
+            subject.execute_global_command command
+          end
+
+          it 'registers the component' do
+            Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
+            subject.wrapped_object.expects(:register_component).with mock_action
             subject.execute_global_command command
           end
         end
@@ -192,12 +205,12 @@ module Punchblock
             end
           end
 
-          before { subject.actor_subject.stubs :handle_pb_event }
+          before { subject.wrapped_object.stubs :handle_pb_event }
 
           it 'should be able to look up the call by channel ID' do
             subject.handle_ami_event ami_event
             call_actor = subject.call_for_channel('SIP/1234-00000000')
-            call_actor.actor_subject.should be_a Asterisk::Call
+            call_actor.wrapped_object.should be_a Asterisk::Call
             call_actor.agi_env.should be_a Hash
             call_actor.agi_env[:agi_request].should == 'async'
           end
@@ -227,12 +240,12 @@ module Punchblock
           end
 
           before do
-            subject.actor_subject.stubs :handle_pb_event
+            subject.wrapped_object.stubs :handle_pb_event
             subject.register_call call
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event' do
-            subject.actor_subject.expects(:handle_pb_event).once
+            subject.wrapped_object.expects(:handle_pb_event).once
             call.expects(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end

@@ -151,12 +151,12 @@ module Punchblock
         end
 
         def register_hold_status_handlers
-          register_event_handler OnHold do |event|
+          register_handler :internal, OnHold do |event|
             onhold!
             throw :pass
           end
 
-          register_event_handler OffHold do |event|
+          register_handler :internal, OffHold do |event|
             offhold!
             throw :pass
           end

@@ -35,7 +35,10 @@ module Punchblock
                   end
 
                   it 'should playback the audio file using STREAM FILE' do
-                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename, '"'
+                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename, '"' do
+                      subject.continue!
+                      true
+                    end
                     subject.execute
                   end
 
@@ -63,8 +66,14 @@ module Punchblock
                   end
 
                   it 'should playback each audio file using STREAM FILE' do
-                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename1, '"'
-                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename2, '"'
+                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename1, '"' do
+                      subject.continue!
+                      true
+                    end
+                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename2, '"' do
+                      subject.continue!
+                      true
+                    end
                     subject.execute
                   end
 

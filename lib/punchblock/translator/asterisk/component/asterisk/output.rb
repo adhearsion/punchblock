@@ -24,7 +24,11 @@ module Punchblock
 
               @pending_actions = @execution_elements.count
 
-              @execution_elements.each &:call
+              @execution_elements.each do |element|
+                element.call
+                wait :continue
+                process_playback_completion
+              end
             end
 
             def process_playback_completion
@@ -36,9 +40,16 @@ module Punchblock
               end
             end
 
+            def continue(event = nil)
+              signal :continue, event
+            end
+
             def play_audio(path)
+              pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
+              op = current_actor
               @call.send_agi_action! 'STREAM FILE', path, '"' do |complete_event|
-                current_actor.process_playback_completion
+                pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
+                op.continue! complete_event
               end
             end
 

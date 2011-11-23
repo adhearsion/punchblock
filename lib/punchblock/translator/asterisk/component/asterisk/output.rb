@@ -1,5 +1,3 @@
-require 'ruby_speech'
-
 module Punchblock
   module Translator
     class Asterisk
@@ -15,8 +13,7 @@ module Punchblock
 
             def execute
               audio_filename = ''
-              document = RubySpeech::SSML::Element.import Nokogiri::XML(@component_node.ssml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
-              @call.send_agi_action! 'STREAM FILE', document.children.first.src, '"'
+              @call.send_agi_action! 'STREAM FILE', @component_node.ssml.children.first.src, '"'
             end
 
             # private

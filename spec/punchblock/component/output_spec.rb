@@ -63,18 +63,26 @@ module Punchblock
       end
 
       describe "for SSML" do
-        subject { Output.new :ssml => '<output-as interpret-as="ordinal">100</output-as>', :voice => 'kate' }
+        def ssml_doc(mode = :ordinal)
+          RubySpeech::SSML.draw do
+            say_as(:interpret_as => mode) { 100 }
+          end
+        end
+
+        subject { Output.new :ssml => ssml_doc, :voice => 'kate' }
 
         its(:voice) { should == 'kate' }
 
-        its(:ssml) { should == '<output-as interpret-as="ordinal">100</output-as>' }
+        its(:ssml) { should == ssml_doc }
 
         describe "comparison" do
-          let(:output2) { Output.new :ssml => '<output-as interpret-as="ordinal">100</output-as>', :voice => 'kate'  }
-          let(:output3) { Output.new :ssml => '<output-as interpret-as="number">100</output-as>', :voice => 'kate'  }
+          let(:output2) { Output.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal"/></speak>', :voice => 'kate'  }
+          let(:output3) { Output.new :ssml => ssml_doc, :voice => 'kate'  }
+          let(:output4) { Output.new :ssml => ssml_doc(:normal), :voice => 'kate'  }
 
           it { should == output2 }
-          it { should_not == output3 }
+          it { should == output3 }
+          it { should_not == output4 }
         end
       end
 

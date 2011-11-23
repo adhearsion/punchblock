@@ -91,13 +91,22 @@ module Punchblock
       end
 
       def ready!
-        status = Blather::Stanza::Presence::Status.new :chat
-        status.to = @rayo_domain
-        client.write status
+        send_presence :chat
+        super
+      end
+
+      def not_ready!
+        send_presence :dnd
         super
       end
 
       private
+
+      def send_presence(presence)
+        status = Blather::Stanza::Presence::Status.new presence
+        status.to = @rayo_domain
+        client.write status
+      end
 
       def handle_presence(p)
         throw :pass unless p.rayo_event?

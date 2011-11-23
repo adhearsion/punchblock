@@ -12,8 +12,12 @@ module Punchblock
             end
 
             def execute
-              audio_filename = ''
-              @call.send_agi_action! 'STREAM FILE', @component_node.ssml.children.first.src, '"'
+              @component_node.ssml.children.each do |node|
+                case node
+                when RubySpeech::SSML::Audio
+                  @call.send_agi_action! 'STREAM FILE', node.src, '"'
+                end
+              end
             end
 
             # private

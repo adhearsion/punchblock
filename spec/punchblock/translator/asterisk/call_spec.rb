@@ -106,7 +106,7 @@ module Punchblock
           end
 
           context 'with an event for a known AGI command component' do
-            let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER' }
+            let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER', :params_array => [] }
             let :component do
               Component::Asterisk::AGICommand.new mock_component_node, subject.translator
             end

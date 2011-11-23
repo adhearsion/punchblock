@@ -69,9 +69,9 @@ module Punchblock
           end
         end
 
-        def send_agi_action(command, &block)
+        def send_agi_action(command, *params, &block)
           pb_logger.debug "Sending AGI action #{command}"
-          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :call_id => id
+          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :call_id => id
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
             pb_logger.debug "AGI action received complete event #{e.inspect}"

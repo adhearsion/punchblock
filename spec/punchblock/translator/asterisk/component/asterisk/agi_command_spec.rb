@@ -27,6 +27,23 @@ module Punchblock
                 mock_call.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
                 subject.execute
               end
+
+              context 'with some parameters' do
+                let(:params) { [1000, 'foo'] }
+
+                let :expected_action do
+                  RubyAMI::Action.new 'AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id
+                end
+
+                let :command do
+                  Punchblock::Component::Asterisk::AGI::Command.new :name => 'WAIT FOR DIGIT', :params => params
+                end
+
+                it 'should send the appropriate RubyAMI::Action' do
+                  mock_call.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
+                  subject.execute
+                end
+              end
             end
 
             context 'when the AMI action completes' do

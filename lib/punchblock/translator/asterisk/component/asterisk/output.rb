@@ -47,7 +47,7 @@ module Punchblock
             def play_audio(path)
               pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
               op = current_actor
-              @call.send_agi_action! 'STREAM FILE', path, '"' do |complete_event|
+              @call.send_agi_action! 'STREAM FILE', path, nil do |complete_event|
                 pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
                 op.continue! complete_event
               end

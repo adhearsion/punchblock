@@ -1,5 +1,10 @@
 # develop
 
+# v0.7.1 - 2011-11-24
+  * [FEATURE] Add `Connection#not_ready!`, to instruct the server not to send any more offers.
+  * [BUGFIX] Translate all exceptions raised by the XMPP connection into a ProtocolError
+  * [UPDATE] Blather dependency to >= 0.5.9
+
 # v0.7.0 - 2011-11-22
   * Bugfix: Some spec mistakes
   * Feature: Allow execution of actions against global components on Asterisk

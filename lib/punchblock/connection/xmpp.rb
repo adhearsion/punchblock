@@ -76,7 +76,7 @@ module Punchblock
       def connect
         begin
           EM.run { client.run }
-        rescue Blather::SASLError, Blather::StreamError => e
+        rescue => e
           raise ProtocolError.new(e.class.to_s, e.message)
         end
       end

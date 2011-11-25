@@ -1,3 +1,5 @@
+require 'active_support/core_ext/string/filters'
+
 module Punchblock
   module Translator
     class Asterisk
@@ -8,6 +10,7 @@ module Punchblock
             def initialize(component_node, call)
               @component_node, @call = component_node, call
               @id = UUIDTools::UUID.random_create.to_s
+              @media_engine = call.translator.media_engine
               pb_logger.debug "Starting up..."
             end
 
@@ -15,19 +18,29 @@ module Punchblock
               set_node_response Ref.new :id => id
 
               @component_node.ssml or return
-              @execution_elements = @component_node.ssml.children.map do |node|
-                case node
-                when RubySpeech::SSML::Audio
-                  lambda { current_actor.play_audio! node.src }
+
+              case @media_engine
+              when :asterisk
+                @execution_elements = @component_node.ssml.children.map do |node|
+                  case node
+                  when RubySpeech::SSML::Audio
+                    lambda { current_actor.play_audio! node.src }
+                  end
                 end
-              end
 
-              @pending_actions = @execution_elements.count
+                @pending_actions = @execution_elements.count
 
-              @execution_elements.each do |element|
-                element.call
-                wait :continue
-                process_playback_completion
+                @execution_elements.each do |element|
+                  element.call
+                  wait :continue
+                  process_playback_completion
+                end
+              when :unimrcp
+                doc = @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+                @call.send_agi_action! 'EXEC MRCPSynth', doc do |complete_event|
+                  pb_logger.debug "MRCPSynth completed with #{complete_event}."
+                  send_event complete_event(success_reason)
+                end
               end
             end
 

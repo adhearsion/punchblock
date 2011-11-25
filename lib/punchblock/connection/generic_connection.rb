@@ -6,7 +6,9 @@ module Punchblock
       end
 
       def ready!
+      end
 
+      def not_ready!
       end
     end
   end

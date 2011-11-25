@@ -81,6 +81,26 @@ module Punchblock
         say.component_id.should == 'fgh4590'
       end
 
+      it 'should send a "Chat" presence when ready' do
+        client = connection.send :client
+        client.expects(:write).once.with do |stanza|
+          stanza.to.should == 'call.rayo.net' &&
+            stanza.is_a?(Blather::Stanza::Presence::Status) &&
+            stanza.chat?
+        end
+        connection.ready!
+      end
+
+      it 'should send a "Do Not Disturb" presence when not_ready' do
+        client = connection.send :client
+        client.expects(:write).once.with do |stanza|
+          stanza.to.should == 'call.rayo.net' &&
+            stanza.is_a?(Blather::Stanza::Presence::Status) &&
+            stanza.dnd?
+        end
+        connection.not_ready!
+      end
+
       describe '#handle_presence' do
         let :offer_xml do
           <<-MSG

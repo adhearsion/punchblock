@@ -119,6 +119,10 @@ module Punchblock
         write_attr :'max-time', other
       end
 
+      def inspect_attributes
+        super + [:interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time]
+      end
+
       state_machine :state do
         event :paused do
           transition :executing => :paused

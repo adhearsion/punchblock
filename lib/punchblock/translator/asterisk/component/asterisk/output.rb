@@ -15,9 +15,11 @@ module Punchblock
             end
 
             def execute
-              set_node_response Ref.new :id => id
-
               @component_node.ssml or return
+
+              return with_error 'option error', 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
+
+              set_node_response Ref.new :id => id
 
               case @media_engine
               when :asterisk
@@ -37,7 +39,7 @@ module Punchblock
                 end
               when :unimrcp
                 doc = @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
-                @call.send_agi_action! 'EXEC MRCPSynth', doc do |complete_event|
+                @call.send_agi_action! 'EXEC MRCPSynth', doc, mrcpsynth_options do |complete_event|
                   pb_logger.debug "MRCPSynth completed with #{complete_event}."
                   send_event complete_event(success_reason)
                 end
@@ -67,6 +69,16 @@ module Punchblock
             end
 
             private
+
+            def with_error(name, text)
+              set_node_response ProtocolError.new(name, text)
+            end
+
+            def mrcpsynth_options
+              [].tap do |opts|
+                opts << 'i=any' if [:any, :dtmf].include? @component_node.interrupt_on
+              end.join '&'
+            end
 
             def set_node_response(value)
               pb_logger.debug "Setting response on component node to #{value}"

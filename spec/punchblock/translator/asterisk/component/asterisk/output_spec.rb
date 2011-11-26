@@ -15,6 +15,16 @@ module Punchblock
               Punchblock::Component::Output.new command_options
             end
 
+            let :ssml_doc do
+              RubySpeech::SSML.draw do
+                say_as(:interpret_as => :cardinal) { 'FOO' }
+              end
+            end
+
+            let :command_options do
+              { :ssml => ssml_doc }
+            end
+
             subject { Output.new command, mock_call }
 
             describe '#execute' do
@@ -43,7 +53,7 @@ module Punchblock
                 end
 
                 it "should execute MRCPSynth" do
-                  mock_call.expects(:send_agi_action!).once.with 'EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+                  mock_call.expects(:send_agi_action!).once.with 'EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, ''
                   subject.execute
                 end
 
@@ -55,11 +65,50 @@ module Punchblock
                   command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
                 end
 
-                context "with barge in digits set" do
-                  it "should pass the i option for MRCPSynth" do
-                    pending
-                    mock_call.should_receive(:execute).with('MRCPSynth', 'hello', 'i=any').once.and_return pbx_result_response 0
-                    @speech_engines.unimrcp(mock_call, 'hello', :interrupt_digits => 'any')
+                describe 'interrupt_on' do
+                  def expect_mrcpsynth_with_options(options)
+                    mock_call.expects(:send_agi_action!).once.with do |*args|
+                      args[0].should == 'EXEC MRCPSynth'
+                      args[2].should match options
+                    end
+                  end
+
+                  let :command do
+                    opts = { :ssml => ssml_doc }.merge(command_opts)
+                    Punchblock::Component::Output.new opts
+                  end
+
+                  context "set to nil" do
+                    let(:command_opts) { { :interrupt_on => nil } }
+                    it "should not pass the i option to MRCPSynth" do
+                      expect_mrcpsynth_with_options(//)
+                      subject.execute
+                    end
+                  end
+
+                  context "set to :any" do
+                    let(:command_opts) { { :interrupt_on => :any } }
+                    it "should pass the i option to MRCPSynth" do
+                      expect_mrcpsynth_with_options(/i=any/)
+                      subject.execute
+                    end
+                  end
+
+                  context "set to :dtmf" do
+                    let(:command_opts) { { :interrupt_on => :dtmf } }
+                    it "should pass the i option to MRCPSynth" do
+                      expect_mrcpsynth_with_options(/i=any/)
+                      subject.execute
+                    end
+                  end
+
+                  context "set to :speech" do
+                    let(:command_opts) { { :interrupt_on => :speech } }
+                    it "should return an error and not execute any actions" do
+                      subject.execute
+                      error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
+                      command.response(0.1).should == error
+                    end
                   end
                 end
               end

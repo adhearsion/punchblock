@@ -15,22 +15,30 @@ module Punchblock
             end
 
             def execute
-              @component_node.ssml or return
+              return with_error 'option error', 'An SSML document is required.' unless @component_node.ssml
 
               return with_error 'option error', 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
 
-              set_node_response Ref.new :id => id
+              [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
+                return with_error 'option error', "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
+              end
 
               case @media_engine
               when :asterisk
+                return with_error 'option error', "A voice value is unsupported on Asterisk." if @component_node.voice
+
                 @execution_elements = @component_node.ssml.children.map do |node|
                   case node
                   when RubySpeech::SSML::Audio
                     lambda { current_actor.play_audio! node.src }
                   end
-                end
+                end.compact
 
                 @pending_actions = @execution_elements.count
+
+                send_ref
+
+                @interrupt_digits = '0123456789*#' if [:any, :dtmf].include? @component_node.interrupt_on
 
                 @execution_elements.each do |element|
                   element.call
@@ -39,6 +47,7 @@ module Punchblock
                 end
               when :unimrcp
                 doc = @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+                send_ref
                 @call.send_agi_action! 'EXEC MRCPSynth', doc, mrcpsynth_options do |complete_event|
                   pb_logger.debug "MRCPSynth completed with #{complete_event}."
                   send_event complete_event(success_reason)
@@ -62,13 +71,17 @@ module Punchblock
             def play_audio(path)
               pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
               op = current_actor
-              @call.send_agi_action! 'STREAM FILE', path, nil do |complete_event|
+              @call.send_agi_action! 'STREAM FILE', path, @interrupt_digits do |complete_event|
                 pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
                 op.continue! complete_event
               end
             end
 
             private
+
+            def send_ref
+              set_node_response Ref.new :id => id
+            end
 
             def with_error(name, text)
               set_node_response ProtocolError.new(name, text)

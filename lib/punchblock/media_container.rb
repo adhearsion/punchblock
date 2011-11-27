@@ -26,6 +26,7 @@ module Punchblock
     # @param [String] ssml the SSML document to render TTS
     #
     def ssml=(ssml)
+      return unless ssml
       unless ssml.is_a?(RubySpeech::SSML::Element)
         node = ssml.is_a?(Nokogiri::XML::Node) ? ssml : Nokogiri::XML(ssml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
         ssml = RubySpeech::SSML::Element.import node

@@ -48,8 +48,21 @@ module Punchblock
                   end
                 end
 
+                let(:command_opts) { {} }
+
                 let :command_options do
-                  { :ssml => ssml_doc }
+                  { :ssml => ssml_doc }.merge(command_opts)
+                end
+
+                let :command do
+                  Punchblock::Component::Output.new command_options
+                end
+
+                def expect_mrcpsynth_with_options(options)
+                  mock_call.expects(:send_agi_action!).once.with do |*args|
+                    args[0].should == 'EXEC MRCPSynth'
+                    args[2].should match options
+                  end
                 end
 
                 it "should execute MRCPSynth" do
@@ -65,19 +78,25 @@ module Punchblock
                   command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
                 end
 
-                describe 'interrupt_on' do
-                  def expect_mrcpsynth_with_options(options)
-                    mock_call.expects(:send_agi_action!).once.with do |*args|
-                      args[0].should == 'EXEC MRCPSynth'
-                      args[2].should match options
+                describe 'voice' do
+                  context 'unset' do
+                    let(:command_opts) { { :voice => nil } }
+                    it 'should not pass the v option to MRCPSynth' do
+                      expect_mrcpsynth_with_options(//)
+                      subject.execute
                     end
                   end
 
-                  let :command do
-                    opts = { :ssml => ssml_doc }.merge(command_opts)
-                    Punchblock::Component::Output.new opts
+                  context 'set' do
+                    let(:command_opts) { { :voice => 'alison' } }
+                    it 'should pass the v option to MRCPSynth' do
+                      expect_mrcpsynth_with_options(/v=alison/)
+                      subject.execute
+                    end
                   end
+                end
 
+                describe 'interrupt_on' do
                   context "set to nil" do
                     let(:command_opts) { { :interrupt_on => nil } }
                     it "should not pass the i option to MRCPSynth" do

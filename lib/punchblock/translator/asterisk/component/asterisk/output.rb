@@ -77,6 +77,7 @@ module Punchblock
             def mrcpsynth_options
               [].tap do |opts|
                 opts << 'i=any' if [:any, :dtmf].include? @component_node.interrupt_on
+                opts << "v=#{@component_node.voice}" if @component_node.voice
               end.join '&'
             end
 

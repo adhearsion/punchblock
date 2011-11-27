@@ -7,6 +7,16 @@ module Punchblock
         RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should == Output
       end
 
+      describe 'default values' do
+        its(:interrupt_on)     { should be nil }
+        its(:start_offset)     { should be nil }
+        its(:start_paused)     { should be false }
+        its(:repeat_interval)  { should be nil }
+        its(:repeat_times)     { should be nil }
+        its(:max_time)         { should be nil }
+        its(:voice)            { should be nil }
+      end
+
       describe "when setting options in initializer" do
         subject do
           Output.new  :interrupt_on     => :speech,

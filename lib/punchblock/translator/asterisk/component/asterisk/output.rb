@@ -24,7 +24,7 @@ module Punchblock
               end
 
               case @media_engine
-              when :asterisk
+              when :asterisk, nil
                 return with_error 'option error', "A voice value is unsupported on Asterisk." if @component_node.voice
 
                 @execution_elements = @component_node.ssml.children.map do |node|

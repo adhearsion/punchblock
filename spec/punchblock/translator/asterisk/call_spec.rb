@@ -106,7 +106,7 @@ module Punchblock
           end
 
           context 'with an event for a known AGI command component' do
-            let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER' }
+            let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER', :params_array => [] }
             let :component do
               Component::Asterisk::AGICommand.new mock_component_node, subject.translator
             end
@@ -183,15 +183,29 @@ module Punchblock
             end
           end
 
-          context 'with a component' do
+          context 'with an AGI command component' do
             let :command do
               Punchblock::Component::Asterisk::AGI::Command.new :name => 'Answer'
             end
 
             let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
 
-            it 'should create a component actor and execute it asynchronously' do
+            it 'should create an AGI command component actor and execute it asynchronously' do
               Component::Asterisk::AGICommand.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:execute!).once
+              subject.execute_command command
+            end
+          end
+
+          context 'with an Output component' do
+            let :command do
+              Punchblock::Component::Output.new
+            end
+
+            let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
+
+            it 'should create an AGI command component actor and execute it asynchronously' do
+              Component::Asterisk::Output.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:execute!).once
               subject.execute_command command
             end

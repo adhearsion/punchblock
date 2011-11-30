@@ -3,10 +3,11 @@ require 'spec_helper'
 module Punchblock
   module Translator
     describe Asterisk do
-      let(:ami_client) { mock 'RubyAMI::Client' }
-      let(:connection) { mock 'Connection::Asterisk' }
+      let(:ami_client)    { mock 'RubyAMI::Client' }
+      let(:connection)    { mock 'Connection::Asterisk' }
+      let(:media_engine)  { :asterisk }
 
-      let(:translator) { Asterisk.new ami_client, connection }
+      let(:translator) { Asterisk.new ami_client, connection, media_engine }
 
       subject { translator }
 
@@ -14,6 +15,16 @@ module Punchblock
       its(:connection) { should be connection }
 
       after { translator.terminate }
+
+      context 'with a configured media engine of :asterisk' do
+        let(:media_engine) { :asterisk }
+        its(:media_engine) { should == :asterisk }
+      end
+
+      context 'with a configured media engine of :unimrcp' do
+        let(:media_engine) { :unimrcp }
+        its(:media_engine) { should == :unimrcp }
+      end
 
       describe '#execute_command' do
         describe 'with a call command' do

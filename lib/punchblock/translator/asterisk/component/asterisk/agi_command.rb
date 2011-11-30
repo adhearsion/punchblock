@@ -1,4 +1,5 @@
 require 'uri'
+require 'active_support/core_ext/string/filters'
 
 module Punchblock
   module Translator
@@ -40,9 +41,19 @@ module Punchblock
             private
 
             def create_action
-              RubyAMI::Action.new 'AGI', 'Channel' => @call.channel, 'Command' => @component_node.name, 'CommandID' => id do |response|
+              RubyAMI::Action.new 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id do |response|
                 handle_response response
               end
+            end
+
+            def agi_command
+              "#{@component_node.name} #{@component_node.params_array.map { |arg| quote_arg(arg) }.join(' ')}".squish
+            end
+
+            # Arguments surrounded by quotes; quotes backslash-escaped.
+            # See parse_args in asterisk/res/res_agi.c (Asterisk 1.4.21.1)
+            def quote_arg(arg)
+              '"' + arg.to_s.gsub(/["\\]/) { |m| "\\#{m}" } + '"'
             end
 
             def handle_response(response)

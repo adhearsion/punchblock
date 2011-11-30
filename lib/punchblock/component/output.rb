@@ -109,7 +109,7 @@ module Punchblock
       # @return [String] the TTS voice to use
       #
       def max_time
-        read_attr(:'max-time').to_i
+        read_attr :'max-time', :to_i
       end
 
       ##
@@ -117,6 +117,10 @@ module Punchblock
       #
       def max_time=(other)
         write_attr :'max-time', other
+      end
+
+      def inspect_attributes
+        super + [:interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time]
       end
 
       state_machine :state do

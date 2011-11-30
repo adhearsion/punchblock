@@ -11,11 +11,11 @@ module Punchblock
       autoload :Call
       autoload :Component
 
-      attr_reader :ami_client, :connection, :calls
+      attr_reader :ami_client, :connection, :media_engine, :calls
 
-      def initialize(ami_client, connection)
+      def initialize(ami_client, connection, media_engine = nil)
         pb_logger.debug "Starting up..."
-        @ami_client, @connection = ami_client, connection
+        @ami_client, @connection, @media_engine = ami_client, connection, media_engine
         @calls, @components, @channel_to_call_id = {}, {}, {}
         @fully_booted_count = 0
       end

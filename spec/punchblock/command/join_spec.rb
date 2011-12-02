@@ -12,7 +12,7 @@ module Punchblock
         subject { Join.new :other_call_id => 'abc123', :mixer_name => 'blah', :direction => :duplex, :media => :bridge }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_name)      { should == 'blah' }
+        its(:mixer_name)    { should == 'blah' }
         its(:direction)     { should == :duplex }
         its(:media)         { should == :bridge }
       end
@@ -33,7 +33,7 @@ module Punchblock
         it { should be_instance_of Join }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_name)      { should == 'blah' }
+        its(:mixer_name)    { should == 'blah' }
         its(:direction)     { should == :duplex }
         its(:media)         { should == :bridge }
       end

@@ -17,7 +17,7 @@ module Punchblock
         it_should_behave_like 'event'
 
         its(:other_call_id) { should == 'b' }
-        its(:mixer_name)      { should == 'm' }
+        its(:mixer_name)    { should == 'm' }
         its(:xmlns)         { should == 'urn:xmpp:rayo:1' }
       end
 
@@ -25,7 +25,7 @@ module Punchblock
         subject { Joined.new :other_call_id => 'abc123', :mixer_name => 'blah' }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_name)      { should == 'blah' }
+        its(:mixer_name)    { should == 'blah' }
       end
     end
   end

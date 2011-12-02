@@ -12,7 +12,7 @@ module Punchblock
         subject { Unjoin.new :other_call_id => 'abc123', :mixer_name => 'blah' }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_name)      { should == 'blah' }
+        its(:mixer_name)    { should == 'blah' }
       end
 
       describe "from a stanza" do
@@ -29,7 +29,7 @@ module Punchblock
         it { should be_instance_of Unjoin }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_name)      { should == 'blah' }
+        its(:mixer_name)    { should == 'blah' }
       end
     end
   end

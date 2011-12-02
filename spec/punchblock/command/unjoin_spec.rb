@@ -9,10 +9,10 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        subject { Unjoin.new :other_call_id => 'abc123', :mixer_id => 'blah' }
+        subject { Unjoin.new :other_call_id => 'abc123', :mixer_name => 'blah' }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_id)      { should == 'blah' }
+        its(:mixer_name)      { should == 'blah' }
       end
 
       describe "from a stanza" do
@@ -20,7 +20,7 @@ module Punchblock
           <<-MESSAGE
 <unjoin xmlns="urn:xmpp:rayo:1"
       call-id="abc123"
-      mixer-id="blah" />
+      mixer-name="blah" />
           MESSAGE
         end
 
@@ -29,7 +29,7 @@ module Punchblock
         it { should be_instance_of Unjoin }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_id)      { should == 'blah' }
+        its(:mixer_name)      { should == 'blah' }
       end
     end
   end

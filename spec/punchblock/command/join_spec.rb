@@ -9,10 +9,10 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        subject { Join.new :other_call_id => 'abc123', :mixer_id => 'blah', :direction => :duplex, :media => :bridge }
+        subject { Join.new :other_call_id => 'abc123', :mixer_name => 'blah', :direction => :duplex, :media => :bridge }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_id)      { should == 'blah' }
+        its(:mixer_name)      { should == 'blah' }
         its(:direction)     { should == :duplex }
         its(:media)         { should == :bridge }
       end
@@ -22,7 +22,7 @@ module Punchblock
           <<-MESSAGE
 <join xmlns="urn:xmpp:rayo:1"
       call-id="abc123"
-      mixer-id="blah"
+      mixer-name="blah"
       direction="duplex"
       media="bridge" />
           MESSAGE
@@ -33,7 +33,7 @@ module Punchblock
         it { should be_instance_of Join }
 
         its(:other_call_id) { should == 'abc123' }
-        its(:mixer_id)      { should == 'blah' }
+        its(:mixer_name)      { should == 'blah' }
         its(:direction)     { should == :duplex }
         its(:media)         { should == :bridge }
       end

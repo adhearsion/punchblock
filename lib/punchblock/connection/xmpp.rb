@@ -37,6 +37,7 @@ module Punchblock
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
         Blather.logger = pb_logger
+        Blather.default_log_level = :trace if Blather.respond_to? :default_log_level
 
         super()
       end

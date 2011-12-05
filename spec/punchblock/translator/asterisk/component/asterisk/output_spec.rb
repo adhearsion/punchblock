@@ -308,15 +308,19 @@ module Punchblock
                     end
 
                     it 'should playback each audio file using STREAM FILE' do
+                      latch = CountDownLatch.new 2
                       mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename1, nil do
                         subject.continue
                         true
+                        latch.countdown!
                       end
                       mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename2, nil do
                         subject.continue
                         true
+                        latch.countdown!
                       end
                       subject.execute
+                      latch.wait 2
                     end
 
                     it 'should send a complete event after the final file has finished playback' do

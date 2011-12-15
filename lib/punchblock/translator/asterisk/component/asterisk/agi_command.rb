@@ -9,11 +9,8 @@ module Punchblock
           class AGICommand < Component
             attr_reader :action
 
-            def initialize(component_node, call)
-              @component_node, @call = component_node, call
-              @id = UUIDTools::UUID.random_create.to_s
+            def setup
               @action = create_action
-              pb_logger.debug "Starting up..."
             end
 
             def execute
@@ -62,30 +59,13 @@ module Punchblock
               when RubyAMI::Error
                 set_node_response false
               when RubyAMI::Response
-                set_node_response Ref.new :id => id
+                send_ref
               end
-            end
-
-            def set_node_response(value)
-              pb_logger.debug "Setting response on component node to #{value}"
-              @component_node.response = value
             end
 
             def success_reason(event)
               code, result, data = parse_agi_result event['Result']
               Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code => code, :result => result, :data => data
-            end
-
-            def complete_event(reason)
-              Punchblock::Event::Complete.new.tap do |c|
-                c.reason = reason
-              end
-            end
-
-            def send_event(event)
-              event.component_id = id
-              pb_logger.debug "Sending event #{event.inspect}"
-              @component_node.add_event event
             end
           end
         end

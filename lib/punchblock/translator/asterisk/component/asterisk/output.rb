@@ -7,11 +7,8 @@ module Punchblock
         module Asterisk
           class Output < Component
 
-            def initialize(component_node, call)
-              @component_node, @call = component_node, call
-              @id = UUIDTools::UUID.random_create.to_s
-              @media_engine = call.translator.media_engine
-              pb_logger.debug "Starting up..."
+            def setup
+              @media_engine = @call.translator.media_engine
             end
 
             def execute
@@ -79,14 +76,6 @@ module Punchblock
 
             private
 
-            def send_ref
-              set_node_response Ref.new :id => id
-            end
-
-            def with_error(name, text)
-              set_node_response ProtocolError.new(name, text)
-            end
-
             def mrcpsynth_options
               [].tap do |opts|
                 opts << 'i=any' if [:any, :dtmf].include? @component_node.interrupt_on
@@ -94,25 +83,8 @@ module Punchblock
               end.join '&'
             end
 
-            def set_node_response(value)
-              pb_logger.debug "Setting response on component node to #{value}"
-              @component_node.response = value
-            end
-
             def success_reason
               Punchblock::Component::Output::Complete::Success.new
-            end
-
-            def complete_event(reason)
-              Punchblock::Event::Complete.new.tap do |c|
-                c.reason = reason
-              end
-            end
-
-            def send_event(event)
-              event.component_id = id
-              pb_logger.debug "Sending event #{event.inspect}"
-              @component_node.add_event event
             end
           end
         end

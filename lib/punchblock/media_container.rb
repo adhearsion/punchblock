@@ -19,7 +19,7 @@ module Punchblock
     #
     def ssml
       node = children.first
-      RubySpeech::SSML::Element.import node if node
+      RubySpeech::SSML.import node if node
     end
 
     ##
@@ -28,8 +28,7 @@ module Punchblock
     def ssml=(ssml)
       return unless ssml
       unless ssml.is_a?(RubySpeech::SSML::Element)
-        node = ssml.is_a?(Nokogiri::XML::Node) ? ssml : Nokogiri::XML(ssml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
-        ssml = RubySpeech::SSML::Element.import node
+        ssml = RubySpeech::SSML.import ssml
       end
       self << ssml
     end

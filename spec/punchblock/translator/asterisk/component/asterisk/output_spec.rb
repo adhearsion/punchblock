@@ -36,9 +36,8 @@ module Punchblock
                 let(:audio_filename) { 'http://foo.com/bar.mp3' }
 
                 let :ssml_doc do
-                  filename = audio_filename
                   RubySpeech::SSML.draw do
-                    audio :src => filename
+                    audio :src => audio_filename
                     say_as(:interpret_as => :cardinal) { 'FOO' }
                   end
                 end
@@ -243,9 +242,8 @@ module Punchblock
                 let(:audio_filename) { 'http://foo.com/bar.mp3' }
 
                 let :ssml_doc do
-                  filename = audio_filename
                   RubySpeech::SSML.draw do
-                    audio :src => filename
+                    audio :src => audio_filename
                     say_as(:interpret_as => :cardinal) { 'FOO' }
                   end
                 end
@@ -273,9 +271,8 @@ module Punchblock
                   context 'with a single audio SSML node' do
                     let(:audio_filename) { 'http://foo.com/bar.mp3' }
                     let :command_options do
-                      filename = audio_filename
                       {
-                        :ssml => RubySpeech::SSML.draw { audio :src => filename }
+                        :ssml => RubySpeech::SSML.draw { audio :src => audio_filename }
                       }
                     end
 
@@ -297,12 +294,10 @@ module Punchblock
                     let(:audio_filename1) { 'http://foo.com/bar.mp3' }
                     let(:audio_filename2) { 'http://foo.com/baz.mp3' }
                     let :command_options do
-                      filename1 = audio_filename1
-                      filename2 = audio_filename2
                       {
                         :ssml => RubySpeech::SSML.draw do
-                          audio :src => filename1
-                          audio :src => filename2
+                          audio :src => audio_filename1
+                          audio :src => audio_filename2
                         end
                       }
                     end

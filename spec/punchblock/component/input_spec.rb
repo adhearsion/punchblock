@@ -81,9 +81,22 @@ module Punchblock
         its(:min_confidence)      { should == 0.5 }
       end
 
+      def grxml_doc(mode = :dtmf)
+        RubySpeech::GRXML.draw do
+          self.mode = mode.to_s
+          self.root = 'digits'
+
+          rule id: 'digits' do
+            one_of do
+              0.upto(1) { |d| item { d.to_s } }
+            end
+          end
+        end
+      end
+
       describe Input::Grammar do
-        describe "when not passing a grammar" do
-          subject { Input::Grammar.new :value => '[5 DIGITS]' }
+        describe "when not passing a content type" do
+          subject { Input::Grammar.new :value => grxml_doc }
           its(:content_type) { should == 'application/grammar+grxml' }
         end
 
@@ -98,39 +111,26 @@ module Punchblock
         end
 
         describe 'with a GRXML grammar' do
-          subject { Input::Grammar.new :value => grxml, :content_type => 'application/grammar+grxml' }
+          subject { Input::Grammar.new :value => grxml_doc, :content_type => 'application/grammar+grxml' }
 
-          let :grxml do
-            <<-GRXML
-<grammar xmlns="http://www.w3.org/2001/06/grammar" root="MAINRULE">
-<rule id="MAINRULE">
-  <one-of>
-    <item>
-      <item repeat="0-1"> need a</item>
-      <item repeat="0-1"> i need a</item>
-        <one-of>
-          <item> clue </item>
-        </one-of>
-      <tag> out.concept = "clue";</tag>
-    </item>
-    <item>
-      <item repeat="0-1"> have an</item>
-      <item repeat="0-1"> i have an</item>
-        <one-of>
-          <item> answer </item>
-        </one-of>
-      <tag> out.concept = "answer";</tag>
-    </item>
-  </one-of>
-</rule>
-</grammar>
-            GRXML
-          end
+          its(:content_type) { should == 'application/grammar+grxml' }
 
-          let(:expected_message) { "<![CDATA[ #{grxml} ]]>" }
+          let(:expected_message) { "<![CDATA[ #{grxml_doc} ]]>" }
 
           it "should wrap GRXML in CDATA" do
             subject.child.to_xml.should == expected_message.strip
+          end
+
+          its(:value) { should == grxml_doc }
+
+          describe "comparison" do
+            let(:grammar2) { Input::Grammar.new :value => '<grammar xmlns="http://www.w3.org/2001/06/grammar" version="1.0" xml:lang="en-US" mode="dtmf" root="digits"><rule id="digits"><one-of><item>0</item><item>1</item></one-of></rule></grammar>' }
+            let(:grammar3) { Input::Grammar.new :value => grxml_doc }
+            let(:grammar4) { Input::Grammar.new :value => grxml_doc(:speech) }
+
+            it { should == grammar2 }
+            it { should == grammar3 }
+            it { should_not == grammar4 }
           end
         end
       end

@@ -82,10 +82,7 @@ module Punchblock
       end
 
       def grxml_doc(mode = :dtmf)
-        RubySpeech::GRXML.draw do
-          self.mode = mode.to_s
-          self.root = 'digits'
-
+        RubySpeech::GRXML.draw :mode => mode.to_s, :root => 'digits' do
           rule id: 'digits' do
             one_of do
               0.upto(1) { |d| item { d.to_s } }

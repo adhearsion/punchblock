@@ -7,7 +7,7 @@ module Punchblock
 
     class_attribute :registered_ns, :registered_name
 
-    attr_accessor :call_id, :component_id, :domain, :connection, :client, :original_component
+    attr_accessor :call_id, :mixer_id, :component_id, :domain, :connection, :client, :original_component
 
     # Register a new stanza class to a name and/or namespace
     #

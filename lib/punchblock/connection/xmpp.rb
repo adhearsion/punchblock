@@ -9,7 +9,7 @@ module Punchblock
   module Connection
     class XMPP < GenericConnection
       include Blather::DSL
-      attr_accessor :event_handler
+      attr_accessor :event_handler, :root_domain, :calls_domain, :mixers_domain
 
       ##
       # Initialize the required connection attributes
@@ -27,7 +27,9 @@ module Punchblock
 
         setup *[:username, :password, :host, :port, :certs].map { |key| options.delete key }
 
-        @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain
+        @root_domain    = Blather::JID.new(options[:root_domain] || options[:rayo_domain] || @username).domain
+        @calls_domain   = options[:calls_domain]  || "calls.#{@root_domain}"
+        @mixers_domain  = options[:mixers_domain] || "mixers.#{@root_domain}"
 
         @callmap = {} # This hash maps call IDs to their XMPP domain.
 
@@ -55,12 +57,11 @@ module Punchblock
       end
 
       def prep_command_for_execution(command, options = {})
-        call_id, component_id = options.values_at :call_id, :component_id
-        command.connection = self
-        command.call_id = call_id
-        jid = command.is_a?(Command::Dial) ? @rayo_domain : "#{call_id}@#{@callmap[call_id]}"
-        jid << "/#{component_id}" if component_id
-        create_iq(jid).tap do |iq|
+        command.connection    = self
+        command.call_id       ||= options[:call_id]
+        command.mixer_id      ||= options[:mixer_id]
+        command.component_id  ||= options[:component_id]
+        create_iq(jid_for_command(command)).tap do |iq|
           pb_logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{jid}"
           iq << command
         end
@@ -103,9 +104,25 @@ module Punchblock
 
       private
 
+      def jid_for_command(command)
+        return root_domain if command.is_a?(Command::Dial)
+
+        if command.call_id
+          node = command.call_id
+          domain = @callmap[command.call_id] || calls_domain
+        elsif command.mixer_id
+          node = command.mixer_id
+          domain = @callmap[command.mixer_id] || mixers_domain
+        else
+          domain = calls_domain
+        end
+
+        Blather::JID.new(node, domain, command.component_id).to_s
+      end
+
       def send_presence(presence)
         status = Blather::Stanza::Presence::Status.new presence
-        status.to = @rayo_domain
+        status.to = root_domain
         client.write status
       end
 
@@ -161,7 +178,7 @@ module Punchblock
       end
 
       def ping_rayo
-        client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, @rayo_domain) do |response|
+        client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, root_domain) do |response|
           begin
             handle_error response if response.is_a? Blather::BlatherError
           rescue ProtocolError => e

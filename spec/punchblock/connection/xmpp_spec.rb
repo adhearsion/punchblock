@@ -3,7 +3,8 @@ require 'spec_helper'
 module Punchblock
   module Connection
     describe XMPP do
-      let(:connection) { XMPP.new :username => '1@call.rayo.net', :password => 1 }
+      let(:options)     { { :root_domain => 'rayo.net' } }
+      let(:connection)  { XMPP.new({:username => '1@app.rayo.net', :password => 1}.merge(options)) }
 
       let(:mock_event_handler) { stub_everything 'Event Handler' }
 
@@ -12,6 +13,48 @@ module Punchblock
       end
 
       subject { connection }
+
+      describe "rayo domains" do
+        context "with no domains specified, and a JID of 1@app.rayo.net" do
+          let(:options) { { :username => '1@app.rayo.net' } }
+
+          its(:root_domain)   { should == 'app.rayo.net' }
+          its(:calls_domain)   { should == 'calls.app.rayo.net' }
+          its(:mixers_domain)  { should == 'mixers.app.rayo.net' }
+        end
+
+        context "with only a rayo domain set" do
+          let(:options) { { :rayo_domain => 'rayo.org' } }
+
+          its(:root_domain)   { should == 'rayo.org' }
+          its(:calls_domain)   { should == 'calls.rayo.org' }
+          its(:mixers_domain)  { should == 'mixers.rayo.org' }
+        end
+
+        context "with only a root domain set" do
+          let(:options) { { :root_domain => 'rayo.org' } }
+
+          its(:root_domain)   { should == 'rayo.org' }
+          its(:calls_domain)   { should == 'calls.rayo.org' }
+          its(:mixers_domain)  { should == 'mixers.rayo.org' }
+        end
+
+        context "with a root domain and calls domain set" do
+          let(:options) { { :root_domain => 'rayo.org', :calls_domain => 'phone_calls.rayo.org' } }
+
+          its(:root_domain)   { should == 'rayo.org' }
+          its(:calls_domain)   { should == 'phone_calls.rayo.org' }
+          its(:mixers_domain)  { should == 'mixers.rayo.org' }
+        end
+
+        context "with a root domain and mixers domain set" do
+          let(:options) { { :root_domain => 'rayo.org', :mixers_domain => 'conferences.rayo.org' } }
+
+          its(:root_domain)   { should == 'rayo.org' }
+          its(:calls_domain)   { should == 'calls.rayo.org' }
+          its(:mixers_domain)  { should == 'conferences.rayo.org' }
+        end
+      end
 
       it 'should require a username and password to be passed in the options' do
         expect { XMPP.new :password => 1 }.to raise_error ArgumentError
@@ -84,7 +127,7 @@ module Punchblock
       it 'should send a "Chat" presence when ready' do
         client = connection.send :client
         client.expects(:write).once.with do |stanza|
-          stanza.to.should == 'call.rayo.net' &&
+          stanza.to.should == 'rayo.net' &&
             stanza.is_a?(Blather::Stanza::Presence::Status) &&
             stanza.chat?
         end
@@ -94,7 +137,7 @@ module Punchblock
       it 'should send a "Do Not Disturb" presence when not_ready' do
         client = connection.send :client
         client.expects(:write).once.with do |stanza|
-          stanza.to.should == 'call.rayo.net' &&
+          stanza.to.should == 'rayo.net' &&
             stanza.is_a?(Blather::Stanza::Presence::Status) &&
             stanza.dnd?
         end

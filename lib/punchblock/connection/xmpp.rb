@@ -9,7 +9,7 @@ module Punchblock
   module Connection
     class XMPP < GenericConnection
       include Blather::DSL
-      attr_accessor :event_handler
+      attr_accessor :event_handler, :root_domain, :calls_domain, :mixers_domain
 
       ##
       # Initialize the required connection attributes
@@ -27,7 +27,9 @@ module Punchblock
 
         setup *[:username, :password, :host, :port, :certs].map { |key| options.delete key }
 
-        @rayo_domain = options[:rayo_domain] || Blather::JID.new(@username).domain
+        @root_domain    = options[:root_domain]   || options[:rayo_domain] || Blather::JID.new(@username).domain
+        @calls_domain   = options[:calls_domain]  || "calls.#{@root_domain}"
+        @mixers_domain  = options[:mixers_domain] || "mixers.#{@root_domain}"
 
         @callmap = {} # This hash maps call IDs to their XMPP domain.
 
@@ -58,7 +60,7 @@ module Punchblock
         call_id, component_id = options.values_at :call_id, :component_id
         command.connection = self
         command.call_id = call_id
-        jid = command.is_a?(Command::Dial) ? @rayo_domain : "#{call_id}@#{@callmap[call_id]}"
+        jid = command.is_a?(Command::Dial) ? root_domain : "#{call_id}@#{@callmap[call_id]}"
         jid << "/#{component_id}" if component_id
         create_iq(jid).tap do |iq|
           pb_logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{jid}"
@@ -105,7 +107,7 @@ module Punchblock
 
       def send_presence(presence)
         status = Blather::Stanza::Presence::Status.new presence
-        status.to = @rayo_domain
+        status.to = root_domain
         client.write status
       end
 
@@ -161,7 +163,7 @@ module Punchblock
       end
 
       def ping_rayo
-        client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, @rayo_domain) do |response|
+        client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, root_domain) do |response|
           begin
             handle_error response if response.is_a? Blather::BlatherError
           rescue ProtocolError => e

@@ -243,6 +243,65 @@ module Punchblock
         its(:name)          { should == :item_not_found }
         its(:text)          { should == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
       end
+
+      describe "#prep_command_for_execution" do
+        let(:stanza) { subject.prep_command_for_execution command }
+
+        context "with a dial command" do
+          let(:command)       { Command::Dial.new }
+          let(:expected_jid)  { 'rayo.net' }
+
+          it "should use the correct JID" do
+            stanza = subject.prep_command_for_execution command
+            stanza.to.should == expected_jid
+          end
+        end
+
+        context "with a call command" do
+          let(:command)       { Command::Answer.new.tap { |a| a.call_id = 'abc123' } }
+          let(:expected_jid)  { 'abc123@calls.rayo.net' }
+
+          it "should use the correct JID" do
+            stanza.to.should == expected_jid
+          end
+        end
+
+        context "with a call component" do
+          let(:command)       { Component::Output.new :call_id => 'abc123' }
+          let(:expected_jid)  { 'abc123@calls.rayo.net' }
+
+          it "should use the correct JID" do
+            stanza.to.should == expected_jid
+          end
+        end
+
+        context "with a call component command" do
+          let(:command)       { Component::Stop.new :call_id => 'abc123', :component_id => 'foobar' }
+          let(:expected_jid)  { 'abc123@calls.rayo.net/foobar' }
+
+          it "should use the correct JID" do
+            stanza.to.should == expected_jid
+          end
+        end
+
+        context "with a mixer component" do
+          let(:command)       { Component::Output.new :mixer_id => 'abc123' }
+          let(:expected_jid)  { 'abc123@mixers.rayo.net' }
+
+          it "should use the correct JID" do
+            stanza.to.should == expected_jid
+          end
+        end
+
+        context "with a mixer component command" do
+          let(:command)       { Component::Stop.new :mixer_id => 'abc123', :component_id => 'foobar' }
+          let(:expected_jid)  { 'abc123@mixers.rayo.net/foobar' }
+
+          it "should use the correct JID" do
+            stanza.to.should == expected_jid
+          end
+        end
+      end
     end # describe XMPP
   end # XMPP
 end # Punchblock

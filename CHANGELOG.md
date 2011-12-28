@@ -1,4 +1,6 @@
 # develop
+
+# v0.7.2 - 2011-12-28
   * Feature: Allow sending commands to mixers easily
   * Feature: Allow configuration of Rayo XMPP domains (root, call and mixer)
   * Feature: Log Blather messages to the trace log level

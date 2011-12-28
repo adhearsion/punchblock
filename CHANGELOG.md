@@ -1,4 +1,14 @@
 # develop
+  * Feature: Allow sending commands to mixers easily
+  * Feature: Allow configuration of Rayo XMPP domains (root, call and mixer)
+  * Feature: Log Blather messages to the trace log level
+  * Feature: Return an error when trying to execute an Output on Asterisk with unsupported options set
+  * Feature: Add basic support for media output via MRCPSynth on Asterisk
+  * API change: Rename mixer_id to mixer_name to align with change to Rayo
+  * Bugfix: Handle and expose RubySpeech GRXML documents on Input/Ask properly
+  * Bugfix: Compare ProtocolErrors correctly
+  * Bugfix: Asterisk media output should default to Asterisk native output (STREAM FILE)
+  * Bugfix: An Output node's default max_time value should be nil rather than zero
 
 # v0.7.1 - 2011-11-24
   * [FEATURE] Add `Connection#not_ready!`, to instruct the server not to send any more offers.

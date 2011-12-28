@@ -147,7 +147,8 @@ module Punchblock
         # @return [Choices] the choices available
         #
         def choices
-          Choices.new find_first('ns:choices', :ns => self.class.registered_ns)
+          node = find_first 'ns:choices', :ns => self.class.registered_ns
+          Choices.new node if node
         end
 
         ##
@@ -156,6 +157,7 @@ module Punchblock
         # @option choices [String] :value the choices available
         #
         def choices=(choices)
+          return unless choices
           remove_children :choices
           choices = Choices.new(choices) unless choices.is_a?(Choices)
           self << choices

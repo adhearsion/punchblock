@@ -64,12 +64,14 @@ module Punchblock
             end
           when Punchblock::Component::Asterisk::AGI::Command
             execute_agi_command command
+          when Punchblock::Component::Output
+            execute_component Component::Asterisk::Output, command
           end
         end
 
-        def send_agi_action(command, &block)
+        def send_agi_action(command, *params, &block)
           pb_logger.debug "Sending AGI action #{command}"
-          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :call_id => id
+          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :call_id => id
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
             pb_logger.debug "AGI action received complete event #{e.inspect}"
@@ -89,7 +91,11 @@ module Punchblock
         private
 
         def execute_agi_command(command)
-          Component::Asterisk::AGICommand.new(command, current_actor).tap do |component|
+          execute_component Component::Asterisk::AGICommand, command
+        end
+
+        def execute_component(type, command)
+          type.new(command, current_actor).tap do |component|
             register_component component
             component.execute!
           end

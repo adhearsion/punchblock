@@ -8,7 +8,7 @@ module Punchblock
       #
       # @param [Hash] options
       # @option options [String, Optional] :other_call_id the call ID to unjoin
-      # @option options [String, Optional] :mixer_id the mixer name to unjoin
+      # @option options [String, Optional] :mixer_name the mixer name to unjoin
       #
       # @return [Command::Unjoin] a formatted Rayo unjoin command
       #
@@ -32,18 +32,18 @@ module Punchblock
 
       ##
       # @return [String] the mixer name to unjoin
-      def mixer_id
-        read_attr :'mixer-id'
+      def mixer_name
+        read_attr :'mixer-name'
       end
 
       ##
       # @param [String] other the mixer name to unjoin
-      def mixer_id=(other)
-        write_attr :'mixer-id', other
+      def mixer_name=(other)
+        write_attr :'mixer-name', other
       end
 
       def inspect_attributes # :nodoc:
-        [:other_call_id, :mixer_id] + super
+        [:other_call_id, :mixer_name] + super
       end
     end # Unjoin
   end # Command

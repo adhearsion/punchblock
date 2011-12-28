@@ -7,10 +7,13 @@ module Punchblock
             attr_reader :action
 
             def initialize(component_node, translator)
-              @component_node, @translator = component_node, translator
+              super
+              @translator = translator
+            end
+
+            def setup
               @action = create_action
               @id = @action.action_id
-              pb_logger.debug "Starting up..."
             end
 
             def execute
@@ -32,10 +35,6 @@ module Punchblock
 
             def send_action
               @translator.send_ami_action! @action
-            end
-
-            def send_ref
-              @component_node.response = Ref.new :id => @action.action_id
             end
 
             def handle_response(response)
@@ -60,12 +59,6 @@ module Punchblock
               Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => headers.delete('Message'), :attributes => headers
             end
 
-            def complete_event(reason)
-              Punchblock::Event::Complete.new.tap do |c|
-                c.reason = reason
-              end
-            end
-
             def send_events
               return unless @action.has_causal_events?
               @action.events.each do |e|
@@ -81,12 +74,6 @@ module Punchblock
               headers = ami_event.headers
               headers.delete 'ActionID'
               Event::Asterisk::AMI::Event.new :name => ami_event.name, :attributes => headers
-            end
-
-            def send_event(event)
-              event.component_id = id
-              pb_logger.debug "Sending event #{event}"
-              @component_node.add_event event
             end
           end
         end

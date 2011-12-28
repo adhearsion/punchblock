@@ -18,18 +18,19 @@ module Punchblock
     # @return [String] the SSML document to render TTS
     #
     def ssml
-      children.to_xml
+      node = children.first
+      RubySpeech::SSML.import node if node
     end
 
     ##
     # @param [String] ssml the SSML document to render TTS
     #
     def ssml=(ssml)
-      if ssml.instance_of?(String)
-        self << RayoNode.new('').parse(ssml) do |config|
-          config.noblanks.strict
-        end
+      return unless ssml
+      unless ssml.is_a?(RubySpeech::SSML::Element)
+        ssml = RubySpeech::SSML.import ssml
       end
+      self << ssml
     end
 
     def inspect_attributes # :nodoc:

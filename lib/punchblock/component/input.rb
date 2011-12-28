@@ -208,7 +208,8 @@ module Punchblock
       # @return [Choices] the choices available
       #
       def grammar
-        Grammar.new find_first('ns:grammar', :ns => self.class.registered_ns)
+        node = find_first 'ns:grammar', :ns => self.class.registered_ns
+        Grammar.new node if node
       end
 
       ##
@@ -217,6 +218,7 @@ module Punchblock
       # @option choices [String] :value the choices available
       #
       def grammar=(other)
+        return unless other
         remove_children :grammar
         grammar = Grammar.new(other) unless other.is_a?(Grammar)
         self << grammar
@@ -252,21 +254,29 @@ module Punchblock
         end
 
         ##
-        # @param [String] content_type Defaults to the Voxeo Simple Grammar
+        # @param [String] content_type Defaults to GRXML
         #
         def content_type=(content_type)
-          write_attr 'content-type', content_type || 'application/grammar+grxml'
+          write_attr 'content-type', content_type || grxml_content_type
         end
 
         ##
         # @return [String] the choices available
         def value
-          content
+          if grxml?
+            RubySpeech::GRXML.import content
+          else
+            content
+          end
         end
 
         ##
         # @param [String] value the choices available
         def value=(value)
+          return unless value
+          if grxml? && !value.is_a?(RubySpeech::GRXML::Element)
+            value = RubySpeech::GRXML.import value
+          end
           Nokogiri::XML::Builder.with(self) do |xml|
             xml.cdata " #{value} "
           end
@@ -281,6 +291,16 @@ module Punchblock
 
         def inspect_attributes # :nodoc:
           [:content_type, :value] + super
+        end
+
+        private
+
+        def grxml_content_type
+          'application/grammar+grxml'
+        end
+
+        def grxml?
+          content_type == grxml_content_type
         end
       end # Choices
 

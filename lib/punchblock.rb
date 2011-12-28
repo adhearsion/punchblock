@@ -4,6 +4,7 @@
   active_support/core_ext/module/delegation
   future-resource
   has_guarded_handlers
+  ruby_speech
   punchblock/core_ext/ruby
 }.each { |l| require l }
 

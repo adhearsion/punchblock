@@ -59,7 +59,7 @@ module Punchblock
       def prep_command_for_execution(command, options = {})
         command.connection    = self
         command.call_id       ||= options[:call_id]
-        command.mixer_id      ||= options[:mixer_id]
+        command.mixer_name      ||= options[:mixer_name]
         command.component_id  ||= options[:component_id]
         create_iq(jid_for_command(command)).tap do |iq|
           pb_logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{jid}"
@@ -110,9 +110,9 @@ module Punchblock
         if command.call_id
           node = command.call_id
           domain = @callmap[command.call_id] || calls_domain
-        elsif command.mixer_id
-          node = command.mixer_id
-          domain = @callmap[command.mixer_id] || mixers_domain
+        elsif command.mixer_name
+          node = command.mixer_name
+          domain = @callmap[command.mixer_name] || mixers_domain
         else
           domain = calls_domain
         end

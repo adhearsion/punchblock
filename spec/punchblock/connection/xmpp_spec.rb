@@ -285,7 +285,7 @@ module Punchblock
         end
 
         context "with a mixer component" do
-          let(:command)       { Component::Output.new :mixer_id => 'abc123' }
+          let(:command)       { Component::Output.new :mixer_name => 'abc123' }
           let(:expected_jid)  { 'abc123@mixers.rayo.net' }
 
           it "should use the correct JID" do
@@ -294,7 +294,7 @@ module Punchblock
         end
 
         context "with a mixer component command" do
-          let(:command)       { Component::Stop.new :mixer_id => 'abc123', :component_id => 'foobar' }
+          let(:command)       { Component::Stop.new :mixer_name => 'abc123', :component_id => 'foobar' }
           let(:expected_jid)  { 'abc123@mixers.rayo.net/foobar' }
 
           it "should use the correct JID" do

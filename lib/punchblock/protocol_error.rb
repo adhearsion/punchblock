@@ -12,5 +12,10 @@ module Punchblock
       "#<#{self.class}: name=#{name.inspect} text=#{text.inspect} call_id=#{call_id.inspect} component_id=#{component_id.inspect}>"
     end
     alias :inspect :to_s
+
+    def eql?(other)
+      other.is_a?(self.class) && [:name, :text, :call_id, :component_id].all? { |f| self.__send__(f) == other.__send__(f) }
+    end
+    alias :== :eql?
   end
 end

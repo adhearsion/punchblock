@@ -130,6 +130,28 @@ module Punchblock
               subject.process_ami_event ami_event
             end
           end
+
+          context 'with a handler registered for a matching event' do
+            let :ami_event do
+              RubyAMI::Event.new('DTMF').tap do |e|
+                e['Digit']    = '4'
+                e['Start']    = 'Yes'
+                e['End']      = 'No'
+                e['Uniqueid'] = "1320842458.8"
+                e['Channel']  = "SIP/1234-00000000"
+              end
+            end
+
+            let(:response) { mock 'Response' }
+
+            it 'should execute the handler' do
+              response.expects(:call).once.with ami_event
+              subject.register_handler :ami, :name => 'DTMF' do |event|
+                response.call event
+              end
+              subject.process_ami_event ami_event
+            end
+          end
         end
 
         describe '#execute_command' do

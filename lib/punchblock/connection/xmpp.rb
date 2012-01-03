@@ -34,7 +34,8 @@ module Punchblock
         @callmap = {} # This hash maps call IDs to their XMPP domain.
 
         @auto_reconnect = !!options[:auto_reconnect]
-        @reconnect_attempts = 0
+        @reconnect_attempts = 1.0/0.0 # Infinity
+        @reconnect_timer = 5
 
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
@@ -161,12 +162,13 @@ module Punchblock
 
         disconnected do
           @rayo_ping.cancel if @rayo_ping
-          if @auto_reconnect && @reconnect_attempts
-            timer = 30 * 2 ** @reconnect_attempts
-            pb_logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{timer}s."
-            sleep timer
+          Adhearsion::Process.reset
+          attempts = 0
+          while @auto_reconnect && @reconnect_attempts >= attempts
+            pb_logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{@reconnect_timer}s."
+            sleep @reconnect_timer
             pb_logger.info "Trying to reconnect..."
-            @reconnect_attempts += 1
+            attempts += 1
             connect
           end
         end

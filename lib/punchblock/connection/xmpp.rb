@@ -162,7 +162,6 @@ module Punchblock
 
         disconnected do
           @rayo_ping.cancel if @rayo_ping
-          Adhearsion::Process.reset
           attempts = 0
           while @auto_reconnect && @reconnect_attempts >= attempts
             pb_logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{@reconnect_timer}s."

@@ -33,10 +33,6 @@ module Punchblock
 
         @callmap = {} # This hash maps call IDs to their XMPP domain.
 
-        @auto_reconnect = !!options[:auto_reconnect]
-        @reconnect_attempts = 1.0/0.0 # Infinity
-        @reconnect_timer = 5
-
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
         Blather.logger = pb_logger
@@ -79,6 +75,8 @@ module Punchblock
       def connect
         begin
           EM.run { client.run }
+        rescue DisconnectedError => e
+          raise
         rescue => e
           raise ProtocolError.new(e.class.to_s, e.message)
         end
@@ -162,14 +160,7 @@ module Punchblock
 
         disconnected do
           @rayo_ping.cancel if @rayo_ping
-          attempts = 0
-          while @auto_reconnect && @reconnect_attempts >= attempts
-            pb_logger.warn "XMPP disconnected. Tried to reconnect #{@reconnect_attempts} times. Reconnecting in #{@reconnect_timer}s."
-            sleep @reconnect_timer
-            pb_logger.info "Trying to reconnect..."
-            attempts += 1
-            connect
-          end
+          raise DisconnectedError
         end
 
         # Read/handle presence requests. This is how we get events.

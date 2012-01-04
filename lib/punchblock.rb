@@ -16,6 +16,7 @@ module Punchblock
   autoload :CommandNode
   autoload :Component
   autoload :Connection
+  autoload :DisconnectedError
   autoload :HasHeaders
   autoload :Header
   autoload :MediaContainer

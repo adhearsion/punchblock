@@ -1,5 +1,11 @@
 # develop
 
+# v0.8.0 - 2012-01-06
+  * Feature: Expose Blather's connection timeout config when creating a Connection::XMPP
+  * Bugfix: Remove some deprecated Tropo extension components
+  * Bugfix: Remove reconnection logic since it really belongs in the consumer
+  * Feature: Raise a DisconnectedError when a disconnection is detected
+
 # v0.7.2 - 2011-12-28
   * Feature: Allow sending commands to mixers easily
   * Feature: Allow configuration of Rayo XMPP domains (root, call and mixer)

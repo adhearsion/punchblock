@@ -16,6 +16,7 @@ module Punchblock
   autoload :CommandNode
   autoload :Component
   autoload :Connection
+  autoload :DisconnectedError
   autoload :HasHeaders
   autoload :Header
   autoload :MediaContainer
@@ -53,7 +54,7 @@ module Punchblock
     RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_RAYO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
   end
 
-  [:ask, :conference, :say, :transfer].each do |ns|
+  [:conference].each do |ns|
     RAYO_NAMESPACES[ns] = [BASE_TROPO_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
     RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_TROPO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
   end

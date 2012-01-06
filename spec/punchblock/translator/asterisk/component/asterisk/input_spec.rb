@@ -24,13 +24,9 @@ module Punchblock
                 end
 
                 rule id: 'pin', scope: 'public' do
-                  one_of do
-                    item do
-                      item repeat: '2' do
-                        ruleref uri: '#digit'
-                      end
-                      "#"
-                    end
+                  string "#"
+                  item repeat: '2' do
+                    ruleref uri: '#digit'
                   end
                 end
               end
@@ -61,53 +57,44 @@ module Punchblock
                   { :mode => :dtmf, :grammar => { :value => grammar } }.merge(command_opts)
                 end
 
-                it "should create a matcher from the parsed grammar" do
-                  subject.execute
-                  subject.matcher.should be_a Input::DTMFMatcher
-                  subject.matcher.grammar.should == grammar
-                end
-
-                it "should begin capturing DTMF events for the call and pass them to the matcher" do
-                  matcher = Input::DTMFMatcher.new grammar
-                  Input::DTMFMatcher.expects(:new).returns matcher
-
-                  dtmf = sequence 'dtmf'
-
-                  matcher.expects(:<<).once.with('3').in_sequence dtmf
-                  matcher.expects(:match?).once.returns(nil).in_sequence dtmf
-                  matcher.expects(:<<).once.with('7').in_sequence dtmf
-                  matcher.expects(:match?).once.returns(nil).in_sequence dtmf
-                  matcher.expects(:<<).once.with('#').in_sequence dtmf
-                  matcher.expects(:match?).once.returns(true).in_sequence dtmf
-
-                  subject.execute!
-
+                describe "receiving DTMF events" do
                   def ami_event_for_dtmf(digit, position)
                     RubyAMI::Event.new('DTMF').tap do |e|
-                      e['Digit'] = digit
-                      e['Start'] = position == :start ? 'Yes' : 'No'
-                      e['End'] = position == :end ? 'Yes' : 'No'
+                      e['Digit']  = digit.to_s
+                      e['Start']  = position == :start ? 'Yes' : 'No'
+                      e['End']    = position == :end ? 'Yes' : 'No'
                     end
                   end
 
-                  call.process_ami_event! ami_event_for_dtmf(3, :start)
-                  call.process_ami_event! ami_event_for_dtmf(3, :end)
-                  call.process_ami_event! ami_event_for_dtmf(7, :start)
-                  call.process_ami_event! ami_event_for_dtmf(7, :end)
-                  call.process_ami_event! ami_event_for_dtmf('#', :start)
-                  call.process_ami_event! ami_event_for_dtmf('#', :end)
+                  def send_ami_events_for_dtmf(digit)
+                    call.process_ami_event ami_event_for_dtmf(digit, :start)
+                    call.process_ami_event ami_event_for_dtmf(digit, :end)
+                  end
 
-                  command.complete_event(0.1)
-                end
+                  let(:reason) { command.complete_event(5).reason }
 
-                describe "receiving DTMF events" do
-                  describe "checked against the matcher" do
-                    context "when a match is found" do
-                      it "should send a success complete event with the relevant data"
+                  before { subject.execute! }
+
+                  context "when a match is found" do
+                    before do
+                      send_ami_events_for_dtmf '#'
+                      send_ami_events_for_dtmf 1
+                      send_ami_events_for_dtmf 2
                     end
 
-                    context "when the match is invalid" do
-                      it "should send a nomatch complete event"
+                    it "should send a success complete event with the relevant data" do
+                      reason.should == Punchblock::Component::Input::Complete::Success.new(:mode => :dtmf, :confidence => 1, :utterance => '#12', :interpretation => 'dtmf-pound dtmf-1 dtmf-2', :component_id => subject.id)
+                    end
+                  end
+
+                  context "when the match is invalid" do
+                    before do
+                      send_ami_events_for_dtmf 1
+                      send_ami_events_for_dtmf '#'
+                    end
+
+                    it "should send a nomatch complete event" do
+                      reason.should == Punchblock::Component::Input::Complete::NoMatch.new(:component_id => subject.id)
                     end
                   end
                 end

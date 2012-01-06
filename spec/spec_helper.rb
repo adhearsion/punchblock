@@ -10,6 +10,10 @@ RSpec.configure do |config|
   config.mock_with :mocha
   config.filter_run :focus => true
   config.run_all_when_everything_filtered = true
+
+  config.before :suite do |variable|
+    Punchblock.logger = Logger.new(STDOUT)
+  end
 end
 
 def parse_stanza(xml)

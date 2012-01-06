@@ -20,12 +20,13 @@ module Punchblock
       # @option options [String] :rayo_domain the domain on which Rayo is running
       # @option options [Boolean, Optional] :auto_reconnect whether or not to auto reconnect
       # @option options [Numeric, Optional] :write_timeout for which to wait on a command response
+      # @option options [Numeric, Optional] :connection_timeout for which to wait on a connection being established
       # @option options [Numeric, nil, Optional] :ping_period interval in seconds on which to ping the server. Nil or false to disable
       #
       def initialize(options = {})
         raise ArgumentError unless (@username = options[:username]) && options[:password]
 
-        setup *[:username, :password, :host, :port, :certs].map { |key| options.delete key }
+        setup *[:username, :password, :host, :port, :certs, :connection_timeout].map { |key| options.delete key }
 
         @root_domain    = Blather::JID.new(options[:root_domain] || options[:rayo_domain] || @username).domain
         @calls_domain   = options[:calls_domain]  || "calls.#{@root_domain}"
@@ -75,7 +76,7 @@ module Punchblock
       def connect
         begin
           EM.run { client.run }
-        rescue Blather::Stream::ConnectionFailed => e
+        rescue Blather::Stream::ConnectionFailed, Blather::Stream::ConnectionTimeout => e
           raise DisconnectedError.new(e.class.to_s, e.message)
         rescue => e
           # Preserve Punchblock native exceptions

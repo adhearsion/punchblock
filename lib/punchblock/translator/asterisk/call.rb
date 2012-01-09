@@ -68,6 +68,8 @@ module Punchblock
             execute_agi_command command
           when Punchblock::Component::Output
             execute_component Component::Asterisk::Output, command
+          when Punchblock::Component::Input
+            execute_component Component::Asterisk::Input, command
           end
         end
 

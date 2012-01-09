@@ -233,6 +233,20 @@ module Punchblock
             end
           end
 
+          context 'with an Input component' do
+            let :command do
+              Punchblock::Component::Input.new
+            end
+
+            let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
+
+            it 'should create an AGI command component actor and execute it asynchronously' do
+              Component::Asterisk::Input.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:execute!).once
+              subject.execute_command command
+            end
+          end
+
           context 'with a component command' do
             let(:component_id) { 'foobar' }
 

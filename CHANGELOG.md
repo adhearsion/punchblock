@@ -1,4 +1,6 @@
 # develop
+
+# v0.8.1 - 2012-01-09
   * Feature: Support DTMF Input components on Asterisk
 
 # v0.8.0 - 2012-01-06

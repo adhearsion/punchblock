@@ -4,6 +4,7 @@ module Punchblock
   module Translator
     class Asterisk
       class Call
+        include HasGuardedHandlers
         include Celluloid
 
         attr_reader :id, :channel, :translator, :agi_env
@@ -42,6 +43,7 @@ module Punchblock
               pb_logger.debug "Could not find component for AMI event: #{ami_event}"
             end
           end
+          trigger_handler :ami, ami_event
         end
 
         def execute_command(command)
@@ -66,6 +68,8 @@ module Punchblock
             execute_agi_command command
           when Punchblock::Component::Output
             execute_component Component::Asterisk::Output, command
+          when Punchblock::Component::Input
+            execute_component Component::Asterisk::Input, command
           end
         end
 

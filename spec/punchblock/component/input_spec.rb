@@ -192,6 +192,21 @@ module Punchblock
         its(:confidence)      { should == 0.45 }
         its(:interpretation)  { should == '1234' }
         its(:utterance)       { should == 'one two three four' }
+
+        describe "when setting options in initializer" do
+          subject do
+            Input::Complete::Success.new :mode            => :dtmf,
+                                         :confidence      => 1,
+                                         :utterance       => '123',
+                                         :interpretation  => 'dtmf-1 dtmf-2 dtmf-3'
+          end
+
+
+          its(:mode)            { should == :dtmf }
+          its(:confidence)      { should == 1 }
+          its(:utterance)       { should == '123' }
+          its(:interpretation)  { should == 'dtmf-1 dtmf-2 dtmf-3' }
+        end
       end
 
       describe Input::Complete::NoMatch do

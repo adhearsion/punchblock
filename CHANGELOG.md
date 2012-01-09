@@ -1,4 +1,5 @@
 # develop
+  * Feature: Support DTMF Input components on Asterisk
 
 # v0.8.0 - 2012-01-06
   * Feature: Expose Blather's connection timeout config when creating a Connection::XMPP

@@ -24,7 +24,6 @@ module Punchblock
                 end
 
                 rule id: 'pin', scope: 'public' do
-                  string "#"
                   item repeat: '2' do
                     ruleref uri: '#digit'
                   end
@@ -77,13 +76,12 @@ module Punchblock
 
                   context "when a match is found" do
                     before do
-                      send_ami_events_for_dtmf '#'
                       send_ami_events_for_dtmf 1
                       send_ami_events_for_dtmf 2
                     end
 
                     it "should send a success complete event with the relevant data" do
-                      reason.should == Punchblock::Component::Input::Complete::Success.new(:mode => :dtmf, :confidence => 1, :utterance => '#12', :interpretation => 'dtmf-pound dtmf-1 dtmf-2', :component_id => subject.id)
+                      reason.should == Punchblock::Component::Input::Complete::Success.new(:mode => :dtmf, :confidence => 1, :utterance => '12', :interpretation => 'dtmf-1 dtmf-2', :component_id => subject.id)
                     end
                   end
 

@@ -5,7 +5,7 @@ module Punchblock
     def self.new(options = {})
       super().tap do |new_node|
         new_node.call_id = options[:call_id]
-        new_node.mixer_id = options[:mixer_id]
+        new_node.mixer_name = options[:mixer_name]
         new_node.component_id = options[:component_id]
       end
     end

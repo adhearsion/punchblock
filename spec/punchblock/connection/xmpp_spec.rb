@@ -73,8 +73,8 @@ module Punchblock
         offer = Event::Offer.new
         offer.call_id = '9f00061'
         offer.to = 'sip:whatever@127.0.0.1'
-        say = <<-MSG
-<say xmlns='urn:xmpp:tropo:say:1' voice='allison'>
+        output = <<-MSG
+<output xmlns='urn:xmpp:tropo:say:1'>
   <audio url='http://acme.com/greeting.mp3'>
   Thanks for calling ACME company
   </audio>
@@ -82,16 +82,16 @@ module Punchblock
   Your package was shipped on
   </audio>
   <say-as interpret-as='date'>12/01/2011</say-as>
-</say>
+</output>
         MSG
-        Component::Tropo::Say
-        say = RayoNode.import parse_stanza(say).root
+        Component::Output
+        output = RayoNode.import parse_stanza(output).root
         connection.expects(:write_to_stream).once.returns true
         iq = Blather::Stanza::Iq.new :set, '9f00061@call.rayo.net'
         connection.expects(:create_iq).returns iq
 
         write_thread = Thread.new do
-          connection.write offer.call_id, say
+          connection.write offer.call_id, output
         end
 
         result = import_stanza <<-MSG
@@ -106,22 +106,22 @@ module Punchblock
 
         write_thread.join
 
-        say.state_name.should == :executing
+        output.state_name.should == :executing
 
-        connection.original_component_from_id('fgh4590').should == say
+        connection.original_component_from_id('fgh4590').should == output
 
         example_complete = import_stanza <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
   <complete xmlns='urn:xmpp:rayo:ext:1'>
-  <success xmlns='urn:xmpp:tropo:say:complete:1' />
+  <success xmlns='urn:xmpp:rayo:output:complete:1' />
   </complete>
 </presence>
         MSG
 
         connection.__send__ :handle_presence, example_complete
-        say.complete_event(0.5).source.should == say
+        output.complete_event(0.5).source.should == output
 
-        say.component_id.should == 'fgh4590'
+        output.component_id.should == 'fgh4590'
       end
 
       it 'should send a "Chat" presence when ready' do
@@ -164,7 +164,7 @@ module Punchblock
           <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
   <complete xmlns='urn:xmpp:rayo:ext:1'>
-  <success xmlns='urn:xmpp:tropo:say:complete:1' />
+  <success xmlns='urn:xmpp:rayo:output:complete:1' />
   </complete>
 </presence>
           MSG
@@ -285,7 +285,7 @@ module Punchblock
         end
 
         context "with a mixer component" do
-          let(:command)       { Component::Output.new :mixer_id => 'abc123' }
+          let(:command)       { Component::Output.new :mixer_name => 'abc123' }
           let(:expected_jid)  { 'abc123@mixers.rayo.net' }
 
           it "should use the correct JID" do
@@ -294,7 +294,7 @@ module Punchblock
         end
 
         context "with a mixer component command" do
-          let(:command)       { Component::Stop.new :mixer_id => 'abc123', :component_id => 'foobar' }
+          let(:command)       { Component::Stop.new :mixer_name => 'abc123', :component_id => 'foobar' }
           let(:expected_jid)  { 'abc123@mixers.rayo.net/foobar' }
 
           it "should use the correct JID" do

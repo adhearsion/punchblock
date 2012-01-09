@@ -72,7 +72,7 @@ module Punchblock
                 let(:reason) { command.complete_event(5).reason }
 
                 describe "receiving DTMF events" do
-                  before { subject.execute! }
+                  before { subject.execute }
 
                   context "when a match is found" do
                     before do

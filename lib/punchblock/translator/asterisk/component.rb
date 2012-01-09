@@ -9,7 +9,7 @@ module Punchblock
         class Component
           include Celluloid
 
-          attr_reader :id
+          attr_reader :id, :call
 
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call

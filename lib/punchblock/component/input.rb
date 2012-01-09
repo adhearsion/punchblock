@@ -315,6 +315,10 @@ module Punchblock
             read_attr :mode, :to_sym
           end
 
+          def mode=(other)
+            write_attr :mode, other
+          end
+
           ##
           # @return [Float] A measure of the confidence of the result, between 0-1
           #
@@ -322,22 +326,54 @@ module Punchblock
             read_attr :confidence, :to_f
           end
 
+          def confidence=(other)
+            write_attr :confidence, other
+          end
+
           ##
           # @return [String] An intelligent interpretation of the meaning of the response.
           #
           def interpretation
-            find_first('//ns:interpretation', :ns => self.registered_ns).text
+            interpretation_node.text
+          end
+
+          def interpretation=(other)
+            interpretation_node.content = other
           end
 
           ##
           # @return [String] The exact response gained
           #
           def utterance
-            find_first('//ns:utterance', :ns => self.registered_ns).text
+            utterance_node.text
+          end
+
+          def utterance=(other)
+            utterance_node.content = other
           end
 
           def inspect_attributes # :nodoc:
             [:mode, :confidence, :interpretation, :utterance] + super
+          end
+
+          private
+
+          def interpretation_node
+            child_node_with_name 'interpretation'
+          end
+
+          def utterance_node
+            child_node_with_name 'utterance'
+          end
+
+          def child_node_with_name(name)
+            node = find_first "ns:#{name}", :ns => self.class.registered_ns
+
+            unless node
+              self << (node = RayoNode.new(name, self.document))
+              node.namespace = self.class.registered_ns
+            end
+            node
           end
         end
 

@@ -18,7 +18,6 @@ module Punchblock
       # @option options [String] :username client JID
       # @option options [String] :password XMPP password
       # @option options [String] :rayo_domain the domain on which Rayo is running
-      # @option options [Boolean, Optional] :auto_reconnect whether or not to auto reconnect
       # @option options [Numeric, Optional] :write_timeout for which to wait on a command response
       # @option options [Numeric, Optional] :connection_timeout for which to wait on a connection being established
       # @option options [Numeric, nil, Optional] :ping_period interval in seconds on which to ping the server. Nil or false to disable
@@ -87,7 +86,6 @@ module Punchblock
       end
 
       def stop
-        @reconnect_attempts = nil
         client.close
       end
 
@@ -158,7 +156,6 @@ module Punchblock
         when_ready do
           event_handler.call Connected.new
           pb_logger.info "Connected to XMPP as #{@username}"
-          @reconnect_attempts = 0
           @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
         end
 

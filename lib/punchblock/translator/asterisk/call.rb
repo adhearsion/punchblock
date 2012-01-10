@@ -94,8 +94,13 @@ module Punchblock
           end
           case command
           when Command::Accept
-            send_agi_action 'EXEC RINGING' do |response|
+            if outbound?
+              pb_logger.trace "Attempting to accept an outbound call. Skipping RINGING."
               command.response = true
+            else
+              send_agi_action 'EXEC RINGING' do |response|
+                command.response = true
+              end
             end
           when Command::Answer
             send_agi_action 'EXEC ANSWER' do |response|

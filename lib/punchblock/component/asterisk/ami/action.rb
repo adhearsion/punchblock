@@ -53,7 +53,7 @@ module Punchblock
           end
 
           def inspect_attributes # :nodoc:
-            [:name] + super
+            [:name, :params] + super
           end
 
           class Param < RayoNode

@@ -52,6 +52,26 @@ module Punchblock
                                            :async     => '1'} }
           end
 
+          describe "testing equality" do
+            context "with the same name and params" do
+              it "should be equal" do
+                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' }).should == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+              end
+            end
+
+            context "with the same name and different params" do
+              it "should be equal" do
+                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101' }).should_not == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+              end
+            end
+
+            context "with a different name and the same params" do
+              it "should be equal" do
+                Action.new(:name => 'Hangup', :params => { :channel => 'SIP/101test' }).should_not == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+              end
+            end
+          end
+
           describe "when setting options in initializer" do
             subject do
               Action.new :name => 'Originate',

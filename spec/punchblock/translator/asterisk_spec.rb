@@ -126,7 +126,26 @@ module Punchblock
 
       describe '#execute_global_command' do
         context 'with a Dial' do
-          pending
+          let :command do
+            Command::Dial.new :to => 'SIP/1234', :from => 'abc123'
+          end
+
+          before { command.request! }
+
+          let(:mock_action) { stub_everything 'Asterisk::Component::Asterisk::AMIAction' }
+
+          it 'should be able to look up the call by channel ID' do
+            subject.execute_global_command command
+            call_actor = subject.call_for_channel('SIP/1234')
+            call_actor.wrapped_object.should be_a Asterisk::Call
+          end
+
+          it 'should instruct the call to send a dial' do
+            mock_call = stub_everything 'Asterisk::Call'
+            Asterisk::Call.expects(:new).once.returns mock_call
+            mock_call.expects(:dial!).once.with command
+            subject.execute_global_command command
+          end
         end
 
         context 'with an AMI action' do
@@ -231,6 +250,72 @@ module Punchblock
             Asterisk::Call.expects(:new).once.returns mock_call
             mock_call.expects(:send_offer!).once
             subject.handle_ami_event ami_event
+          end
+
+          context 'if a call already exists for a matching channel' do
+            let(:call) { Asterisk::Call.new "SIP/1234-00000000", subject }
+
+            before do
+              subject.register_call call
+            end
+
+            it "should not create a new call" do
+              Asterisk::Call.expects(:new).never
+              subject.handle_ami_event ami_event
+            end
+          end
+        end
+
+        describe 'with a VarSet event including a punchblock_call_id' do
+          let :ami_event do
+            RubyAMI::Event.new('VarSet').tap do |e|
+              e["Privilege"]  = "dialplan,all"
+              e["Channel"]    = "SIP/1234-00000000"
+              e["Variable"]   = "punchblock_call_id"
+              e["Value"]      = call_id
+              e["Uniqueid"]   = "1326210224.0"
+            end
+          end
+
+          before do
+            ami_client.stub_everything
+            subject.wrapped_object.stubs :handle_pb_event
+          end
+
+          context "matching a call that was created by a Dial command" do
+            let(:dial_command) { Punchblock::Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
+
+            before do
+              dial_command.request!
+              subject.execute_global_command dial_command
+              call
+            end
+
+            let(:call)    { subject.call_for_channel 'SIP/1234' }
+            let(:call_id) { call.id }
+
+            it "should set the correct channel on the call" do
+              subject.handle_ami_event ami_event
+              call.channel.should == 'SIP/1234-00000000'
+            end
+
+            it "should make it possible to look up the call by the full channel name" do
+              subject.handle_ami_event ami_event
+              subject.call_for_channel("SIP/1234-00000000").should be call
+            end
+
+            it "should make looking up the channel by the requested channel name impossible" do
+              subject.handle_ami_event ami_event
+              subject.call_for_channel('SIP/1234').should be_nil
+            end
+          end
+
+          context "for a call that doesn't exist" do
+            let(:call_id) { 'foobarbaz' }
+
+            it "should not raise" do
+              lambda { subject.handle_ami_event ami_event }.should_not raise_error
+            end
           end
         end
 

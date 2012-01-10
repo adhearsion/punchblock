@@ -7,7 +7,16 @@ module Punchblock
         include HasGuardedHandlers
         include Celluloid
 
-        attr_reader :id, :channel, :translator, :agi_env
+        attr_reader :id, :channel, :translator, :agi_env, :direction
+
+        HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
+        HANGUP_CAUSE_TO_END_REASON[16] = :hangup
+        HANGUP_CAUSE_TO_END_REASON[17] = :busy
+        HANGUP_CAUSE_TO_END_REASON[18] = :timeout
+        HANGUP_CAUSE_TO_END_REASON[19] = :reject
+        HANGUP_CAUSE_TO_END_REASON[21] = :reject
+        HANGUP_CAUSE_TO_END_REASON[22] = :reject
+        HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
         def initialize(channel, translator, agi_env = '')
           @channel, @translator = channel, translator
@@ -25,7 +34,41 @@ module Punchblock
         end
 
         def send_offer
+          @direction = :inbound
           send_pb_event offer_event
+        end
+
+        def to_s
+          "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
+        end
+
+        def dial(dial_command)
+          @direction = :outbound
+          originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+                                                                              :params => {
+                                                                                :async       => true,
+                                                                                :application => 'AGI',
+                                                                                :data        => 'agi:async',
+                                                                                :channel     => dial_command.to,
+                                                                                :callerid    => dial_command.from,
+                                                                                :variable    => "punchblock_call_id=#{id}"
+                                                                              }
+          originate_action.request!
+          translator.execute_global_command! originate_action
+          dial_command.response = Ref.new :id => id
+        end
+
+        def outbound?
+          direction == :outbound
+        end
+
+        def inbound?
+          direction == :inbound
+        end
+
+        def channel=(other)
+          pb_logger.info "Channel is changing from #{channel} to #{other}."
+          @channel = other
         end
 
         def process_ami_event(ami_event)
@@ -33,7 +76,7 @@ module Punchblock
           case ami_event.name
           when 'Hangup'
             pb_logger.debug "Received a Hangup AMI event. Sending End event."
-            send_pb_event Event::End.new(:reason => :hangup)
+            send_pb_event Event::End.new(:reason => HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i])
           when 'AsyncAGI'
             pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
@@ -41,6 +84,14 @@ module Punchblock
               component.handle_ami_event! ami_event
             else
               pb_logger.debug "Could not find component for AMI event: #{ami_event}"
+            end
+          when 'Newstate'
+            pb_logger.debug "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
+            case ami_event['ChannelState']
+            when '5'
+              send_pb_event Event::Ringing.new
+            when '6'
+              send_pb_event Event::Answered.new
             end
           end
           trigger_handler :ami, ami_event
@@ -53,8 +104,14 @@ module Punchblock
           end
           case command
           when Command::Accept
-            send_agi_action 'EXEC RINGING' do |response|
+            if outbound?
+              pb_logger.trace "Attempting to accept an outbound call. Skipping RINGING."
               command.response = true
+            else
+              pb_logger.trace "Attempting to accept an inbound call. Executing RINGING."
+              send_agi_action 'EXEC RINGING' do |response|
+                command.response = true
+              end
             end
           when Command::Answer
             send_agi_action 'EXEC ANSWER' do |response|

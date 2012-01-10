@@ -1,5 +1,9 @@
 # develop
 
+# v0.8.2 - 2012-01-10
+  * Feature: Support outbound dial on Asterisk
+  * Bugfix: Asterisk hangup causes should map to correct Rayo End reason
+
 # v0.8.1 - 2012-01-09
   * Feature: Support DTMF Input components on Asterisk
 

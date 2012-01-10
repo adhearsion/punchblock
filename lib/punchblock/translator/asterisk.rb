@@ -55,13 +55,14 @@ module Punchblock
           end
           return
         end
-        if event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
-          handle_async_agi_start_event event
-        end
+
         if call = call_for_channel(event['Channel'])
           pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
           call.process_ami_event! event
+        elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
+          handle_async_agi_start_event event
         end
+
         handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 

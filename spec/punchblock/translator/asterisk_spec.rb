@@ -232,6 +232,19 @@ module Punchblock
             mock_call.expects(:send_offer!).once
             subject.handle_ami_event ami_event
           end
+
+          context 'if a call already exists for a matching channel' do
+            let(:call) { Asterisk::Call.new "SIP/1234-00000000", subject }
+
+            before do
+              subject.register_call call
+            end
+
+            it "should not create a new call" do
+              Asterisk::Call.expects(:new).never
+              subject.handle_ami_event ami_event
+            end
+          end
         end
 
         describe 'with an AMI event for a known channel' do

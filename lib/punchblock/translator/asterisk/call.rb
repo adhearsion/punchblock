@@ -7,7 +7,7 @@ module Punchblock
         include HasGuardedHandlers
         include Celluloid
 
-        attr_reader :id, :channel, :translator, :agi_env
+        attr_reader :id, :channel, :translator, :agi_env, :direction
 
         def initialize(channel, translator, agi_env = '')
           @channel, @translator = channel, translator
@@ -25,11 +25,41 @@ module Punchblock
         end
 
         def send_offer
+          @direction = :inbound
           send_pb_event offer_event
         end
 
         def to_s
           "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
+        end
+
+        def dial(dial_command)
+          @direction = :outbound
+          originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+                                                                              :params => {
+                                                                                :async       => true,
+                                                                                :application => 'AGI',
+                                                                                :data        => 'agi:async',
+                                                                                :channel     => dial_command.to,
+                                                                                :callerid    => dial_command.from,
+                                                                                :variable    => "punchblock_call_id=#{id}"
+                                                                              }
+          originate_action.request!
+          translator.execute_global_command! originate_action
+          dial_command.response = Ref.new :id => id
+        end
+
+        def outbound?
+          direction == :outbound
+        end
+
+        def inbound?
+          direction == :inbound
+        end
+
+        def channel=(other)
+          pb_logger.info "Channel is changing from #{channel} to #{other}."
+          @channel = other
         end
 
         def process_ami_event(ami_event)
@@ -46,6 +76,14 @@ module Punchblock
             else
               pb_logger.debug "Could not find component for AMI event: #{ami_event}"
             end
+          when 'Newstate'
+            pb_logger.debug "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
+            case ami_event['ChannelState']
+            when '5'
+              send_pb_event Event::Ringing.new
+            when '6'
+              send_pb_event Event::Answered.new
+            end
           end
           trigger_handler :ami, ami_event
         end
@@ -57,8 +95,14 @@ module Punchblock
           end
           case command
           when Command::Accept
-            send_agi_action 'EXEC RINGING' do |response|
+            if outbound?
+              pb_logger.trace "Attempting to accept an outbound call. Skipping RINGING."
               command.response = true
+            else
+              pb_logger.trace "Attempting to accept an inbound call. Executing RINGING."
+              send_agi_action 'EXEC RINGING' do |response|
+                command.response = true
+              end
             end
           when Command::Answer
             send_agi_action 'EXEC ANSWER' do |response|

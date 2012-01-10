@@ -82,6 +82,58 @@ module Punchblock
             translator.expects(:handle_pb_event!).with expected_offer
             subject.send_offer
           end
+
+          it 'should make the call identify as inbound' do
+            subject.send_offer
+            subject.direction.should == :inbound
+            subject.inbound?.should be true
+            subject.outbound?.should be false
+          end
+        end
+
+        describe '#dial' do
+          let :dial_command do
+            Punchblock::Command::Dial.new :to => 'SIP/1234', :from => 'sip:foo@bar.com'
+          end
+
+          before { dial_command.request! }
+
+          it 'sends an Originate AMI action' do
+            expected_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+                                                                               :params => {
+                                                                                 :async       => true,
+                                                                                 :application => 'AGI',
+                                                                                 :data        => 'agi:async',
+                                                                                 :channel     => 'SIP/1234',
+                                                                                 :callerid    => 'sip:foo@bar.com',
+                                                                                 :variable    => "punchblock_call_id=#{subject.id}"
+                                                                               }
+
+            translator.expects(:execute_global_command!).once.with expected_action
+            subject.dial dial_command
+          end
+
+          it 'sends the call ID as a response to the Dial' do
+            subject.dial dial_command
+            dial_command.response
+            dial_command.call_id.should == subject.id
+          end
+
+          it 'should make the call identify as outbound' do
+            subject.dial dial_command
+            subject.direction.should == :outbound
+            subject.outbound?.should be true
+            subject.inbound?.should be false
+          end
+
+          it 'causes accepting the call to be a null operation' do
+            subject.dial dial_command
+            accept_command = Command::Accept.new
+            accept_command.request!
+            subject.wrapped_object.expects(:send_agi_action).never
+            subject.execute_command accept_command
+            accept_command.response(0.5).should be true
+          end
         end
 
         describe '#process_ami_event' do
@@ -128,6 +180,46 @@ module Punchblock
             it 'should send the event to the component' do
               component.expects(:handle_ami_event!).once.with ami_event
               subject.process_ami_event ami_event
+            end
+          end
+
+          context 'with a Newstate event' do
+            let :ami_event do
+              RubyAMI::Event.new('Newstate').tap do |e|
+                e['Privilege']          = 'call,all'
+                e['Channel']            = 'SIP/1234-00000000'
+                e['ChannelState']       = channel_state
+                e['ChannelStateDesc']   = channel_state_desc
+                e['CallerIDNum']        = ''
+                e['CallerIDName']       = ''
+                e['ConnectedLineNum']   = ''
+                e['ConnectedLineName']  = ''
+                e['Uniqueid']           = '1326194671.0'
+              end
+            end
+
+            context 'ringing' do
+              let(:channel_state)       { '5' }
+              let(:channel_state_desc)  { 'Ringing' }
+
+              it 'should send a ringing event' do
+                expected_ringing = Punchblock::Event::Ringing.new
+                expected_ringing.call_id = subject.id
+                translator.expects(:handle_pb_event!).with expected_ringing
+                subject.process_ami_event ami_event
+              end
+            end
+
+            context 'up' do
+              let(:channel_state)       { '6' }
+              let(:channel_state_desc)  { 'Up' }
+
+              it 'should send a ringing event' do
+                expected_answered = Punchblock::Event::Answered.new
+                expected_answered.call_id = subject.id
+                translator.expects(:handle_pb_event!).with expected_answered
+                subject.process_ami_event ami_event
+              end
             end
           end
 

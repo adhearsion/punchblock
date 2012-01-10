@@ -28,6 +28,10 @@ module Punchblock
           send_pb_event offer_event
         end
 
+        def to_s
+          "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
+        end
+
         def process_ami_event(ami_event)
           pb_logger.trace "Processing AMI event #{ami_event.inspect}"
           case ami_event.name

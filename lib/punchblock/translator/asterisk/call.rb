@@ -32,6 +32,25 @@ module Punchblock
           "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
         end
 
+        def dial(dial_command)
+          originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+                                                                               :params => {
+                                                                                 :async       => true,
+                                                                                 :application => 'AGI',
+                                                                                 :data        => 'agi:async',
+                                                                                 :channel     => dial_command.to,
+                                                                                 :callerid    => dial_command.from
+                                                                               }
+          originate_action.request!
+          translator.execute_global_command! originate_action
+          dial_command.response = Ref.new :id => id
+        end
+
+        def channel=(other)
+          pb_logger.info "Channel is changing from #{channel} to #{other}."
+          @channel = other
+        end
+
         def process_ami_event(ami_event)
           pb_logger.trace "Processing AMI event #{ami_event.inspect}"
           case ami_event.name
@@ -45,6 +64,14 @@ module Punchblock
               component.handle_ami_event! ami_event
             else
               pb_logger.debug "Could not find component for AMI event: #{ami_event}"
+            end
+          when 'Newstate'
+            pb_logger.debug "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
+            case ami_event['ChannelState']
+            when '5'
+              send_pb_event Event::Ringing.new
+            when '6'
+              send_pb_event Event::Answered.new
             end
           end
           trigger_handler :ami, ami_event

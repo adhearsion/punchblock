@@ -84,6 +84,36 @@ module Punchblock
           end
         end
 
+        describe '#dial' do
+          let(:dial_command) do
+            Punchblock::Command::Dial.new :to => 'SIP/1234',
+                                          :from => 'sip:foo@bar.com'
+          end
+
+          before { dial_command.request! }
+
+          it 'sends an Originate AMI action' do
+            expected_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+                                                                               :params => {
+                                                                                 :async       => true,
+                                                                                 :application => 'AGI',
+                                                                                 :data        => 'agi:async',
+                                                                                 :channel     => 'SIP/1234',
+                                                                                 :callerid    => 'sio:foo@bar.com',
+                                                                                 :variable    => "punchblock_call_id=#{subject.id}"
+                                                                               }
+
+            translator.expects(:execute_global_command!).once.with expected_action
+            subject.dial dial_command
+          end
+
+          it 'sends the call ID as a response to the Dial' do
+            subject.dial dial_command
+            dial_command.response
+            dial_command.call_id.should == subject.id
+          end
+        end
+
         describe '#process_ami_event' do
           context 'with a Hangup event' do
             let :ami_event do
@@ -128,6 +158,46 @@ module Punchblock
             it 'should send the event to the component' do
               component.expects(:handle_ami_event!).once.with ami_event
               subject.process_ami_event ami_event
+            end
+          end
+
+          context 'with a Newstate event' do
+            let :ami_event do
+              RubyAMI::Event.new('Newstate').tap do |e|
+                e['Privilege']          = 'call,all'
+                e['Channel']            = 'SIP/1234-00000000'
+                e['ChannelState']       = channel_state
+                e['ChannelStateDesc']   = channel_state_desc
+                e['CallerIDNum']        = ''
+                e['CallerIDName']       = ''
+                e['ConnectedLineNum']   = ''
+                e['ConnectedLineName']  = ''
+                e['Uniqueid']           = '1326194671.0'
+              end
+            end
+
+            context 'ringing' do
+              let(:channel_state)       { '5' }
+              let(:channel_state_desc)  { 'Ringing' }
+
+              it 'should send a ringing event' do
+                expected_ringing = Punchblock::Event::Ringing.new
+                expected_ringing.call_id = subject.id
+                translator.expects(:handle_pb_event!).with expected_ringing
+                subject.process_ami_event ami_event
+              end
+            end
+
+            context 'up' do
+              let(:channel_state)       { '6' }
+              let(:channel_state_desc)  { 'Up' }
+
+              it 'should send a ringing event' do
+                expected_answered = Punchblock::Event::Answered.new
+                expected_answered.call_id = subject.id
+                translator.expects(:handle_pb_event!).with expected_answered
+                subject.process_ami_event ami_event
+              end
             end
           end
 

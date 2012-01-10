@@ -56,6 +56,14 @@ module Punchblock
           return
         end
 
+        if event.name == 'VarSet' && event['Variable'] == 'punchblock_call_id' && (call = call_with_id event['Value'])
+          pb_logger.trace "Received a VarSet event indicating the full channel for call #{call}"
+          @channel_to_call_id.delete call.channel
+          pb_logger.trace "Removed call with old channel from channel map: #{@channel_to_call_id}"
+          call.channel = event['Channel']
+          register_call call
+        end
+
         if call = call_for_channel(event['Channel'])
           pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
           call.process_ami_event! event
@@ -95,9 +103,16 @@ module Punchblock
       end
 
       def execute_global_command(command)
-        component = Component::Asterisk::AMIAction.new command, current_actor
-        register_component component
-        component.execute!
+        case command
+        when Punchblock::Component::Asterisk::AMI::Action
+          component = Component::Asterisk::AMIAction.new command, current_actor
+          register_component component
+          component.execute!
+        when Punchblock::Command::Dial
+          call = Call.new command.to, current_actor
+          register_call call
+          call.dial! command
+        end
       end
 
       def send_ami_action(name, headers = {}, &block)

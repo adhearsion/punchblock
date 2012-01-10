@@ -92,9 +92,8 @@ module Punchblock
         end
 
         describe '#dial' do
-          let(:dial_command) do
-            Punchblock::Command::Dial.new :to => 'SIP/1234',
-                                          :from => 'sip:foo@bar.com'
+          let :dial_command do
+            Punchblock::Command::Dial.new :to => 'SIP/1234', :from => 'sip:foo@bar.com'
           end
 
           before { dial_command.request! }
@@ -106,7 +105,7 @@ module Punchblock
                                                                                  :application => 'AGI',
                                                                                  :data        => 'agi:async',
                                                                                  :channel     => 'SIP/1234',
-                                                                                 :callerid    => 'sio:foo@bar.com',
+                                                                                 :callerid    => 'sip:foo@bar.com',
                                                                                  :variable    => "punchblock_call_id=#{subject.id}"
                                                                                }
 

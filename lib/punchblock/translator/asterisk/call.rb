@@ -36,13 +36,14 @@ module Punchblock
         def dial(dial_command)
           @direction = :outbound
           originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
-                                                                               :params => {
-                                                                                 :async       => true,
-                                                                                 :application => 'AGI',
-                                                                                 :data        => 'agi:async',
-                                                                                 :channel     => dial_command.to,
-                                                                                 :callerid    => dial_command.from
-                                                                               }
+                                                                              :params => {
+                                                                                :async       => true,
+                                                                                :application => 'AGI',
+                                                                                :data        => 'agi:async',
+                                                                                :channel     => dial_command.to,
+                                                                                :callerid    => dial_command.from,
+                                                                                :variable    => "punchblock_call_id=#{id}"
+                                                                              }
           originate_action.request!
           translator.execute_global_command! originate_action
           dial_command.response = Ref.new :id => id
@@ -98,6 +99,7 @@ module Punchblock
               pb_logger.trace "Attempting to accept an outbound call. Skipping RINGING."
               command.response = true
             else
+              pb_logger.trace "Attempting to accept an inbound call. Executing RINGING."
               send_agi_action 'EXEC RINGING' do |response|
                 command.response = true
               end

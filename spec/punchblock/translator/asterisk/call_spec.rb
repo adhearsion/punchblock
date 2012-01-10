@@ -143,17 +143,121 @@ module Punchblock
                 e['Uniqueid']     = "1320842458.8"
                 e['Calleridnum']  = "5678"
                 e['Calleridname'] = "Jane Smith"
-                e['Cause']        = "0"
-                e['Cause-txt']    = "Unknown"
+                e['Cause']        = cause
+                e['Cause-txt']    = cause_txt
                 e['Channel']      = "SIP/1234-00000000"
               end
             end
 
-            it 'should send an end event to the translator' do
-              expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
-                                                              :call_id  => subject.id
-              translator.expects(:handle_pb_event!).with expected_end_event
-              subject.process_ami_event ami_event
+            context "with a normal clearing cause" do
+              let(:cause)     { '16' }
+              let(:cause_txt) { 'Normal Clearing' }
+
+              it 'should send an end (hangup) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+                                                                :call_id  => subject.id
+                translator.expects(:handle_pb_event!).with expected_end_event
+                subject.process_ami_event ami_event
+              end
+            end
+
+            context "with a user busy cause" do
+              let(:cause)     { '17' }
+              let(:cause_txt) { 'User Busy' }
+
+              it 'should send an end (busy) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :busy,
+                                                                :call_id  => subject.id
+                translator.expects(:handle_pb_event!).with expected_end_event
+                subject.process_ami_event ami_event
+              end
+            end
+
+            {
+              18 => 'No user response',
+              102 => 'Recovery on timer expire'
+            }.each_pair do |cause, cause_txt|
+              context "with a #{cause_txt} cause" do
+                let(:cause)     { cause.to_s }
+                let(:cause_txt) { cause_txt }
+
+                it 'should send an end (timeout) event to the translator' do
+                  expected_end_event = Punchblock::Event::End.new :reason   => :timeout,
+                                                                  :call_id  => subject.id
+                  translator.expects(:handle_pb_event!).with expected_end_event
+                  subject.process_ami_event ami_event
+                end
+              end
+            end
+
+            {
+              19 => 'No Answer',
+              21 => 'Call Rejected',
+              22 => 'Number Changed'
+            }.each_pair do |cause, cause_txt|
+              context "with a #{cause_txt} cause" do
+                let(:cause)     { cause.to_s }
+                let(:cause_txt) { cause_txt }
+
+                it 'should send an end (reject) event to the translator' do
+                  expected_end_event = Punchblock::Event::End.new :reason   => :reject,
+                                                                  :call_id  => subject.id
+                  translator.expects(:handle_pb_event!).with expected_end_event
+                  subject.process_ami_event ami_event
+                end
+              end
+            end
+
+            {
+              1   => 'AST_CAUSE_UNALLOCATED',
+              2   => 'NO_ROUTE_TRANSIT_NET',
+              3   => 'NO_ROUTE_DESTINATION',
+              6   => 'CHANNEL_UNACCEPTABLE',
+              7   => 'CALL_AWARDED_DELIVERED',
+              27  => 'DESTINATION_OUT_OF_ORDER',
+              28  => 'INVALID_NUMBER_FORMAT',
+              29  => 'FACILITY_REJECTED',
+              30  => 'RESPONSE_TO_STATUS_ENQUIRY',
+              31  => 'NORMAL_UNSPECIFIED',
+              34  => 'NORMAL_CIRCUIT_CONGESTION',
+              38  => 'NETWORK_OUT_OF_ORDER',
+              41  => 'NORMAL_TEMPORARY_FAILURE',
+              42  => 'SWITCH_CONGESTION',
+              43  => 'ACCESS_INFO_DISCARDED',
+              44  => 'REQUESTED_CHAN_UNAVAIL',
+              45  => 'PRE_EMPTED',
+              50  => 'FACILITY_NOT_SUBSCRIBED',
+              52  => 'OUTGOING_CALL_BARRED',
+              54  => 'INCOMING_CALL_BARRED',
+              57  => 'BEARERCAPABILITY_NOTAUTH',
+              58  => 'BEARERCAPABILITY_NOTAVAIL',
+              65  => 'BEARERCAPABILITY_NOTIMPL',
+              66  => 'CHAN_NOT_IMPLEMENTED',
+              69  => 'FACILITY_NOT_IMPLEMENTED',
+              81  => 'INVALID_CALL_REFERENCE',
+              88  => 'INCOMPATIBLE_DESTINATION',
+              95  => 'INVALID_MSG_UNSPECIFIED',
+              96  => 'MANDATORY_IE_MISSING',
+              97  => 'MESSAGE_TYPE_NONEXIST',
+              98  => 'WRONG_MESSAGE',
+              99  => 'IE_NONEXIST',
+              100 => 'INVALID_IE_CONTENTS',
+              101 => 'WRONG_CALL_STATE',
+              103 => 'MANDATORY_IE_LENGTH_ERROR',
+              111 => 'PROTOCOL_ERROR',
+              127 => 'INTERWORKING'
+            }.each_pair do |cause, cause_txt|
+              context "with a #{cause_txt} cause" do
+                let(:cause)     { cause.to_s }
+                let(:cause_txt) { cause_txt }
+
+                it 'should send an end (error) event to the translator' do
+                  expected_end_event = Punchblock::Event::End.new :reason   => :error,
+                                                                  :call_id  => subject.id
+                  translator.expects(:handle_pb_event!).with expected_end_event
+                  subject.process_ami_event ami_event
+                end
+              end
             end
           end
 

@@ -9,6 +9,15 @@ module Punchblock
 
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
+        HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
+        HANGUP_CAUSE_TO_END_REASON[16] = :hangup
+        HANGUP_CAUSE_TO_END_REASON[17] = :busy
+        HANGUP_CAUSE_TO_END_REASON[18] = :timeout
+        HANGUP_CAUSE_TO_END_REASON[19] = :reject
+        HANGUP_CAUSE_TO_END_REASON[21] = :reject
+        HANGUP_CAUSE_TO_END_REASON[22] = :reject
+        HANGUP_CAUSE_TO_END_REASON[102] = :timeout
+
         def initialize(channel, translator, agi_env = '')
           @channel, @translator = channel, translator
           @agi_env = parse_environment agi_env
@@ -67,7 +76,7 @@ module Punchblock
           case ami_event.name
           when 'Hangup'
             pb_logger.debug "Received a Hangup AMI event. Sending End event."
-            send_pb_event Event::End.new(:reason => :hangup)
+            send_pb_event Event::End.new(:reason => HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i])
           when 'AsyncAGI'
             pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])

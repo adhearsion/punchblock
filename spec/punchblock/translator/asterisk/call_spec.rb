@@ -82,6 +82,13 @@ module Punchblock
             translator.expects(:handle_pb_event!).with expected_offer
             subject.send_offer
           end
+
+          it 'should make the call identify as inbound' do
+            subject.send_offer
+            subject.direction.should == :inbound
+            subject.inbound?.should be true
+            subject.outbound?.should be false
+          end
         end
 
         describe '#dial' do
@@ -111,6 +118,13 @@ module Punchblock
             subject.dial dial_command
             dial_command.response
             dial_command.call_id.should == subject.id
+          end
+
+          it 'should make the call identify as outbound' do
+            subject.dial dial_command
+            subject.direction.should == :outbound
+            subject.outbound?.should be true
+            subject.inbound?.should be false
           end
         end
 

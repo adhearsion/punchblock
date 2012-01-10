@@ -7,7 +7,7 @@ module Punchblock
         include HasGuardedHandlers
         include Celluloid
 
-        attr_reader :id, :channel, :translator, :agi_env
+        attr_reader :id, :channel, :translator, :agi_env, :direction
 
         def initialize(channel, translator, agi_env = '')
           @channel, @translator = channel, translator
@@ -25,6 +25,7 @@ module Punchblock
         end
 
         def send_offer
+          @direction = :inbound
           send_pb_event offer_event
         end
 
@@ -33,6 +34,7 @@ module Punchblock
         end
 
         def dial(dial_command)
+          @direction = :outbound
           originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
                                                                                :params => {
                                                                                  :async       => true,
@@ -44,6 +46,14 @@ module Punchblock
           originate_action.request!
           translator.execute_global_command! originate_action
           dial_command.response = Ref.new :id => id
+        end
+
+        def outbound?
+          direction == :outbound
+        end
+
+        def inbound?
+          direction == :inbound
         end
 
         def channel=(other)

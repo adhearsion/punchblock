@@ -30,7 +30,9 @@ module Punchblock
       end
 
       def call_for_channel(channel)
-        call_with_id @channel_to_call_id[channel]
+        call = call_with_id @channel_to_call_id[channel]
+        pb_logger.trace "Looking up call for channel #{channel} from #{@channel_to_call_id}. Found: #{call || 'none'}"
+        call
       end
 
       def register_component(component)

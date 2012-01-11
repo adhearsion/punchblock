@@ -149,6 +149,15 @@ module Punchblock
               end
             end
 
+            let(:cause)     { '16' }
+            let(:cause_txt) { 'Normal Clearing' }
+
+            it "should cause the actor to be terminated" do
+              translator.expects(:handle_pb_event!).once
+              subject.process_ami_event ami_event
+              subject.should_not be_alive
+            end
+
             context "with a normal clearing cause" do
               let(:cause)     { '16' }
               let(:cause_txt) { 'Normal Clearing' }

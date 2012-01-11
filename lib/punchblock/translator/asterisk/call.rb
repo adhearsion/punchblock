@@ -39,6 +39,7 @@ module Punchblock
         end
 
         def shutdown
+          pb_logger.debug "Shutting down"
           current_actor.terminate!
         end
 

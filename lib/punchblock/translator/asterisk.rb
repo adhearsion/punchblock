@@ -44,6 +44,7 @@ module Punchblock
       end
 
       def shutdown
+        pb_logger.debug "Shutting down"
         @calls.values.each &:shutdown!
         current_actor.terminate!
       end

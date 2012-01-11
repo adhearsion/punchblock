@@ -14,7 +14,7 @@ module Punchblock
       its(:ami_client) { should be ami_client }
       its(:connection) { should be connection }
 
-      after { translator.terminate }
+      after { translator.terminate if translator.alive? }
 
       context 'with a configured media engine of :asterisk' do
         let(:media_engine) { :asterisk }
@@ -24,6 +24,20 @@ module Punchblock
       context 'with a configured media engine of :unimrcp' do
         let(:media_engine) { :unimrcp }
         its(:media_engine) { should == :unimrcp }
+      end
+
+      describe '#shutdown' do
+        it "instructs all calls to shutdown" do
+          call = Asterisk::Call.new 'foo', subject
+          call.expects(:shutdown!).once
+          subject.register_call call
+          subject.shutdown
+        end
+
+        it "terminates the actor" do
+          subject.shutdown
+          subject.should_not be_alive
+        end
       end
 
       describe '#execute_command' do

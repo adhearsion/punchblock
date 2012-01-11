@@ -64,6 +64,13 @@ module Punchblock
         its(:translator)  { should be translator }
         its(:agi_env)     { should == agi_env }
 
+        describe '#shutdown' do
+          it 'should terminate the actor' do
+            subject.shutdown
+            subject.should_not be_alive
+          end
+        end
+
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'

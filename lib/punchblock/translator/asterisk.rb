@@ -43,6 +43,11 @@ module Punchblock
         @components[component_id]
       end
 
+      def shutdown
+        @calls.values.each &:shutdown!
+        current_actor.terminate!
+      end
+
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
         pb_logger.trace "Handling AMI event #{event.inspect}"

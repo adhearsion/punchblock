@@ -316,7 +316,7 @@ module Punchblock
                       end
                       subject.execute
                       latch.wait 2
-                      sleep 1
+                      sleep 2
                     end
 
                     it 'should send a complete event after the final file has finished playback' do

@@ -38,6 +38,10 @@ module Punchblock
           send_pb_event offer_event
         end
 
+        def shutdown
+          current_actor.terminate!
+        end
+
         def to_s
           "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
         end

@@ -130,9 +130,10 @@ module Punchblock
             Command::Dial.new :to => 'SIP/1234', :from => 'abc123'
           end
 
-          before { command.request! }
-
-          let(:mock_action) { stub_everything 'Asterisk::Component::Asterisk::AMIAction' }
+          before do
+            command.request!
+            ami_client.stub_everything
+          end
 
           it 'should be able to look up the call by channel ID' do
             subject.execute_global_command command

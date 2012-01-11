@@ -81,7 +81,7 @@ module Punchblock
                     end
 
                     it "should send a success complete event with the relevant data" do
-                      reason.should == Punchblock::Component::Input::Complete::Success.new(:mode => :dtmf, :confidence => 1, :utterance => '12', :interpretation => 'dtmf-1 dtmf-2', :component_id => subject.id)
+                      reason.should == Punchblock::Component::Input::Complete::Success.new(:mode => :dtmf, :confidence => 1, :utterance => '12', :interpretation => 'dtmf-1 dtmf-2', :component_id => subject.id, :call_id => call.id)
                     end
                   end
 
@@ -92,7 +92,7 @@ module Punchblock
                     end
 
                     it "should send a nomatch complete event" do
-                      reason.should == Punchblock::Component::Input::Complete::NoMatch.new(:component_id => subject.id)
+                      reason.should == Punchblock::Component::Input::Complete::NoMatch.new(:component_id => subject.id, :call_id => call.id)
                     end
                   end
                 end

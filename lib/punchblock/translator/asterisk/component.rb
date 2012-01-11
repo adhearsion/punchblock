@@ -21,6 +21,19 @@ module Punchblock
           def setup
           end
 
+          def send_complete_event(reason)
+            send_event complete_event(reason)
+          end
+
+          def send_event(event)
+            event.component_id  = id
+            event.call_id       = call.id if call
+            pb_logger.debug "Sending event #{event}"
+            @component_node.add_event event
+          end
+
+          private
+
           def set_node_response(value)
             pb_logger.debug "Setting response on component node to #{value}"
             @component_node.response = value
@@ -38,12 +51,6 @@ module Punchblock
             Punchblock::Event::Complete.new.tap do |c|
               c.reason = reason
             end
-          end
-
-          def send_event(event)
-            event.component_id = id
-            pb_logger.debug "Sending event #{event}"
-            @component_node.add_event event
           end
         end
       end

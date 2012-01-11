@@ -8,7 +8,7 @@ module Punchblock
           describe Output do
             let(:media_engine)    { nil }
             let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), mock('Client'), media_engine }
-            let(:mock_call)       { mock 'Call', :translator => translator }
+            let(:mock_call)       { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
             let(:command_options) { nil }
 
             let :command do

@@ -7,7 +7,7 @@ module Punchblock
             attr_reader :action
 
             def initialize(component_node, translator)
-              super
+              super component_node, nil
               @translator = translator
             end
 

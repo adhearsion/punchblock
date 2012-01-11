@@ -72,7 +72,10 @@ module Punchblock
                 let(:reason) { command.complete_event(5).reason }
 
                 describe "receiving DTMF events" do
-                  before { subject.execute }
+                  before do
+                    subject.execute
+                    expected_event
+                  end
 
                   context "when a match is found" do
                     before do
@@ -80,8 +83,17 @@ module Punchblock
                       send_ami_events_for_dtmf 2
                     end
 
+                    let :expected_event do
+                      Punchblock::Component::Input::Complete::Success.new :mode => :dtmf,
+                                                                          :confidence => 1,
+                                                                          :utterance => '12',
+                                                                          :interpretation => 'dtmf-1 dtmf-2',
+                                                                          :component_id => subject.id,
+                                                                          :call_id => call.id
+                    end
+
                     it "should send a success complete event with the relevant data" do
-                      reason.should == Punchblock::Component::Input::Complete::Success.new(:mode => :dtmf, :confidence => 1, :utterance => '12', :interpretation => 'dtmf-1 dtmf-2', :component_id => subject.id, :call_id => call.id)
+                      reason.should == expected_event
                     end
                   end
 
@@ -91,8 +103,13 @@ module Punchblock
                       send_ami_events_for_dtmf '#'
                     end
 
+                    let :expected_event do
+                      Punchblock::Component::Input::Complete::NoMatch.new :component_id => subject.id,
+                                                                          :call_id => call.id
+                    end
+
                     it "should send a nomatch complete event" do
-                      reason.should == Punchblock::Component::Input::Complete::NoMatch.new(:component_id => subject.id, :call_id => call.id)
+                      reason.should == expected_event
                     end
                   end
                 end

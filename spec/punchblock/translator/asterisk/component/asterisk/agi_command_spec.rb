@@ -112,7 +112,7 @@ module Punchblock
 
                   complete_event = command.complete_event 0.5
 
-                  complete_event.component_id.should == subject.id
+                  complete_event.component_id.should == component_id.to_s
                   complete_event.reason.should == expected_complete_reason
                 end
               end

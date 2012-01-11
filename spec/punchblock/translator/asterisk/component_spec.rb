@@ -34,6 +34,11 @@ module Punchblock
               subject.send_complete_event reason
               command.complete_event(0.5).should == expected_event
             end
+
+            it "should cause the actor to be shut down" do
+              subject.send_complete_event reason
+              subject.should_not be_alive
+            end
           end
         end
       end

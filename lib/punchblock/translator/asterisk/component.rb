@@ -22,7 +22,11 @@ module Punchblock
           end
 
           def send_complete_event(reason)
-            send_event complete_event(reason)
+            event = Punchblock::Event::Complete.new.tap do |c|
+              c.reason = reason
+            end
+            send_event event
+            current_actor.terminate!
           end
 
           def send_event(event)
@@ -45,12 +49,6 @@ module Punchblock
 
           def with_error(name, text)
             set_node_response ProtocolError.new(name, text)
-          end
-
-          def complete_event(reason)
-            Punchblock::Event::Complete.new.tap do |c|
-              c.reason = reason
-            end
           end
         end
       end

@@ -22,7 +22,7 @@ module Punchblock
               if event.name == 'AsyncAGI'
                 if event['SubEvent'] == 'Exec'
                   pb_logger.debug "Received AsyncAGI:Exec event, sending complete event."
-                  send_event complete_event(success_reason(event))
+                  send_complete_event success_reason(event)
                 end
               end
             end

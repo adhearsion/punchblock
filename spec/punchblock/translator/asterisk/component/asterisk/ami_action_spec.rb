@@ -6,7 +6,12 @@ module Punchblock
       module Component
         module Asterisk
           describe AMIAction do
-            let(:mock_translator) { mock 'Translator::Asterisk' }
+            let(:connection) do
+              mock_connection_with_event_handler do |event|
+                command.add_event event
+              end
+            end
+            let(:mock_translator) { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
 
             let :command do
               Punchblock::Component::Asterisk::AMI::Action.new :name => 'ExtensionStatus', :params => { :context => 'default', :exten => 'idonno' }

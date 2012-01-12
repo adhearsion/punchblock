@@ -24,6 +24,7 @@ module Punchblock
 
     def handle_event(event)
       event.client = self
+      pb_logger.warn "Handling event #{event} with source #{event.source}."
       if event.source
         event.source.add_event event
       else

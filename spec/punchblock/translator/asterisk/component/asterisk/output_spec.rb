@@ -6,10 +6,14 @@ module Punchblock
       module Component
         module Asterisk
           describe Output do
-            let(:media_engine)    { nil }
-            let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), mock('Client'), media_engine }
-            let(:mock_call)       { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
-            let(:command_options) { nil }
+            let(:connection) do
+              mock_connection_with_event_handler do |event|
+                command.add_event event
+              end
+            end
+            let(:media_engine)  { nil }
+            let(:translator)    { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
+            let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
 
             let :command do
               Punchblock::Component::Output.new command_options

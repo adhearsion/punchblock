@@ -4,7 +4,7 @@ module Punchblock
       module Component
         module Asterisk
           class AMIAction < Component
-            attr_reader :action
+            attr_reader :action, :translator
 
             def initialize(component_node, translator)
               super component_node, nil

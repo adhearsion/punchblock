@@ -6,10 +6,15 @@ module Punchblock
       module Component
         module Asterisk
           describe Input do
+            let(:connection) do
+              mock_connection_with_event_handler do |event|
+                command.add_event event
+              end
+            end
             let(:media_engine)    { nil }
-            let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), mock('Client'), media_engine }
+            let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
             let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
-            let(:command_options) { nil }
+            let(:command_options) { {} }
 
             let :command do
               Punchblock::Component::Input.new command_options
@@ -29,12 +34,6 @@ module Punchblock
                   end
                 end
               end
-            end
-
-            let :command_options do
-              {
-
-              }
             end
 
             subject { Input.new command, call }

@@ -33,10 +33,14 @@ module Punchblock
             event.component_id  = id
             event.call_id       = call.id if call
             pb_logger.debug "Sending event #{event}"
-            @component_node.add_event event
+            translator.connection.handle_event event
           end
 
           private
+
+          def translator
+            call.translator
+          end
 
           def set_node_response(value)
             pb_logger.debug "Setting response on component node to #{value}"

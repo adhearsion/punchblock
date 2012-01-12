@@ -7,7 +7,13 @@ module Punchblock
         module Asterisk
           describe AGICommand do
             let(:channel)       { 'SIP/foo' }
-            let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, nil }
+            let(:connection) do
+              mock_connection_with_event_handler do |event|
+                command.add_event event
+              end
+            end
+            let(:translator)    { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
+            let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator }
             let(:component_id)  { UUIDTools::UUID.random_create }
 
             before { UUIDTools::UUID.stubs :random_create => component_id }

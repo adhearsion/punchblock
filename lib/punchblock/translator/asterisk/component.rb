@@ -10,6 +10,7 @@ module Punchblock
           include Celluloid
 
           attr_reader :id, :call
+          attr_accessor :internal
 
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
@@ -33,7 +34,11 @@ module Punchblock
             event.component_id  = id
             event.call_id       = call.id if call
             pb_logger.debug "Sending event #{event}"
-            translator.connection.handle_event event
+            if internal
+              @component_node.add_event event
+            else
+              translator.connection.handle_event event
+            end
           end
 
           def logger_id

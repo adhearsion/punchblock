@@ -36,6 +36,15 @@ module Punchblock
               connection.expects(:handle_event).once.with expected_event
               subject.send_event event
             end
+
+            context "when marked internal" do
+              before { subject.internal = true }
+
+              it "should add the event to the command" do
+                command.expects(:add_event).once.with expected_event
+                subject.send_event event
+              end
+            end
           end
 
           describe "#send_complete_event" do

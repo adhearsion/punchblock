@@ -127,7 +127,7 @@ module Punchblock
               command.response = true
             end
           when Punchblock::Component::Asterisk::AGI::Command
-            execute_agi_command command
+            execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
             execute_component Component::Asterisk::Output, command
           when Punchblock::Component::Input
@@ -143,7 +143,7 @@ module Punchblock
             pb_logger.debug "AGI action received complete event #{e.inspect}"
             block.call e
           end
-          execute_agi_command @current_agi_command
+          execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
         end
 
         def send_ami_action(name, headers = {}, &block)
@@ -165,13 +165,10 @@ module Punchblock
           current_actor.terminate!
         end
 
-        def execute_agi_command(command)
-          execute_component Component::Asterisk::AGICommand, command
-        end
-
-        def execute_component(type, command)
+        def execute_component(type, command, options = {})
           type.new(command, current_actor).tap do |component|
             register_component component
+            component.internal = true if options[:internal]
             component.execute!
           end
         end

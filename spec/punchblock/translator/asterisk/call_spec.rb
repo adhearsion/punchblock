@@ -383,7 +383,8 @@ module Punchblock
             let(:command) { Command::Accept.new }
 
             it "should send an EXEC RINGING AGI command and set the command's response" do
-              subject.execute_command command
+              component = subject.execute_command command
+              component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC RINGING"
               agi_command.execute!
@@ -396,7 +397,8 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should send an EXEC ANSWER AGI command and set the command's response" do
-              subject.execute_command command
+              component = subject.execute_command command
+              component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC ANSWER"
               agi_command.execute!
@@ -425,6 +427,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
+              mock_action.expects(:internal=).never
               Component::Asterisk::AGICommand.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -440,6 +443,7 @@ module Punchblock
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               Component::Asterisk::Output.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
             end
@@ -454,6 +458,7 @@ module Punchblock
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               Component::Asterisk::Input.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
             end

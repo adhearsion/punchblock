@@ -36,6 +36,14 @@ module Punchblock
             translator.connection.handle_event event
           end
 
+          def logger_id
+            if call
+              "Call ID: #{call.id}, Component ID: #{id}"
+            else
+              id
+            end
+          end
+
           private
 
           def translator

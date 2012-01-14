@@ -154,6 +154,10 @@ module Punchblock
           end
         end
 
+        def logger_id
+          id
+        end
+
         private
 
         def send_end_event(reason)

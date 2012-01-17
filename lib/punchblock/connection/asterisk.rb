@@ -18,6 +18,7 @@ module Punchblock
       end
 
       def stop
+        translator.shutdown!
         ami_client.stop
       end
 

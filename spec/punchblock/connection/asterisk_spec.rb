@@ -42,6 +42,11 @@ module Punchblock
           subject.ami_client.expects(:stop).once
           subject.stop
         end
+
+        it 'shuts down the translator' do
+          subject.translator.expects(:shutdown!).once
+          subject.stop
+        end
       end
 
       it 'sends events from RubyAMI to the translator' do

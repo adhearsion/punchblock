@@ -106,7 +106,7 @@ module Punchblock
               @active = false
               cancel_initial_timer
               cancel_inter_digit_timer
-              send_event complete_event(reason)
+              send_complete_event reason
             end
           end
         end

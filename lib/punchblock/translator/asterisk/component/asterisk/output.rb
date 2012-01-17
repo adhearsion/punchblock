@@ -47,7 +47,7 @@ module Punchblock
                 send_ref
                 @call.send_agi_action! 'EXEC MRCPSynth', doc, mrcpsynth_options do |complete_event|
                   pb_logger.debug "MRCPSynth completed with #{complete_event}."
-                  send_event complete_event(success_reason)
+                  send_complete_event success_reason
                 end
               end
             end
@@ -57,7 +57,7 @@ module Punchblock
               pb_logger.debug "Received action completion. Now waiting on #{@pending_actions} actions."
               if @pending_actions < 1
                 pb_logger.debug "Sending complete event"
-                send_event complete_event(success_reason)
+                send_complete_event success_reason
               end
             end
 

@@ -4,10 +4,10 @@ module Punchblock
       module Component
         module Asterisk
           class AMIAction < Component
-            attr_reader :action
+            attr_reader :action, :translator
 
             def initialize(component_node, translator)
-              super
+              super component_node, nil
               @translator = translator
             end
 
@@ -21,6 +21,17 @@ module Punchblock
               send_ref
             end
 
+            def handle_response(response)
+              pb_logger.debug "Handling response #{response.inspect}"
+              case response
+              when RubyAMI::Error
+                send_complete_event error_reason(response)
+              when RubyAMI::Response
+                send_events
+                send_complete_event success_reason(response)
+              end
+            end
+
             private
 
             def create_action
@@ -28,24 +39,14 @@ module Punchblock
               @component_node.params_hash.each_pair do |key, value|
                 headers[key.to_s.capitalize] = value
               end
+              component = current_actor
               RubyAMI::Action.new @component_node.name, headers do |response|
-                handle_response response
+                component.handle_response! response
               end
             end
 
             def send_action
               @translator.send_ami_action! @action
-            end
-
-            def handle_response(response)
-              pb_logger.debug "Handling response #{response.inspect}"
-              case response
-              when RubyAMI::Error
-                send_event complete_event(error_reason(response))
-              when RubyAMI::Response
-                send_events
-                send_event complete_event(success_reason(response))
-              end
             end
 
             def error_reason(response)

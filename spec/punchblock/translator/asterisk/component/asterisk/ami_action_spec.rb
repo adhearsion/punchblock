@@ -6,7 +6,12 @@ module Punchblock
       module Component
         module Asterisk
           describe AMIAction do
-            let(:mock_translator) { mock 'Translator::Asterisk' }
+            let(:connection) do
+              mock_connection_with_event_handler do |event|
+                command.add_event event
+              end
+            end
+            let(:mock_translator) { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
 
             let :command do
               Punchblock::Component::Asterisk::AMI::Action.new :name => 'ExtensionStatus', :params => { :context => 'default', :exten => 'idonno' }
@@ -57,14 +62,8 @@ module Punchblock
 
               context 'for a non-causal action' do
                 it 'should send a complete event to the component node' do
-                  subject.action.response = response
-
-                  command.should be_complete
-
-                  complete_event = command.complete_event 0.5
-
-                  complete_event.component_id.should == subject.id
-                  complete_event.reason.should == expected_complete_reason
+                  subject.wrapped_object.expects(:send_complete_event).once.with expected_complete_reason
+                  subject.handle_response response
                 end
               end
 
@@ -115,12 +114,14 @@ module Punchblock
                 end
 
                 it 'should send events to the component node' do
+                  event_node
                   command.register_handler :internal, Punchblock::Event::Asterisk::AMI::Event do |event|
                     @event = event
                   end
-                  subject.action << event
-                  subject.action << response
-                  subject.action << terminating_event
+                  action = subject.action
+                  action << event
+                  subject.handle_response response
+                  action << terminating_event
                   @event.should == event_node
                 end
 
@@ -138,16 +139,12 @@ module Punchblock
                 end
 
                 let :expected_complete_reason do
-                  Punchblock::Event::Complete::Error.new :component_id => subject.id, :details => 'Action failed'
+                  Punchblock::Event::Complete::Error.new :details => 'Action failed'
                 end
 
                 it 'should send a complete event to the component node' do
-                  subject.action << error
-
-                  complete_event = command.complete_event 0.5
-
-                  complete_event.component_id.should == subject.id
-                  complete_event.reason.should == expected_complete_reason
+                  subject.wrapped_object.expects(:send_complete_event).once.with expected_complete_reason
+                  subject.handle_response error
                 end
               end
             end

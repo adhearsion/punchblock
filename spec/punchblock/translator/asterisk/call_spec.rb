@@ -64,6 +64,13 @@ module Punchblock
         its(:translator)  { should be translator }
         its(:agi_env)     { should == agi_env }
 
+        describe '#shutdown' do
+          it 'should terminate the actor' do
+            subject.shutdown
+            subject.should_not be_alive
+          end
+        end
+
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'
@@ -147,6 +154,15 @@ module Punchblock
                 e['Cause-txt']    = cause_txt
                 e['Channel']      = "SIP/1234-00000000"
               end
+            end
+
+            let(:cause)     { '16' }
+            let(:cause_txt) { 'Normal Clearing' }
+
+            it "should cause the actor to be terminated" do
+              translator.expects(:handle_pb_event!).once
+              subject.process_ami_event ami_event
+              subject.should_not be_alive
             end
 
             context "with a normal clearing cause" do
@@ -367,7 +383,8 @@ module Punchblock
             let(:command) { Command::Accept.new }
 
             it "should send an EXEC RINGING AGI command and set the command's response" do
-              subject.execute_command command
+              component = subject.execute_command command
+              component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC RINGING"
               agi_command.execute!
@@ -380,7 +397,8 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should send an EXEC ANSWER AGI command and set the command's response" do
-              subject.execute_command command
+              component = subject.execute_command command
+              component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should == "EXEC ANSWER"
               agi_command.execute!
@@ -409,6 +427,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
+              mock_action.expects(:internal=).never
               Component::Asterisk::AGICommand.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -424,6 +443,7 @@ module Punchblock
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               Component::Asterisk::Output.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
             end
@@ -438,6 +458,7 @@ module Punchblock
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               Component::Asterisk::Input.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
             end
@@ -454,11 +475,31 @@ module Punchblock
               mock 'Component', :id => component_id
             end
 
-            before { subject.register_component mock_component }
+            context "for a known component ID" do
+              before { subject.register_component mock_component }
 
-            it 'should send the command to the component for execution' do
-              mock_component.expects(:execute_command!).once
+              it 'should send the command to the component for execution' do
+                mock_component.expects(:execute_command!).once
+                subject.execute_command command
+              end
+            end
+
+            context "for an unknown component ID" do
+              it 'sends an error in response to the command' do
+                subject.execute_command command
+                command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+              end
+            end
+          end
+
+          context 'with a command we do not understand' do
+            let :command do
+              Punchblock::Component::Record.new
+            end
+
+            it 'sends an error in response to the command' do
               subject.execute_command command
+              command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
             end
           end
         end

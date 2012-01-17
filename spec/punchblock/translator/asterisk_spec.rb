@@ -14,7 +14,7 @@ module Punchblock
       its(:ami_client) { should be ami_client }
       its(:connection) { should be connection }
 
-      after { translator.terminate }
+      after { translator.terminate if translator.alive? }
 
       context 'with a configured media engine of :asterisk' do
         let(:media_engine) { :asterisk }
@@ -24,6 +24,20 @@ module Punchblock
       context 'with a configured media engine of :unimrcp' do
         let(:media_engine) { :unimrcp }
         its(:media_engine) { should == :unimrcp }
+      end
+
+      describe '#shutdown' do
+        it "instructs all calls to shutdown" do
+          call = Asterisk::Call.new 'foo', subject
+          call.expects(:shutdown!).once
+          subject.register_call call
+          subject.shutdown
+        end
+
+        it "terminates the actor" do
+          subject.shutdown
+          subject.should_not be_alive
+        end
       end
 
       describe '#execute_command' do
@@ -95,16 +109,29 @@ module Punchblock
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
         let(:call)    { Translator::Asterisk::Call.new 'SIP/foo', subject }
-        let(:command) { mock 'Command::Answer', :call_id => call_id }
+        let(:command) { Command::Answer.new.tap { |c| c.call_id = call_id } }
 
         before do
+          command.request!
           call.stubs(:id).returns call_id
-          subject.register_call call
         end
 
-        it 'sends the command to the call for execution' do
-          call.expects(:execute_command!).once.with command
-          subject.execute_call_command command
+        context "with a known call ID" do
+          before do
+            subject.register_call call
+          end
+
+          it 'sends the command to the call for execution' do
+            call.expects(:execute_command!).once.with command
+            subject.execute_call_command command
+          end
+        end
+
+        context "with an unknown call ID" do
+          it 'sends an error in response to the command' do
+            subject.execute_call_command command
+            command.response.should == ProtocolError.new('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+          end
         end
       end
 
@@ -112,15 +139,28 @@ module Punchblock
         let(:component_id)  { '123abc' }
         let(:component)     { mock 'Translator::Asterisk::Component', :id => component_id }
 
-        let(:command) { mock 'Component::Stop', :component_id => component_id }
+        let(:command) { Component::Stop.new.tap { |c| c.component_id = component_id } }
 
         before do
-          subject.register_component component
+          command.request!
         end
 
-        it 'sends the command to the component for execution' do
-          component.expects(:execute_command!).once.with command
-          subject.execute_component_command command
+        context 'with a known component ID' do
+          before do
+            subject.register_component component
+          end
+
+          it 'sends the command to the component for execution' do
+            component.expects(:execute_command!).once.with command
+            subject.execute_component_command command
+          end
+        end
+
+        context "with an unknown component ID" do
+          it 'sends an error in response to the command' do
+            subject.execute_component_command command
+            command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+          end
         end
       end
 
@@ -130,9 +170,10 @@ module Punchblock
             Command::Dial.new :to => 'SIP/1234', :from => 'abc123'
           end
 
-          before { command.request! }
-
-          let(:mock_action) { stub_everything 'Asterisk::Component::Asterisk::AMIAction' }
+          before do
+            command.request!
+            ami_client.stub_everything
+          end
 
           it 'should be able to look up the call by channel ID' do
             subject.execute_global_command command
@@ -165,6 +206,17 @@ module Punchblock
             Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
             subject.wrapped_object.expects(:register_component).with mock_action
             subject.execute_global_command command
+          end
+        end
+
+        context "with a command we don't understand" do
+          let :command do
+            Command::Answer.new
+          end
+
+          it 'sends an error in response to the command' do
+            subject.execute_command command
+            command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command")
           end
         end
       end

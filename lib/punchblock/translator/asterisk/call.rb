@@ -38,6 +38,11 @@ module Punchblock
           send_pb_event offer_event
         end
 
+        def shutdown
+          pb_logger.debug "Shutting down"
+          current_actor.terminate!
+        end
+
         def to_s
           "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
         end
@@ -76,7 +81,7 @@ module Punchblock
           case ami_event.name
           when 'Hangup'
             pb_logger.debug "Received a Hangup AMI event. Sending End event."
-            send_pb_event Event::End.new(:reason => HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i])
+            send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
             pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
@@ -100,7 +105,11 @@ module Punchblock
         def execute_command(command)
           pb_logger.debug "Executing command: #{command.inspect}"
           if command.component_id
-            component_with_id(command.component_id).execute_command! command
+            if component = component_with_id(command.component_id)
+              component.execute_command! command
+            else
+              command.response = ProtocolError.new 'component-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+            end
           end
           case command
           when Command::Accept
@@ -122,11 +131,13 @@ module Punchblock
               command.response = true
             end
           when Punchblock::Component::Asterisk::AGI::Command
-            execute_agi_command command
+            execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
             execute_component Component::Asterisk::Output, command
           when Punchblock::Component::Input
             execute_component Component::Asterisk::Input, command
+          else
+            command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
         end
 
@@ -138,7 +149,7 @@ module Punchblock
             pb_logger.debug "AGI action received complete event #{e.inspect}"
             block.call e
           end
-          execute_agi_command @current_agi_command
+          execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
         end
 
         def send_ami_action(name, headers = {}, &block)
@@ -149,15 +160,21 @@ module Punchblock
           end
         end
 
-        private
-
-        def execute_agi_command(command)
-          execute_component Component::Asterisk::AGICommand, command
+        def logger_id
+          "#{self.class}: #{id}"
         end
 
-        def execute_component(type, command)
+        private
+
+        def send_end_event(reason)
+          send_pb_event Event::End.new(:reason => reason)
+          current_actor.terminate!
+        end
+
+        def execute_component(type, command, options = {})
           type.new(command, current_actor).tap do |component|
             register_component component
+            component.internal = true if options[:internal]
             component.execute!
           end
         end

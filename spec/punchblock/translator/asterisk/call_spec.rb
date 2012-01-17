@@ -475,11 +475,20 @@ module Punchblock
               mock 'Component', :id => component_id
             end
 
-            before { subject.register_component mock_component }
+            context "for a known component ID" do
+              before { subject.register_component mock_component }
 
-            it 'should send the command to the component for execution' do
-              mock_component.expects(:execute_command!).once
-              subject.execute_command command
+              it 'should send the command to the component for execution' do
+                mock_component.expects(:execute_command!).once
+                subject.execute_command command
+              end
+            end
+
+            context "for an unknown component ID" do
+              it 'sends an error in response to the command' do
+                subject.execute_command command
+                command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+              end
             end
           end
         end

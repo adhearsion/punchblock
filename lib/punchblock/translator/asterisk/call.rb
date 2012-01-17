@@ -105,7 +105,11 @@ module Punchblock
         def execute_command(command)
           pb_logger.debug "Executing command: #{command.inspect}"
           if command.component_id
-            component_with_id(command.component_id).execute_command! command
+            if component = component_with_id(command.component_id)
+              component.execute_command! command
+            else
+              command.response = ProtocolError.new 'component-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+            end
           end
           case command
           when Command::Accept

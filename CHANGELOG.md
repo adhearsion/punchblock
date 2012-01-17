@@ -1,4 +1,19 @@
 # develop
+  * Feature: Return an error when trying to execute a command for unknown calls/components or when not understood
+  * Feature: Log calls/translator shutting down
+  * Feature: Calls and components should log their IDs
+  * Feature: Components marked as internal should send events directly to the component node
+  * Bugfix: Fix Asterisk Call and Component logger IDs
+  * Bugfix: Fix a stupidly high log level
+  * Bugfix: AGI commands executed by a call/component that are a translation of a Rayo command should be marked internal
+  * Bugfix: Asterisk components should sent events via the connection
+  * Bugfix: Shutting down an asterisk connection should do a cascading shutdown of the translator and all of its calls
+  * Bugfix: Component actors should be terminated once they've sent a complete event
+  * Bugfix: Component events should be sent with the call ID
+  * Bugfix: AMIAction components do not have a call
+  * Bugfix: Add test coverage for comparison of complete events
+  * Bugfix: A call being hung up should terminate the call actor
+  * Bugfix: Fix a mock expectation error in a test
 
 # v0.8.2 - 2012-01-10
   * Feature: Support outbound dial on Asterisk

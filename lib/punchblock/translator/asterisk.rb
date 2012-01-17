@@ -101,11 +101,19 @@ module Punchblock
       end
 
       def execute_call_command(command)
-        call_with_id(command.call_id).execute_command! command
+        if call = call_with_id(command.call_id)
+          call.execute_command! command
+        else
+          command.response = ProtocolError.new 'call-not-found', "Could not find a call with ID #{command.call_id}", command.call_id
+        end
       end
 
       def execute_component_command(command)
-        component_with_id(command.component_id).execute_command! command
+        if (component = component_with_id(command.component_id))
+          component.execute_command! command
+        else
+          command.response = ProtocolError.new 'component-not-found', "Could not find a component with ID #{command.component_id}", command.call_id, command.component_id
+        end
       end
 
       def execute_global_command(command)

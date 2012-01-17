@@ -109,16 +109,29 @@ module Punchblock
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
         let(:call)    { Translator::Asterisk::Call.new 'SIP/foo', subject }
-        let(:command) { mock 'Command::Answer', :call_id => call_id }
+        let(:command) { Command::Answer.new.tap { |c| c.call_id = call_id } }
 
         before do
+          command.request!
           call.stubs(:id).returns call_id
-          subject.register_call call
         end
 
-        it 'sends the command to the call for execution' do
-          call.expects(:execute_command!).once.with command
-          subject.execute_call_command command
+        context "with a known call ID" do
+          before do
+            subject.register_call call
+          end
+
+          it 'sends the command to the call for execution' do
+            call.expects(:execute_command!).once.with command
+            subject.execute_call_command command
+          end
+        end
+
+        context "with an unknown call ID" do
+          it 'sends an error in response to the command' do
+            subject.execute_call_command command
+            command.response.should == ProtocolError.new('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+          end
         end
       end
 
@@ -126,15 +139,28 @@ module Punchblock
         let(:component_id)  { '123abc' }
         let(:component)     { mock 'Translator::Asterisk::Component', :id => component_id }
 
-        let(:command) { mock 'Component::Stop', :component_id => component_id }
+        let(:command) { Component::Stop.new.tap { |c| c.component_id = component_id } }
 
         before do
-          subject.register_component component
+          command.request!
         end
 
-        it 'sends the command to the component for execution' do
-          component.expects(:execute_command!).once.with command
-          subject.execute_component_command command
+        context 'with a known component ID' do
+          before do
+            subject.register_component component
+          end
+
+          it 'sends the command to the component for execution' do
+            component.expects(:execute_command!).once.with command
+            subject.execute_component_command command
+          end
+        end
+
+        context "with an unknown component ID" do
+          it 'sends an error in response to the command' do
+            subject.execute_component_command command
+            command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+          end
         end
       end
 

@@ -22,6 +22,10 @@ module Punchblock
           def setup
           end
 
+          def execute_command(command)
+            command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
+          end
+
           def send_complete_event(reason)
             event = Punchblock::Event::Complete.new.tap do |c|
               c.reason = reason
@@ -32,7 +36,7 @@ module Punchblock
 
           def send_event(event)
             event.component_id  = id
-            event.call_id       = call.id if call
+            event.call_id       = call_id
             pb_logger.debug "Sending event #{event}"
             if internal
               @component_node.add_event event
@@ -43,6 +47,10 @@ module Punchblock
 
           def logger_id
             "#{self.class}: #{call ? "Call ID: #{call.id}, Component ID: #{id}" : id}"
+          end
+
+          def call_id
+            call.id if call
           end
 
           private

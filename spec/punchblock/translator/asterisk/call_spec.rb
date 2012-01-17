@@ -491,6 +491,17 @@ module Punchblock
               end
             end
           end
+
+          context 'with a command we do not understand' do
+            let :command do
+              Punchblock::Component::Record.new
+            end
+
+            it 'sends an error in response to the command' do
+              subject.execute_command command
+              command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
+            end
+          end
         end
 
         describe '#send_agi_action' do

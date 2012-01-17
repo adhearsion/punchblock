@@ -136,6 +136,8 @@ module Punchblock
             execute_component Component::Asterisk::Output, command
           when Punchblock::Component::Input
             execute_component Component::Asterisk::Input, command
+          else
+            command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
         end
 

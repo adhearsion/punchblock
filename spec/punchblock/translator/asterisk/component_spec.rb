@@ -68,6 +68,23 @@ module Punchblock
               subject.should_not be_alive
             end
           end
+
+          describe '#execute_command' do
+            before do
+              component_command.request!
+            end
+
+            context 'with a command we do not understand' do
+              let :component_command do
+                Punchblock::Component::Stop.new :component_id => subject.id
+              end
+
+              it 'sends an error in response to the command' do
+                subject.execute_command component_command
+                component_command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command for component #{subject.id}", call.id, subject.id)
+              end
+            end
+          end
         end
       end
     end

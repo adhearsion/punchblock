@@ -208,6 +208,17 @@ module Punchblock
             subject.execute_global_command command
           end
         end
+
+        context "with a command we don't understand" do
+          let :command do
+            Command::Answer.new
+          end
+
+          it 'sends an error in response to the command' do
+            subject.execute_command command
+            command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command")
+          end
+        end
       end
 
       describe '#handle_pb_event' do

@@ -126,6 +126,8 @@ module Punchblock
           call = Call.new command.to, current_actor
           register_call call
           call.dial! command
+        else
+          command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command"
         end
       end
 

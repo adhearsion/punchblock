@@ -1,4 +1,6 @@
 # develop
+
+# v0.8.3 - 2012-01-17
   * Feature: Return an error when trying to execute a command for unknown calls/components or when not understood
   * Feature: Log calls/translator shutting down
   * Feature: Calls and components should log their IDs

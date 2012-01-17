@@ -42,11 +42,7 @@ module Punchblock
           end
 
           def logger_id
-            if call
-              "Call ID: #{call.id}, Component ID: #{id}"
-            else
-              id
-            end
+            "#{self.class}: #{call ? "Call ID: #{call.id}, Component ID: #{id}" : id}"
           end
 
           private

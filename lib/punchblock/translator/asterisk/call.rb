@@ -155,7 +155,7 @@ module Punchblock
         end
 
         def logger_id
-          id
+          "#{self.class}: #{id}"
         end
 
         private

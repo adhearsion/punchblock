@@ -12,6 +12,9 @@ module Punchblock
           <<-MESSAGE
 <end xmlns="urn:xmpp:rayo:1">
   <timeout />
+  <!-- Signaling (e.g. SIP) Headers -->
+  <header name="x-skill" value="agent" />
+  <header name="x-customer-id" value="8877" />
 </end>
           MESSAGE
         end
@@ -21,6 +24,7 @@ module Punchblock
         it { should be_instance_of End }
 
         it_should_behave_like 'event'
+        it_should_behave_like 'event_headers'
 
         its(:reason) { should == :timeout }
         its(:xmlns) { should == 'urn:xmpp:rayo:1' }
@@ -28,10 +32,12 @@ module Punchblock
 
       describe "when setting options in initializer" do
         subject do
-          End.new :reason => :hangup
+          End.new :reason => :hangup,
+                  :headers  => { :x_skill => "agent", :x_customer_id => "8877" }
         end
 
         its(:reason) { should == :hangup }
+        it_should_behave_like 'event_headers'
       end
     end
   end

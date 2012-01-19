@@ -3,6 +3,8 @@ module Punchblock
     class End < Event
       register :end, :core
 
+      include HasHeaders
+
       ##
       # Create an End event
       #

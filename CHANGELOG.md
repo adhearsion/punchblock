@@ -1,4 +1,6 @@
 # develop
+
+# v0.8.4 - 2012-01-19
   * Bugfix: End, Ringing & Answered events are allowed to have headers
   * Feature: Dial commands may have an optional timeout
 

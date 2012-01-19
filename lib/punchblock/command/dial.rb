@@ -56,6 +56,18 @@ module Punchblock
       end
 
       ##
+      # @return [Integer] timeout in milliseconds
+      def timeout
+        read_attr :timeout, :to_i
+      end
+
+      ##
+      # @param [Integer] other timeout in milliseconds
+      def timeout=(other)
+        write_attr :timeout, other
+      end
+
+      ##
       # @return [Join] the nested join
       #
       def join

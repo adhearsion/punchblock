@@ -4,21 +4,6 @@ module Punchblock
       register :joined, :core
 
       ##
-      # Create a joined event
-      #
-      # @param [Hash] options
-      # @option options [String, Optional] :other_call_id the call ID that was joined
-      # @option options [String, Optional] :mixer_name the mixer name that was joined
-      #
-      # @return [Event::Joined] a formatted Rayo joined event
-      #
-      def self.new(options = {})
-        super().tap do |new_node|
-          options.each_pair { |k,v| new_node.send :"#{k}=", v }
-        end
-      end
-
-      ##
       # @return [String] the call ID that was joined
       def other_call_id
         read_attr :'call-id'

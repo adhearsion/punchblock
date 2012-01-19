@@ -1,5 +1,5 @@
 # develop
-  * Bugfix: End events are allowed to have headers
+  * Bugfix: End, Ringing & Answered events are allowed to have headers
 
 # v0.8.3 - 2012-01-17
   * Feature: Return an error when trying to execute a command for unknown calls/components or when not understood

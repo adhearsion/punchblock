@@ -8,15 +8,32 @@ module Punchblock
       end
 
       describe "from a stanza" do
-        let(:stanza) { '<ringing xmlns="urn:xmpp:rayo:1"/>' }
+        let :stanza do
+          <<-MESSAGE
+<ringing xmlns='urn:xmpp:rayo:1'>
+  <!-- Signaling (e.g. SIP) Headers -->
+  <header name="x-skill" value="agent" />
+  <header name="x-customer-id" value="8877" />
+</ringing>
+          MESSAGE
+        end
 
         subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
 
         it { should be_instance_of Ringing }
 
         it_should_behave_like 'event'
+        it_should_behave_like 'event_headers'
 
         its(:xmlns) { should == 'urn:xmpp:rayo:1' }
+      end
+
+      describe "when setting options in initializer" do
+        subject do
+          Ringing.new :headers => { :x_skill => "agent", :x_customer_id => "8877" }
+        end
+
+        it_should_behave_like 'event_headers'
       end
     end
   end

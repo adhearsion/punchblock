@@ -67,6 +67,7 @@ module Punchblock
         describe '#shutdown' do
           it 'should terminate the actor' do
             subject.shutdown
+            sleep 0.5
             subject.should_not be_alive
           end
         end
@@ -162,6 +163,7 @@ module Punchblock
             it "should cause the actor to be terminated" do
               translator.expects(:handle_pb_event!).once
               subject.process_ami_event ami_event
+              sleep 0.5
               subject.should_not be_alive
             end
 

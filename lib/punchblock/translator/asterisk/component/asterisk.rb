@@ -7,8 +7,6 @@ module Punchblock
 
           autoload :AGICommand
           autoload :AMIAction
-          autoload :Input
-          autoload :Output
         end
       end
     end

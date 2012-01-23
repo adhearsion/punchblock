@@ -133,9 +133,9 @@ module Punchblock
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
-            execute_component Component::Asterisk::Output, command
+            execute_component Component::Output, command
           when Punchblock::Component::Input
-            execute_component Component::Asterisk::Input, command
+            execute_component Component::Input, command
           else
             command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command for call #{id}", id
           end

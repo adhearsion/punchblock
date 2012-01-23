@@ -444,7 +444,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
-              Component::Asterisk::Output.expects(:new).once.with(command, subject).returns mock_action
+              Component::Output.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -459,7 +459,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
-              Component::Asterisk::Input.expects(:new).once.with(command, subject).returns mock_action
+              Component::Input.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command

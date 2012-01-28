@@ -104,6 +104,10 @@ module Punchblock
             Punchblock::Command::Dial.new :to => 'SIP/1234', :from => 'sip:foo@bar.com'
           end
 
+          let :dial_command_timeout do
+            Punchblock::Command::Dial.new :to => 'SIP/1234', :from => 'sip:foo@bar.com', :timeout => 10000
+          end
+
           before { dial_command.request! }
 
           it 'sends an Originate AMI action' do
@@ -119,6 +123,23 @@ module Punchblock
 
             translator.expects(:execute_global_command!).once.with expected_action
             subject.dial dial_command
+          end
+
+          it 'includes the timeout in the Originate AMI action' do
+            dial_command_timeout.request!
+            expected_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+                                                                               :params => {
+                                                                                 :async       => true,
+                                                                                 :application => 'AGI',
+                                                                                 :data        => 'agi:async',
+                                                                                 :channel     => 'SIP/1234',
+                                                                                 :callerid    => 'sip:foo@bar.com',
+                                                                                 :variable    => "punchblock_call_id=#{subject.id}",
+                                                                                 :timeout     => 10000
+                                                                               }
+
+            translator.expects(:execute_global_command!).once.with expected_action
+            subject.dial dial_command_timeout
           end
 
           it 'sends the call ID as a response to the Dial' do

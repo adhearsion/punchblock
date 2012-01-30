@@ -1,4 +1,7 @@
 # develop
+  * Bugfix: Remove the rest of the deprecated Tropo components (conference)
+  * Feature: Outbound dials on Asterisk now respect the dial timeout
+  * Bugfix: Registering stanza handlers on an XMPP connection now sets them in the correct order such that they do not override the internally defined handlers
 
 # v0.8.4 - 2012-01-19
   * Bugfix: End, Ringing & Answered events are allowed to have headers

@@ -1,4 +1,6 @@
 # develop
+
+# v0.9.1 - 2012-01-30
   * Bugfix: Closing an disconnected XMPP connection is a no-op
 
 # v0.9.0 - 2012-01-30

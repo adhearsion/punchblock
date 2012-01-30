@@ -49,15 +49,17 @@ module Punchblock
 
         def dial(dial_command)
           @direction = :outbound
+          params = { :async       => true,
+                     :application => 'AGI',
+                     :data        => 'agi:async',
+                     :channel     => dial_command.to,
+                     :callerid    => dial_command.from,
+                     :variable    => "punchblock_call_id=#{id}"
+                   }
+          params[:timeout] = dial_command.timeout unless dial_command.timeout.nil?
+
           originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
-                                                                              :params => {
-                                                                                :async       => true,
-                                                                                :application => 'AGI',
-                                                                                :data        => 'agi:async',
-                                                                                :channel     => dial_command.to,
-                                                                                :callerid    => dial_command.from,
-                                                                                :variable    => "punchblock_call_id=#{id}"
-                                                                              }
+                                                                              :params => params
           originate_action.request!
           translator.execute_global_command! originate_action
           dial_command.response = Ref.new :id => id
@@ -133,9 +135,9 @@ module Punchblock
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
-            execute_component Component::Asterisk::Output, command
+            execute_component Component::Output, command
           when Punchblock::Component::Input
-            execute_component Component::Asterisk::Input, command
+            execute_component Component::Input, command
           else
             command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command for call #{id}", id
           end

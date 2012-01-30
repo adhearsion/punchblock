@@ -67,6 +67,7 @@ module Punchblock
         describe '#shutdown' do
           it 'should terminate the actor' do
             subject.shutdown
+            sleep 0.5
             subject.should_not be_alive
           end
         end
@@ -99,8 +100,10 @@ module Punchblock
         end
 
         describe '#dial' do
+          let(:dial_command_options) { {} }
+
           let :dial_command do
-            Punchblock::Command::Dial.new :to => 'SIP/1234', :from => 'sip:foo@bar.com'
+            Punchblock::Command::Dial.new({:to => 'SIP/1234', :from => 'sip:foo@bar.com'}.merge(dial_command_options))
           end
 
           before { dial_command.request! }
@@ -118,6 +121,28 @@ module Punchblock
 
             translator.expects(:execute_global_command!).once.with expected_action
             subject.dial dial_command
+          end
+
+          context 'with a timeout specified' do
+            let :dial_command_options do
+              { :timeout => 10000 }
+            end
+
+            it 'includes the timeout in the Originate AMI action' do
+              expected_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+                                                                                 :params => {
+                                                                                   :async       => true,
+                                                                                   :application => 'AGI',
+                                                                                   :data        => 'agi:async',
+                                                                                   :channel     => 'SIP/1234',
+                                                                                   :callerid    => 'sip:foo@bar.com',
+                                                                                   :variable    => "punchblock_call_id=#{subject.id}",
+                                                                                   :timeout     => 10000
+                                                                                 }
+
+              translator.expects(:execute_global_command!).once.with expected_action
+              subject.dial dial_command
+            end
           end
 
           it 'sends the call ID as a response to the Dial' do
@@ -162,6 +187,7 @@ module Punchblock
             it "should cause the actor to be terminated" do
               translator.expects(:handle_pb_event!).once
               subject.process_ami_event ami_event
+              sleep 0.5
               subject.should_not be_alive
             end
 
@@ -442,7 +468,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
-              Component::Asterisk::Output.expects(:new).once.with(command, subject).returns mock_action
+              Component::Output.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -457,7 +483,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
-              Component::Asterisk::Input.expects(:new).once.with(command, subject).returns mock_action
+              Component::Input.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command

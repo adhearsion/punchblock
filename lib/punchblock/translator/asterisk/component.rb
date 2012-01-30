@@ -5,6 +5,8 @@ module Punchblock
         extend ActiveSupport::Autoload
 
         autoload :Asterisk
+        autoload :Input
+        autoload :Output
 
         class Component
           include Celluloid

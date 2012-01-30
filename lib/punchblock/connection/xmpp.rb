@@ -38,6 +38,8 @@ module Punchblock
         Blather.logger = pb_logger
         Blather.default_log_level = :trace if Blather.respond_to? :default_log_level
 
+        register_handlers
+
         super()
       end
 
@@ -68,7 +70,6 @@ module Punchblock
       # Fire up the connection
       #
       def run
-        register_handlers
         connect
       end
 

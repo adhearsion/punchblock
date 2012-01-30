@@ -11,6 +11,7 @@ module Punchblock
       # @param [Hash] options
       # @option options [String] :to destination to dial
       # @option options [String, Optional] :from what to set the Caller ID to
+      # @option options [Integer, Optional] :timeout in milliseconds
       # @option options [Array[Header], Hash, Optional] :headers SIP headers to attach to
       #   the new call. Can be either a hash of key-value pairs, or an array of
       #   Header objects.

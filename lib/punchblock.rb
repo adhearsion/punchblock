@@ -44,7 +44,6 @@ module Punchblock
   TransportError = Class.new StandardError
 
   BASE_RAYO_NAMESPACE     = 'urn:xmpp:rayo'
-  BASE_TROPO_NAMESPACE    = 'urn:xmpp:tropo'
   BASE_ASTERISK_NAMESPACE = 'urn:xmpp:rayo:asterisk'
   RAYO_VERSION            = '1'
   RAYO_NAMESPACES         = {:core => [BASE_RAYO_NAMESPACE, RAYO_VERSION].compact.join(':')}
@@ -52,11 +51,6 @@ module Punchblock
   [:ext, :record, :output, :input].each do |ns|
     RAYO_NAMESPACES[ns] = [BASE_RAYO_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
     RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_RAYO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
-  end
-
-  [:conference].each do |ns|
-    RAYO_NAMESPACES[ns] = [BASE_TROPO_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
-    RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_TROPO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
   end
 
   [:agi, :ami].each do |ns|

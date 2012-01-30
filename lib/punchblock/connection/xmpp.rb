@@ -87,7 +87,7 @@ module Punchblock
       end
 
       def stop
-        client.close
+        client.close if client.connected?
       end
 
       def connected?

@@ -1,5 +1,8 @@
 # develop
 
+# v0.9.1 - 2012-01-30
+  * Bugfix: Closing an disconnected XMPP connection is a no-op
+
 # v0.9.0 - 2012-01-30
   * Bugfix: Remove the rest of the deprecated Tropo components (conference)
   * Feature: Outbound dials on Asterisk now respect the dial timeout

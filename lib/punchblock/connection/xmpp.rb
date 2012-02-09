@@ -82,6 +82,7 @@ module Punchblock
           # Preserve Punchblock native exceptions
           raise e if e.class.to_s =~ /^Punchblock/
           # Wrap everything else
+          # FIXME: We are losing valuable backtrace here...
           raise ProtocolError.new(e.class.to_s, e.message)
         end
       end

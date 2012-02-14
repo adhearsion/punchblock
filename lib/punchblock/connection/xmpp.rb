@@ -38,7 +38,7 @@ module Punchblock
         Blather.logger = pb_logger
         Blather.default_log_level = :trace if Blather.respond_to? :default_log_level
 
-        register_call_handlers
+        register_handlers
 
         super()
       end
@@ -105,10 +105,6 @@ module Punchblock
         super
       end
 
-      def register_handlers(&block)
-        instance_eval &block
-      end
-
       private
 
       def jid_for_command(command)
@@ -157,24 +153,22 @@ module Punchblock
         command.response = protocol_error if command
       end
 
-      def register_call_handlers
-        register_handlers do
-          # Push a message to the queue and the log that we connected
-          when_ready do
-            event_handler.call Connected.new
-            pb_logger.info "Connected to XMPP as #{@username}"
-            @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
-          end
+      def register_handlers
+        # Push a message to the queue and the log that we connected
+        when_ready do
+          event_handler.call Connected.new
+          pb_logger.info "Connected to XMPP as #{@username}"
+          @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
+        end
 
-          disconnected do
-            @rayo_ping.cancel if @rayo_ping
-            raise DisconnectedError
-          end
+        disconnected do
+          @rayo_ping.cancel if @rayo_ping
+          raise DisconnectedError
+        end
 
-          # Read/handle presence requests. This is how we get events.
-          presence do |msg|
-            handle_presence msg
-          end
+        # Read/handle presence requests. This is how we get events.
+        presence do |msg|
+          handle_presence msg
         end
       end
 

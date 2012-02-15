@@ -78,6 +78,14 @@ module Punchblock
           @answered
         end
 
+        def answer_if_not_answered
+          unless answered?
+            if inbound?
+              execute_command(Command::Answer.new)
+            end
+          end
+        end
+
         def channel=(other)
           pb_logger.info "Channel is changing from #{channel} to #{other}."
           @channel = other

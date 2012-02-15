@@ -99,6 +99,30 @@ module Punchblock
           end
         end
 
+        describe '#answer_if_not_answered' do
+          let(:answer_command) { Command::Answer.new }
+          it 'should not answer a call that is already answered' do
+            subject.wrapped_object.expects(:'answered?').returns true
+            subject.wrapped_object.expects(:execute_command).never
+            subject.answer_if_not_answered
+          end
+
+          it 'should not answer a call that is not inbound, even if not answered' do
+            subject.wrapped_object.expects(:'answered?').returns false
+            subject.wrapped_object.expects(:'inbound?').returns false
+            subject.wrapped_object.expects(:execute_command).never
+            subject.answer_if_not_answered
+          end
+
+          it 'should answer a call that is inbound and not answered' do
+            subject.wrapped_object.expects(:'answered?').returns false
+            subject.wrapped_object.expects(:'inbound?').returns true
+            subject.wrapped_object.expects(:execute_command).with(answer_command)
+            subject.answer_if_not_answered
+          end
+
+        end
+
         describe '#dial' do
           let(:dial_command_options) { {} }
 

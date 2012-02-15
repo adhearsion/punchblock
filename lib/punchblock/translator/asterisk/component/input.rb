@@ -9,6 +9,7 @@ module Punchblock
           def setup
             @media_engine = call.translator.media_engine
             @buffer       = ""
+            @call.answer_if_not_answered
           end
 
           def execute

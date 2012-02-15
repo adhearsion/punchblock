@@ -30,6 +30,13 @@ module Punchblock
 
           subject { Output.new command, mock_call }
 
+          describe '#setup' do
+            it "calls answer_if_not_answered on the call" do
+              mock_call.expects(:answer_if_not_answered).twice
+              subject.setup
+            end
+          end
+
           describe '#execute' do
             before { command.request! }
 

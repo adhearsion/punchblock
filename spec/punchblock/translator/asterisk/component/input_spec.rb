@@ -39,7 +39,7 @@ module Punchblock
 
           describe '#setup' do
             it "calls answer_if_not_answered on the call" do
-              call.expects(:answer_if_not_answered).twice
+              call.expects(:answer_if_not_answered)
               subject.setup
             end
           end

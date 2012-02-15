@@ -354,6 +354,11 @@ module Punchblock
                 translator.expects(:handle_pb_event!).with expected_ringing
                 subject.process_ami_event ami_event
               end
+
+              it '#answered? should return false' do
+                subject.process_ami_event ami_event
+                subject.answered?.should be_false
+              end
             end
 
             context 'up' do
@@ -365,6 +370,11 @@ module Punchblock
                 expected_answered.call_id = subject.id
                 translator.expects(:handle_pb_event!).with expected_answered
                 subject.process_ami_event ami_event
+              end
+
+              it '#answered? should be true' do
+                subject.process_ami_event ami_event
+                subject.answered?.should be_true
               end
             end
           end

@@ -1,4 +1,5 @@
 # develop
+  * Feature: Asterisk calls receiving media commands are implicitly answered
 
 # v0.9.1 - 2012-01-30
   * Bugfix: Closing an disconnected XMPP connection is a no-op

@@ -79,11 +79,8 @@ module Punchblock
         end
 
         def answer_if_not_answered
-          unless answered?
-            if inbound?
-              execute_command(Command::Answer.new)
-            end
-          end
+          return if answered? || outbound?
+          execute_command Command::Answer.new
         end
 
         def channel=(other)

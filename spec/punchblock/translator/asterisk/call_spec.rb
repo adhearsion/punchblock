@@ -101,26 +101,45 @@ module Punchblock
 
         describe '#answer_if_not_answered' do
           let(:answer_command) { Command::Answer.new }
-          it 'should not answer a call that is already answered' do
-            subject.wrapped_object.expects(:'answered?').returns true
-            subject.wrapped_object.expects(:execute_command).never
-            subject.answer_if_not_answered
+
+          context "with a call that is already answered" do
+            it 'should not answer the call' do
+              subject.wrapped_object.expects(:'answered?').returns true
+              subject.wrapped_object.expects(:execute_command).never
+              subject.answer_if_not_answered
+            end
           end
 
-          it 'should not answer a call that is not inbound, even if not answered' do
-            subject.wrapped_object.expects(:'answered?').returns false
-            subject.wrapped_object.expects(:'inbound?').returns false
-            subject.wrapped_object.expects(:execute_command).never
-            subject.answer_if_not_answered
-          end
+          context "with an unanswered call" do
+            before do
+              subject.wrapped_object.expects(:'answered?').returns false
+            end
 
-          it 'should answer a call that is inbound and not answered' do
-            subject.wrapped_object.expects(:'answered?').returns false
-            subject.wrapped_object.expects(:'inbound?').returns true
-            subject.wrapped_object.expects(:execute_command).with(answer_command)
-            subject.answer_if_not_answered
-          end
+            context "with a call that is outbound" do
+              let(:dial_command) { Command::Dial.new }
 
+              before do
+                dial_command.request!
+                subject.dial dial_command
+              end
+
+              it 'should not answer the call' do
+                subject.wrapped_object.expects(:execute_command).never
+                subject.answer_if_not_answered
+              end
+            end
+
+            context "with a call that is inbound" do
+              before do
+                subject.send_offer
+              end
+
+              it 'should answer a call that is inbound and not answered' do
+                subject.wrapped_object.expects(:execute_command).with(answer_command)
+                subject.answer_if_not_answered
+              end
+            end
+          end
         end
 
         describe '#dial' do

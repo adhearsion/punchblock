@@ -34,9 +34,11 @@ module Punchblock
             before { command.request! }
 
             it "calls answer_if_not_answered on the call" do
-              mock_call.expects(:answer_if_not_answered)
+              mock_call.expects :answer_if_not_answered
               subject.execute
             end
+
+            before { mock_call.stubs :answer_if_not_answered }
 
             context 'with a media engine of :unimrcp' do
               let(:media_engine) { :unimrcp }

@@ -29,6 +29,8 @@ module Punchblock
                 case node
                 when RubySpeech::SSML::Audio
                   lambda { current_actor.play_audio! node.src }
+                else
+                  return with_error 'unrenderable document error', 'The provided document could not be rendered.'
                 end
               end.compact
 

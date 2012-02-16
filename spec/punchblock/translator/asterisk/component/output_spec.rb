@@ -254,7 +254,6 @@ module Punchblock
               let :ssml_doc do
                 RubySpeech::SSML.draw do
                   audio :src => audio_filename
-                  say_as(:interpret_as => :cardinal) { 'FOO' }
                 end
               end
 
@@ -337,6 +336,22 @@ module Punchblock
                       e.reason.should be_a Punchblock::Component::Output::Complete::Success
                     end
                     subject.execute
+                  end
+                end
+
+                context "with an SSML document containing elements other than <audio/>" do
+                  let :command_options do
+                    {
+                      :ssml => RubySpeech::SSML.draw do
+                        string "FooBar"
+                      end
+                    }
+                  end
+
+                  it "should return an unrenderable document error" do
+                    subject.execute
+                    error = ProtocolError.new 'unrenderable document error', 'The provided document could not be rendered.'
+                    command.response(0.1).should == error
                   end
                 end
               end

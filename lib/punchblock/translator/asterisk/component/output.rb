@@ -11,6 +11,8 @@ module Punchblock
           end
 
           def execute
+            @call.answer_if_not_answered
+
             return with_error 'option error', 'An SSML document is required.' unless @component_node.ssml
 
             return with_error 'option error', 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech

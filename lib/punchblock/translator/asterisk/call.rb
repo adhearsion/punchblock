@@ -22,6 +22,7 @@ module Punchblock
           @channel, @translator = channel, translator
           @agi_env = parse_environment agi_env
           @id, @components = UUIDTools::UUID.random_create.to_s, {}
+          @answered = false
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
         end
 
@@ -73,6 +74,15 @@ module Punchblock
           direction == :inbound
         end
 
+        def answered?
+          @answered
+        end
+
+        def answer_if_not_answered
+          return if answered? || outbound?
+          execute_command Command::Answer.new
+        end
+
         def channel=(other)
           pb_logger.info "Channel is changing from #{channel} to #{other}."
           @channel = other
@@ -98,6 +108,7 @@ module Punchblock
             when '5'
               send_pb_event Event::Ringing.new
             when '6'
+              @answered = true
               send_pb_event Event::Answered.new
             end
           end

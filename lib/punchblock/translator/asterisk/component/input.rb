@@ -9,10 +9,10 @@ module Punchblock
           def setup
             @media_engine = call.translator.media_engine
             @buffer       = ""
-            @call.answer_if_not_answered
           end
 
           def execute
+            @call.answer_if_not_answered
             initial_timeout = @component_node.initial_timeout || -1
             @inter_digit_timeout = @component_node.inter_digit_timeout || -1
 

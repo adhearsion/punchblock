@@ -37,15 +37,13 @@ module Punchblock
 
           subject { Input.new command, call }
 
-          describe '#setup' do
-            it "calls answer_if_not_answered on the call" do
-              call.expects(:answer_if_not_answered)
-              subject.setup
-            end
-          end
-
           describe '#execute' do
             before { command.request! }
+
+            it "calls answer_if_not_answered on the call" do
+              call.expects(:answer_if_not_answered)
+              subject.execute
+            end
 
             context 'with a media engine of :unimrcp' do
               pending

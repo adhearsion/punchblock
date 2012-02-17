@@ -78,12 +78,6 @@ module Punchblock
           EM.run { client.run }
         rescue Blather::Stream::ConnectionFailed, Blather::Stream::ConnectionTimeout => e
           raise DisconnectedError.new(e.class.to_s, e.message)
-        rescue => e
-          # Preserve Punchblock native exceptions
-          raise e if e.class.to_s =~ /^Punchblock/
-          # Wrap everything else
-          # FIXME: We are losing valuable backtrace here...
-          raise ProtocolError.new(e.class.to_s, e.message)
         end
       end
 

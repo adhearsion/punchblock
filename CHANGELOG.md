@@ -1,4 +1,6 @@
 # develop
+
+# v0.9.2 - 2012-02-18
   * Feature: Asterisk calls receiving media commands are implicitly answered
   * Bugfix: Unrenderable output documents on Asterisk should return a sensible error
   * Bugfix: Log the target of commands correctly

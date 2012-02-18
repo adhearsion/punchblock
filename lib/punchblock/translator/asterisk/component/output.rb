@@ -11,6 +11,8 @@ module Punchblock
           end
 
           def execute
+            @call.answer_if_not_answered
+
             return with_error 'option error', 'An SSML document is required.' unless @component_node.ssml
 
             return with_error 'option error', 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
@@ -27,6 +29,8 @@ module Punchblock
                 case node
                 when RubySpeech::SSML::Audio
                   lambda { current_actor.play_audio! node.src }
+                else
+                  return with_error 'unrenderable document error', 'The provided document could not be rendered.'
                 end
               end.compact
 

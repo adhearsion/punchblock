@@ -40,6 +40,13 @@ module Punchblock
           describe '#execute' do
             before { command.request! }
 
+            it "calls answer_if_not_answered on the call" do
+              call.expects :answer_if_not_answered
+              subject.execute
+            end
+
+            before { call.stubs :answer_if_not_answered }
+
             context 'with a media engine of :unimrcp' do
               pending
               let(:media_engine) { :unimrcp }

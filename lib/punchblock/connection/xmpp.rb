@@ -61,7 +61,7 @@ module Punchblock
         command.mixer_name    ||= options[:mixer_name]
         command.component_id  ||= options[:component_id]
         create_iq(jid_for_command(command)).tap do |iq|
-          pb_logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{jid}"
+          pb_logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{iq.to}"
           iq << command
         end
       end

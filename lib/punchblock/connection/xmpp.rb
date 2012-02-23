@@ -76,7 +76,7 @@ module Punchblock
       def connect
         begin
           EM.run { client.run }
-        rescue Blather::Stream::ConnectionFailed, Blather::Stream::ConnectionTimeout => e
+        rescue Blather::Stream::ConnectionFailed, Blather::Stream::ConnectionTimeout, Blather::StreamError => e
           raise DisconnectedError.new(e.class.to_s, e.message)
         end
       end

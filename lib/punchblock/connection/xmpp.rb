@@ -153,6 +153,7 @@ module Punchblock
           event_handler.call Connected.new
           pb_logger.info "Connected to XMPP as #{@username}"
           @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
+          throw :pass
         end
 
         disconnected do

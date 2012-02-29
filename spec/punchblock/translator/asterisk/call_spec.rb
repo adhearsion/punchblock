@@ -581,7 +581,30 @@ module Punchblock
               command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
             end
           end
-        end
+
+          context "with a join command" do
+            let(:other_channel)         { 'SIP/bar' }
+            let(:other_translator)      { stub_everything 'Translator::Asterisk' }
+            let :other_call do
+              Call.new other_channel, other_translator
+            end
+            let :other_call_id do
+              "abc123"
+            end
+            let :command do
+              Punchblock::Command::Join.new :other_call_id => other_call_id
+            end 
+
+            it "executes the proper AMI Bridge command" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should == "bridge"
+              ami_action << RubyAMI::Response.new
+              command.response(0.5).should be true
+            end
+          end
+        end#execute_command
 
         describe '#send_agi_action' do
           it 'should send an appropriate AsyncAGI AMI action' do

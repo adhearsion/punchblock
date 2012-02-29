@@ -143,6 +143,15 @@ module Punchblock
             send_ami_action 'Hangup', 'Channel' => channel do |response|
               command.response = true
             end
+          when Command::Join
+            other_call = translator.call_with_id command.other_call_id
+            bridge_options = {
+              'Channel1' => channel,
+              'Channel2' => other_call.channel
+            }
+            send_ami_action 'Bridge', bridge_options do |response|
+              command.response = true
+            end
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output

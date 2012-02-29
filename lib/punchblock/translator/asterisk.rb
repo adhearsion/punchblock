@@ -70,7 +70,7 @@ module Punchblock
           register_call call
         end
 
-        if call = call_for_channel(event['Channel'])
+        if event['Channel'] && call = call_for_channel(event['Channel'])
           pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
           call.process_ami_event! event
         elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"

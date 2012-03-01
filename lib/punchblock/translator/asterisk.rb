@@ -76,6 +76,9 @@ module Punchblock
         elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event
         end
+        # handle everything here
+        # use Call#send_pb_event to send the correct event
+        # no need to handle it in the call unless asked to
 
         handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end

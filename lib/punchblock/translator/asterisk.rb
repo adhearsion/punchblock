@@ -79,10 +79,16 @@ module Punchblock
         # handle everything here
         # use Call#send_pb_event to send the correct event
         # no need to handle it in the call unless asked to
+        #if event.name == 'BridgeAction' && call = call_for_channel(event['Channel1'])
+        if event.name == 'BridgeAction'
+          if call = call_for_channel(event['Channel1'])
+          end
+        end
 
         handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 
+      
       def handle_pb_event(event)
         connection.handle_event event
       end

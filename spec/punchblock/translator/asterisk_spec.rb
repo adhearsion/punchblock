@@ -266,15 +266,12 @@ module Punchblock
           let(:first_call_id)    { "abc123" }
 
           let(:second_channel)    { 'SIP/5678-00000000' }
-          let(:second_translator) { stub_everything 'Translator::Asterisk' }
-          let(:second_call)       { ::Punchblock::Translator::Asterisk::Call.new second_channel, second_translator }
-          let(:second_call_id)    { "def456" }
 
           let :pb_event do 
             Punchblock::Event::Joined.new :other_call_id => second_call_id
           end
 
-          let :ami_event do
+          let :bridge_action_event do
             RubyAMI::Event.new('BridgeAction').tap do |e|
               e['Privilege'] = "call,all"
               e['Response'] = "Success"
@@ -283,8 +280,20 @@ module Punchblock
             end
           end
 
+          let :expected_pb_event do
+            Event::Asterisk::AMI::Event.new :name => 'BridgeAction',
+              :attributes => {
+                :privilege  => "call,all",
+                :response   => "Success",
+                :channel1 => first_channel,
+                :channel2 => second_channel
+            }
+          end
+
           it 'sends the Joined event to the first call' do
             subject.expects(:call_for_channel).with(first_channel).returns(first_call)
+            subject.connection.expects(:handle_event).once.with expected_pb_event
+            subject.handle_ami_event bridge_action_event
           end
           
         end
@@ -427,20 +436,6 @@ module Punchblock
             call.expects(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end
-        end
-        
-        describe 'with a BridgeAction event' do
-          let(:call_one_channel) { "SIP/1234-00000000" }
-          let(:call_two_channel) { "SIP/5678-00000000" }
-          let :ami_event do
-            RubyAMI::Event.new('Hangup').tap do |e|
-              e['Privilege'] = "call,all"
-              e['Response'] = "Success"
-              e['Channel1'] = call_one_channel
-              e['Channel2'] = call_two_channel
-            end
-          end
-          
         end
 
       end#handle_ami_event

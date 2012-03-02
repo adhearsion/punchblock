@@ -70,25 +70,23 @@ module Punchblock
           register_call call
         end
 
-        if call = call_for_channel(event['Channel'])
-          pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
-          call.process_ami_event! event
+        if (event['Channel'] && call_for_channel(event['Channel'])) ||
+            (event['Channel1'] && call_for_channel(event['Channel1'])) ||
+            (event['Channel2'] && call_for_channel(event['Channel2']))
+          [event['Channel'], event['Channel1'], event['Channel2']].compact.each do |channel|
+            call = call_for_channel channel
+            if call
+              pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
+              call.process_ami_event! event
+            end
+          end
         elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event
-        end
-        # handle everything here
-        # use Call#send_pb_event to send the correct event
-        # no need to handle it in the call unless asked to
-        #if event.name == 'BridgeAction' && call = call_for_channel(event['Channel1'])
-        if event.name == 'BridgeAction'
-          if call = call_for_channel(event['Channel1'])
-          end
         end
 
         handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 
-      
       def handle_pb_event(event)
         connection.handle_event event
       end
@@ -147,6 +145,7 @@ module Punchblock
       private
 
       def handle_async_agi_start_event(event)
+        pb_logger.trace "Handling AsyncAGI Start event by creating a new call"
         call = Call.new event['Channel'], current_actor, event['Env']
         register_call call
         call.send_offer!

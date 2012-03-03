@@ -1,4 +1,5 @@
 # develop
+  * Feature: Asterisk calls now support the Join API (joining only)
 
 # v0.9.2 - 2012-02-18
   * Feature: Asterisk calls receiving media commands are implicitly answered

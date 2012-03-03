@@ -117,6 +117,14 @@ module Punchblock
             if join_command = pending_joins[ami_event['Channel2']]
               join_command.response = true
             end
+          when 'Bridged'
+            other_call_channel = (ami_event['Channel1'] == channel) ? ami_event['Channel2'] : ami_event['Channel2']
+            if other_call = translator.call_for_channel(other_call_channel)
+              joined_event = Event::Joined.new.tap do |e|
+                e.other_call_id = other_call.id
+              end
+              send_pb_event joined_event
+            end
           end
           trigger_handler :ami, ami_event
         end

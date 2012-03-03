@@ -470,6 +470,42 @@ module Punchblock
               command.response(0.5).should == true
             end
           end
+
+          context 'with a Bridged event' do
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            let :ami_event do
+              RubyAMI::Event.new('Bridged').tap do |e|
+                e['Privilege'] = "call,all"
+                e['Bridgestate'] = "Link"
+                e['Bridgetype'] = "core"
+                e['Channel1']  = channel
+                e['Channel2']  = other_channel
+                e['Uniqueid1']  = "1319717537.11"
+                e['Uniqueid2']  = "1319717537.10"
+                e['CallerID1']  = "1234"
+                e['CallerID2']  = "5678"
+              end
+            end
+
+            before do
+              translator.register_call other_call
+            end
+
+            it 'sends the Joined event when the call is the first channel' do
+                translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+                other_call.expects(:id).returns other_call_id
+                expected_joined = Punchblock::Event::Joined.new
+                expected_joined.call_id = subject.id
+                expected_joined.other_call_id = other_call_id
+                translator.expects(:handle_pb_event!).with expected_joined
+                subject.process_ami_event ami_event
+            end
+          end
         end
 
         describe '#execute_command' do

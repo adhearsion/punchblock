@@ -8,6 +8,7 @@ module Punchblock
         include Celluloid
 
         attr_reader :id, :channel, :translator, :agi_env, :direction
+        attr_accessor :pending_joins
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[16] = :hangup
@@ -23,6 +24,7 @@ module Punchblock
           @agi_env = parse_environment agi_env
           @id, @components = UUIDTools::UUID.random_create.to_s, {}
           @answered = false
+          @pending_joins = {}
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
         end
 
@@ -111,6 +113,10 @@ module Punchblock
               @answered = true
               send_pb_event Event::Answered.new
             end
+          when 'BridgeAction'
+            if join_command = pending_joins[ami_event['Channel2']]
+              join_command.response = true
+            end
           end
           trigger_handler :ami, ami_event
         end
@@ -149,9 +155,9 @@ module Punchblock
               'Channel1' => channel,
               'Channel2' => other_call.channel
             }
-            send_ami_action 'Bridge', bridge_options do |response|
-              command.response = true
-            end
+            send_ami_action 'Bridge', bridge_options
+            pending_joins[other_call.channel] = command
+
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output

@@ -443,6 +443,33 @@ module Punchblock
               subject.process_ami_event ami_event
             end
           end
+
+          context 'with a BridgeAction event' do
+            let :ami_event do
+              RubyAMI::Event.new('BridgeAction').tap do |e|
+                e['Privilege'] = "call,all"
+                e['Response'] = "Success"
+                e['Channel1']  = "SIP/foo"
+                e['Channel2']  = "SIP/5678-00000000"
+              end
+            end
+
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :command do
+              Punchblock::Command::Join.new :other_call_id => other_call_id
+            end 
+
+            before do
+              subject.pending_joins[other_channel] = command
+              command.request!
+            end
+
+            it 'retrieves and sets success on the correct Join' do
+              subject.process_ami_event ami_event
+              command.response(0.5).should == true
+            end
+          end
         end
 
         describe '#execute_command' do
@@ -600,8 +627,12 @@ module Punchblock
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should == "bridge"
-              ami_action << RubyAMI::Response.new
-              command.response(0.5).should be true
+            end
+            
+            it "adds the join to the @pending_joins hash" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              subject.pending_joins[other_channel].should be_a Command::Join
             end
           end
         end#execute_command

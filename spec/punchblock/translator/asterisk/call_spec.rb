@@ -686,6 +686,8 @@ module Punchblock
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should == "bridge"
+              ami_action.headers['Channel1'].should == channel
+              ami_action.headers['Channel2'].should == other_channel
             end
 
             it "adds the join to the @pending_joins hash" do

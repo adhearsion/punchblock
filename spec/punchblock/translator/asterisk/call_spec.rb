@@ -458,7 +458,7 @@ module Punchblock
             let(:other_call_id) { 'def567' }
             let :command do
               Punchblock::Command::Join.new :other_call_id => other_call_id
-            end 
+            end
 
             before do
               subject.pending_joins[other_channel] = command
@@ -511,23 +511,23 @@ module Punchblock
             end
 
             it 'sends the Joined event when the call is the first channel' do
-                translator.expects(:call_for_channel).with(other_channel).returns(other_call)
-                other_call.expects(:id).returns other_call_id
-                expected_joined = Punchblock::Event::Joined.new
-                expected_joined.call_id = subject.id
-                expected_joined.other_call_id = other_call_id
-                translator.expects(:handle_pb_event!).with expected_joined
-                subject.process_ami_event ami_event
+              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+              other_call.expects(:id).returns other_call_id
+              expected_joined = Punchblock::Event::Joined.new
+              expected_joined.call_id = subject.id
+              expected_joined.other_call_id = other_call_id
+              translator.expects(:handle_pb_event!).with expected_joined
+              subject.process_ami_event ami_event
             end
 
             it 'sends the Joined event when the call is the second channel' do
-                translator.expects(:call_for_channel).with(other_channel).returns(other_call)
-                other_call.expects(:id).returns other_call_id
-                expected_joined = Punchblock::Event::Joined.new
-                expected_joined.call_id = subject.id
-                expected_joined.other_call_id = other_call_id
-                translator.expects(:handle_pb_event!).with expected_joined
-                subject.process_ami_event ami_event
+              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+              other_call.expects(:id).returns other_call_id
+              expected_joined = Punchblock::Event::Joined.new
+              expected_joined.call_id = subject.id
+              expected_joined.other_call_id = other_call_id
+              translator.expects(:handle_pb_event!).with expected_joined
+              subject.process_ami_event ami_event
             end
           end
         end
@@ -680,7 +680,7 @@ module Punchblock
             end
             let :command do
               Punchblock::Command::Join.new :other_call_id => other_call_id
-            end 
+            end
 
             it "executes the proper AMI Bridge command" do
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
@@ -688,7 +688,7 @@ module Punchblock
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should == "bridge"
             end
-            
+
             it "adds the join to the @pending_joins hash" do
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command

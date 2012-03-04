@@ -163,9 +163,8 @@ module Punchblock
               'Channel1' => channel,
               'Channel2' => other_call.channel
             }
-            send_ami_action 'Bridge', bridge_options
             pending_joins[other_call.channel] = command
-
+            send_ami_action 'Bridge', bridge_options
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output

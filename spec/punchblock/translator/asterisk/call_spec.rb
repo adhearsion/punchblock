@@ -508,26 +508,25 @@ module Punchblock
 
             before do
               translator.register_call other_call
+              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+              other_call.expects(:id).returns other_call_id
+            end
+
+            let :expected_joined do
+              Punchblock::Event::Joined.new.tap do |joined|
+                joined.call_id = subject.id
+                joined.other_call_id = other_call_id
+              end
             end
 
             it 'sends the Joined event when the call is the first channel' do
-              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
-              other_call.expects(:id).returns other_call_id
-              expected_joined = Punchblock::Event::Joined.new
-              expected_joined.call_id = subject.id
-              expected_joined.other_call_id = other_call_id
               translator.expects(:handle_pb_event!).with expected_joined
               subject.process_ami_event ami_event
             end
 
             it 'sends the Joined event when the call is the second channel' do
-              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
-              other_call.expects(:id).returns other_call_id
-              expected_joined = Punchblock::Event::Joined.new
-              expected_joined.call_id = subject.id
-              expected_joined.other_call_id = other_call_id
               translator.expects(:handle_pb_event!).with expected_joined
-              subject.process_ami_event ami_event
+              subject.process_ami_event switched_ami_event
             end
           end
         end

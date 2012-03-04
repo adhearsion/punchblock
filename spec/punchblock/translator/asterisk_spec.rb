@@ -424,7 +424,6 @@ module Punchblock
             end
           end
         end
-
       end#handle_ami_event
 
       describe '#send_ami_action' do

@@ -24,8 +24,6 @@ module Punchblock
 
       its(:ami_client) { should be_a RubyAMI::Client }
 
-      after { connection.translator.terminate }
-
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
       end

@@ -15,6 +15,10 @@ RSpec.configure do |config|
   config.before :suite do |variable|
     Punchblock.logger = Logger.new(STDOUT)
   end
+
+  config.after :each do
+    Object.const_defined?(:Celluloid) && Celluloid.shutdown
+  end
 end
 
 def parse_stanza(xml)

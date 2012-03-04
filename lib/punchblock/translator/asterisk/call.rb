@@ -7,8 +7,7 @@ module Punchblock
         include HasGuardedHandlers
         include Celluloid
 
-        attr_reader :id, :channel, :translator, :agi_env, :direction
-        attr_accessor :pending_joins
+        attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[16] = :hangup

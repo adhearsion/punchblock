@@ -691,7 +691,7 @@ module Punchblock
             it "adds the join to the @pending_joins hash" do
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command
-              subject.pending_joins[other_channel].should be_a Command::Join
+              subject.pending_joins[other_channel].should be command
             end
           end
         end#execute_command

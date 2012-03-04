@@ -10,6 +10,9 @@ module Punchblock
 
       def not_ready!
       end
+
+      def connected?
+      end
     end
   end
 end

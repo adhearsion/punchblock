@@ -669,14 +669,14 @@ module Punchblock
           end
 
           context "with a join command" do
+            let(:other_call_id)         { "abc123" }
             let(:other_channel)         { 'SIP/bar' }
             let(:other_translator)      { stub_everything 'Translator::Asterisk' }
+
             let :other_call do
               Call.new other_channel, other_translator
             end
-            let :other_call_id do
-              "abc123"
-            end
+
             let :command do
               Punchblock::Command::Join.new :other_call_id => other_call_id
             end

@@ -138,7 +138,13 @@ module Punchblock
       private
 
       def handle_async_agi_start_event(event)
-        call = Call.new event['Channel'], current_actor, event['Env']
+        env = Call.parse_environment event['Env']
+
+        return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'h' extension" if env[:agi_extension] == 'h'
+        return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'Kill' type" if env[:agi_type] == 'Kill'
+
+        pb_logger.trace "Handling AsyncAGI Start event by creating a new call"
+        call = Call.new event['Channel'], current_actor, env
         register_call call
         call.send_offer!
       end

@@ -18,9 +18,22 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
-        def initialize(channel, translator, agi_env = '')
+        class << self
+          def parse_environment(agi_env)
+            agi_env_as_array(agi_env).inject({}) do |accumulator, element|
+              accumulator[element[0].to_sym] = element[1] || ''
+              accumulator
+            end
+          end
+
+          def agi_env_as_array(agi_env)
+            URI.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
+          end
+        end
+
+        def initialize(channel, translator, agi_env = nil)
           @channel, @translator = channel, translator
-          @agi_env = parse_environment agi_env
+          @agi_env = agi_env || {}
           @id, @components = UUIDTools::UUID.random_create.to_s, {}
           @answered = false
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
@@ -209,17 +222,6 @@ module Punchblock
             accumulator[('x_' + element[0].to_s).to_sym] = element[1] || ''
             accumulator
           end
-        end
-
-        def parse_environment(agi_env)
-          agi_env_as_array(agi_env).inject({}) do |accumulator, element|
-            accumulator[element[0].to_sym] = element[1] || ''
-            accumulator
-          end
-        end
-
-        def agi_env_as_array(agi_env)
-          URI.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
         end
       end
     end

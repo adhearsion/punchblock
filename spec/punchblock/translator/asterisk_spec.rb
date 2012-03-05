@@ -294,7 +294,28 @@ module Punchblock
             call_actor = subject.call_for_channel('SIP/1234-00000000')
             call_actor.wrapped_object.should be_a Asterisk::Call
             call_actor.agi_env.should be_a Hash
-            call_actor.agi_env[:agi_request].should == 'async'
+            call_actor.agi_env.should == {
+              :agi_request      => 'async',
+              :agi_channel      => 'SIP/1234-00000000',
+              :agi_language     => 'en',
+              :agi_type         => 'SIP',
+              :agi_uniqueid     => '1320835995.0',
+              :agi_version      => '1.8.4.1',
+              :agi_callerid     => '5678',
+              :agi_calleridname => 'Jane Smith',
+              :agi_callingpres  => '0',
+              :agi_callingani2  => '0',
+              :agi_callington   => '0',
+              :agi_callingtns   => '0',
+              :agi_dnid         => '1000',
+              :agi_rdnis        => 'unknown',
+              :agi_context      => 'default',
+              :agi_extension    => '1000',
+              :agi_priority     => '1',
+              :agi_enhanced     => '0.0',
+              :agi_accountcode  => '',
+              :agi_threadid     => '4366221312'
+            }
           end
 
           it 'should instruct the call to send an offer' do
@@ -314,6 +335,46 @@ module Punchblock
             it "should not create a new call" do
               Asterisk::Call.expects(:new).never
               subject.handle_ami_event ami_event
+            end
+          end
+
+          context "for a 'h' extension" do
+            let :ami_event do
+              RubyAMI::Event.new('AsyncAGI').tap do |e|
+                e['SubEvent'] = "Start"
+                e['Channel']  = "SIP/1234-00000000"
+                e['Env']      = "agi_extension%3A%20h%0A%0A"
+              end
+            end
+
+            it "should not create a new call" do
+              Asterisk::Call.expects(:new).never
+              subject.handle_ami_event ami_event
+            end
+
+            it 'should not be able to look up the call by channel ID' do
+              subject.handle_ami_event ami_event
+              subject.call_for_channel('SIP/1234-00000000').should be nil
+            end
+          end
+
+          context "for a 'Kill' type" do
+            let :ami_event do
+              RubyAMI::Event.new('AsyncAGI').tap do |e|
+                e['SubEvent'] = "Start"
+                e['Channel']  = "SIP/1234-00000000"
+                e['Env']      = "agi_type%3A%20Kill%0A%0A"
+              end
+            end
+
+            it "should not create a new call" do
+              Asterisk::Call.expects(:new).never
+              subject.handle_ami_event ami_event
+            end
+
+            it 'should not be able to look up the call by channel ID' do
+              subject.handle_ami_event ami_event
+              subject.call_for_channel('SIP/1234-00000000').should be nil
             end
           end
         end

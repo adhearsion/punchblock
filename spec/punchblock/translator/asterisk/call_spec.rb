@@ -233,6 +233,18 @@ module Punchblock
               subject.should_not be_alive
             end
 
+            context "with an undefined cause" do
+              let(:cause)     { '0' }
+              let(:cause_txt) { 'Undefined' }
+
+              it 'should send an end (hangup) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+                                                                :call_id  => subject.id
+                translator.expects(:handle_pb_event!).with expected_end_event
+                subject.process_ami_event ami_event
+              end
+            end
+
             context "with a normal clearing cause" do
               let(:cause)     { '16' }
               let(:cause_txt) { 'Normal Clearing' }

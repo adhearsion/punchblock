@@ -1,5 +1,3 @@
-$LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
-$LOAD_PATH.unshift File.dirname(__FILE__)
 require 'punchblock'
 require 'mocha'
 require 'countdownlatch'
@@ -14,6 +12,10 @@ RSpec.configure do |config|
 
   config.before :suite do |variable|
     Punchblock.logger = Logger.new(STDOUT)
+  end
+
+  config.after :each do
+    Object.const_defined?(:Celluloid) && Celluloid.shutdown
   end
 end
 

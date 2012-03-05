@@ -470,7 +470,7 @@ module Punchblock
             end
           end
 
-          context 'with a Bridged event' do
+          context 'with a Bridge event' do
             let(:other_channel) { 'SIP/5678-00000000' }
             let(:other_call_id) { 'def567' }
             let :other_call do
@@ -478,7 +478,7 @@ module Punchblock
             end
 
             let :ami_event do
-              RubyAMI::Event.new('Bridged').tap do |e|
+              RubyAMI::Event.new('Bridge').tap do |e|
                 e['Privilege'] = "call,all"
                 e['Bridgestate'] = "Link"
                 e['Bridgetype'] = "core"
@@ -492,7 +492,7 @@ module Punchblock
             end
 
             let :switched_ami_event do
-              RubyAMI::Event.new('Bridged').tap do |e|
+              RubyAMI::Event.new('Bridge').tap do |e|
                 e['Privilege'] = "call,all"
                 e['Bridgestate'] = "Link"
                 e['Bridgetype'] = "core"

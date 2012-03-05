@@ -113,7 +113,7 @@ module Punchblock
               pb_logger.debug "Found component #{component.id} for event. Forwarding event..."
               component.handle_ami_event! ami_event
             else
-              pb_logger.debug "Could not find component for AMI event: #{ami_event}"
+              pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
             pb_logger.debug "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"

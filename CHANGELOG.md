@@ -1,4 +1,5 @@
 # develop
+  * Feature: Asterisk calls now support the Join API (joining only)
   * Bugfix: The Asterisk translator now ignores calls to 'h' or of type 'Kill'
 
 # v0.9.2 - 2012-02-18

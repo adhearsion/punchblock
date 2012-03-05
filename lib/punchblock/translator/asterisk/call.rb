@@ -7,9 +7,10 @@ module Punchblock
         include HasGuardedHandlers
         include Celluloid
 
-        attr_reader :id, :channel, :translator, :agi_env, :direction
+        attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
+        HANGUP_CAUSE_TO_END_REASON[0] = :hangup
         HANGUP_CAUSE_TO_END_REASON[16] = :hangup
         HANGUP_CAUSE_TO_END_REASON[17] = :busy
         HANGUP_CAUSE_TO_END_REASON[18] = :timeout
@@ -36,6 +37,7 @@ module Punchblock
           @agi_env = agi_env || {}
           @id, @components = UUIDTools::UUID.random_create.to_s, {}
           @answered = false
+          @pending_joins = {}
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
         end
 
@@ -124,6 +126,25 @@ module Punchblock
               @answered = true
               send_pb_event Event::Answered.new
             end
+          when 'BridgeAction'
+            if join_command = pending_joins[ami_event['Channel2']]
+              join_command.response = true
+            end
+          when 'Bridge'
+            other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
+            if other_call = translator.call_for_channel(other_call_channel)
+              event = case ami_event['Bridgestate']
+              when 'Link'
+                Event::Joined.new.tap do |e|
+                  e.other_call_id = other_call.id
+                end
+              when 'Unlink'
+                Event::Unjoined.new.tap do |e|
+                  e.other_call_id = other_call.id
+                end
+              end
+              send_pb_event event
+            end
           end
           trigger_handler :ami, ami_event
         end
@@ -156,6 +177,14 @@ module Punchblock
             send_ami_action 'Hangup', 'Channel' => channel do |response|
               command.response = true
             end
+          when Command::Join
+            other_call = translator.call_with_id command.other_call_id
+            bridge_options = {
+              'Channel1' => channel,
+              'Channel2' => other_call.channel
+            }
+            pending_joins[other_call.channel] = command
+            send_ami_action 'Bridge', bridge_options
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output

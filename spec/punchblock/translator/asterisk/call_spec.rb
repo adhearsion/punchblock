@@ -233,6 +233,18 @@ module Punchblock
               subject.should_not be_alive
             end
 
+            context "with an undefined cause" do
+              let(:cause)     { '0' }
+              let(:cause_txt) { 'Undefined' }
+
+              it 'should send an end (hangup) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+                                                                :call_id  => subject.id
+                translator.expects(:handle_pb_event!).with expected_end_event
+                subject.process_ami_event ami_event
+              end
+            end
+
             context "with a normal clearing cause" do
               let(:cause)     { '16' }
               let(:cause_txt) { 'Normal Clearing' }
@@ -442,6 +454,117 @@ module Punchblock
               subject.process_ami_event ami_event
             end
           end
+
+          context 'with a BridgeAction event' do
+            let :ami_event do
+              RubyAMI::Event.new('BridgeAction').tap do |e|
+                e['Privilege'] = "call,all"
+                e['Response'] = "Success"
+                e['Channel1']  = "SIP/foo"
+                e['Channel2']  = "SIP/5678-00000000"
+              end
+            end
+
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :command do
+              Punchblock::Command::Join.new :other_call_id => other_call_id
+            end
+
+            before do
+              subject.pending_joins[other_channel] = command
+              command.request!
+            end
+
+            it 'retrieves and sets success on the correct Join' do
+              subject.process_ami_event ami_event
+              command.response(0.5).should == true
+            end
+          end
+
+          context 'with a Bridge event' do
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            let :ami_event do
+              RubyAMI::Event.new('Bridge').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Bridgestate']  = state
+                e['Bridgetype']   = "core"
+                e['Channel1']     = channel
+                e['Channel2']     = other_channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            let :switched_ami_event do
+              RubyAMI::Event.new('Bridge').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Bridgestate']  = state
+                e['Bridgetype']   = "core"
+                e['Channel1']     = other_channel
+                e['Channel2']     = channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            before do
+              translator.register_call other_call
+              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+              other_call.expects(:id).returns other_call_id
+            end
+
+            context "of state 'Link'" do
+              let(:state) { 'Link' }
+
+              let :expected_joined do
+                Punchblock::Event::Joined.new.tap do |joined|
+                  joined.call_id = subject.id
+                  joined.other_call_id = other_call_id
+                end
+              end
+
+              it 'sends the Joined event when the call is the first channel' do
+                translator.expects(:handle_pb_event!).with expected_joined
+                subject.process_ami_event ami_event
+              end
+
+              it 'sends the Joined event when the call is the second channel' do
+                translator.expects(:handle_pb_event!).with expected_joined
+                subject.process_ami_event switched_ami_event
+              end
+            end
+
+            context "of state 'Unlink'" do
+              let(:state) { 'Unlink' }
+
+              let :expected_unjoined do
+                Punchblock::Event::Unjoined.new.tap do |joined|
+                  joined.call_id = subject.id
+                  joined.other_call_id = other_call_id
+                end
+              end
+
+              it 'sends the Unjoined event when the call is the first channel' do
+                translator.expects(:handle_pb_event!).with expected_unjoined
+                subject.process_ami_event ami_event
+              end
+
+              it 'sends the Unjoined event when the call is the second channel' do
+                translator.expects(:handle_pb_event!).with expected_unjoined
+                subject.process_ami_event switched_ami_event
+              end
+            end
+          end
         end
 
         describe '#execute_command' do
@@ -580,7 +703,36 @@ module Punchblock
               command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
             end
           end
-        end
+
+          context "with a join command" do
+            let(:other_call_id)         { "abc123" }
+            let(:other_channel)         { 'SIP/bar' }
+            let(:other_translator)      { stub_everything 'Translator::Asterisk' }
+
+            let :other_call do
+              Call.new other_channel, other_translator
+            end
+
+            let :command do
+              Punchblock::Command::Join.new :other_call_id => other_call_id
+            end
+
+            it "executes the proper AMI Bridge command" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should == "bridge"
+              ami_action.headers['Channel1'].should == channel
+              ami_action.headers['Channel2'].should == other_channel
+            end
+
+            it "adds the join to the @pending_joins hash" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              subject.pending_joins[other_channel].should be command
+            end
+          end
+        end#execute_command
 
         describe '#send_agi_action' do
           it 'should send an appropriate AsyncAGI AMI action' do

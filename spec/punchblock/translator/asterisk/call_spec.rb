@@ -479,29 +479,29 @@ module Punchblock
 
             let :ami_event do
               RubyAMI::Event.new('Bridge').tap do |e|
-                e['Privilege'] = "call,all"
-                e['Bridgestate'] = "Link"
-                e['Bridgetype'] = "core"
-                e['Channel1']  = channel
-                e['Channel2']  = other_channel
-                e['Uniqueid1']  = "1319717537.11"
-                e['Uniqueid2']  = "1319717537.10"
-                e['CallerID1']  = "1234"
-                e['CallerID2']  = "5678"
+                e['Privilege']    = "call,all"
+                e['Bridgestate']  = state
+                e['Bridgetype']   = "core"
+                e['Channel1']     = channel
+                e['Channel2']     = other_channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
               end
             end
 
             let :switched_ami_event do
               RubyAMI::Event.new('Bridge').tap do |e|
-                e['Privilege'] = "call,all"
-                e['Bridgestate'] = "Link"
-                e['Bridgetype'] = "core"
-                e['Channel1']  = other_channel
-                e['Channel2']  = channel
-                e['Uniqueid1']  = "1319717537.11"
-                e['Uniqueid2']  = "1319717537.10"
-                e['CallerID1']  = "1234"
-                e['CallerID2']  = "5678"
+                e['Privilege']    = "call,all"
+                e['Bridgestate']  = state
+                e['Bridgetype']   = "core"
+                e['Channel1']     = other_channel
+                e['Channel2']     = channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
               end
             end
 
@@ -511,21 +511,46 @@ module Punchblock
               other_call.expects(:id).returns other_call_id
             end
 
-            let :expected_joined do
-              Punchblock::Event::Joined.new.tap do |joined|
-                joined.call_id = subject.id
-                joined.other_call_id = other_call_id
+            context "of state 'Link'" do
+              let(:state) { 'Link' }
+
+              let :expected_joined do
+                Punchblock::Event::Joined.new.tap do |joined|
+                  joined.call_id = subject.id
+                  joined.other_call_id = other_call_id
+                end
+              end
+
+              it 'sends the Joined event when the call is the first channel' do
+                translator.expects(:handle_pb_event!).with expected_joined
+                subject.process_ami_event ami_event
+              end
+
+              it 'sends the Joined event when the call is the second channel' do
+                translator.expects(:handle_pb_event!).with expected_joined
+                subject.process_ami_event switched_ami_event
               end
             end
 
-            it 'sends the Joined event when the call is the first channel' do
-              translator.expects(:handle_pb_event!).with expected_joined
-              subject.process_ami_event ami_event
-            end
+            context "of state 'Unlink'" do
+              let(:state) { 'Unlink' }
 
-            it 'sends the Joined event when the call is the second channel' do
-              translator.expects(:handle_pb_event!).with expected_joined
-              subject.process_ami_event switched_ami_event
+              let :expected_unjoined do
+                Punchblock::Event::Unjoined.new.tap do |joined|
+                  joined.call_id = subject.id
+                  joined.other_call_id = other_call_id
+                end
+              end
+
+              it 'sends the Unjoined event when the call is the first channel' do
+                translator.expects(:handle_pb_event!).with expected_unjoined
+                subject.process_ami_event ami_event
+              end
+
+              it 'sends the Unjoined event when the call is the second channel' do
+                translator.expects(:handle_pb_event!).with expected_unjoined
+                subject.process_ami_event switched_ami_event
+              end
             end
           end
         end

@@ -132,10 +132,17 @@ module Punchblock
           when 'Bridge'
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
-              joined_event = Event::Joined.new.tap do |e|
-                e.other_call_id = other_call.id
+              event = case ami_event['Bridgestate']
+              when 'Link'
+                Event::Joined.new.tap do |e|
+                  e.other_call_id = other_call.id
+                end
+              when 'Unlink'
+                Event::Unjoined.new.tap do |e|
+                  e.other_call_id = other_call.id
+                end
               end
-              send_pb_event joined_event
+              send_pb_event event
             end
           end
           trigger_handler :ami, ami_event

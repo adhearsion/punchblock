@@ -13,6 +13,10 @@ module Punchblock
 
       attr_reader :ami_client, :connection, :media_engine, :calls
 
+      REDIRECT_CONTEXT = 'adhearsion-redirect'
+      REDIRECT_EXTENSION = '1'
+      REDIRECT_PRIORITY = '1'
+
       def initialize(ami_client, connection, media_engine = nil)
         pb_logger.debug "Starting up..."
         @ami_client, @connection, @media_engine = ami_client, connection, media_engine
@@ -145,9 +149,9 @@ module Punchblock
 
       def run_at_fully_booted
         send_ami_action('Command', {
-          'Command' => 'dialplan add extension 1,1,AGI,agi:async into adhearsion-h8d718d'
+          'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
         })
-        pb_logger.trace "Added extension 1,1,AGI,agi:async into adhearsion-h8d718d"
+        pb_logger.trace "Added extension extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
       end
 
       private

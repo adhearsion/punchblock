@@ -744,9 +744,9 @@ module Punchblock
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should == "redirect"
               ami_action.headers['Channel'].should == channel
-              ami_action.headers['Exten'].should == '1'
-              ami_action.headers['Priority'].should == '1'
-              ami_action.headers['Context'].should == 'adhearsion-h8d718d'
+              ami_action.headers['Exten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
             end
           end
         end#execute_command

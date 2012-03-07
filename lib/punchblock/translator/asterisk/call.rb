@@ -186,12 +186,11 @@ module Punchblock
             pending_joins[other_call.channel] = command
             send_ami_action 'Bridge', bridge_options
           when Command::Unjoin
-            #attemp redirect
             redirect_options = {
               'Channel' => channel,
-              'Exten' => '1',
-              'Priority' => '1',
-              'Context' => 'adhearsion-h8d718d'
+              'Exten' => Asterisk::REDIRECT_EXTENSION,
+              'Priority' => Asterisk::REDIRECT_PRIORITY,
+              'Context' => Asterisk::REDIRECT_CONTEXT
             }
             send_ami_action 'Redirect', redirect_options
           when Punchblock::Component::Asterisk::AGI::Command

@@ -497,7 +497,7 @@ module Punchblock
 
       describe '#run_at_fully_booted' do
         it 'should send the redirect extension Command to the AMI client' do
-          ami_client.expects(:send_action).once.with 'Command', 'Command' => 'dialplan add extension 1,1,AGI,agi:async into adhearsion-h8d718d'
+          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
           subject.run_at_fully_booted
         end
       end

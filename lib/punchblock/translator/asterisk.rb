@@ -58,6 +58,7 @@ module Punchblock
           if @fully_booted_count >= 2
             handle_pb_event Connection::Connected.new
             @fully_booted_count = 0
+            run_at_fully_booted
           end
           return
         end
@@ -140,6 +141,13 @@ module Punchblock
 
       def send_ami_action(name, headers = {}, &block)
         ami_client.send_action name, headers, &block
+      end
+
+      def run_at_fully_booted
+        send_ami_action('Command', {
+          'Command' => 'dialplan add extension 1,1,AGI,agi:async into adhearsion-h8d718d'
+        })
+        pb_logger.trace "Added extension 1,1,AGI,agi:async into adhearsion-h8d718d"
       end
 
       private

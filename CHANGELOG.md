@@ -3,6 +3,7 @@
   * Bugfix: The Asterisk translator now ignores calls to 'h' or of type 'Kill'
   * Bugfix: Handle more XMPP connection errors gracefully
   * Bugfix: The XMPP connection ready event is now available to external handlers
+  * Bugfix: The Asterisk connection now passes the `:media_engine` option down to the translator
 
 # v0.9.2 - 2012-02-18
   * Feature: Asterisk calls receiving media commands are implicitly answered

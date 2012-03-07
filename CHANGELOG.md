@@ -1,6 +1,8 @@
 # develop
   * Feature: Asterisk calls now support the Join API (joining only)
   * Bugfix: The Asterisk translator now ignores calls to 'h' or of type 'Kill'
+  * Bugfix: Handle more XMPP connection errors gracefully
+  * Bugfix: The XMPP connection ready event is now available to external handlers
 
 # v0.9.2 - 2012-02-18
   * Feature: Asterisk calls receiving media commands are implicitly answered

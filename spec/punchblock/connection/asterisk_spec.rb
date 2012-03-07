@@ -8,7 +8,8 @@ module Punchblock
           :host     => '127.0.0.1',
           :port     => 5038,
           :username => 'test',
-          :password => 'test'
+          :password => 'test',
+          :media_engine => :swift
         }
       end
 
@@ -26,6 +27,10 @@ module Punchblock
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
+      end
+
+      it 'should set the media engine on the translator' do
+        subject.translator.media_engine.should == :swift
       end
 
       describe '#run' do

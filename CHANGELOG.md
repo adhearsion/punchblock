@@ -4,6 +4,7 @@
   * Bugfix: Handle more XMPP connection errors gracefully
   * Bugfix: The XMPP connection ready event is now available to external handlers
   * Bugfix: The Asterisk connection now passes the `:media_engine` option down to the translator
+  * Feature: app_swift is now supported on Asterisk with a media_engine type of :swift
 
 # [v0.9.2](https://github.com/adhearsion/punchblock/compare/v0.9.1...v0.9.2) - [2012-02-18](https://rubygems.org/gems/punchblock/versions/0.9.2)
   * Feature: Asterisk calls receiving media commands are implicitly answered

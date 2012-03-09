@@ -52,6 +52,13 @@ module Punchblock
                 pb_logger.debug "MRCPSynth completed with #{complete_event}."
                 send_complete_event success_reason
               end
+            when :swift
+              doc = @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+              send_ref
+              @call.send_agi_action! 'EXEC Swift', doc, swift_options do |complete_event|
+                pb_logger.debug "Swift completed with #{complete_event}."
+                send_complete_event success_reason
+              end
             end
           end
 
@@ -84,6 +91,9 @@ module Punchblock
               opts << 'i=any' if [:any, :dtmf].include? @component_node.interrupt_on
               opts << "v=#{@component_node.voice}" if @component_node.voice
             end.join '&'
+          end
+
+          def swift_options
           end
 
           def success_reason

@@ -40,6 +40,38 @@ module Punchblock
 
             before { mock_call.stubs :answer_if_not_answered }
 
+            context 'with a media engine of :swift' do
+              let(:media_engine) { :swift }
+
+              let(:audio_filename) { 'http://foo.com/bar.mp3' }
+
+              let :ssml_doc do
+                RubySpeech::SSML.draw do
+                  audio :src => audio_filename
+                  say_as(:interpret_as => :cardinal) { 'FOO' }
+                end
+              end
+
+              let(:command_opts) { {} }
+
+              let :command_options do
+                { :ssml => ssml_doc }.merge(command_opts)
+              end
+
+              def expect_swift_with_options(options)
+                mock_call.expects(:send_agi_action!).once.with do |*args|
+                  args[0].should == 'EXEC Swift'
+                  args[2].should match options
+                end
+              end
+
+              it "should execute Swift" do
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, nil
+                subject.execute
+              end
+
+            end
+
             context 'with a media engine of :unimrcp' do
               let(:media_engine) { :unimrcp }
 

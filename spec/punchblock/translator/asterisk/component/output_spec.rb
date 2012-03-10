@@ -58,18 +58,78 @@ module Punchblock
                 { :ssml => ssml_doc }.merge(command_opts)
               end
 
-              def expect_swift_with_options(options)
-                mock_call.expects(:send_agi_action!).once.with do |*args|
-                  args[0].should == 'EXEC Swift'
-                  args[2].should match options
-                end
+              def ssml_with_options(prefix = '', postfix = '')
+                base_doc = ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+                prefix + base_doc + postfix
               end
 
               it "should execute Swift" do
-                mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, nil
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options, []
                 subject.execute
               end
 
+              it 'should send a complete event when Swift completes' do
+                def mock_call.send_agi_action!(*args, &block)
+                  block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
+                end
+                subject.execute
+                command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+              end
+
+
+              describe 'interrupt_on' do
+                context "set to nil" do
+                  let(:command_opts) { { :interrupt_on => nil } }
+                  it "should not add interrupt arguments" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options, []
+                    subject.execute
+                  end
+                end
+
+                context "set to :any" do
+                  let(:command_opts) { { :interrupt_on => :any } }
+                  it "should add the interrupt options to the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1'), []
+                    subject.execute
+                  end
+                end
+
+                context "set to :dtmf" do
+                  let(:command_opts) { { :interrupt_on => :dtmf } }
+                  it "should add the interrupt options to the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1'), []
+                    subject.execute
+                  end
+                end
+
+                context "set to :speech" do
+                  let(:command_opts) { { :interrupt_on => :speech } }
+                  it "should return an error and not execute any actions" do
+                    subject.execute
+                    error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
+                    command.response(0.1).should == error
+                  end
+                end
+              end
+
+              describe 'voice' do
+                context "set to nil" do
+                  let(:command_opts) { { :voice => nil } }
+                  it "should not add a voice at the beginning of the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options, []
+                    subject.execute
+                  end
+                end
+
+                context "set to Leonard" do
+                  let(:command_opts) { { :voice => "Leonard" } }
+                  it "should add a voice at the beginning of the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('Leonard^', ''), []
+                    subject.execute
+                  end
+                end
+
+              end
             end
 
             context 'with a media engine of :unimrcp' do

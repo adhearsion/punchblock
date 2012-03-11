@@ -141,10 +141,7 @@ module Punchblock
             (event['Channel2'] && call_for_channel(event['Channel2']))
           [event['Channel'], event['Channel1'], event['Channel2']].compact.each do |channel|
             call = call_for_channel channel
-            if call
-              pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
-              call.process_ami_event! event
-            end
+            call.process_ami_event! event if call
           end
         elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event

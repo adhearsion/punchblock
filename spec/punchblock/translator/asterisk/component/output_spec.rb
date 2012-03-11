@@ -76,7 +76,6 @@ module Punchblock
                 command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
               end
 
-
               describe 'interrupt_on' do
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }

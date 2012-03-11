@@ -64,7 +64,7 @@ module Punchblock
               end
 
               it "should execute Swift" do
-                mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options, []
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
                 subject.execute
               end
 
@@ -81,7 +81,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
                   it "should not add interrupt arguments" do
-                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options, []
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
                     subject.execute
                   end
                 end
@@ -89,7 +89,7 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should add the interrupt options to the argument" do
-                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1'), []
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
                 end
@@ -97,7 +97,7 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should add the interrupt options to the argument" do
-                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1'), []
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
                 end
@@ -116,7 +116,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :voice => nil } }
                   it "should not add a voice at the beginning of the argument" do
-                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options, []
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
                     subject.execute
                   end
                 end
@@ -124,7 +124,7 @@ module Punchblock
                 context "set to Leonard" do
                   let(:command_opts) { { :voice => "Leonard" } }
                   it "should add a voice at the beginning of the argument" do
-                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('Leonard^', ''), []
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('Leonard^', '')
                     subject.execute
                   end
                 end

@@ -34,9 +34,7 @@ module Punchblock
       end
 
       def call_for_channel(channel)
-        call = call_with_id @channel_to_call_id[channel]
-        pb_logger.trace "Looking up call for channel #{channel} from #{@channel_to_call_id}. Found: #{call || 'none'}"
-        call
+        call_with_id @channel_to_call_id[channel]
       end
 
       def register_component(component)
@@ -56,6 +54,7 @@ module Punchblock
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
         pb_logger.trace "Handling AMI event #{event.inspect}"
+
         if event.name.downcase == "fullybooted"
           pb_logger.trace "Counting FullyBooted event"
           @fully_booted_count += 1
@@ -67,27 +66,9 @@ module Punchblock
           return
         end
 
-        if event.name == 'VarSet' && event['Variable'] == 'punchblock_call_id' && (call = call_with_id event['Value'])
-          pb_logger.trace "Received a VarSet event indicating the full channel for call #{call}"
-          @channel_to_call_id.delete call.channel
-          pb_logger.trace "Removed call with old channel from channel map: #{@channel_to_call_id}"
-          call.channel = event['Channel']
-          register_call call
-        end
+        handle_varset_ami_event event
 
-        if (event['Channel'] && call_for_channel(event['Channel'])) ||
-            (event['Channel1'] && call_for_channel(event['Channel1'])) ||
-            (event['Channel2'] && call_for_channel(event['Channel2']))
-          [event['Channel'], event['Channel1'], event['Channel2']].compact.each do |channel|
-            call = call_for_channel channel
-            if call
-              pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
-              call.process_ami_event! event
-            end
-          end
-        elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
-          handle_async_agi_start_event event
-        end
+        ami_dispatch_to_or_create_call event
 
         handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
@@ -155,6 +136,32 @@ module Punchblock
       end
 
       private
+
+      def handle_varset_ami_event(event)
+        return unless event.name == 'VarSet' && event['Variable'] == 'punchblock_call_id' && (call = call_with_id event['Value'])
+
+        pb_logger.trace "Received a VarSet event indicating the full channel for call #{call}"
+        @channel_to_call_id.delete call.channel
+        pb_logger.trace "Removed call with old channel from channel map: #{@channel_to_call_id}"
+        call.channel = event['Channel']
+        register_call call
+      end
+
+      def ami_dispatch_to_or_create_call(event)
+        if (event['Channel'] && call_for_channel(event['Channel'])) ||
+            (event['Channel1'] && call_for_channel(event['Channel1'])) ||
+            (event['Channel2'] && call_for_channel(event['Channel2']))
+          [event['Channel'], event['Channel1'], event['Channel2']].compact.each do |channel|
+            call = call_for_channel channel
+            if call
+              pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
+              call.process_ami_event! event
+            end
+          end
+        elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
+          handle_async_agi_start_event event
+        end
+      end
 
       def handle_async_agi_start_event(event)
         env = Call.parse_environment event['Env']

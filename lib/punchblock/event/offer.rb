@@ -24,6 +24,10 @@ module Punchblock
       def inspect_attributes # :nodoc:
         [:to, :from] + super
       end
+
+      def inspect
+        "#<Punchblock::Event::Offer to=\"#{to}\", from=\"#{from}\", call_id=\"#{call_id}\""
+      end
     end # Offer
   end
 end # Punchblock

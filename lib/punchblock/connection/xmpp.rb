@@ -61,7 +61,6 @@ module Punchblock
         command.mixer_name    ||= options[:mixer_name]
         command.component_id  ||= options[:component_id]
         create_iq(jid_for_command(command)).tap do |iq|
-          pb_logger.debug "Sending IQ ID #{iq.id} #{command.inspect} to #{iq.to}"
           iq << command
         end
       end
@@ -125,9 +124,7 @@ module Punchblock
 
       def handle_presence(p)
         throw :pass unless p.rayo_event?
-        pb_logger.info "Receiving event for call ID #{p.call_id}"
         @callmap[p.call_id] = p.from.domain
-        pb_logger.debug p.inspect
         event = p.event
         event.connection = self
         event.domain = p.from.domain
@@ -137,7 +134,6 @@ module Punchblock
       def handle_iq_result(iq, command)
         # FIXME: Do we need to raise a warning if the domain changes?
         @callmap[iq.from.node] = iq.from.domain
-        pb_logger.debug "Command #{iq.id} completed successfully"
         command.response = iq.rayo_node.is_a?(Ref) ? iq.rayo_node : true
       end
 

@@ -61,7 +61,7 @@ module Punchblock
           return
         end
 
-        handle_varset_event event
+        handle_varset_ami_event event
 
         ami_dispatch_to_or_create_call event
 

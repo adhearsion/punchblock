@@ -104,7 +104,6 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
-          pb_logger.trace "Processing AMI event #{ami_event.inspect}"
           case ami_event.name
           when 'Hangup'
             pb_logger.debug "Received a Hangup AMI event. Sending End event."

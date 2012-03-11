@@ -49,7 +49,6 @@ module Punchblock
 
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
-        pb_logger.trace "Handling AMI event #{event.inspect}"
 
         if event.name.downcase == "fullybooted"
           pb_logger.trace "Counting FullyBooted event"

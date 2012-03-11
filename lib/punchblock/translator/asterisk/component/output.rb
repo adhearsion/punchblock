@@ -46,10 +46,18 @@ module Punchblock
                 process_playback_completion
               end
             when :unimrcp
-              doc = @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
               send_ref
-              @call.send_agi_action! 'EXEC MRCPSynth', doc, mrcpsynth_options do |complete_event|
+              @call.send_agi_action! 'EXEC MRCPSynth', escaped_doc, mrcpsynth_options do |complete_event|
                 pb_logger.debug "MRCPSynth completed with #{complete_event}."
+                send_complete_event success_reason
+              end
+            when :swift
+              doc = escaped_doc
+              doc << "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
+              doc.insert 0, "#{@component_node.voice}^" if @component_node.voice
+              send_ref
+              @call.send_agi_action! 'EXEC Swift', doc do |complete_event|
+                pb_logger.debug "Swift completed with #{complete_event}."
                 send_complete_event success_reason
               end
             end
@@ -78,6 +86,10 @@ module Punchblock
           end
 
           private
+
+          def escaped_doc
+            @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+          end
 
           def mrcpsynth_options
             [].tap do |opts|

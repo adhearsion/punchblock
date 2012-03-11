@@ -52,9 +52,9 @@ module Punchblock
                 send_complete_event success_reason
               end
             when :swift
-              doc += "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
-              doc = "#{@component_node.voice}^" + doc if @component_node.voice
               doc = escaped_doc
+              doc << "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
+              doc.insert 0, "#{@component_node.voice}^" if @component_node.voice
               send_ref
               @call.send_agi_action! 'EXEC Swift', doc do |complete_event|
                 pb_logger.debug "Swift completed with #{complete_event}."

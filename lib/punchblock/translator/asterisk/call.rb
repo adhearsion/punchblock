@@ -223,7 +223,7 @@ module Punchblock
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
-          current_actor.terminate!
+          after(5) { shutdown }
         end
 
         def execute_component(type, command, options = {})

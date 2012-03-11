@@ -106,17 +106,17 @@ module Punchblock
         def process_ami_event(ami_event)
           case ami_event.name
           when 'Hangup'
-            pb_logger.debug "Received a Hangup AMI event. Sending End event."
+            pb_logger.trace "Received a Hangup AMI event. Sending End event."
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
-            pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
+            pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event! ami_event
             else
               pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
-            pb_logger.debug "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
+            pb_logger.trace "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
             case ami_event['ChannelState']
             when '5'
               send_pb_event Event::Ringing.new
@@ -195,11 +195,11 @@ module Punchblock
         end
 
         def send_agi_action(command, *params, &block)
-          pb_logger.debug "Sending AGI action #{command}"
+          pb_logger.trace "Sending AGI action #{command}"
           @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :call_id => id
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
-            pb_logger.debug "AGI action received complete event #{e.inspect}"
+            pb_logger.trace "AGI action received complete event #{e.inspect}"
             block.call e
           end
           execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
@@ -208,7 +208,7 @@ module Punchblock
         def send_ami_action(name, headers = {}, &block)
           (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
-            pb_logger.debug "Sending AMI action #{action.inspect}"
+            pb_logger.trace "Sending AMI action #{action.inspect}"
             translator.send_ami_action! action
           end
         end
@@ -234,7 +234,7 @@ module Punchblock
 
         def send_pb_event(event)
           event.call_id = id
-          pb_logger.debug "Sending Punchblock event: #{event.inspect}"
+          pb_logger.trace "Sending Punchblock event: #{event.inspect}"
           translator.handle_pb_event! event
         end
 

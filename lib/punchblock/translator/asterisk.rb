@@ -72,7 +72,7 @@ module Punchblock
       end
 
       def execute_command(command, options = {})
-        pb_logger.debug "Executing command #{command.inspect}"
+        pb_logger.trace "Executing command #{command.inspect}"
         command.request!
 
         command.call_id ||= options[:call_id]

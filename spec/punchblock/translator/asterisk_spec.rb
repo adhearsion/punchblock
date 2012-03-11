@@ -272,6 +272,7 @@ module Punchblock
           context 'twice' do
             it 'sends a connected event to the event handler' do
               subject.connection.expects(:handle_event).once.with Connection::Connected.new
+              subject.wrapped_object.expects(:run_at_fully_booted).once
               subject.handle_ami_event ami_event
               subject.handle_ami_event ami_event
             end
@@ -491,6 +492,13 @@ module Punchblock
         it 'should send the action to the AMI client' do
           ami_client.expects(:send_action).once.with 'foo', :foo => :bar
           subject.send_ami_action 'foo', :foo => :bar
+        end
+      end
+
+      describe '#run_at_fully_booted' do
+        it 'should send the redirect extension Command to the AMI client' do
+          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          subject.run_at_fully_booted
         end
       end
     end

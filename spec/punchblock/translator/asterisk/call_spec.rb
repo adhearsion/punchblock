@@ -732,6 +732,23 @@ module Punchblock
               subject.pending_joins[other_channel].should be command
             end
           end
+
+          context "with an unjoin command" do
+            let(:other_call_id)         { "abc123" }
+            let :command do
+              Punchblock::Command::Unjoin.new :other_call_id => other_call_id
+            end
+
+            it "executes the unjoin through redirection" do
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should == "redirect"
+              ami_action.headers['Channel'].should == channel
+              ami_action.headers['Exten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+          end
         end#execute_command
 
         describe '#send_agi_action' do

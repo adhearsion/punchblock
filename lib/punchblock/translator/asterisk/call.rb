@@ -188,7 +188,8 @@ module Punchblock
             pending_joins[other_call.channel] = command
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
-            redirect_back
+            other_call = translator.call_with_id command.other_call_id
+            redirect_back other_call
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
@@ -225,13 +226,19 @@ module Punchblock
 
         private
 
-        def redirect_back
+        def redirect_back(other_call = nil)
           redirect_options = {
             'Channel'   => channel,
             'Exten'     => Asterisk::REDIRECT_EXTENSION,
             'Priority'  => Asterisk::REDIRECT_PRIORITY,
             'Context'   => Asterisk::REDIRECT_CONTEXT
           }
+          redirect_options.merge!({
+            'ExtraChannel' => other_call.channel,
+            'ExtraExten'     => Asterisk::REDIRECT_EXTENSION,
+            'ExtraPriority'  => Asterisk::REDIRECT_PRIORITY,
+            'ExtraContext'   => Asterisk::REDIRECT_CONTEXT
+          }) if other_call
           send_ami_action 'Redirect', redirect_options
         end
 

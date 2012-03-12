@@ -789,11 +789,18 @@ module Punchblock
 
           context "with an unjoin command" do
             let(:other_call_id)         { "abc123" }
+            let(:other_channel)         { 'SIP/bar' }
+
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
             let :command do
               Punchblock::Command::Unjoin.new :other_call_id => other_call_id
             end
 
             it "executes the unjoin through redirection" do
+              translator.expects(:call_with_id).with(other_call_id).returns(nil)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should == "redirect"
@@ -801,6 +808,22 @@ module Punchblock
               ami_action.headers['Exten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
               ami_action.headers['Priority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
               ami_action.headers['Context'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+            
+            it "executes the unjoin through redirection, on the subject call and the other call" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should == "redirect"
+              ami_action.headers['Channel'].should == channel
+              ami_action.headers['Exten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+
+              ami_action.headers['ExtraChannel'].should == other_channel
+              ami_action.headers['ExtraExten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['ExtraPriority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['ExtraContext'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
             end
           end
         end#execute_command

@@ -200,7 +200,7 @@ module Punchblock
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
             pb_logger.trace "AGI action received complete event #{e.inspect}"
-            block.call e
+            block.call e if block
           end
           execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
         end

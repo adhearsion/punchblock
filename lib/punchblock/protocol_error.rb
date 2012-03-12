@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Punchblock
   ##
   # This exception may be raised if a transport error is detected.

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 %w{
   active_support/dependencies/autoload
   active_support/core_ext/object/blank

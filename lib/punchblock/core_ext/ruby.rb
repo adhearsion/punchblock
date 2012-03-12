@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 class Hash
   def select(&block)
     val = super(&block)

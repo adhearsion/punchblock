@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module KeyValuePairNode
   def self.included(klass)
     klass.class_exec do

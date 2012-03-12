@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -775,9 +777,9 @@ module Punchblock
             it "executes the proper AMI Bridge command" do
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "agi"
-              ami_action.headers['Command'].should == "EXEC Bridge \"#{other_channel}\""
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
+              agi_command.name.should == "EXEC Bridge"
+              agi_command.params_array.should == [other_channel]
             end
 
             it "adds the join to the @pending_joins hash" do

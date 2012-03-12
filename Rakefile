@@ -8,6 +8,7 @@ require 'ci/reporter/rake/rspec'
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = 'spec/**/*_spec.rb'
   spec.rspec_opts = '--color'
+  spec.ruby_opts = "-w -r./spec/capture_warnings"
 end
 
 task :default => :spec

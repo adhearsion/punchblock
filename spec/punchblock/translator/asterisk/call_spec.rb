@@ -455,9 +455,9 @@ module Punchblock
             end
           end
 
-          context 'with a BridgeAction event' do
+          context 'with a BridgeExec event' do
             let :ami_event do
-              RubyAMI::Event.new('BridgeAction').tap do |e|
+              RubyAMI::Event.new('BridgeExec').tap do |e|
                 e['Privilege'] = "call,all"
                 e['Response'] = "Success"
                 e['Channel1']  = "SIP/foo"
@@ -721,9 +721,8 @@ module Punchblock
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "bridge"
-              ami_action.headers['Channel1'].should == channel
-              ami_action.headers['Channel2'].should == other_channel
+              ami_action.name.should == "agi"
+              ami_action.headers['Command'].should == "EXEC Bridge \"#{other_channel}\""
             end
 
             it "adds the join to the @pending_joins hash" do

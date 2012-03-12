@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Punchblock
   ##
   # An rayo Ref message. This provides the command ID in response to execution of a command.

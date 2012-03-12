@@ -774,7 +774,7 @@ module Punchblock
               Punchblock::Command::Join.new :other_call_id => other_call_id
             end
 
-            it "executes the proper AMI Bridge command" do
+            it "executes the proper dialplan Bridge application" do
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')

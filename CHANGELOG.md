@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Feature: Asterisk calls now support the Join API (joining only)
+  * Feature: Asterisk calls now support the Join API
+  * Bugfix: Unjoining calls now redirects both legs
   * Bugfix: The Asterisk translator now ignores calls to 'h' or of type 'Kill'
   * Bugfix: Handle more XMPP connection errors gracefully
   * Bugfix: The XMPP connection ready event is now available to external handlers

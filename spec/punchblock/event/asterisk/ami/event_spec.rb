@@ -8,7 +8,7 @@ module Punchblock
       module AMI
         describe Event do
           it 'registers itself' do
-            RayoNode.class_from_registration(:event, 'urn:xmpp:rayo:asterisk:ami:1').should == Event
+            RayoNode.class_from_registration(:event, 'urn:xmpp:rayo:asterisk:ami:1').should be == Event
           end
 
           describe "from a stanza" do
@@ -29,9 +29,9 @@ module Punchblock
 
             it_should_behave_like 'event'
 
-            its(:name)            { should == 'Newchannel' }
-            its(:attributes)      { should == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
-            its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
+            its(:name)            { should be == 'Newchannel' }
+            its(:attributes)      { should be == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
+            its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
           end
 
           describe "when setting options in initializer" do
@@ -43,9 +43,9 @@ module Punchblock
                                         :uniqueid => '1094154427.10'}
             end
 
-            its(:name)            { should == 'Newchannel' }
-            its(:attributes)      { should == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
-            its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
+            its(:name)            { should be == 'Newchannel' }
+            its(:attributes)      { should be == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
+            its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
           end
 
           class Event

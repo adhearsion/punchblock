@@ -31,8 +31,8 @@ end
 
 # FIXME: change this to rayo_event?  It can be ambigous
 shared_examples_for 'event' do
-  its(:call_id) { should == '9f00061' }
-  its(:component_id) { should == '1' }
+  its(:call_id) { should be == '9f00061' }
+  its(:component_id) { should be == '1' }
 end
 
 shared_examples_for 'command_headers' do
@@ -48,47 +48,47 @@ shared_examples_for 'command_headers' do
 end
 
 shared_examples_for 'event_headers' do
-  its(:headers) { should == [Punchblock::Header.new(:x_skill, 'agent'), Punchblock::Header.new(:x_customer_id, '8877')]}
-  its(:headers_hash) { should == {:x_skill => 'agent', :x_customer_id => '8877'} }
+  its(:headers) { should be == [Punchblock::Header.new(:x_skill, 'agent'), Punchblock::Header.new(:x_customer_id, '8877')]}
+  its(:headers_hash) { should be == {:x_skill => 'agent', :x_customer_id => '8877'} }
 end
 
 shared_examples_for 'key_value_pairs' do
   it 'will auto-inherit nodes' do
     n = parse_stanza "<#{element_name} name='boo' value='bah' />"
     h = class_name.new n.root
-    h.name.should == :boo
-    h.value.should == 'bah'
+    h.name.should be == :boo
+    h.value.should be == 'bah'
   end
 
   it 'has a name attribute' do
     n = class_name.new :boo, 'bah'
-    n.name.should == :boo
+    n.name.should be == :boo
     n.name = :foo
-    n.name.should == :foo
+    n.name.should be == :foo
   end
 
   it "substitutes - for _ on the name attribute when reading" do
     n = parse_stanza "<#{element_name} name='boo-bah' value='foo' />"
     h = class_name.new n.root
-    h.name.should == :boo_bah
+    h.name.should be == :boo_bah
   end
 
   it "substitutes _ for - on the name attribute when writing" do
     h = class_name.new :boo_bah, 'foo'
-    h.to_xml.should == "<#{element_name} name=\"boo-bah\" value=\"foo\"/>"
+    h.to_xml.should be == "<#{element_name} name=\"boo-bah\" value=\"foo\"/>"
   end
 
   it 'has a value param' do
     n = class_name.new :boo, 'en'
-    n.value.should == 'en'
+    n.value.should be == 'en'
     n.value = 'de'
-    n.value.should == 'de'
+    n.value.should be == 'de'
   end
 
   it 'can determine equality' do
     a = class_name.new :boo, 'bah'
-    a.should == class_name.new(:boo, 'bah')
-    a.should_not == class_name.new(:bah, 'bah')
-    a.should_not == class_name.new(:boo, 'boo')
+    a.should be == class_name.new(:boo, 'bah')
+    a.should_not be == class_name.new(:bah, 'bah')
+    a.should_not be == class_name.new(:boo, 'boo')
   end
 end

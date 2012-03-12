@@ -20,7 +20,7 @@ module Punchblock
         describe "with a complete event" do
           it "should set the complete event resource" do
             add_event
-            subject.complete_event(0.5).should == event
+            subject.complete_event(0.5).should be == event
           end
 
           it "should call #complete!" do
@@ -77,7 +77,7 @@ module Punchblock
 
         it "should set the component ID from the ref" do
           subject.response = ref
-          subject.component_id.should == component_id
+          subject.component_id.should be == component_id
           subject.client.find_component_by_id(component_id).should be subject
         end
       end
@@ -96,7 +96,7 @@ module Punchblock
         it "should be a no-op if the response has already been set" do
           subject.complete_event = :foo
           lambda { subject.complete_event = :bar }.should_not raise_error
-          subject.complete_event(0.5).should == :foo
+          subject.complete_event(0.5).should be == :foo
         end
       end
     end # ComponentNode

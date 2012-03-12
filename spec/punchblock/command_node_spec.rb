@@ -5,7 +5,7 @@ require 'spec_helper'
 module Punchblock
   module Command
     describe CommandNode do
-      its(:state_name) { should == :new }
+      its(:state_name) { should be == :new }
 
       describe "#new" do
         describe "with a call/component ID" do
@@ -15,15 +15,15 @@ module Punchblock
 
           subject { CommandNode.new *args }
 
-          its(:call_id)       { should == call_id }
-          its(:component_id)  { should == component_id }
+          its(:call_id)       { should be == call_id }
+          its(:component_id)  { should be == component_id }
         end
       end
 
       describe "#request!" do
         before { subject.request! }
 
-        its(:state_name) { should == :requested }
+        its(:state_name) { should be == :requested }
 
         it "should raise a StateMachine::InvalidTransition when received a second time" do
           lambda { subject.request! }.should raise_error(StateMachine::InvalidTransition)
@@ -47,7 +47,7 @@ module Punchblock
             subject.execute!
           end
 
-          its(:state_name) { should == :executing }
+          its(:state_name) { should be == :executing }
         end
       end
 
@@ -58,7 +58,7 @@ module Punchblock
           subject.complete!
         end
 
-        its(:state_name) { should == :complete }
+        its(:state_name) { should be == :complete }
 
         it "should raise a StateMachine::InvalidTransition when received a second time" do
           lambda { subject.complete! }.should raise_error(StateMachine::InvalidTransition)

@@ -108,7 +108,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -153,7 +153,7 @@ module Punchblock
 
               def expect_mrcpsynth_with_options(options)
                 mock_call.expects(:send_agi_action!).once.with do |*args|
-                  args[0].should == 'EXEC MRCPSynth'
+                  args[0].should be == 'EXEC MRCPSynth'
                   args[2].should match options
                 end
               end
@@ -177,7 +177,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An SSML document is required.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -196,7 +196,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_offset value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -215,7 +215,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_paused value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -234,7 +234,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -253,7 +253,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_times value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -272,7 +272,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A max_time value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -325,7 +325,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -336,7 +336,7 @@ module Punchblock
 
               def expect_stream_file_with_options(options = nil)
                 mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename, options do |*args|
-                  args[2].should == options
+                  args[2].should be == options
                   subject.continue!
                   true
                 end
@@ -366,7 +366,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An SSML document is required.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
 
@@ -444,7 +444,7 @@ module Punchblock
                   it "should return an unrenderable document error" do
                     subject.execute
                     error = ProtocolError.new 'unrenderable document error', 'The provided document could not be rendered.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -463,7 +463,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_offset value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -482,7 +482,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_paused value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -501,7 +501,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -520,7 +520,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_times value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -539,7 +539,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A max_time value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -558,7 +558,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A voice value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -593,7 +593,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end

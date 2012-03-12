@@ -120,8 +120,8 @@ module Punchblock
 
                   complete_event = command.complete_event 0.5
 
-                  complete_event.component_id.should == component_id.to_s
-                  complete_event.reason.should == expected_complete_reason
+                  complete_event.component_id.should be == component_id.to_s
+                  complete_event.reason.should be == expected_complete_reason
                 end
               end
             end
@@ -133,7 +133,7 @@ module Punchblock
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
                   code.should   == 200
-                  result.should == 123
+                  result.should be == 123
                   data.should   == ''
                 end
               end
@@ -144,7 +144,7 @@ module Punchblock
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
                   code.should   == 200
-                  result.should == -123
+                  result.should be == -123
                   data.should   == 'timeout'
                 end
               end
@@ -155,7 +155,7 @@ module Punchblock
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
                   code.should   == 200
-                  result.should == 123
+                  result.should be == 123
                   data.should   == 'foo=bar'
                 end
               end

@@ -61,9 +61,9 @@ module Punchblock
         subject { Call.new channel, translator, agi_env }
 
         its(:id)          { should be_a String }
-        its(:channel)     { should == channel }
+        its(:channel)     { should be == channel }
         its(:translator)  { should be translator }
-        its(:agi_env)     { should == agi_env }
+        its(:agi_env)     { should be == agi_env }
 
         describe '#shutdown' do
           it 'should terminate the actor' do
@@ -94,7 +94,7 @@ module Punchblock
 
           it 'should make the call identify as inbound' do
             subject.send_offer
-            subject.direction.should == :inbound
+            subject.direction.should be == :inbound
             subject.inbound?.should be true
             subject.outbound?.should be false
           end
@@ -192,12 +192,12 @@ module Punchblock
           it 'sends the call ID as a response to the Dial' do
             subject.dial dial_command
             dial_command.response
-            dial_command.call_id.should == subject.id
+            dial_command.call_id.should be == subject.id
           end
 
           it 'should make the call identify as outbound' do
             subject.dial dial_command
-            subject.direction.should == :outbound
+            subject.direction.should be == :outbound
             subject.outbound?.should be true
             subject.inbound?.should be false
           end
@@ -480,7 +480,7 @@ module Punchblock
 
             it 'retrieves and sets success on the correct Join' do
               subject.process_ami_event ami_event
-              command.response(0.5).should == true
+              command.response(0.5).should be == true
             end
           end
 
@@ -644,7 +644,7 @@ module Punchblock
               component = subject.execute_command command
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should == "EXEC RINGING"
+              agi_command.name.should be == "EXEC RINGING"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
@@ -658,7 +658,7 @@ module Punchblock
               component = subject.execute_command command
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should == "EXEC ANSWER"
+              agi_command.name.should be == "EXEC ANSWER"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
@@ -671,7 +671,7 @@ module Punchblock
             it "should send a Hangup AMI command and set the command's response" do
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "hangup"
+              ami_action.name.should be == "hangup"
               ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
             end
@@ -745,7 +745,7 @@ module Punchblock
             context "for an unknown component ID" do
               it 'sends an error in response to the command' do
                 subject.execute_command command
-                command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+                command.response.should be == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
               end
             end
           end
@@ -757,7 +757,7 @@ module Punchblock
 
             it 'sends an error in response to the command' do
               subject.execute_command command
-              command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
+              command.response.should be == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
             end
           end
 
@@ -778,8 +778,8 @@ module Punchblock
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should == "EXEC Bridge"
-              agi_command.params_array.should == [other_channel]
+              agi_command.name.should be == "EXEC Bridge"
+              agi_command.params_array.should be == [other_channel]
             end
 
             it "adds the join to the @pending_joins hash" do
@@ -805,27 +805,27 @@ module Punchblock
               translator.expects(:call_with_id).with(other_call_id).returns(nil)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "redirect"
-              ami_action.headers['Channel'].should == channel
-              ami_action.headers['Exten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
             end
-            
+
             it "executes the unjoin through redirection, on the subject call and the other call" do
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "redirect"
-              ami_action.headers['Channel'].should == channel
-              ami_action.headers['Exten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
 
-              ami_action.headers['ExtraChannel'].should == other_channel
-              ami_action.headers['ExtraExten'].should == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['ExtraPriority'].should == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['ExtraContext'].should == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ami_action.headers['ExtraChannel'].should be == other_channel
+              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
             end
           end
         end#execute_command

@@ -8,7 +8,7 @@ module Punchblock
       module AGI
         describe Command do
           it 'registers itself' do
-            RayoNode.class_from_registration(:command, 'urn:xmpp:rayo:asterisk:agi:1').should == Command
+            RayoNode.class_from_registration(:command, 'urn:xmpp:rayo:asterisk:agi:1').should be == Command
           end
 
           describe "from a stanza" do
@@ -26,9 +26,9 @@ module Punchblock
 
             it_should_behave_like 'event'
 
-            its(:name)          { should == 'GET VARIABLE' }
-            its(:params)        { should == [Command::Param.new('UNIQUEID')] }
-            its(:params_array)  { should == ['UNIQUEID'] }
+            its(:name)          { should be == 'GET VARIABLE' }
+            its(:params)        { should be == [Command::Param.new('UNIQUEID')] }
+            its(:params_array)  { should be == ['UNIQUEID'] }
           end
 
           describe "when setting options in initializer" do
@@ -37,9 +37,9 @@ module Punchblock
                           :params => ['UNIQUEID']
             end
 
-            its(:name)          { should == 'GET VARIABLE' }
-            its(:params)        { should == [Command::Param.new('UNIQUEID')] }
-            its(:params_array)  { should == ['UNIQUEID'] }
+            its(:name)          { should be == 'GET VARIABLE' }
+            its(:params)        { should be == [Command::Param.new('UNIQUEID')] }
+            its(:params_array)  { should be == ['UNIQUEID'] }
           end
 
           class Command
@@ -47,20 +47,20 @@ module Punchblock
               it 'will auto-inherit nodes' do
                 n = parse_stanza "<param value='bah' />"
                 h = Param.new n.root
-                h.value.should == 'bah'
+                h.value.should be == 'bah'
               end
 
               it 'has a value attribute' do
                 n = Param.new 'en'
-                n.value.should == 'en'
+                n.value.should be == 'en'
                 n.value = 'de'
-                n.value.should == 'de'
+                n.value.should be == 'de'
               end
 
               it 'can determine equality' do
                 a = Param.new 'bah'
-                a.should == Param.new('bah')
-                a.should_not == Param.new('boo')
+                a.should be == Param.new('bah')
+                a.should_not be == Param.new('boo')
               end
             end
 
@@ -81,19 +81,19 @@ module Punchblock
 
               it { should be_instance_of Complete::Success }
 
-              its(:name)    { should == :success }
-              its(:code)    { should == 200 }
-              its(:result)  { should == 0 }
-              its(:data)    { should == '1187188485.0' }
+              its(:name)    { should be == :success }
+              its(:code)    { should be == 200 }
+              its(:result)  { should be == 0 }
+              its(:data)    { should be == '1187188485.0' }
 
               describe "when setting options in initializer" do
                 subject do
                   Complete::Success.new :code => 200, :result => 0, :data => '1187188485.0'
                 end
 
-                its(:code)    { should == 200 }
-                its(:result)  { should == 0 }
-                its(:data)    { should == '1187188485.0' }
+                its(:code)    { should be == 200 }
+                its(:result)  { should be == 0 }
+                its(:data)    { should be == '1187188485.0' }
               end
             end
           end

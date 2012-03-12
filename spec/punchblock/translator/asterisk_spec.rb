@@ -20,12 +20,12 @@ module Punchblock
 
       context 'with a configured media engine of :asterisk' do
         let(:media_engine) { :asterisk }
-        its(:media_engine) { should == :asterisk }
+        its(:media_engine) { should be == :asterisk }
       end
 
       context 'with a configured media engine of :unimrcp' do
         let(:media_engine) { :unimrcp }
-        its(:media_engine) { should == :unimrcp }
+        its(:media_engine) { should be == :unimrcp }
       end
 
       describe '#shutdown' do
@@ -50,7 +50,7 @@ module Punchblock
           it 'executes the call command' do
             subject.wrapped_object.expects(:execute_call_command).with do |c|
               c.should be command
-              c.call_id.should == call_id
+              c.call_id.should be == call_id
             end
             subject.execute_command command, :call_id => call_id
           end
@@ -63,7 +63,7 @@ module Punchblock
           it 'executes the component command' do
             subject.wrapped_object.expects(:execute_component_command).with do |c|
               c.should be command
-              c.component_id.should == component_id
+              c.component_id.should be == component_id
             end
             subject.execute_command command, :component_id => component_id
           end
@@ -132,7 +132,7 @@ module Punchblock
         context "with an unknown call ID" do
           it 'sends an error in response to the command' do
             subject.execute_call_command command
-            command.response.should == ProtocolError.new('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+            command.response.should be == ProtocolError.new('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
           end
         end
       end
@@ -161,7 +161,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+            command.response.should be == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
           end
         end
       end
@@ -218,7 +218,7 @@ module Punchblock
 
           it 'sends an error in response to the command' do
             subject.execute_command command
-            command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command")
+            command.response.should be == ProtocolError.new('command-not-acceptable', "Did not understand command")
           end
         end
       end
@@ -297,7 +297,7 @@ module Punchblock
             call_actor = subject.call_for_channel('SIP/1234-00000000')
             call_actor.wrapped_object.should be_a Asterisk::Call
             call_actor.agi_env.should be_a Hash
-            call_actor.agi_env.should == {
+            call_actor.agi_env.should be == {
               :agi_request      => 'async',
               :agi_channel      => 'SIP/1234-00000000',
               :agi_language     => 'en',
@@ -412,7 +412,7 @@ module Punchblock
 
             it "should set the correct channel on the call" do
               subject.handle_ami_event ami_event
-              call.channel.should == 'SIP/1234-00000000'
+              call.channel.should be == 'SIP/1234-00000000'
             end
 
             it "should make it possible to look up the call by the full channel name" do

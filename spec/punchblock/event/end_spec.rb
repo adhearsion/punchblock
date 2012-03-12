@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe End do
       it 'registers itself' do
-        RayoNode.class_from_registration(:end, 'urn:xmpp:rayo:1').should == End
+        RayoNode.class_from_registration(:end, 'urn:xmpp:rayo:1').should be == End
       end
 
       describe "from a stanza" do
@@ -28,8 +28,8 @@ module Punchblock
         it_should_behave_like 'event'
         it_should_behave_like 'event_headers'
 
-        its(:reason) { should == :timeout }
-        its(:xmlns) { should == 'urn:xmpp:rayo:1' }
+        its(:reason) { should be == :timeout }
+        its(:xmlns) { should be == 'urn:xmpp:rayo:1' }
       end
 
       describe "when setting options in initializer" do
@@ -38,7 +38,7 @@ module Punchblock
                   :headers  => { :x_skill => "agent", :x_customer_id => "8877" }
         end
 
-        its(:reason) { should == :hangup }
+        its(:reason) { should be == :hangup }
         it_should_behave_like 'event_headers'
       end
     end

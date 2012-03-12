@@ -20,41 +20,41 @@ module Punchblock
         context "with no domains specified, and a JID of 1@app.rayo.net" do
           let(:options) { { :username => '1@app.rayo.net' } }
 
-          its(:root_domain)   { should == 'app.rayo.net' }
-          its(:calls_domain)   { should == 'calls.app.rayo.net' }
-          its(:mixers_domain)  { should == 'mixers.app.rayo.net' }
+          its(:root_domain)   { should be == 'app.rayo.net' }
+          its(:calls_domain)   { should be == 'calls.app.rayo.net' }
+          its(:mixers_domain)  { should be == 'mixers.app.rayo.net' }
         end
 
         context "with only a rayo domain set" do
           let(:options) { { :rayo_domain => 'rayo.org' } }
 
-          its(:root_domain)   { should == 'rayo.org' }
-          its(:calls_domain)   { should == 'calls.rayo.org' }
-          its(:mixers_domain)  { should == 'mixers.rayo.org' }
+          its(:root_domain)   { should be == 'rayo.org' }
+          its(:calls_domain)   { should be == 'calls.rayo.org' }
+          its(:mixers_domain)  { should be == 'mixers.rayo.org' }
         end
 
         context "with only a root domain set" do
           let(:options) { { :root_domain => 'rayo.org' } }
 
-          its(:root_domain)   { should == 'rayo.org' }
-          its(:calls_domain)   { should == 'calls.rayo.org' }
-          its(:mixers_domain)  { should == 'mixers.rayo.org' }
+          its(:root_domain)   { should be == 'rayo.org' }
+          its(:calls_domain)   { should be == 'calls.rayo.org' }
+          its(:mixers_domain)  { should be == 'mixers.rayo.org' }
         end
 
         context "with a root domain and calls domain set" do
           let(:options) { { :root_domain => 'rayo.org', :calls_domain => 'phone_calls.rayo.org' } }
 
-          its(:root_domain)   { should == 'rayo.org' }
-          its(:calls_domain)   { should == 'phone_calls.rayo.org' }
-          its(:mixers_domain)  { should == 'mixers.rayo.org' }
+          its(:root_domain)   { should be == 'rayo.org' }
+          its(:calls_domain)   { should be == 'phone_calls.rayo.org' }
+          its(:mixers_domain)  { should be == 'mixers.rayo.org' }
         end
 
         context "with a root domain and mixers domain set" do
           let(:options) { { :root_domain => 'rayo.org', :mixers_domain => 'conferences.rayo.org' } }
 
-          its(:root_domain)   { should == 'rayo.org' }
-          its(:calls_domain)   { should == 'calls.rayo.org' }
-          its(:mixers_domain)  { should == 'conferences.rayo.org' }
+          its(:root_domain)   { should be == 'rayo.org' }
+          its(:calls_domain)   { should be == 'calls.rayo.org' }
+          its(:mixers_domain)  { should be == 'conferences.rayo.org' }
         end
       end
 
@@ -108,9 +108,9 @@ module Punchblock
 
         write_thread.join
 
-        output.state_name.should == :executing
+        output.state_name.should be == :executing
 
-        connection.original_component_from_id('fgh4590').should == output
+        connection.original_component_from_id('fgh4590').should be == output
 
         example_complete = import_stanza <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
@@ -121,17 +121,17 @@ module Punchblock
         MSG
 
         connection.__send__ :handle_presence, example_complete
-        output.complete_event(0.5).source.should == output
+        output.complete_event(0.5).source.should be == output
 
-        output.component_id.should == 'fgh4590'
+        output.component_id.should be == 'fgh4590'
       end
 
       it 'should send a "Chat" presence when ready' do
         client = connection.send :client
         client.expects(:write).once.with do |stanza|
-          stanza.to.should == 'rayo.net' &&
-            stanza.is_a?(Blather::Stanza::Presence::Status) &&
-            stanza.chat?
+          stanza.to.should be == 'rayo.net'
+          stanza.should be_a Blather::Stanza::Presence::Status
+          stanza.chat?.should be true
         end
         connection.ready!
       end
@@ -139,9 +139,9 @@ module Punchblock
       it 'should send a "Do Not Disturb" presence when not_ready' do
         client = connection.send :client
         client.expects(:write).once.with do |stanza|
-          stanza.to.should == 'rayo.net' &&
-            stanza.is_a?(Blather::Stanza::Presence::Status) &&
-            stanza.dnd?
+          stanza.to.should be == 'rayo.net'
+          stanza.should be_a Blather::Stanza::Presence::Status
+          stanza.dnd?.should be true
         end
         connection.not_ready!
       end
@@ -183,8 +183,8 @@ module Punchblock
             it 'should call the event handler with the event' do
               mock_event_handler.expects(:call).once.with do |event|
                 event.should be_instance_of Event::Offer
-                event.call_id.should == '9f00061'
-                event.domain.should == 'call.rayo.net'
+                event.call_id.should be == '9f00061'
+                event.domain.should be == 'call.rayo.net'
               end
               handle_presence
             end
@@ -192,7 +192,7 @@ module Punchblock
             it "should populate the call map with the domain for the call ID" do
               handle_presence
               callmap = connection.instance_variable_get(:'@callmap')
-              callmap['9f00061'].should == 'call.rayo.net'
+              callmap['9f00061'].should be == 'call.rayo.net'
             end
           end
 
@@ -240,10 +240,10 @@ module Punchblock
 
         subject { cmd.response }
 
-        its(:call_id)       { should == call_id }
-        its(:component_id)  { should == component_id }
-        its(:name)          { should == :item_not_found }
-        its(:text)          { should == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
+        its(:call_id)       { should be == call_id }
+        its(:component_id)  { should be == component_id }
+        its(:name)          { should be == :item_not_found }
+        its(:text)          { should be == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
       end
 
       describe "#prep_command_for_execution" do
@@ -255,7 +255,7 @@ module Punchblock
 
           it "should use the correct JID" do
             stanza = subject.prep_command_for_execution command
-            stanza.to.should == expected_jid
+            stanza.to.should be == expected_jid
           end
         end
 
@@ -264,7 +264,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@calls.rayo.net' }
 
           it "should use the correct JID" do
-            stanza.to.should == expected_jid
+            stanza.to.should be == expected_jid
           end
         end
 
@@ -273,7 +273,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@calls.rayo.net' }
 
           it "should use the correct JID" do
-            stanza.to.should == expected_jid
+            stanza.to.should be == expected_jid
           end
         end
 
@@ -282,7 +282,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@calls.rayo.net/foobar' }
 
           it "should use the correct JID" do
-            stanza.to.should == expected_jid
+            stanza.to.should be == expected_jid
           end
         end
 
@@ -291,7 +291,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@mixers.rayo.net' }
 
           it "should use the correct JID" do
-            stanza.to.should == expected_jid
+            stanza.to.should be == expected_jid
           end
         end
 
@@ -300,7 +300,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@mixers.rayo.net/foobar' }
 
           it "should use the correct JID" do
-            stanza.to.should == expected_jid
+            stanza.to.should be == expected_jid
           end
         end
       end

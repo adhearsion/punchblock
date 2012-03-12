@@ -5,7 +5,7 @@ require 'spec_helper'
 module Punchblock
   describe Ref do
     it 'registers itself' do
-      RayoNode.class_from_registration(:ref, 'urn:xmpp:rayo:1').should == Ref
+      RayoNode.class_from_registration(:ref, 'urn:xmpp:rayo:1').should be == Ref
     end
 
     describe "from a stanza" do
@@ -17,13 +17,13 @@ module Punchblock
 
       it_should_behave_like 'event'
 
-      its(:id) { should == 'fgh4590' }
+      its(:id) { should be == 'fgh4590' }
     end
 
     describe "when setting options in initializer" do
       subject { Ref.new :id => 'foo' }
 
-      its(:id) { should == 'foo' }
+      its(:id) { should be == 'foo' }
     end
   end
 end # Punchblock

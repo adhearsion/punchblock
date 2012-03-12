@@ -6,7 +6,7 @@ module Punchblock
   module Command
     describe Unmute do
       it 'registers itself' do
-        RayoNode.class_from_registration(:unmute, 'urn:xmpp:rayo:1').should == Unmute
+        RayoNode.class_from_registration(:unmute, 'urn:xmpp:rayo:1').should be == Unmute
       end
 
       describe "from a stanza" do

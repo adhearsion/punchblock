@@ -32,7 +32,7 @@ module Punchblock
       end
 
       it 'should set the media engine on the translator' do
-        subject.translator.media_engine.should == :swift
+        subject.translator.media_engine.should be == :swift
       end
 
       describe '#run' do

@@ -36,7 +36,7 @@ module Punchblock
       describe '#run' do
         it 'starts the RubyAMI::Client' do
           subject.ami_client.expects(:start).once
-          subject.run
+          lambda { subject.run }.should raise_error DisconnectedError
         end
       end
 

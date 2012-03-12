@@ -143,6 +143,14 @@ module Punchblock
               end
               send_pb_event event
             end
+          when 'Unlink'
+            other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
+            if other_call = translator.call_for_channel(other_call_channel)
+              event = Event::Unjoined.new.tap do |e|
+                e.other_call_id = other_call.id
+              end
+              send_pb_event event
+            end
           end
           trigger_handler :ami, ami_event
         end

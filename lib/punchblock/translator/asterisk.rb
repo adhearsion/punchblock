@@ -53,7 +53,6 @@ module Punchblock
 
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
-        pb_logger.trace "Handling AMI event #{event.inspect}"
 
         if event.name.downcase == "fullybooted"
           pb_logger.trace "Counting FullyBooted event"
@@ -78,7 +77,7 @@ module Punchblock
       end
 
       def execute_command(command, options = {})
-        pb_logger.debug "Executing command #{command.inspect}"
+        pb_logger.trace "Executing command #{command.inspect}"
         command.request!
 
         command.call_id ||= options[:call_id]
@@ -153,10 +152,7 @@ module Punchblock
             (event['Channel2'] && call_for_channel(event['Channel2']))
           [event['Channel'], event['Channel1'], event['Channel2']].compact.each do |channel|
             call = call_for_channel channel
-            if call
-              pb_logger.trace "Found call by channel matching this event. Sending to call #{call.id}"
-              call.process_ami_event! event
-            end
+            call.process_ami_event! event if call
           end
         elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event

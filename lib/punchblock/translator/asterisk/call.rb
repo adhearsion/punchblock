@@ -104,21 +104,19 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
-          pb_logger.trace "Processing AMI event #{ami_event.inspect}"
           case ami_event.name
           when 'Hangup'
-            pb_logger.debug "Received a Hangup AMI event. Sending End event."
+            pb_logger.trace "Received a Hangup AMI event. Sending End event."
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
-            pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
+            pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
-              pb_logger.debug "Found component #{component.id} for event. Forwarding event..."
               component.handle_ami_event! ami_event
             else
               pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
-            pb_logger.debug "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
+            pb_logger.trace "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
             case ami_event['ChannelState']
             when '5'
               send_pb_event Event::Ringing.new
@@ -126,7 +124,7 @@ module Punchblock
               @answered = true
               send_pb_event Event::Answered.new
             end
-          when 'BridgeAction'
+          when 'BridgeExec'
             if join_command = pending_joins[ami_event['Channel2']]
               join_command.response = true
             end
@@ -142,6 +140,14 @@ module Punchblock
                 Event::Unjoined.new.tap do |e|
                   e.other_call_id = other_call.id
                 end
+              end
+              send_pb_event event
+            end
+          when 'Unlink'
+            other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
+            if other_call = translator.call_for_channel(other_call_channel)
+              event = Event::Unjoined.new.tap do |e|
+                e.other_call_id = other_call.id
               end
               send_pb_event event
             end
@@ -179,12 +185,8 @@ module Punchblock
             end
           when Command::Join
             other_call = translator.call_with_id command.other_call_id
-            bridge_options = {
-              'Channel1' => channel,
-              'Channel2' => other_call.channel
-            }
             pending_joins[other_call.channel] = command
-            send_ami_action 'Bridge', bridge_options
+            send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             redirect_back
           when Punchblock::Component::Asterisk::AGI::Command
@@ -199,12 +201,12 @@ module Punchblock
         end
 
         def send_agi_action(command, *params, &block)
-          pb_logger.debug "Sending AGI action #{command}"
+          pb_logger.trace "Sending AGI action #{command}"
           @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :call_id => id
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
-            pb_logger.debug "AGI action received complete event #{e.inspect}"
-            block.call e
+            pb_logger.trace "AGI action received complete event #{e.inspect}"
+            block.call e if block
           end
           execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
         end
@@ -212,7 +214,7 @@ module Punchblock
         def send_ami_action(name, headers = {}, &block)
           (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
-            pb_logger.debug "Sending AMI action #{action.inspect}"
+            pb_logger.trace "Sending AMI action #{action.inspect}"
             translator.send_ami_action! action
           end
         end
@@ -235,7 +237,7 @@ module Punchblock
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
-          current_actor.terminate!
+          after(5) { shutdown }
         end
 
         def execute_component(type, command, options = {})
@@ -248,7 +250,7 @@ module Punchblock
 
         def send_pb_event(event)
           event.call_id = id
-          pb_logger.debug "Sending Punchblock event: #{event.inspect}"
+          pb_logger.trace "Sending Punchblock event: #{event.inspect}"
           translator.handle_pb_event! event
         end
 

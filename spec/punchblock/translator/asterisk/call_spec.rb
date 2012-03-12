@@ -455,9 +455,9 @@ module Punchblock
             end
           end
 
-          context 'with a BridgeAction event' do
+          context 'with a BridgeExec event' do
             let :ami_event do
-              RubyAMI::Event.new('BridgeAction').tap do |e|
+              RubyAMI::Event.new('BridgeExec').tap do |e|
                 e['Privilege'] = "call,all"
                 e['Response'] = "Success"
                 e['Channel1']  = "SIP/foo"
@@ -563,6 +563,61 @@ module Punchblock
                 translator.expects(:handle_pb_event!).with expected_unjoined
                 subject.process_ami_event switched_ami_event
               end
+            end
+          end
+
+          context 'with an Unlink event' do
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            let :ami_event do
+              RubyAMI::Event.new('Unlink').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Channel1']     = channel
+                e['Channel2']     = other_channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            let :switched_ami_event do
+              RubyAMI::Event.new('Unlink').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Channel1']     = other_channel
+                e['Channel2']     = channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            before do
+              translator.register_call other_call
+              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+              other_call.expects(:id).returns other_call_id
+            end
+
+            let :expected_unjoined do
+              Punchblock::Event::Unjoined.new.tap do |joined|
+                joined.call_id = subject.id
+                joined.other_call_id = other_call_id
+              end
+            end
+
+            it 'sends the Unjoined event when the call is the first channel' do
+              translator.expects(:handle_pb_event!).with expected_unjoined
+              subject.process_ami_event ami_event
+            end
+
+            it 'sends the Unjoined event when the call is the second channel' do
+              translator.expects(:handle_pb_event!).with expected_unjoined
+              subject.process_ami_event switched_ami_event
             end
           end
         end
@@ -721,9 +776,8 @@ module Punchblock
               translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "bridge"
-              ami_action.headers['Channel1'].should == channel
-              ami_action.headers['Channel2'].should == other_channel
+              ami_action.name.should == "agi"
+              ami_action.headers['Command'].should == "EXEC Bridge \"#{other_channel}\""
             end
 
             it "adds the join to the @pending_joins hash" do

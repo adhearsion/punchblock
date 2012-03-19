@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # This is a nasty hack due to the fact that Mocha does not support expectations returning a value calculated by executing a block with the parameters passed.
 # If it did, we could do this in our component tests:
 # mc = mock 'Connection'

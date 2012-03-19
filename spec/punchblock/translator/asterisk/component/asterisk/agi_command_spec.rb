@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -118,8 +120,8 @@ module Punchblock
 
                   complete_event = command.complete_event 0.5
 
-                  complete_event.component_id.should == component_id.to_s
-                  complete_event.reason.should == expected_complete_reason
+                  complete_event.component_id.should be == component_id.to_s
+                  complete_event.reason.should be == expected_complete_reason
                 end
               end
             end
@@ -130,9 +132,9 @@ module Punchblock
 
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
-                  code.should   == 200
-                  result.should == 123
-                  data.should   == ''
+                  code.should be == 200
+                  result.should be == 123
+                  data.should be == ''
                 end
               end
 
@@ -141,9 +143,9 @@ module Punchblock
 
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
-                  code.should   == 200
-                  result.should == -123
-                  data.should   == 'timeout'
+                  code.should be == 200
+                  result.should be == -123
+                  data.should be == 'timeout'
                 end
               end
 
@@ -152,9 +154,9 @@ module Punchblock
 
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
-                  code.should   == 200
-                  result.should == 123
-                  data.should   == 'foo=bar'
+                  code.should be == 200
+                  result.should be == 123
+                  data.should be == 'foo=bar'
                 end
               end
             end

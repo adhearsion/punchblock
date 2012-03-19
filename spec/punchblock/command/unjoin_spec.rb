@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -5,14 +7,14 @@ module Punchblock
     describe Unjoin do
 
       it 'registers itself' do
-        RayoNode.class_from_registration(:unjoin, 'urn:xmpp:rayo:1').should == Unjoin
+        RayoNode.class_from_registration(:unjoin, 'urn:xmpp:rayo:1').should be == Unjoin
       end
 
       describe "when setting options in initializer" do
         subject { Unjoin.new :other_call_id => 'abc123', :mixer_name => 'blah' }
 
-        its(:other_call_id) { should == 'abc123' }
-        its(:mixer_name)    { should == 'blah' }
+        its(:other_call_id) { should be == 'abc123' }
+        its(:mixer_name)    { should be == 'blah' }
       end
 
       describe "from a stanza" do
@@ -28,8 +30,8 @@ module Punchblock
 
         it { should be_instance_of Unjoin }
 
-        its(:other_call_id) { should == 'abc123' }
-        its(:mixer_name)    { should == 'blah' }
+        its(:other_call_id) { should be == 'abc123' }
+        its(:mixer_name)    { should be == 'blah' }
       end
     end
   end

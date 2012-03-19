@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -40,6 +42,97 @@ module Punchblock
 
             before { mock_call.stubs :answer_if_not_answered }
 
+            context 'with a media engine of :swift' do
+              let(:media_engine) { :swift }
+
+              let(:audio_filename) { 'http://foo.com/bar.mp3' }
+
+              let :ssml_doc do
+                RubySpeech::SSML.draw do
+                  audio :src => audio_filename
+                  say_as(:interpret_as => :cardinal) { 'FOO' }
+                end
+              end
+
+              let(:command_opts) { {} }
+
+              let :command_options do
+                { :ssml => ssml_doc }.merge(command_opts)
+              end
+
+              def ssml_with_options(prefix = '', postfix = '')
+                base_doc = ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+                prefix + base_doc + postfix
+              end
+
+              it "should execute Swift" do
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
+                subject.execute
+              end
+
+              it 'should send a complete event when Swift completes' do
+                def mock_call.send_agi_action!(*args, &block)
+                  block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
+                end
+                subject.execute
+                command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+              end
+
+              describe 'interrupt_on' do
+                context "set to nil" do
+                  let(:command_opts) { { :interrupt_on => nil } }
+                  it "should not add interrupt arguments" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
+                    subject.execute
+                  end
+                end
+
+                context "set to :any" do
+                  let(:command_opts) { { :interrupt_on => :any } }
+                  it "should add the interrupt options to the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
+                    subject.execute
+                  end
+                end
+
+                context "set to :dtmf" do
+                  let(:command_opts) { { :interrupt_on => :dtmf } }
+                  it "should add the interrupt options to the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
+                    subject.execute
+                  end
+                end
+
+                context "set to :speech" do
+                  let(:command_opts) { { :interrupt_on => :speech } }
+                  it "should return an error and not execute any actions" do
+                    subject.execute
+                    error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
+                    command.response(0.1).should be == error
+                  end
+                end
+              end
+
+              describe 'voice' do
+                context "set to nil" do
+                  let(:command_opts) { { :voice => nil } }
+                  it "should not add a voice at the beginning of the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
+                    subject.execute
+                  end
+                end
+
+                context "set to Leonard" do
+                  let(:command_opts) { { :voice => "Leonard" } }
+                  it "should add a voice at the beginning of the argument" do
+                    mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('Leonard^', '')
+                    subject.execute
+                  end
+                end
+
+              end
+            end
+
             context 'with a media engine of :unimrcp' do
               let(:media_engine) { :unimrcp }
 
@@ -60,7 +153,7 @@ module Punchblock
 
               def expect_mrcpsynth_with_options(options)
                 mock_call.expects(:send_agi_action!).once.with do |*args|
-                  args[0].should == 'EXEC MRCPSynth'
+                  args[0].should be == 'EXEC MRCPSynth'
                   args[2].should match options
                 end
               end
@@ -84,7 +177,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An SSML document is required.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -103,7 +196,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_offset value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -122,7 +215,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_paused value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -141,7 +234,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -160,7 +253,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_times value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -179,7 +272,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A max_time value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -232,7 +325,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -243,7 +336,7 @@ module Punchblock
 
               def expect_stream_file_with_options(options = nil)
                 mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename, options do |*args|
-                  args[2].should == options
+                  args[2].should be == options
                   subject.continue!
                   true
                 end
@@ -273,7 +366,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An SSML document is required.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
 
@@ -315,12 +408,10 @@ module Punchblock
                     latch = CountDownLatch.new 2
                     mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename1, nil do
                       subject.continue
-                      true
                       latch.countdown!
                     end
                     mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename2, nil do
                       subject.continue
-                      true
                       latch.countdown!
                     end
                     subject.execute
@@ -351,7 +442,7 @@ module Punchblock
                   it "should return an unrenderable document error" do
                     subject.execute
                     error = ProtocolError.new 'unrenderable document error', 'The provided document could not be rendered.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -370,7 +461,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_offset value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -389,7 +480,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A start_paused value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -408,7 +499,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -427,7 +518,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A repeat_times value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -446,7 +537,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A max_time value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -465,7 +556,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A voice value is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -500,7 +591,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end

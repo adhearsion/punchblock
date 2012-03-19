@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'uri'
 
 module Punchblock
@@ -7,9 +9,10 @@ module Punchblock
         include HasGuardedHandlers
         include Celluloid
 
-        attr_reader :id, :channel, :translator, :agi_env, :direction
+        attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
+        HANGUP_CAUSE_TO_END_REASON[0] = :hangup
         HANGUP_CAUSE_TO_END_REASON[16] = :hangup
         HANGUP_CAUSE_TO_END_REASON[17] = :busy
         HANGUP_CAUSE_TO_END_REASON[18] = :timeout
@@ -18,11 +21,25 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
-        def initialize(channel, translator, agi_env = '')
+        class << self
+          def parse_environment(agi_env)
+            agi_env_as_array(agi_env).inject({}) do |accumulator, element|
+              accumulator[element[0].to_sym] = element[1] || ''
+              accumulator
+            end
+          end
+
+          def agi_env_as_array(agi_env)
+            URI::Parser.new.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
+          end
+        end
+
+        def initialize(channel, translator, agi_env = nil)
           @channel, @translator = channel, translator
-          @agi_env = parse_environment agi_env
+          @agi_env = agi_env || {}
           @id, @components = UUIDTools::UUID.random_create.to_s, {}
           @answered = false
+          @pending_joins = {}
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
         end
 
@@ -89,27 +106,52 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
-          pb_logger.trace "Processing AMI event #{ami_event.inspect}"
           case ami_event.name
           when 'Hangup'
-            pb_logger.debug "Received a Hangup AMI event. Sending End event."
+            pb_logger.trace "Received a Hangup AMI event. Sending End event."
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
-            pb_logger.debug "Received an AsyncAGI event. Looking for matching AGICommand component."
+            pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
-              pb_logger.debug "Found component #{component.id} for event. Forwarding event..."
               component.handle_ami_event! ami_event
             else
-              pb_logger.debug "Could not find component for AMI event: #{ami_event}"
+              pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
-            pb_logger.debug "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
+            pb_logger.trace "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
             case ami_event['ChannelState']
             when '5'
               send_pb_event Event::Ringing.new
             when '6'
               @answered = true
               send_pb_event Event::Answered.new
+            end
+          when 'BridgeExec'
+            if join_command = pending_joins[ami_event['Channel2']]
+              join_command.response = true
+            end
+          when 'Bridge'
+            other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
+            if other_call = translator.call_for_channel(other_call_channel)
+              event = case ami_event['Bridgestate']
+              when 'Link'
+                Event::Joined.new.tap do |e|
+                  e.other_call_id = other_call.id
+                end
+              when 'Unlink'
+                Event::Unjoined.new.tap do |e|
+                  e.other_call_id = other_call.id
+                end
+              end
+              send_pb_event event
+            end
+          when 'Unlink'
+            other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
+            if other_call = translator.call_for_channel(other_call_channel)
+              event = Event::Unjoined.new.tap do |e|
+                e.other_call_id = other_call.id
+              end
+              send_pb_event event
             end
           end
           trigger_handler :ami, ami_event
@@ -143,6 +185,13 @@ module Punchblock
             send_ami_action 'Hangup', 'Channel' => channel do |response|
               command.response = true
             end
+          when Command::Join
+            other_call = translator.call_with_id command.other_call_id
+            pending_joins[other_call.channel] = command
+            send_agi_action 'EXEC Bridge', other_call.channel
+          when Command::Unjoin
+            other_call = translator.call_with_id command.other_call_id
+            redirect_back other_call
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
@@ -155,12 +204,12 @@ module Punchblock
         end
 
         def send_agi_action(command, *params, &block)
-          pb_logger.debug "Sending AGI action #{command}"
+          pb_logger.trace "Sending AGI action #{command}"
           @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :call_id => id
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
-            pb_logger.debug "AGI action received complete event #{e.inspect}"
-            block.call e
+            pb_logger.trace "AGI action received complete event #{e.inspect}"
+            block.call e if block
           end
           execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
         end
@@ -168,7 +217,7 @@ module Punchblock
         def send_ami_action(name, headers = {}, &block)
           (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
-            pb_logger.debug "Sending AMI action #{action.inspect}"
+            pb_logger.trace "Sending AMI action #{action.inspect}"
             translator.send_ami_action! action
           end
         end
@@ -179,9 +228,25 @@ module Punchblock
 
         private
 
+        def redirect_back(other_call = nil)
+          redirect_options = {
+            'Channel'   => channel,
+            'Exten'     => Asterisk::REDIRECT_EXTENSION,
+            'Priority'  => Asterisk::REDIRECT_PRIORITY,
+            'Context'   => Asterisk::REDIRECT_CONTEXT
+          }
+          redirect_options.merge!({
+            'ExtraChannel' => other_call.channel,
+            'ExtraExten'     => Asterisk::REDIRECT_EXTENSION,
+            'ExtraPriority'  => Asterisk::REDIRECT_PRIORITY,
+            'ExtraContext'   => Asterisk::REDIRECT_CONTEXT
+          }) if other_call
+          send_ami_action 'Redirect', redirect_options
+        end
+
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
-          current_actor.terminate!
+          after(5) { shutdown }
         end
 
         def execute_component(type, command, options = {})
@@ -194,7 +259,7 @@ module Punchblock
 
         def send_pb_event(event)
           event.call_id = id
-          pb_logger.debug "Sending Punchblock event: #{event.inspect}"
+          pb_logger.trace "Sending Punchblock event: #{event.inspect}"
           translator.handle_pb_event! event
         end
 
@@ -209,17 +274,6 @@ module Punchblock
             accumulator[('x_' + element[0].to_s).to_sym] = element[1] || ''
             accumulator
           end
-        end
-
-        def parse_environment(agi_env)
-          agi_env_as_array(agi_env).inject({}) do |accumulator, element|
-            accumulator[element[0].to_sym] = element[1] || ''
-            accumulator
-          end
-        end
-
-        def agi_env_as_array(agi_env)
-          URI.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
         end
       end
     end

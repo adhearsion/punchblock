@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'punchblock/key_value_pair_node'
 
 module Punchblock

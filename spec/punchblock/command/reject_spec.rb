@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   module Command
     describe Reject do
       it 'registers itself' do
-        RayoNode.class_from_registration(:reject, 'urn:xmpp:rayo:1').should == Reject
+        RayoNode.class_from_registration(:reject, 'urn:xmpp:rayo:1').should be == Reject
       end
 
       describe "when setting options in initializer" do
@@ -12,7 +14,7 @@ module Punchblock
 
         it_should_behave_like 'command_headers'
 
-        its(:reason) { should == :busy }
+        its(:reason) { should be == :busy }
       end
 
       describe "from a stanza" do
@@ -30,8 +32,8 @@ module Punchblock
 
         it { should be_instance_of Reject }
 
-        its(:reason) { should == :busy }
-        its(:headers_hash) { should == { :x_reason_internal => 'bad-skill' } }
+        its(:reason) { should be == :busy }
+        its(:headers_hash) { should be == { :x_reason_internal => 'bad-skill' } }
       end
 
       describe "with the reason" do
@@ -39,7 +41,7 @@ module Punchblock
           describe reason do
             subject { Reject.new :reason => reason }
 
-            its(:reason) { should == reason }
+            its(:reason) { should be == reason }
           end
         end
 

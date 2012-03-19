@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -8,7 +10,8 @@ module Punchblock
           :host     => '127.0.0.1',
           :port     => 5038,
           :username => 'test',
-          :password => 'test'
+          :password => 'test',
+          :media_engine => :swift
         }
       end
 
@@ -24,16 +27,18 @@ module Punchblock
 
       its(:ami_client) { should be_a RubyAMI::Client }
 
-      after { connection.translator.terminate }
-
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
+      end
+
+      it 'should set the media engine on the translator' do
+        subject.translator.media_engine.should be == :swift
       end
 
       describe '#run' do
         it 'starts the RubyAMI::Client' do
           subject.ami_client.expects(:start).once
-          subject.run
+          lambda { subject.run }.should raise_error DisconnectedError
         end
       end
 

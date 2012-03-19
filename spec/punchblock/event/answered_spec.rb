@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   class Event
     describe Answered do
       it 'registers itself' do
-        RayoNode.class_from_registration(:answered, 'urn:xmpp:rayo:1').should == Answered
+        RayoNode.class_from_registration(:answered, 'urn:xmpp:rayo:1').should be == Answered
       end
 
       describe "from a stanza" do
@@ -25,7 +27,7 @@ module Punchblock
         it_should_behave_like 'event'
         it_should_behave_like 'event_headers'
 
-        its(:xmlns) { should == 'urn:xmpp:rayo:1' }
+        its(:xmlns) { should be == 'urn:xmpp:rayo:1' }
       end
 
       describe "when setting options in initializer" do

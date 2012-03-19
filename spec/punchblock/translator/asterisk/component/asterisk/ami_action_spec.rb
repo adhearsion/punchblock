@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -122,14 +124,14 @@ module Punchblock
                   action << event
                   subject.handle_response response
                   action << terminating_event
-                  @event.should == event_node
+                  @event.should be == event_node
                 end
 
                 it 'should send a complete event to the component node' do
                   subject.action << response
                   subject.action << terminating_event
 
-                  command.complete_event(0.5).reason.should == expected_complete_reason
+                  command.complete_event(0.5).reason.should be == expected_complete_reason
                 end
               end
 

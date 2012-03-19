@@ -11,3 +11,4 @@ spec/reports
 vendor
 .rbx/
 *.rbc
+tmp

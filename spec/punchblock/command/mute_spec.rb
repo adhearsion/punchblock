@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   module Command
     describe Mute do
       it 'registers itself' do
-        RayoNode.class_from_registration(:mute, 'urn:xmpp:rayo:1').should == Mute
+        RayoNode.class_from_registration(:mute, 'urn:xmpp:rayo:1').should be == Mute
       end
 
       describe "from a stanza" do

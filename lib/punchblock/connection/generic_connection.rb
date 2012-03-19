@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Punchblock
   module Connection
     class GenericConnection
@@ -9,6 +11,9 @@ module Punchblock
       end
 
       def not_ready!
+      end
+
+      def connected?
       end
     end
   end

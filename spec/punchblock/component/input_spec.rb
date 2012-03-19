@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   module Component
     describe Input do
       it 'registers itself' do
-        RayoNode.class_from_registration(:input, 'urn:xmpp:rayo:input:1').should == Input
+        RayoNode.class_from_registration(:input, 'urn:xmpp:rayo:input:1').should be == Input
       end
 
       describe "when setting options in initializer" do
@@ -24,19 +26,19 @@ module Punchblock
                     :min_confidence       => 0.5
         end
 
-        its(:grammar)             { should == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
-        its(:mode)                { should == :speech }
-        its(:terminator)          { should == '#' }
-        its(:max_digits)          { should == 10 }
-        its(:max_silence)         { should == 1000 }
-        its(:recognizer)          { should == 'en-US' }
-        its(:initial_timeout)     { should == 2000 }
-        its(:inter_digit_timeout) { should == 2000 }
-        its(:term_timeout)        { should == 2000 }
-        its(:complete_timeout)    { should == 2000 }
-        its(:incomplete_timeout)  { should == 2000 }
-        its(:sensitivity)         { should == 0.5 }
-        its(:min_confidence)      { should == 0.5 }
+        its(:grammar)             { should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
+        its(:mode)                { should be == :speech }
+        its(:terminator)          { should be == '#' }
+        its(:max_digits)          { should be == 10 }
+        its(:max_silence)         { should be == 1000 }
+        its(:recognizer)          { should be == 'en-US' }
+        its(:initial_timeout)     { should be == 2000 }
+        its(:inter_digit_timeout) { should be == 2000 }
+        its(:term_timeout)        { should be == 2000 }
+        its(:complete_timeout)    { should be == 2000 }
+        its(:incomplete_timeout)  { should be == 2000 }
+        its(:sensitivity)         { should be == 0.5 }
+        its(:min_confidence)      { should be == 0.5 }
       end
 
       describe "from a stanza" do
@@ -66,19 +68,19 @@ module Punchblock
 
         it { should be_instance_of Input }
 
-        its(:grammar)             { should == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
-        its(:mode)                { should == :speech }
-        its(:terminator)          { should == '#' }
-        its(:max_digits)          { should == 10 }
-        its(:max_silence)         { should == 1000 }
-        its(:recognizer)          { should == 'en-US' }
-        its(:initial_timeout)     { should == 2000 }
-        its(:inter_digit_timeout) { should == 2000 }
-        its(:term_timeout)        { should == 2000 }
-        its(:complete_timeout)    { should == 2000 }
-        its(:incomplete_timeout)  { should == 2000 }
-        its(:sensitivity)         { should == 0.5 }
-        its(:min_confidence)      { should == 0.5 }
+        its(:grammar)             { should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
+        its(:mode)                { should be == :speech }
+        its(:terminator)          { should be == '#' }
+        its(:max_digits)          { should be == 10 }
+        its(:max_silence)         { should be == 1000 }
+        its(:recognizer)          { should be == 'en-US' }
+        its(:initial_timeout)     { should be == 2000 }
+        its(:inter_digit_timeout) { should be == 2000 }
+        its(:term_timeout)        { should be == 2000 }
+        its(:complete_timeout)    { should be == 2000 }
+        its(:incomplete_timeout)  { should be == 2000 }
+        its(:sensitivity)         { should be == 0.5 }
+        its(:min_confidence)      { should be == 0.5 }
       end
 
       def grxml_doc(mode = :dtmf)
@@ -94,7 +96,7 @@ module Punchblock
       describe Input::Grammar do
         describe "when not passing a content type" do
           subject { Input::Grammar.new :value => grxml_doc }
-          its(:content_type) { should == 'application/grammar+grxml' }
+          its(:content_type) { should be == 'application/grammar+grxml' }
         end
 
         describe 'with a simple grammar' do
@@ -103,31 +105,31 @@ module Punchblock
           let(:expected_message) { "<![CDATA[ [5 DIGITS] ]]>" }
 
           it "should wrap grammar in CDATA" do
-            subject.child.to_xml.should == expected_message.strip
+            subject.child.to_xml.should be == expected_message.strip
           end
         end
 
         describe 'with a GRXML grammar' do
           subject { Input::Grammar.new :value => grxml_doc, :content_type => 'application/grammar+grxml' }
 
-          its(:content_type) { should == 'application/grammar+grxml' }
+          its(:content_type) { should be == 'application/grammar+grxml' }
 
           let(:expected_message) { "<![CDATA[ #{grxml_doc} ]]>" }
 
           it "should wrap GRXML in CDATA" do
-            subject.child.to_xml.should == expected_message.strip
+            subject.child.to_xml.should be == expected_message.strip
           end
 
-          its(:value) { should == grxml_doc }
+          its(:value) { should be == grxml_doc }
 
           describe "comparison" do
             let(:grammar2) { Input::Grammar.new :value => '<grammar xmlns="http://www.w3.org/2001/06/grammar" version="1.0" xml:lang="en-US" mode="dtmf" root="digits"><rule id="digits"><one-of><item>0</item><item>1</item></one-of></rule></grammar>' }
             let(:grammar3) { Input::Grammar.new :value => grxml_doc }
             let(:grammar4) { Input::Grammar.new :value => grxml_doc(:speech) }
 
-            it { should == grammar2 }
-            it { should == grammar3 }
-            it { should_not == grammar4 }
+            it { should be == grammar2 }
+            it { should be == grammar3 }
+            it { should_not be == grammar4 }
           end
         end
       end
@@ -145,9 +147,9 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should == '<stop xmlns="urn:xmpp:rayo:1"/>' }
-          its(:component_id) { should == 'abc123' }
-          its(:call_id) { should == '123abc' }
+          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:1"/>' }
+          its(:component_id) { should be == 'abc123' }
+          its(:call_id) { should be == '123abc' }
         end
 
         describe '#stop!' do
@@ -187,11 +189,11 @@ module Punchblock
 
         it { should be_instance_of Input::Complete::Success }
 
-        its(:name)            { should == :success }
-        its(:mode)            { should == :speech }
-        its(:confidence)      { should == 0.45 }
-        its(:interpretation)  { should == '1234' }
-        its(:utterance)       { should == 'one two three four' }
+        its(:name)            { should be == :success }
+        its(:mode)            { should be == :speech }
+        its(:confidence)      { should be == 0.45 }
+        its(:interpretation)  { should be == '1234' }
+        its(:utterance)       { should be == 'one two three four' }
 
         describe "when setting options in initializer" do
           subject do
@@ -202,10 +204,10 @@ module Punchblock
           end
 
 
-          its(:mode)            { should == :dtmf }
-          its(:confidence)      { should == 1 }
-          its(:utterance)       { should == '123' }
-          its(:interpretation)  { should == 'dtmf-1 dtmf-2 dtmf-3' }
+          its(:mode)            { should be == :dtmf }
+          its(:confidence)      { should be == 1 }
+          its(:utterance)       { should be == '123' }
+          its(:interpretation)  { should be == 'dtmf-1 dtmf-2 dtmf-3' }
         end
       end
 
@@ -222,7 +224,7 @@ module Punchblock
 
         it { should be_instance_of Input::Complete::NoMatch }
 
-        its(:name) { should == :nomatch }
+        its(:name) { should be == :nomatch }
       end
 
       describe Input::Complete::NoInput do
@@ -238,7 +240,7 @@ module Punchblock
 
         it { should be_instance_of Input::Complete::NoInput }
 
-        its(:name) { should == :noinput }
+        its(:name) { should be == :noinput }
       end
     end
   end

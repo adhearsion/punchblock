@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -98,7 +100,7 @@ module Punchblock
                   end
 
                   it "should send a success complete event with the relevant data" do
-                    reason.should == expected_event
+                    reason.should be == expected_event
                   end
                 end
 
@@ -114,7 +116,7 @@ module Punchblock
                   end
 
                   it "should send a nomatch complete event" do
-                    reason.should == expected_event
+                    reason.should be == expected_event
                   end
                 end
               end
@@ -125,7 +127,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A grammar document is required.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -136,7 +138,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
 
@@ -145,7 +147,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
 
@@ -154,7 +156,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -212,7 +214,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An initial timeout value that is negative (and not -1) is invalid.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end
@@ -264,7 +266,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An inter-digit timeout value that is negative (and not -1) is invalid.'
-                    command.response(0.1).should == error
+                    command.response(0.1).should be == error
                   end
                 end
               end

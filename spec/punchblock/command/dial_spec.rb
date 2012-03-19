@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -5,7 +7,7 @@ module Punchblock
     describe Dial do
 
       it 'registers itself' do
-        RayoNode.class_from_registration(:dial, 'urn:xmpp:rayo:1').should == Dial
+        RayoNode.class_from_registration(:dial, 'urn:xmpp:rayo:1').should be == Dial
       end
 
       let(:join_params) { {:other_call_id => 'abc123'} }
@@ -15,10 +17,10 @@ module Punchblock
 
         it_should_behave_like 'command_headers'
 
-        its(:to)      { should == 'tel:+14155551212' }
-        its(:from)    { should == 'tel:+13035551212' }
-        its(:timeout) { should == 30000 }
-        its(:join)    { should == Join.new(join_params) }
+        its(:to)      { should be == 'tel:+14155551212' }
+        its(:from)    { should be == 'tel:+13035551212' }
+        its(:timeout) { should be == 30000 }
+        its(:join)    { should be == Join.new(join_params) }
       end
 
       describe "from a stanza" do
@@ -36,10 +38,10 @@ module Punchblock
 
         it { should be_instance_of Dial }
 
-        its(:to)      { should == 'tel:+14155551212' }
-        its(:from)    { should == 'tel:+13035551212' }
-        its(:timeout) { should == 30000 }
-        its(:join)    { should == Join.new(join_params) }
+        its(:to)      { should be == 'tel:+14155551212' }
+        its(:from)    { should be == 'tel:+13035551212' }
+        its(:timeout) { should be == 30000 }
+        its(:join)    { should be == Join.new(join_params) }
       end
 
       describe "#response=" do
@@ -55,7 +57,7 @@ module Punchblock
 
         it "should set the call ID from the ref" do
           subject.response = ref
-          subject.call_id.should == call_id
+          subject.call_id.should be == call_id
         end
       end
     end

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Punchblock
   class Client
     extend ActiveSupport::Autoload
@@ -24,7 +26,6 @@ module Punchblock
 
     def handle_event(event)
       event.client = self
-      pb_logger.debug "Handling event #{event} with source #{event.source}."
       if event.source
         event.source.add_event event
       else
@@ -51,7 +52,6 @@ module Punchblock
     end
 
     def execute_command(command, options = {})
-      pb_logger.debug "Executing command: #{command.inspect} with options #{options.inspect}"
       async = options.has_key?(:async) ? options.delete(:async) : true
       command.client = self
       if command.respond_to?(:register_handler)

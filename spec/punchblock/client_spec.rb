@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -81,7 +83,7 @@ module Punchblock
         context 'if event handlers have not been set' do
           it 'should queue up the event' do
             subject.handle_event mock_event
-            subject.event_queue.pop(true).should == mock_event
+            subject.event_queue.pop(true).should be == mock_event
           end
         end
       end

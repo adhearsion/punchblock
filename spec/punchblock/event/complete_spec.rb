@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   class Event
     describe Complete do
       it 'registers itself' do
-        RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1').should == Complete
+        RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1').should be == Complete
       end
 
       describe "comparing for equality" do
@@ -30,7 +32,7 @@ module Punchblock
           let(:component_id)  { 'abcd' }
 
           it "should be equal" do
-            subject.should == other_complete
+            subject.should be == other_complete
           end
         end
 
@@ -40,7 +42,7 @@ module Punchblock
           let(:component_id)  { 'abcd' }
 
           it "should not be equal" do
-            subject.should_not == other_complete
+            subject.should_not be == other_complete
           end
         end
 
@@ -50,7 +52,7 @@ module Punchblock
           let(:component_id)  { 'abcd' }
 
           it "should not be equal" do
-            subject.should_not == other_complete
+            subject.should_not be == other_complete
           end
         end
 
@@ -60,7 +62,7 @@ module Punchblock
           let(:component_id)  { 'efgh' }
 
           it "should not be equal" do
-            subject.should_not == other_complete
+            subject.should_not be == other_complete
           end
         end
       end
@@ -97,7 +99,7 @@ module Punchblock
 
       it { should be_instance_of Complete::Stop }
 
-      its(:name) { should == :stop }
+      its(:name) { should be == :stop }
     end
 
     describe Complete::Hangup do
@@ -113,7 +115,7 @@ module Punchblock
 
       it { should be_instance_of Complete::Hangup }
 
-      its(:name) { should == :hangup }
+      its(:name) { should be == :hangup }
     end
 
     describe Complete::Error do
@@ -131,15 +133,15 @@ module Punchblock
 
       it { should be_instance_of Complete::Error }
 
-      its(:name) { should == :error }
-      its(:details) { should == "Something really bad happened" }
+      its(:name) { should be == :error }
+      its(:details) { should be == "Something really bad happened" }
 
       describe "when setting options in initializer" do
         subject do
           Complete::Error.new :details => 'Ooops'
         end
 
-        its(:details) { should == 'Ooops' }
+        its(:details) { should be == 'Ooops' }
       end
     end
   end

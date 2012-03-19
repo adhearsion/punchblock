@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'active_support/core_ext/class/attribute'
 require 'niceogiri'
 
@@ -41,12 +43,11 @@ module Punchblock
     def self.import(node, call_id = nil, component_id = nil)
       ns = (node.namespace.href if node.namespace)
       klass = class_from_registration(node.element_name, ns)
-      event = if klass && klass != self
+      if klass && klass != self
         klass.import node, call_id, component_id
       else
         new.inherit node
-      end
-      event.tap do |event|
+      end.tap do |event|
         event.call_id = call_id
         event.component_id = component_id
       end

@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   module Component
     describe Record do
       it 'registers itself' do
-        RayoNode.class_from_registration(:record, 'urn:xmpp:rayo:record:1').should == Record
+        RayoNode.class_from_registration(:record, 'urn:xmpp:rayo:record:1').should be == Record
       end
 
       describe "when setting options in initializer" do
@@ -18,13 +20,13 @@ module Punchblock
                      :final_timeout   => 30000
         end
 
-        its(:format)          { should == 'WAV' }
-        its(:start_beep)      { should == true }
-        its(:start_paused)    { should == false }
-        its(:stop_beep)       { should == true }
-        its(:max_duration)    { should == 500000 }
-        its(:initial_timeout) { should == 10000 }
-        its(:final_timeout)   { should == 30000 }
+        its(:format)          { should be == 'WAV' }
+        its(:start_beep)      { should be == true }
+        its(:start_paused)    { should be == false }
+        its(:stop_beep)       { should be == true }
+        its(:max_duration)    { should be == 500000 }
+        its(:initial_timeout) { should be == 10000 }
+        its(:final_timeout)   { should be == 30000 }
       end
 
       describe "from a stanza" do
@@ -45,13 +47,13 @@ module Punchblock
 
         it { should be_instance_of Record }
 
-        its(:format)          { should == 'WAV' }
-        its(:start_beep)      { should == true }
-        its(:start_paused)    { should == false }
-        its(:stop_beep)       { should == true }
-        its(:max_duration)    { should == 500000 }
-        its(:initial_timeout) { should == 10000 }
-        its(:final_timeout)   { should == 30000 }
+        its(:format)          { should be == 'WAV' }
+        its(:start_beep)      { should be == true }
+        its(:start_paused)    { should be == false }
+        its(:stop_beep)       { should be == true }
+        its(:max_duration)    { should be == 500000 }
+        its(:initial_timeout) { should be == 10000 }
+        its(:final_timeout)   { should be == 30000 }
       end
 
       describe "actions" do
@@ -67,9 +69,9 @@ module Punchblock
         describe '#pause_action' do
           subject { command.pause_action }
 
-          its(:to_xml) { should == '<pause xmlns="urn:xmpp:rayo:record:1"/>' }
-          its(:component_id) { should == 'abc123' }
-          its(:call_id) { should == '123abc' }
+          its(:to_xml) { should be == '<pause xmlns="urn:xmpp:rayo:record:1"/>' }
+          its(:component_id) { should be == 'abc123' }
+          its(:call_id) { should be == '123abc' }
         end
 
         describe '#pause!' do
@@ -100,7 +102,7 @@ module Punchblock
             subject.paused!
           end
 
-          its(:state_name) { should == :paused }
+          its(:state_name) { should be == :paused }
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
             lambda { subject.paused! }.should raise_error(StateMachine::InvalidTransition)
@@ -110,9 +112,9 @@ module Punchblock
         describe '#resume_action' do
           subject { command.resume_action }
 
-          its(:to_xml) { should == '<resume xmlns="urn:xmpp:rayo:record:1"/>' }
-          its(:component_id) { should == 'abc123' }
-          its(:call_id) { should == '123abc' }
+          its(:to_xml) { should be == '<resume xmlns="urn:xmpp:rayo:record:1"/>' }
+          its(:component_id) { should be == 'abc123' }
+          its(:call_id) { should be == '123abc' }
         end
 
         describe '#resume!' do
@@ -145,7 +147,7 @@ module Punchblock
             subject.resumed!
           end
 
-          its(:state_name) { should == :executing }
+          its(:state_name) { should be == :executing }
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
             lambda { subject.resumed! }.should raise_error(StateMachine::InvalidTransition)
@@ -155,9 +157,9 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should == '<stop xmlns="urn:xmpp:rayo:1"/>' }
-          its(:component_id) { should == 'abc123' }
-          its(:call_id) { should == '123abc' }
+          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:1"/>' }
+          its(:component_id) { should be == 'abc123' }
+          its(:call_id) { should be == '123abc' }
         end
 
         describe '#stop!' do
@@ -196,16 +198,16 @@ module Punchblock
 
           it { should be_instance_of Record::Complete::Success }
 
-          its(:name)  { should == :success }
+          its(:name)  { should be == :success }
         end
 
         describe "#recording" do
           subject { RayoNode.import(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
-          its(:uri)       { should == "file:/tmp/rayo7451601434771683422.mp3" }
-          its(:duration)  { should == 34000 }
-          its(:size)      { should == 23450 }
+          its(:uri)       { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+          its(:duration)  { should be == 34000 }
+          its(:size)      { should be == 23450 }
         end
       end
 
@@ -224,14 +226,14 @@ module Punchblock
 
           it { should be_instance_of Event::Complete::Stop }
 
-          its(:name)  { should == :stop }
+          its(:name)  { should be == :stop }
         end
 
         describe "#recording" do
           subject { RayoNode.import(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
-          its(:uri) { should == "file:/tmp/rayo7451601434771683422.mp3" }
+          its(:uri) { should be == "file:/tmp/rayo7451601434771683422.mp3" }
         end
       end
 
@@ -250,14 +252,14 @@ module Punchblock
 
           it { should be_instance_of Event::Complete::Hangup }
 
-          its(:name)  { should == :hangup }
+          its(:name)  { should be == :hangup }
         end
 
         describe "#recording" do
           subject { RayoNode.import(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
-          its(:uri) { should == "file:/tmp/rayo7451601434771683422.mp3" }
+          its(:uri) { should be == "file:/tmp/rayo7451601434771683422.mp3" }
         end
       end
     end

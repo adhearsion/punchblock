@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -18,12 +20,12 @@ module Punchblock
 
       context 'with a configured media engine of :asterisk' do
         let(:media_engine) { :asterisk }
-        its(:media_engine) { should == :asterisk }
+        its(:media_engine) { should be == :asterisk }
       end
 
       context 'with a configured media engine of :unimrcp' do
         let(:media_engine) { :unimrcp }
-        its(:media_engine) { should == :unimrcp }
+        its(:media_engine) { should be == :unimrcp }
       end
 
       describe '#shutdown' do
@@ -48,7 +50,7 @@ module Punchblock
           it 'executes the call command' do
             subject.wrapped_object.expects(:execute_call_command).with do |c|
               c.should be command
-              c.call_id.should == call_id
+              c.call_id.should be == call_id
             end
             subject.execute_command command, :call_id => call_id
           end
@@ -61,7 +63,7 @@ module Punchblock
           it 'executes the component command' do
             subject.wrapped_object.expects(:execute_component_command).with do |c|
               c.should be command
-              c.component_id.should == component_id
+              c.component_id.should be == component_id
             end
             subject.execute_command command, :component_id => component_id
           end
@@ -130,7 +132,7 @@ module Punchblock
         context "with an unknown call ID" do
           it 'sends an error in response to the command' do
             subject.execute_call_command command
-            command.response.should == ProtocolError.new('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+            command.response.should be == ProtocolError.new('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
           end
         end
       end
@@ -159,7 +161,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+            command.response.should be == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
           end
         end
       end
@@ -216,7 +218,7 @@ module Punchblock
 
           it 'sends an error in response to the command' do
             subject.execute_command command
-            command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command")
+            command.response.should be == ProtocolError.new('command-not-acceptable', "Did not understand command")
           end
         end
       end
@@ -272,6 +274,7 @@ module Punchblock
           context 'twice' do
             it 'sends a connected event to the event handler' do
               subject.connection.expects(:handle_event).once.with Connection::Connected.new
+              subject.wrapped_object.expects(:run_at_fully_booted).once
               subject.handle_ami_event ami_event
               subject.handle_ami_event ami_event
             end
@@ -294,7 +297,28 @@ module Punchblock
             call_actor = subject.call_for_channel('SIP/1234-00000000')
             call_actor.wrapped_object.should be_a Asterisk::Call
             call_actor.agi_env.should be_a Hash
-            call_actor.agi_env[:agi_request].should == 'async'
+            call_actor.agi_env.should be == {
+              :agi_request      => 'async',
+              :agi_channel      => 'SIP/1234-00000000',
+              :agi_language     => 'en',
+              :agi_type         => 'SIP',
+              :agi_uniqueid     => '1320835995.0',
+              :agi_version      => '1.8.4.1',
+              :agi_callerid     => '5678',
+              :agi_calleridname => 'Jane Smith',
+              :agi_callingpres  => '0',
+              :agi_callingani2  => '0',
+              :agi_callington   => '0',
+              :agi_callingtns   => '0',
+              :agi_dnid         => '1000',
+              :agi_rdnis        => 'unknown',
+              :agi_context      => 'default',
+              :agi_extension    => '1000',
+              :agi_priority     => '1',
+              :agi_enhanced     => '0.0',
+              :agi_accountcode  => '',
+              :agi_threadid     => '4366221312'
+            }
           end
 
           it 'should instruct the call to send an offer' do
@@ -314,6 +338,46 @@ module Punchblock
             it "should not create a new call" do
               Asterisk::Call.expects(:new).never
               subject.handle_ami_event ami_event
+            end
+          end
+
+          context "for a 'h' extension" do
+            let :ami_event do
+              RubyAMI::Event.new('AsyncAGI').tap do |e|
+                e['SubEvent'] = "Start"
+                e['Channel']  = "SIP/1234-00000000"
+                e['Env']      = "agi_extension%3A%20h%0A%0A"
+              end
+            end
+
+            it "should not create a new call" do
+              Asterisk::Call.expects(:new).never
+              subject.handle_ami_event ami_event
+            end
+
+            it 'should not be able to look up the call by channel ID' do
+              subject.handle_ami_event ami_event
+              subject.call_for_channel('SIP/1234-00000000').should be nil
+            end
+          end
+
+          context "for a 'Kill' type" do
+            let :ami_event do
+              RubyAMI::Event.new('AsyncAGI').tap do |e|
+                e['SubEvent'] = "Start"
+                e['Channel']  = "SIP/1234-00000000"
+                e['Env']      = "agi_type%3A%20Kill%0A%0A"
+              end
+            end
+
+            it "should not create a new call" do
+              Asterisk::Call.expects(:new).never
+              subject.handle_ami_event ami_event
+            end
+
+            it 'should not be able to look up the call by channel ID' do
+              subject.handle_ami_event ami_event
+              subject.call_for_channel('SIP/1234-00000000').should be nil
             end
           end
         end
@@ -348,7 +412,7 @@ module Punchblock
 
             it "should set the correct channel on the call" do
               subject.handle_ami_event ami_event
-              call.channel.should == 'SIP/1234-00000000'
+              call.channel.should be == 'SIP/1234-00000000'
             end
 
             it "should make it possible to look up the call by the full channel name" do
@@ -397,13 +461,46 @@ module Punchblock
             call.expects(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end
+
+          context 'with a Channel1 and Channel2 specified on the event' do
+            let :ami_event do
+              RubyAMI::Event.new('BridgeAction').tap do |e|
+                e['Privilege'] = "call,all"
+                e['Response'] = "Success"
+                e['Channel1']  = "SIP/1234-00000000"
+                e['Channel2']  = "SIP/5678-00000000"
+              end
+            end
+
+            context 'with calls for those channels' do
+              let(:call2) do
+                Asterisk::Call.new "SIP/5678-00000000", subject, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
+              end
+
+              before { subject.register_call call2 }
+
+              it 'should send the event to both calls and to the connection once as a PB event' do
+                subject.wrapped_object.expects(:handle_pb_event).once
+                call.expects(:process_ami_event!).once.with ami_event
+                call2.expects(:process_ami_event!).once.with ami_event
+                subject.handle_ami_event ami_event
+              end
+            end
+          end
         end
-      end
+      end#handle_ami_event
 
       describe '#send_ami_action' do
         it 'should send the action to the AMI client' do
           ami_client.expects(:send_action).once.with 'foo', :foo => :bar
           subject.send_ami_action 'foo', :foo => :bar
+        end
+      end
+
+      describe '#run_at_fully_booted' do
+        it 'should send the redirect extension Command to the AMI client' do
+          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          subject.run_at_fully_booted
         end
       end
     end

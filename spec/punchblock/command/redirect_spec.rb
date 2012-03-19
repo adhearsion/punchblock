@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   module Command
     describe Redirect do
       it 'registers itself' do
-        RayoNode.class_from_registration(:redirect, 'urn:xmpp:rayo:1').should == Redirect
+        RayoNode.class_from_registration(:redirect, 'urn:xmpp:rayo:1').should be == Redirect
       end
 
       describe "when setting options in initializer" do
@@ -12,7 +14,7 @@ module Punchblock
 
         it_should_behave_like 'command_headers'
 
-        its(:to) { should == 'tel:+14045551234' }
+        its(:to) { should be == 'tel:+14045551234' }
       end
 
       describe "from a stanza" do
@@ -33,7 +35,7 @@ module Punchblock
 
         it_should_behave_like 'command_headers'
 
-        its(:to) { should == 'tel:+14045551234' }
+        its(:to) { should be == 'tel:+14045551234' }
       end
     end # Redirect
   end # Command

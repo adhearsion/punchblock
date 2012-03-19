@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -6,7 +8,6 @@ module Punchblock
       describe Call do
         let(:channel)         { 'SIP/foo' }
         let(:translator)      { stub_everything 'Translator::Asterisk' }
-        let(:env)             { "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A" }
         let(:agi_env) do
           {
             :agi_request      => 'async',
@@ -57,12 +58,12 @@ module Punchblock
           }
         end
 
-        subject { Call.new channel, translator, env }
+        subject { Call.new channel, translator, agi_env }
 
         its(:id)          { should be_a String }
-        its(:channel)     { should == channel }
+        its(:channel)     { should be == channel }
         its(:translator)  { should be translator }
-        its(:agi_env)     { should == agi_env }
+        its(:agi_env)     { should be == agi_env }
 
         describe '#shutdown' do
           it 'should terminate the actor' do
@@ -93,7 +94,7 @@ module Punchblock
 
           it 'should make the call identify as inbound' do
             subject.send_offer
-            subject.direction.should == :inbound
+            subject.direction.should be == :inbound
             subject.inbound?.should be true
             subject.outbound?.should be false
           end
@@ -191,12 +192,12 @@ module Punchblock
           it 'sends the call ID as a response to the Dial' do
             subject.dial dial_command
             dial_command.response
-            dial_command.call_id.should == subject.id
+            dial_command.call_id.should be == subject.id
           end
 
           it 'should make the call identify as outbound' do
             subject.dial dial_command
-            subject.direction.should == :outbound
+            subject.direction.should be == :outbound
             subject.outbound?.should be true
             subject.inbound?.should be false
           end
@@ -230,8 +231,20 @@ module Punchblock
             it "should cause the actor to be terminated" do
               translator.expects(:handle_pb_event!).once
               subject.process_ami_event ami_event
-              sleep 0.5
+              sleep 5.5
               subject.should_not be_alive
+            end
+
+            context "with an undefined cause" do
+              let(:cause)     { '0' }
+              let(:cause_txt) { 'Undefined' }
+
+              it 'should send an end (hangup) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+                                                                :call_id  => subject.id
+                translator.expects(:handle_pb_event!).with expected_end_event
+                subject.process_ami_event ami_event
+              end
             end
 
             context "with a normal clearing cause" do
@@ -443,6 +456,172 @@ module Punchblock
               subject.process_ami_event ami_event
             end
           end
+
+          context 'with a BridgeExec event' do
+            let :ami_event do
+              RubyAMI::Event.new('BridgeExec').tap do |e|
+                e['Privilege'] = "call,all"
+                e['Response'] = "Success"
+                e['Channel1']  = "SIP/foo"
+                e['Channel2']  = "SIP/5678-00000000"
+              end
+            end
+
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :command do
+              Punchblock::Command::Join.new :other_call_id => other_call_id
+            end
+
+            before do
+              subject.pending_joins[other_channel] = command
+              command.request!
+            end
+
+            it 'retrieves and sets success on the correct Join' do
+              subject.process_ami_event ami_event
+              command.response(0.5).should be == true
+            end
+          end
+
+          context 'with a Bridge event' do
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            let :ami_event do
+              RubyAMI::Event.new('Bridge').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Bridgestate']  = state
+                e['Bridgetype']   = "core"
+                e['Channel1']     = channel
+                e['Channel2']     = other_channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            let :switched_ami_event do
+              RubyAMI::Event.new('Bridge').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Bridgestate']  = state
+                e['Bridgetype']   = "core"
+                e['Channel1']     = other_channel
+                e['Channel2']     = channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            before do
+              translator.register_call other_call
+              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+              other_call.expects(:id).returns other_call_id
+            end
+
+            context "of state 'Link'" do
+              let(:state) { 'Link' }
+
+              let :expected_joined do
+                Punchblock::Event::Joined.new.tap do |joined|
+                  joined.call_id = subject.id
+                  joined.other_call_id = other_call_id
+                end
+              end
+
+              it 'sends the Joined event when the call is the first channel' do
+                translator.expects(:handle_pb_event!).with expected_joined
+                subject.process_ami_event ami_event
+              end
+
+              it 'sends the Joined event when the call is the second channel' do
+                translator.expects(:handle_pb_event!).with expected_joined
+                subject.process_ami_event switched_ami_event
+              end
+            end
+
+            context "of state 'Unlink'" do
+              let(:state) { 'Unlink' }
+
+              let :expected_unjoined do
+                Punchblock::Event::Unjoined.new.tap do |joined|
+                  joined.call_id = subject.id
+                  joined.other_call_id = other_call_id
+                end
+              end
+
+              it 'sends the Unjoined event when the call is the first channel' do
+                translator.expects(:handle_pb_event!).with expected_unjoined
+                subject.process_ami_event ami_event
+              end
+
+              it 'sends the Unjoined event when the call is the second channel' do
+                translator.expects(:handle_pb_event!).with expected_unjoined
+                subject.process_ami_event switched_ami_event
+              end
+            end
+          end
+
+          context 'with an Unlink event' do
+            let(:other_channel) { 'SIP/5678-00000000' }
+            let(:other_call_id) { 'def567' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            let :ami_event do
+              RubyAMI::Event.new('Unlink').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Channel1']     = channel
+                e['Channel2']     = other_channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            let :switched_ami_event do
+              RubyAMI::Event.new('Unlink').tap do |e|
+                e['Privilege']    = "call,all"
+                e['Channel1']     = other_channel
+                e['Channel2']     = channel
+                e['Uniqueid1']    = "1319717537.11"
+                e['Uniqueid2']    = "1319717537.10"
+                e['CallerID1']    = "1234"
+                e['CallerID2']    = "5678"
+              end
+            end
+
+            before do
+              translator.register_call other_call
+              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
+              other_call.expects(:id).returns other_call_id
+            end
+
+            let :expected_unjoined do
+              Punchblock::Event::Unjoined.new.tap do |joined|
+                joined.call_id = subject.id
+                joined.other_call_id = other_call_id
+              end
+            end
+
+            it 'sends the Unjoined event when the call is the first channel' do
+              translator.expects(:handle_pb_event!).with expected_unjoined
+              subject.process_ami_event ami_event
+            end
+
+            it 'sends the Unjoined event when the call is the second channel' do
+              translator.expects(:handle_pb_event!).with expected_unjoined
+              subject.process_ami_event switched_ami_event
+            end
+          end
         end
 
         describe '#execute_command' do
@@ -465,7 +644,7 @@ module Punchblock
               component = subject.execute_command command
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should == "EXEC RINGING"
+              agi_command.name.should be == "EXEC RINGING"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
@@ -479,7 +658,7 @@ module Punchblock
               component = subject.execute_command command
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should == "EXEC ANSWER"
+              agi_command.name.should be == "EXEC ANSWER"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
@@ -492,7 +671,7 @@ module Punchblock
             it "should send a Hangup AMI command and set the command's response" do
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should == "hangup"
+              ami_action.name.should be == "hangup"
               ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
             end
@@ -566,7 +745,7 @@ module Punchblock
             context "for an unknown component ID" do
               it 'sends an error in response to the command' do
                 subject.execute_command command
-                command.response.should == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+                command.response.should be == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
               end
             end
           end
@@ -578,10 +757,78 @@ module Punchblock
 
             it 'sends an error in response to the command' do
               subject.execute_command command
-              command.response.should == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
+              command.response.should be == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
             end
           end
-        end
+
+          context "with a join command" do
+            let(:other_call_id)         { "abc123" }
+            let(:other_channel)         { 'SIP/bar' }
+            let(:other_translator)      { stub_everything 'Translator::Asterisk' }
+
+            let :other_call do
+              Call.new other_channel, other_translator
+            end
+
+            let :command do
+              Punchblock::Command::Join.new :other_call_id => other_call_id
+            end
+
+            it "executes the proper dialplan Bridge application" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
+              agi_command.name.should be == "EXEC Bridge"
+              agi_command.params_array.should be == [other_channel]
+            end
+
+            it "adds the join to the @pending_joins hash" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              subject.pending_joins[other_channel].should be command
+            end
+          end
+
+          context "with an unjoin command" do
+            let(:other_call_id)         { "abc123" }
+            let(:other_channel)         { 'SIP/bar' }
+
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            let :command do
+              Punchblock::Command::Unjoin.new :other_call_id => other_call_id
+            end
+
+            it "executes the unjoin through redirection" do
+              translator.expects(:call_with_id).with(other_call_id).returns(nil)
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+
+            it "executes the unjoin through redirection, on the subject call and the other call" do
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+
+              ami_action.headers['ExtraChannel'].should be == other_channel
+              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+          end
+        end#execute_command
 
         describe '#send_agi_action' do
           it 'should send an appropriate AsyncAGI AMI action' do

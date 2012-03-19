@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'uri'
 require 'active_support/core_ext/string/filters'
 
@@ -28,7 +30,7 @@ module Punchblock
             end
 
             def parse_agi_result(result)
-              match = URI.decode(result).chomp.match(/^(\d{3}) result=(-?\d*) ?(\(?.*\)?)?$/)
+              match = URI::Parser.new.unescape(result).chomp.match(/^(\d{3}) result=(-?\d*) ?(\(?.*\)?)?$/)
               if match
                 data = match[3] ? match[3].gsub(/(^\()|(\)$)/, '') : nil
                 [match[1].to_i, match[2].to_i, data]

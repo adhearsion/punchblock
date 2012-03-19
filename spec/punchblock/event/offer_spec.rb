@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   class Event
     describe Offer do
       it 'registers itself' do
-        RayoNode.class_from_registration(:offer, 'urn:xmpp:rayo:1').should == Offer
+        RayoNode.class_from_registration(:offer, 'urn:xmpp:rayo:1').should be == Offer
       end
 
       describe "from a stanza" do
@@ -27,8 +29,8 @@ module Punchblock
         it_should_behave_like 'event'
         it_should_behave_like 'event_headers'
 
-        its(:to)    { should == 'tel:+18003211212' }
-        its(:from)  { should == 'tel:+13058881212' }
+        its(:to)    { should be == 'tel:+18003211212' }
+        its(:from)  { should be == 'tel:+13058881212' }
       end
 
       describe "when setting options in initializer" do
@@ -40,8 +42,8 @@ module Punchblock
 
         it_should_behave_like 'event_headers'
 
-        its(:to)    { should == 'tel:+18003211212' }
-        its(:from)  { should == 'tel:+13058881212' }
+        its(:to)    { should be == 'tel:+18003211212' }
+        its(:from)  { should be == 'tel:+13058881212' }
       end
     end
   end

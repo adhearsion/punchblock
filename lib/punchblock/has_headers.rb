@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Punchblock
   module HasHeaders
     ##
@@ -23,7 +25,7 @@ module Punchblock
     # @param [Hash, Array] headers A hash of key-value header pairs, or an array of Header objects
     #
     def headers=(headers)
-      find('//ns:header', :ns => self.class.registered_ns).each &:remove
+      find('//ns:header', :ns => self.class.registered_ns).each(&:remove)
       if headers.is_a? Hash
         headers.each_pair { |k,v| self << Header.new(k, v) }
       elsif headers.is_a? Array

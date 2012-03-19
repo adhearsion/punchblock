@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
@@ -6,7 +8,7 @@ module Punchblock
       module AMI
         describe Action do
           it 'registers itself' do
-            RayoNode.class_from_registration(:action, 'urn:xmpp:rayo:asterisk:ami:1').should == Action
+            RayoNode.class_from_registration(:action, 'urn:xmpp:rayo:asterisk:ami:1').should be == Action
           end
 
           describe "from a stanza" do
@@ -31,8 +33,8 @@ module Punchblock
 
             it_should_behave_like 'event'
 
-            its(:name)    { should == 'Originate' }
-            its(:params)  { should == [Action::Param.new(:channel, 'SIP/101test'),
+            its(:name)    { should be == 'Originate' }
+            its(:params)  { should be == [Action::Param.new(:channel, 'SIP/101test'),
                                       Action::Param.new(:context, 'default'),
                                       Action::Param.new(:exten, '8135551212'),
                                       Action::Param.new(:priority, '1'),
@@ -42,7 +44,7 @@ module Punchblock
                                       Action::Param.new(:async, '1')
                                      ]}
 
-            its(:params_hash) { should == {:channel   => 'SIP/101test',
+            its(:params_hash) { should be == {:channel   => 'SIP/101test',
                                            :context   => 'default',
                                            :exten     => '8135551212',
                                            :priority  => '1',
@@ -55,19 +57,19 @@ module Punchblock
           describe "testing equality" do
             context "with the same name and params" do
               it "should be equal" do
-                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' }).should == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' }).should be == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
               end
             end
 
             context "with the same name and different params" do
               it "should be equal" do
-                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101' }).should_not == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101' }).should_not be == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
               end
             end
 
             context "with a different name and the same params" do
               it "should be equal" do
-                Action.new(:name => 'Hangup', :params => { :channel => 'SIP/101test' }).should_not == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+                Action.new(:name => 'Hangup', :params => { :channel => 'SIP/101test' }).should_not be == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
               end
             end
           end
@@ -78,9 +80,9 @@ module Punchblock
                          :params => { :channel => 'SIP/101test' }
             end
 
-            its(:name)        { should == 'Originate' }
-            its(:params)      { should == [Action::Param.new(:channel, 'SIP/101test')]}
-            its(:params_hash) { should == { :channel => 'SIP/101test' } }
+            its(:name)        { should be == 'Originate' }
+            its(:params)      { should be == [Action::Param.new(:channel, 'SIP/101test')]}
+            its(:params_hash) { should be == { :channel => 'SIP/101test' } }
           end
 
           class Action
@@ -108,19 +110,19 @@ module Punchblock
 
                 it { should be_instance_of Success }
 
-                its(:name)            { should == :success }
-                its(:message)         { should == "Originate successfully queued" }
-                its(:attributes)      { should == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
-                its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
+                its(:name)            { should be == :success }
+                its(:message)         { should be == "Originate successfully queued" }
+                its(:attributes)      { should be == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
+                its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
 
                 describe "when setting options in initializer" do
                   subject do
                     Success.new :message => 'Originate successfully queued', :attributes => {:channel => 'SIP/101-3f3f', :state => 'Ring'}
                   end
 
-                  its(:message)         { should == 'Originate successfully queued' }
-                  its(:attributes)      { should == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
-                  its(:attributes_hash) { should == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
+                  its(:message)         { should be == 'Originate successfully queued' }
+                  its(:attributes)      { should be == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
+                  its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
                 end
               end
 

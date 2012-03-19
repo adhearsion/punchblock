@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Punchblock
   module Translator
     class Asterisk
@@ -71,7 +73,7 @@ module Punchblock
           end
 
           def cancel_initial_timer
-            return unless @initial_timer
+            return unless instance_variable_defined?(:@initial_timer) && @initial_timer
             @initial_timer.cancel
             @initial_timer = nil
           end
@@ -90,7 +92,7 @@ module Punchblock
           end
 
           def cancel_inter_digit_timer
-            return unless @inter_digit_timer
+            return unless instance_variable_defined?(:@inter_digit_timer) && @inter_digit_timer
             @inter_digit_timer.cancel
             @inter_digit_timer = nil
           end

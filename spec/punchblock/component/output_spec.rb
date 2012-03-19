@@ -1,10 +1,12 @@
+# encoding: utf-8
+
 require 'spec_helper'
 
 module Punchblock
   module Component
     describe Output do
       it 'registers itself' do
-        RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should == Output
+        RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should be == Output
       end
 
       describe 'default values' do
@@ -28,13 +30,13 @@ module Punchblock
                       :voice            => 'allison'
         end
 
-        its(:interrupt_on)     { should == :speech }
-        its(:start_offset)     { should == 2000 }
-        its(:start_paused)     { should == false }
-        its(:repeat_interval)  { should == 2000 }
-        its(:repeat_times)     { should == 10 }
-        its(:max_time)         { should == 30000 }
-        its(:voice)            { should == 'allison' }
+        its(:interrupt_on)     { should be == :speech }
+        its(:start_offset)     { should be == 2000 }
+        its(:start_paused)     { should be == false }
+        its(:repeat_interval)  { should be == 2000 }
+        its(:repeat_times)     { should be == 10 }
+        its(:max_time)         { should be == 30000 }
+        its(:voice)            { should be == 'allison' }
       end
 
       describe "from a stanza" do
@@ -55,21 +57,21 @@ module Punchblock
 
         it { should be_instance_of Output }
 
-        its(:interrupt_on)     { should == :speech }
-        its(:start_offset)     { should == 2000 }
-        its(:start_paused)     { should == false }
-        its(:repeat_interval)  { should == 2000 }
-        its(:repeat_times)     { should == 10 }
-        its(:max_time)         { should == 30000 }
-        its(:voice)            { should == 'allison' }
-        its(:text)             { should == 'Hello world' }
+        its(:interrupt_on)     { should be == :speech }
+        its(:start_offset)     { should be == 2000 }
+        its(:start_paused)     { should be == false }
+        its(:repeat_interval)  { should be == 2000 }
+        its(:repeat_times)     { should be == 10 }
+        its(:max_time)         { should be == 30000 }
+        its(:voice)            { should be == 'allison' }
+        its(:text)             { should be == 'Hello world' }
       end
 
       describe "for text" do
         subject { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
 
-        its(:voice) { should == 'kate' }
-        its(:text) { should == 'Once upon a time there was a message...' }
+        its(:voice) { should be == 'kate' }
+        its(:text) { should be == 'Once upon a time there was a message...' }
       end
 
       describe "for SSML" do
@@ -81,18 +83,18 @@ module Punchblock
 
         subject { Output.new :ssml => ssml_doc, :voice => 'kate' }
 
-        its(:voice) { should == 'kate' }
+        its(:voice) { should be == 'kate' }
 
-        its(:ssml) { should == ssml_doc }
+        its(:ssml) { should be == ssml_doc }
 
         describe "comparison" do
           let(:output2) { Output.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal"/></speak>', :voice => 'kate'  }
           let(:output3) { Output.new :ssml => ssml_doc, :voice => 'kate'  }
           let(:output4) { Output.new :ssml => ssml_doc(:normal), :voice => 'kate'  }
 
-          it { should == output2 }
-          it { should == output3 }
-          it { should_not == output4 }
+          it { should be == output2 }
+          it { should be == output3 }
+          it { should_not be == output4 }
         end
       end
 
@@ -109,9 +111,9 @@ module Punchblock
         describe '#pause_action' do
           subject { command.pause_action }
 
-          its(:to_xml) { should == '<pause xmlns="urn:xmpp:rayo:output:1"/>' }
-          its(:component_id) { should == 'abc123' }
-          its(:call_id) { should == '123abc' }
+          its(:to_xml) { should be == '<pause xmlns="urn:xmpp:rayo:output:1"/>' }
+          its(:component_id) { should be == 'abc123' }
+          its(:call_id) { should be == '123abc' }
         end
 
         describe '#pause!' do
@@ -142,7 +144,7 @@ module Punchblock
             subject.paused!
           end
 
-          its(:state_name) { should == :paused }
+          its(:state_name) { should be == :paused }
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
             lambda { subject.paused! }.should raise_error(StateMachine::InvalidTransition)
@@ -152,9 +154,9 @@ module Punchblock
         describe '#resume_action' do
           subject { command.resume_action }
 
-          its(:to_xml) { should == '<resume xmlns="urn:xmpp:rayo:output:1"/>' }
-          its(:component_id) { should == 'abc123' }
-          its(:call_id) { should == '123abc' }
+          its(:to_xml) { should be == '<resume xmlns="urn:xmpp:rayo:output:1"/>' }
+          its(:component_id) { should be == 'abc123' }
+          its(:call_id) { should be == '123abc' }
         end
 
         describe '#resume!' do
@@ -187,7 +189,7 @@ module Punchblock
             subject.resumed!
           end
 
-          its(:state_name) { should == :executing }
+          its(:state_name) { should be == :executing }
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
             lambda { subject.resumed! }.should raise_error(StateMachine::InvalidTransition)
@@ -197,9 +199,9 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should == '<stop xmlns="urn:xmpp:rayo:1"/>' }
-          its(:component_id) { should == 'abc123' }
-          its(:call_id) { should == '123abc' }
+          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:1"/>' }
+          its(:component_id) { should be == 'abc123' }
+          its(:call_id) { should be == '123abc' }
         end
 
         describe '#stop!' do
@@ -228,9 +230,9 @@ module Punchblock
           describe '#seek_action' do
             subject { command.seek_action seek_options }
 
-            its(:to_xml) { should == '<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>' }
-            its(:component_id) { should == 'abc123' }
-            its(:call_id) { should == '123abc' }
+            its(:to_xml) { should be == '<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>' }
+            its(:component_id) { should be == 'abc123' }
+            its(:call_id) { should be == '123abc' }
           end
 
           describe '#seek!' do
@@ -268,7 +270,7 @@ module Punchblock
               subject.seeking!
             end
 
-            its(:seek_status_name) { should == :seeking }
+            its(:seek_status_name) { should be == :seeking }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.seeking! }.should raise_error(StateMachine::InvalidTransition)
@@ -283,7 +285,7 @@ module Punchblock
               subject.stopped_seeking!
             end
 
-            its(:seek_status_name) { should == :not_seeking }
+            its(:seek_status_name) { should be == :not_seeking }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.stopped_seeking! }.should raise_error(StateMachine::InvalidTransition)
@@ -295,9 +297,9 @@ module Punchblock
           describe '#speed_up_action' do
             subject { command.speed_up_action }
 
-            its(:to_xml) { should == '<speed-up xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should == 'abc123' }
-            its(:call_id) { should == '123abc' }
+            its(:to_xml) { should be == '<speed-up xmlns="urn:xmpp:rayo:output:1"/>' }
+            its(:component_id) { should be == 'abc123' }
+            its(:call_id) { should be == '123abc' }
           end
 
           describe '#speed_up!' do
@@ -343,7 +345,7 @@ module Punchblock
               subject.speeding_up!
             end
 
-            its(:speed_status_name) { should == :speeding_up }
+            its(:speed_status_name) { should be == :speeding_up }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.speeding_up! }.should raise_error(StateMachine::InvalidTransition)
@@ -353,9 +355,9 @@ module Punchblock
           describe '#slow_down_action' do
             subject { command.slow_down_action }
 
-            its(:to_xml) { should == '<speed-down xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should == 'abc123' }
-            its(:call_id) { should == '123abc' }
+            its(:to_xml) { should be == '<speed-down xmlns="urn:xmpp:rayo:output:1"/>' }
+            its(:component_id) { should be == 'abc123' }
+            its(:call_id) { should be == '123abc' }
           end
 
           describe '#slow_down!' do
@@ -401,7 +403,7 @@ module Punchblock
               subject.slowing_down!
             end
 
-            its(:speed_status_name) { should == :slowing_down }
+            its(:speed_status_name) { should be == :slowing_down }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.slowing_down! }.should raise_error(StateMachine::InvalidTransition)
@@ -416,7 +418,7 @@ module Punchblock
               subject.stopped_speeding!
             end
 
-            its(:speed_status_name) { should == :not_speeding }
+            its(:speed_status_name) { should be == :not_speeding }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.stopped_speeding! }.should raise_error(StateMachine::InvalidTransition)
@@ -428,9 +430,9 @@ module Punchblock
           describe '#volume_up_action' do
             subject { command.volume_up_action }
 
-            its(:to_xml) { should == '<volume-up xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should == 'abc123' }
-            its(:call_id) { should == '123abc' }
+            its(:to_xml) { should be == '<volume-up xmlns="urn:xmpp:rayo:output:1"/>' }
+            its(:component_id) { should be == 'abc123' }
+            its(:call_id) { should be == '123abc' }
           end
 
           describe '#volume_up!' do
@@ -476,7 +478,7 @@ module Punchblock
               subject.voluming_up!
             end
 
-            its(:volume_status_name) { should == :voluming_up }
+            its(:volume_status_name) { should be == :voluming_up }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.voluming_up! }.should raise_error(StateMachine::InvalidTransition)
@@ -486,9 +488,9 @@ module Punchblock
           describe '#volume_down_action' do
             subject { command.volume_down_action }
 
-            its(:to_xml) { should == '<volume-down xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should == 'abc123' }
-            its(:call_id) { should == '123abc' }
+            its(:to_xml) { should be == '<volume-down xmlns="urn:xmpp:rayo:output:1"/>' }
+            its(:component_id) { should be == 'abc123' }
+            its(:call_id) { should be == '123abc' }
           end
 
           describe '#volume_down!' do
@@ -534,7 +536,7 @@ module Punchblock
               subject.voluming_down!
             end
 
-            its(:volume_status_name) { should == :voluming_down }
+            its(:volume_status_name) { should be == :voluming_down }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.voluming_down! }.should raise_error(StateMachine::InvalidTransition)
@@ -549,7 +551,7 @@ module Punchblock
               subject.stopped_voluming!
             end
 
-            its(:volume_status_name) { should == :not_voluming }
+            its(:volume_status_name) { should be == :not_voluming }
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
               lambda { subject.stopped_voluming! }.should raise_error(StateMachine::InvalidTransition)
@@ -572,7 +574,7 @@ module Punchblock
 
       it { should be_instance_of Output::Complete::Success }
 
-      its(:name) { should == :success }
+      its(:name) { should be == :success }
     end
   end
 end # Punchblock

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'punchblock/key_value_pair_node'
 
 module Punchblock
@@ -44,7 +46,7 @@ module Punchblock
           # @param [Hash, Array] attributes A hash of key-value attribute pairs, or an array of Attribute objects
           #
           def attributes=(attributes)
-            find('//ns:attribute', :ns => self.class.registered_ns).each &:remove
+            find('//ns:attribute', :ns => self.class.registered_ns).each(&:remove)
             if attributes.is_a? Hash
               attributes.each_pair { |k,v| self << Attribute.new(k, v) }
             elsif attributes.is_a? Array

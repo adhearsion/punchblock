@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Punchblock
   class Event
     class Complete < Event
@@ -18,7 +20,7 @@ module Punchblock
       end
 
       def reason=(other)
-        children.map &:remove
+        children.map(&:remove)
         self << other
       end
 

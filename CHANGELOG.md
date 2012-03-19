@@ -1,10 +1,14 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Asterisk calls now support the Join API
+  * Feature: On Asterisk, Punchblock creates a context and extension to redirect calls to
   * Bugfix: Unjoining calls now redirects both legs
+  * Bugfix: Unlink events on Asterisk correctly send Unjoin Punchblock events
   * Bugfix: The Asterisk translator now ignores calls to 'h' or of type 'Kill'
   * Bugfix: Handle more XMPP connection errors gracefully
   * Bugfix: The XMPP connection ready event is now available to external handlers
   * Bugfix: The Asterisk connection now passes the `:media_engine` option down to the translator
+  * Bugfix: Connections now always respond to connected?
+  * Bugfix: Connection termination handled gracefully on Asterisk
   * Feature: app_swift is now supported on Asterisk with a media_engine type of :swift
 
 # [v0.9.2](https://github.com/adhearsion/punchblock/compare/v0.9.1...v0.9.2) - [2012-02-18](https://rubygems.org/gems/punchblock/versions/0.9.2)

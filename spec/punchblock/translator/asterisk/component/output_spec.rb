@@ -408,12 +408,10 @@ module Punchblock
                     latch = CountDownLatch.new 2
                     mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename1, nil do
                       subject.continue
-                      true
                       latch.countdown!
                     end
                     mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename2, nil do
                       subject.continue
-                      true
                       latch.countdown!
                     end
                     subject.execute

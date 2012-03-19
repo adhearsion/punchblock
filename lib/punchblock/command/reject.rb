@@ -55,7 +55,7 @@ module Punchblock
         if reject_reason && !VALID_REASONS.include?(reject_reason.to_sym)
           raise ArgumentError, "Invalid Reason (#{reject_reason}), use: #{VALID_REASONS*' '}"
         end
-        children.each &:remove
+        children.each(&:remove)
         self << RayoNode.new(reject_reason)
       end
 

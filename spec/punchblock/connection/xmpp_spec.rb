@@ -86,7 +86,6 @@ module Punchblock
   <say-as interpret-as='date'>12/01/2011</say-as>
 </output>
         MSG
-        Component::Output
         output = RayoNode.import parse_stanza(output).root
         connection.expects(:write_to_stream).once.returns true
         iq = Blather::Stanza::Iq.new :set, '9f00061@call.rayo.net'

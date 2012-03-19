@@ -57,7 +57,7 @@ module Punchblock
 
             def success_reason(response)
               headers = response.headers
-              headers.merge! @extra_complete_attributes if @extra_complete_attributes
+              headers.merge! @extra_complete_attributes if instance_variable_defined?(:@extra_complete_attributes)
               headers.delete 'ActionID'
               Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => headers.delete('Message'), :attributes => headers
             end

@@ -20,7 +20,7 @@ module Punchblock
       end
 
       def reason=(other)
-        children.map &:remove
+        children.map(&:remove)
         self << other
       end
 

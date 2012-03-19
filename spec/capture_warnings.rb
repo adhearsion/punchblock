@@ -8,24 +8,25 @@ at_exit do
   lines = stderr_file.read.split("\n").uniq
   stderr_file.close!
 
-  ahn_warnings, other_warnings = lines.partition { |line| line.include?(current_dir) && !line.include?('vendor') }
+  pb_warnings, other_warnings = lines.partition { |line| line.include?(current_dir) && !line.include?('vendor') && line.include?('warning') }
 
-  if ahn_warnings.any?
+  if pb_warnings.any?
     puts
-    puts "-" * 30 + " AHN Warnings: " + "-" * 30
+    puts "-" * 30 + " PB Warnings: " + "-" * 30
     puts
-    puts ahn_warnings.join("\n")
+    puts pb_warnings.join("\n")
     puts
     puts "-" * 75
     puts
   end
 
   if other_warnings.any?
+    Dir.mkdir 'tmp' unless Dir.exists? 'tmp'
     File.open('tmp/warnings.txt', 'w') { |f| f.write other_warnings.join("\n") }
     puts
-    puts "Non-AHN warnings written to tmp/warnings.txt"
+    puts "Non-PB warnings written to tmp/warnings.txt"
     puts
   end
 
-  exit 1 if ahn_warnings.any? # fail the build...
+  exit 1 if pb_warnings.any? # fail the build...
 end

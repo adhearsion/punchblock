@@ -132,9 +132,9 @@ module Punchblock
 
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
-                  code.should   == 200
+                  code.should be == 200
                   result.should be == 123
-                  data.should   == ''
+                  data.should be == ''
                 end
               end
 
@@ -143,9 +143,9 @@ module Punchblock
 
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
-                  code.should   == 200
+                  code.should be == 200
                   result.should be == -123
-                  data.should   == 'timeout'
+                  data.should be == 'timeout'
                 end
               end
 
@@ -154,9 +154,9 @@ module Punchblock
 
                 it 'should provide the code and result' do
                   code, result, data = subject.parse_agi_result result_string
-                  code.should   == 200
+                  code.should be == 200
                   result.should be == 123
-                  data.should   == 'foo=bar'
+                  data.should be == 'foo=bar'
                 end
               end
             end

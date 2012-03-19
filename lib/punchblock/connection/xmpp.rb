@@ -27,7 +27,7 @@ module Punchblock
       def initialize(options = {})
         raise ArgumentError unless (@username = options[:username]) && options[:password]
 
-        setup *[:username, :password, :host, :port, :certs, :connection_timeout].map { |key| options.delete key }
+        setup(*[:username, :password, :host, :port, :certs, :connection_timeout].map { |key| options.delete key })
 
         @root_domain    = Blather::JID.new(options[:root_domain] || options[:rayo_domain] || @username).domain
         @calls_domain   = options[:calls_domain]  || "calls.#{@root_domain}"

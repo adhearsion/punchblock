@@ -13,7 +13,7 @@ module Punchblock
           let(:component_id)  { 'abc123' }
           let(:args)          { [{:call_id => call_id, :component_id => component_id}] }
 
-          subject { CommandNode.new *args }
+          subject { CommandNode.new(*args) }
 
           its(:call_id)       { should be == call_id }
           its(:component_id)  { should be == component_id }

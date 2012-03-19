@@ -7,6 +7,8 @@ require 'logger'
 
 Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
 
+Thread.abort_on_exception = true
+
 RSpec.configure do |config|
   config.mock_with :mocha
   config.filter_run :focus => true

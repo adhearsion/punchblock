@@ -40,7 +40,11 @@ module Punchblock
 
               send_ref
 
-              @interrupt_digits = '0123456789*#' if [:any, :dtmf].include? @component_node.interrupt_on
+              @interrupt_digits = if [:any, :dtmf].include? @component_node.interrupt_on
+                '0123456789*#'
+              else
+                nil
+              end
 
               @execution_elements.each do |element|
                 element.call

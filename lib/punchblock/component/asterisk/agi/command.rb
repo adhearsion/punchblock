@@ -25,7 +25,7 @@ module Punchblock
           # @return [Array[String]] array of values of params
           #
           def params_array
-            params.map &:value
+            params.map(&:value)
           end
 
           ##
@@ -41,7 +41,7 @@ module Punchblock
           # @param [Hash, Array] params A hash of key-value param pairs, or an array of Param objects
           #
           def params=(params)
-            find('//ns:param', :ns => self.class.registered_ns).each &:remove
+            find('//ns:param', :ns => self.class.registered_ns).each(&:remove)
             [params].flatten.each { |i| self << Param.new(i) } if params.is_a? Array
           end
 

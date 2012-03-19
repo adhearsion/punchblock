@@ -30,7 +30,7 @@ module Punchblock
           end
 
           def agi_env_as_array(agi_env)
-            URI.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
+            URI::Parser.new.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
           end
         end
 

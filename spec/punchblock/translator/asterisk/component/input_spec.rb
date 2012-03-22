@@ -9,16 +9,16 @@ module Punchblock
         describe Input do
           let(:connection) do
             mock_connection_with_event_handler do |event|
-              command.add_event event
+              original_command.add_event event
             end
           end
           let(:media_engine)    { nil }
           let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
           let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
-          let(:command_options) { {} }
+          let(:original_command_options) { {} }
 
-          let :command do
-            Punchblock::Component::Input.new command_options
+          let :original_command do
+            Punchblock::Component::Input.new original_command_options
           end
 
           let :grammar do
@@ -37,10 +37,10 @@ module Punchblock
             end
           end
 
-          subject { Input.new command, call }
+          subject { Input.new original_command, call }
 
           describe '#execute' do
-            before { command.request! }
+            before { original_command.request! }
 
             it "calls answer_if_not_answered on the call" do
               call.expects :answer_if_not_answered
@@ -57,10 +57,10 @@ module Punchblock
             context 'with a media engine of :asterisk' do
               let(:media_engine) { :asterisk }
 
-              let(:command_opts) { {} }
+              let(:original_command_opts) { {} }
 
-              let :command_options do
-                { :mode => :dtmf, :grammar => { :value => grammar } }.merge(command_opts)
+              let :original_command_options do
+                { :mode => :dtmf, :grammar => { :value => grammar } }.merge(original_command_opts)
               end
 
               def ami_event_for_dtmf(digit, position)
@@ -76,7 +76,7 @@ module Punchblock
                 call.process_ami_event ami_event_for_dtmf(digit, :end)
               end
 
-              let(:reason) { command.complete_event(5).reason }
+              let(:reason) { original_command.complete_event(5).reason }
 
               describe "receiving DTMF events" do
                 before do
@@ -123,40 +123,40 @@ module Punchblock
 
               describe 'grammar' do
                 context 'unset' do
-                  let(:command_opts) { { :grammar => nil } }
+                  let(:original_command_opts) { { :grammar => nil } }
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A grammar document is required.'
-                    command.response(0.1).should be == error
+                    original_command.response(0.1).should be == error
                   end
                 end
               end
 
               describe 'mode' do
                 context 'unset' do
-                  let(:command_opts) { { :mode => nil } }
+                  let(:original_command_opts) { { :mode => nil } }
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
-                    command.response(0.1).should be == error
+                    original_command.response(0.1).should be == error
                   end
                 end
 
                 context 'any' do
-                  let(:command_opts) { { :mode => :any } }
+                  let(:original_command_opts) { { :mode => :any } }
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
-                    command.response(0.1).should be == error
+                    original_command.response(0.1).should be == error
                   end
                 end
 
                 context 'speech' do
-                  let(:command_opts) { { :mode => :speech } }
+                  let(:original_command_opts) { { :mode => :speech } }
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
-                    command.response(0.1).should be == error
+                    original_command.response(0.1).should be == error
                   end
                 end
               end
@@ -171,7 +171,7 @@ module Punchblock
 
               describe 'initial-timeout' do
                 context 'a positive number' do
-                  let(:command_opts) { { :initial_timeout => 1000 } }
+                  let(:original_command_opts) { { :initial_timeout => 1000 } }
 
                   it "should not cause a NoInput if first input is received in time" do
                     subject.execute
@@ -191,7 +191,7 @@ module Punchblock
                 end
 
                 context '-1' do
-                  let(:command_opts) { { :initial_timeout => -1 } }
+                  let(:original_command_opts) { { :initial_timeout => -1 } }
 
                   it "should not start a timer" do
                     subject.wrapped_object.expects(:begin_initial_timer).never
@@ -200,7 +200,7 @@ module Punchblock
                 end
 
                 context 'unset' do
-                  let(:command_opts) { { :initial_timeout => nil } }
+                  let(:original_command_opts) { { :initial_timeout => nil } }
 
                   it "should not start a timer" do
                     subject.wrapped_object.expects(:begin_initial_timer).never
@@ -209,19 +209,19 @@ module Punchblock
                 end
 
                 context 'a negative number other than -1' do
-                  let(:command_opts) { { :initial_timeout => -1000 } }
+                  let(:original_command_opts) { { :initial_timeout => -1000 } }
 
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An initial timeout value that is negative (and not -1) is invalid.'
-                    command.response(0.1).should be == error
+                    original_command.response(0.1).should be == error
                   end
                 end
               end
 
               describe 'inter-digit-timeout' do
                 context 'a positive number' do
-                  let(:command_opts) { { :inter_digit_timeout => 1000 } }
+                  let(:original_command_opts) { { :inter_digit_timeout => 1000 } }
 
                   it "should not prevent a Match if input is received in time" do
                     subject.execute
@@ -243,7 +243,7 @@ module Punchblock
                 end
 
                 context '-1' do
-                  let(:command_opts) { { :inter_digit_timeout => -1 } }
+                  let(:original_command_opts) { { :inter_digit_timeout => -1 } }
 
                   it "should not start a timer" do
                     subject.wrapped_object.expects(:begin_inter_digit_timer).never
@@ -252,7 +252,7 @@ module Punchblock
                 end
 
                 context 'unset' do
-                  let(:command_opts) { { :inter_digit_timeout => nil } }
+                  let(:original_command_opts) { { :inter_digit_timeout => nil } }
 
                   it "should not start a timer" do
                     subject.wrapped_object.expects(:begin_inter_digit_timer).never
@@ -261,12 +261,12 @@ module Punchblock
                 end
 
                 context 'a negative number other than -1' do
-                  let(:command_opts) { { :inter_digit_timeout => -1000 } }
+                  let(:original_command_opts) { { :inter_digit_timeout => -1000 } }
 
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new 'option error', 'An inter-digit timeout value that is negative (and not -1) is invalid.'
-                    command.response(0.1).should be == error
+                    original_command.response(0.1).should be == error
                   end
                 end
               end
@@ -287,19 +287,27 @@ module Punchblock
 
           describe "#execute_command" do
             context "with a command it does not understand" do
-              let(:command) { Punchblock::Component::Output::Pause.new command_options}
-              before{ command.request! }
-              it "returns a ProtocolError response" do 
+              let(:command) { Punchblock::Component::Output::Pause.new }
+
+              before { command.request! }
+
+              it "returns a ProtocolError response" do
                 subject.execute_command command
                 command.response(0.1).should be_a ProtocolError
               end
             end
 
             context "with a Stop command" do
-              let(:command) { Punchblock::Component::Stop.new command_options}
-              let(:reason) { command.complete_event(5).reason }
-              before{ command.request! }
-              it "sets the command response to true" do 
+              let(:command) { Punchblock::Component::Stop.new }
+              let(:reason) { original_command.complete_event(5).reason }
+
+              before do
+                command.request!
+                original_command.request!
+                original_command.execute!
+              end
+
+              it "sets the command response to true" do
                 subject.execute_command command
                 command.response(0.1).should be == true
                 reason.should be_a Punchblock::Event::Complete::Stop

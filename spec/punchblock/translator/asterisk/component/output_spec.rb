@@ -392,6 +392,28 @@ module Punchblock
                   end
                 end
 
+                context 'with a single text node without spaces' do
+                  let(:audio_filename) { 'tt-monkeys' }
+                  let :command_options do
+                    {
+                      :ssml => RubySpeech::SSML.draw { string audio_filename }
+                    }
+                  end
+
+                  it 'should playback the audio file using STREAM FILE' do
+                    expect_stream_file_with_options
+                    subject.execute
+                  end
+
+                  it 'should send a complete event when the file finishes playback' do
+                    def mock_call.send_agi_action!(*args, &block)
+                      block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
+                    end
+                    subject.execute
+                    command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  end
+                end
+
                 context 'with multiple audio SSML nodes' do
                   let(:audio_filename1) { 'http://foo.com/bar.mp3' }
                   let(:audio_filename2) { 'http://foo.com/baz.mp3' }
@@ -434,7 +456,7 @@ module Punchblock
                   let :command_options do
                     {
                       :ssml => RubySpeech::SSML.draw do
-                        string "FooBar"
+                        string "Foo Bar"
                       end
                     }
                   end

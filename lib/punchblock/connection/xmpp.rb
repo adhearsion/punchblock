@@ -170,7 +170,7 @@ module Punchblock
           begin
             handle_error response if response.is_a? Blather::BlatherError
           rescue ProtocolError => e
-            raise e unless e.name == :feature_not_implemented
+            raise unless e.name == :feature_not_implemented
           end
         end
       end

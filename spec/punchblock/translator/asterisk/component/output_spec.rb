@@ -633,8 +633,10 @@ module Punchblock
 
               it "sends the correct complete event" do
                 subject.execute_command command
+                original_command.should_not be_complete
                 mock_call.process_ami_event! ami_event
                 reason.should be_a Punchblock::Event::Complete::Stop
+                original_command.should be_complete
               end
             end
           end

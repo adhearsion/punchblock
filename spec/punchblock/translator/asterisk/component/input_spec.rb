@@ -92,11 +92,11 @@ module Punchblock
 
                   let :expected_event do
                     Punchblock::Component::Input::Complete::Success.new :mode => :dtmf,
-                                                                        :confidence => 1,
-                                                                        :utterance => '12',
-                                                                        :interpretation => 'dtmf-1 dtmf-2',
-                                                                        :component_id => subject.id,
-                                                                        :call_id => call.id
+                      :confidence => 1,
+                      :utterance => '12',
+                      :interpretation => 'dtmf-1 dtmf-2',
+                      :component_id => subject.id,
+                      :call_id => call.id
                   end
 
                   it "should send a success complete event with the relevant data" do
@@ -284,6 +284,29 @@ module Punchblock
               end
             end
           end
+
+          describe "#execute_command" do
+            context "with a command it does not understand" do
+              let(:command) { Punchblock::Component::Output::Pause.new command_options}
+              before{ command.request! }
+              it "returns a ProtocolError response" do 
+                subject.execute_command command
+                command.response(0.1).should be_a ProtocolError
+              end
+            end
+
+            context "with a Stop command" do
+              let(:command) { Punchblock::Component::Stop.new command_options}
+              let(:reason) { command.complete_event(5).reason }
+              before{ command.request! }
+              it "sets the command response to true" do 
+                subject.execute_command command
+                command.response(0.1).should be == true
+                reason.should be_a Punchblock::Event::Complete::Stop
+              end
+            end
+          end
+
         end
       end
     end

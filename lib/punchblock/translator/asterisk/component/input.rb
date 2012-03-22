@@ -62,6 +62,16 @@ module Punchblock
             end
           end
 
+          def execute_command(command)
+            case command
+            when Punchblock::Component::Stop
+              command.response = true
+              complete Punchblock::Event::Complete::Stop.new
+            else
+              super
+            end
+          end
+
           private
 
           def begin_initial_timer(timeout)

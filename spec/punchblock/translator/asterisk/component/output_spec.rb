@@ -612,10 +612,11 @@ module Punchblock
             context "with a Stop command" do
               let(:command) { Punchblock::Component::Stop.new }
               let(:reason) { original_command.complete_event(5).reason }
+              let(:channel) { "SIP/1234-00000000" }
               let :ami_event do
                 RubyAMI::Event.new('AsyncAGI').tap do |e|
                   e['SubEvent'] = "Start"
-                  e['Channel']  = "SIP/1234-00000000"
+                  e['Channel']  = channel
                   e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
                 end
               end
@@ -627,16 +628,23 @@ module Punchblock
               end
 
               it "sets the command response to true" do
+                mock_call.expects(:redirect_back)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
+                mock_call.expects(:redirect_back)
                 subject.execute_command command
                 original_command.should_not be_complete
                 mock_call.process_ami_event! ami_event
                 reason.should be_a Punchblock::Event::Complete::Stop
                 original_command.should be_complete
+              end
+
+              it "redirects the call by unjoining it" do
+                mock_call.expects(:redirect_back).with(nil)
+                subject.execute_command command
               end
             end
           end

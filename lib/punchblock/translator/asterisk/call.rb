@@ -226,8 +226,6 @@ module Punchblock
           "#{self.class}: #{id}"
         end
 
-        private
-
         def redirect_back(other_call = nil)
           redirect_options = {
             'Channel'   => channel,
@@ -243,6 +241,8 @@ module Punchblock
           }) if other_call
           send_ami_action 'Redirect', redirect_options
         end
+
+        private
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)

@@ -95,6 +95,7 @@ module Punchblock
             case command
             when Punchblock::Component::Stop
               command.response = true
+              call.redirect_back
               call.register_handler :ami, :name => 'AsyncAGI' do |event|
                 if event['SubEvent'] == "Start"
                   send_complete_event Punchblock::Event::Complete::Stop.new

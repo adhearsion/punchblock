@@ -91,6 +91,20 @@ module Punchblock
             end
           end
 
+          def execute_command(command)
+            case command
+            when Punchblock::Component::Stop
+              command.response = true
+              call.register_handler :ami, :name => 'AsyncAGI' do |event|
+                if event['SubEvent'] == "Start"
+                  send_complete_event Punchblock::Event::Complete::Stop.new
+                end
+              end
+            else
+              super
+            end
+          end
+
           private
 
           def escaped_doc

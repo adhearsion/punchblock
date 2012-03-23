@@ -9,6 +9,7 @@ module Punchblock
         autoload :Asterisk
         autoload :Input
         autoload :Output
+        autoload :StopByRedirect
 
         class Component
           include Celluloid

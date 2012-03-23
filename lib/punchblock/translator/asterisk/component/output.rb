@@ -7,6 +7,7 @@ module Punchblock
     class Asterisk
       module Component
         class Output < Component
+          include StopByRedirect
 
           def setup
             @media_engine = @call.translator.media_engine
@@ -91,21 +92,6 @@ module Punchblock
             @call.send_agi_action! 'STREAM FILE', path, @interrupt_digits do |complete_event|
               pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
               op.continue! complete_event
-            end
-          end
-
-          def execute_command(command)
-            case command
-            when Punchblock::Component::Stop
-              command.response = true
-              call.redirect_back
-              call.register_handler :ami, :name => 'AsyncAGI' do |event|
-                if event['SubEvent'] == "Start"
-                  send_complete_event Punchblock::Event::Complete::Stop.new
-                end
-              end
-            else
-              super
             end
           end
 

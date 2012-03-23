@@ -98,7 +98,7 @@ module Punchblock
         if call = call_with_id(command.call_id)
           call.execute_command! command
         else
-          command.response = ProtocolError.new 'call-not-found', "Could not find a call with ID #{command.call_id}", command.call_id
+          command.response = ProtocolError.new.setup 'call-not-found', "Could not find a call with ID #{command.call_id}", command.call_id
         end
       end
 
@@ -106,7 +106,7 @@ module Punchblock
         if (component = component_with_id(command.component_id))
           component.execute_command! command
         else
-          command.response = ProtocolError.new 'component-not-found', "Could not find a component with ID #{command.component_id}", command.call_id, command.component_id
+          command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id}", command.call_id, command.component_id
         end
       end
 
@@ -121,7 +121,7 @@ module Punchblock
           register_call call
           call.dial! command
         else
-          command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command"
+          command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command"
         end
       end
 

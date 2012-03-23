@@ -107,7 +107,7 @@ module Punchblock
                   let(:command_opts) { { :interrupt_on => :speech } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
+                    error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -176,7 +176,7 @@ module Punchblock
                   let(:command_opts) { { :ssml => nil } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'An SSML document is required.'
+                    error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -195,7 +195,7 @@ module Punchblock
                   let(:command_opts) { { :start_offset => 10 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A start_offset value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -214,7 +214,7 @@ module Punchblock
                   let(:command_opts) { { :start_paused => true } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A start_paused value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -233,7 +233,7 @@ module Punchblock
                   let(:command_opts) { { :repeat_interval => 10 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A repeat_interval value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -252,7 +252,7 @@ module Punchblock
                   let(:command_opts) { { :repeat_times => 2 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A repeat_times value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -271,7 +271,7 @@ module Punchblock
                   let(:command_opts) { { :max_time => 30 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A max_time value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -324,7 +324,7 @@ module Punchblock
                   let(:command_opts) { { :interrupt_on => :speech } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
+                    error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -365,7 +365,7 @@ module Punchblock
                   let(:command_opts) { { :ssml => nil } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'An SSML document is required.'
+                    error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -375,6 +375,28 @@ module Punchblock
                   let :command_options do
                     {
                       :ssml => RubySpeech::SSML.draw { audio :src => audio_filename }
+                    }
+                  end
+
+                  it 'should playback the audio file using STREAM FILE' do
+                    expect_stream_file_with_options
+                    subject.execute
+                  end
+
+                  it 'should send a complete event when the file finishes playback' do
+                    def mock_call.send_agi_action!(*args, &block)
+                      block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
+                    end
+                    subject.execute
+                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  end
+                end
+
+                context 'with a single text node without spaces' do
+                  let(:audio_filename) { 'tt-monkeys' }
+                  let :command_options do
+                    {
+                      :ssml => RubySpeech::SSML.draw { string audio_filename }
                     }
                   end
 
@@ -434,14 +456,14 @@ module Punchblock
                   let :command_options do
                     {
                       :ssml => RubySpeech::SSML.draw do
-                        string "FooBar"
+                        string "Foo Bar"
                       end
                     }
                   end
 
                   it "should return an unrenderable document error" do
                     subject.execute
-                    error = ProtocolError.new 'unrenderable document error', 'The provided document could not be rendered.'
+                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -460,7 +482,7 @@ module Punchblock
                   let(:command_opts) { { :start_offset => 10 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A start_offset value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -479,7 +501,7 @@ module Punchblock
                   let(:command_opts) { { :start_paused => true } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A start_paused value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -498,7 +520,7 @@ module Punchblock
                   let(:command_opts) { { :repeat_interval => 10 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A repeat_interval value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -517,7 +539,7 @@ module Punchblock
                   let(:command_opts) { { :repeat_times => 2 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A repeat_times value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -536,7 +558,7 @@ module Punchblock
                   let(:command_opts) { { :max_time => 30 } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A max_time value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -555,7 +577,7 @@ module Punchblock
                   let(:command_opts) { { :voice => 'alison' } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A voice value is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A voice value is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -590,14 +612,14 @@ module Punchblock
                   let(:command_opts) { { :interrupt_on => :speech } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'An interrupt-on value of speech is unsupported.'
+                    error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
                     original_command.response(0.1).should be == error
                   end
                 end
               end
             end
           end
-          
+
           describe "#execute_command" do
             context "with a command it does not understand" do
               let(:command) { Punchblock::Component::Output::Pause.new }

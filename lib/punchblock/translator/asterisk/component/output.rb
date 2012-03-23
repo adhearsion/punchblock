@@ -31,8 +31,11 @@ module Punchblock
                 case node
                 when RubySpeech::SSML::Audio
                   lambda { current_actor.play_audio! node.src }
+                when String
+                  return unrenderable_doc_error if node.include?(' ')
+                  lambda { current_actor.play_audio! node }
                 else
-                  return with_error 'unrenderable document error', 'The provided document could not be rendered.'
+                  return unrenderable_doc_error
                 end
               end.compact
 
@@ -107,6 +110,10 @@ module Punchblock
           end
 
           private
+
+          def unrenderable_doc_error
+            with_error 'unrenderable document error', 'The provided document could not be rendered.'
+          end
 
           def escaped_doc
             @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }

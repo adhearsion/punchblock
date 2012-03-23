@@ -6,8 +6,9 @@ module Punchblock
   class ProtocolError < StandardError
     attr_accessor :name, :text, :call_id, :component_id
 
-    def initialize(name = nil, text = nil, call_id = nil, component_id = nil)
+    def setup(name = nil, text = nil, call_id = nil, component_id = nil)
       @name, @text, @call_id, @component_id = name, text, call_id, component_id
+      self
     end
 
     def to_s

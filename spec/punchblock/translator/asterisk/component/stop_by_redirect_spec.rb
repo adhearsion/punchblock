@@ -12,7 +12,8 @@ module Punchblock
             include StopByRedirect
           end
 
-          subject { MockComponent.new Hash.new }
+          let(:mock_call) { mock('Call') }
+          subject { MockComponent.new Hash.new, mock_call }
 
           describe "#execute_command" do
             context "with a command it does not understand" do
@@ -20,6 +21,7 @@ module Punchblock
 
               before { command.request! }
               it "returns a ProtocolError response" do
+                mock_call.expects(:id)
                 subject.execute_command command
                 command.response(0.1).should be_a ProtocolError
               end
@@ -33,9 +35,9 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call = mock('Call')
                 mock_call.expects(:redirect_back)
-                #subject.expects(:call).returns(mock_call)
+                mock_call.expects(:register_handler).with(:ami, {:name => 'AsyncAGI'})
+
                 subject.execute_command command
                 command.response(0.1).should be == true
               end

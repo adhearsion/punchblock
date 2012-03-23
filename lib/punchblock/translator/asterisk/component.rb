@@ -27,7 +27,7 @@ module Punchblock
           end
 
           def execute_command(command)
-            command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
+            command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
           end
 
           def send_complete_event(reason)
@@ -73,7 +73,7 @@ module Punchblock
           end
 
           def with_error(name, text)
-            set_node_response ProtocolError.new(name, text)
+            set_node_response ProtocolError.new.setup(name, text)
           end
         end
       end

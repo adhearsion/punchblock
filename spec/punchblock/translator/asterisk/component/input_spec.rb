@@ -126,7 +126,7 @@ module Punchblock
                   let(:original_command_opts) { { :grammar => nil } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A grammar document is required.'
+                    error = ProtocolError.new.setup 'option error', 'A grammar document is required.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -137,7 +137,7 @@ module Punchblock
                   let(:original_command_opts) { { :mode => nil } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -146,7 +146,7 @@ module Punchblock
                   let(:original_command_opts) { { :mode => :any } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -155,7 +155,7 @@ module Punchblock
                   let(:original_command_opts) { { :mode => :speech } }
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
+                    error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported on Asterisk.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -213,7 +213,7 @@ module Punchblock
 
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'An initial timeout value that is negative (and not -1) is invalid.'
+                    error = ProtocolError.new.setup 'option error', 'An initial timeout value that is negative (and not -1) is invalid.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -265,7 +265,7 @@ module Punchblock
 
                   it "should return an error and not execute any actions" do
                     subject.execute
-                    error = ProtocolError.new 'option error', 'An inter-digit timeout value that is negative (and not -1) is invalid.'
+                    error = ProtocolError.new.setup 'option error', 'An inter-digit timeout value that is negative (and not -1) is invalid.'
                     original_command.response(0.1).should be == error
                   end
                 end

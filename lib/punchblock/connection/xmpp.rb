@@ -141,7 +141,7 @@ module Punchblock
 
       def handle_error(iq, command = nil)
         e = Blather::StanzaError.import iq
-        protocol_error = ProtocolError.new e.name, e.text, iq.call_id, iq.component_id
+        protocol_error = ProtocolError.new.setup e.name, e.text, iq.call_id, iq.component_id
         command.response = protocol_error if command
       end
 

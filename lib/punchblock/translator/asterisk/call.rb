@@ -64,6 +64,7 @@ module Punchblock
         def to_s
           "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
         end
+        alias :inspect :to_s
 
         def dial(dial_command)
           @direction = :outbound

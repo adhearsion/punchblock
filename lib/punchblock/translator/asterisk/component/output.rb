@@ -57,18 +57,20 @@ module Punchblock
               end
             when :unimrcp
               send_ref
+              output_component = current_actor
               @call.send_agi_action! 'EXEC MRCPSynth', escaped_doc, mrcpsynth_options do |complete_event|
                 pb_logger.debug "MRCPSynth completed with #{complete_event}."
-                send_complete_event success_reason
+                output_component.send_complete_event! success_reason
               end
             when :swift
               doc = escaped_doc
               doc << "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
               doc.insert 0, "#{@component_node.voice}^" if @component_node.voice
               send_ref
+              output_component = current_actor
               @call.send_agi_action! 'EXEC Swift', doc do |complete_event|
                 pb_logger.debug "Swift completed with #{complete_event}."
-                send_complete_event success_reason
+                output_component.send_complete_event! success_reason
               end
             end
           end

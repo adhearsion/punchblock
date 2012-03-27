@@ -36,7 +36,12 @@ module Punchblock
 
               it "sets the command response to true" do
                 mock_call.expects(:redirect_back)
-                mock_call.expects(:register_handler).with(:ami, {:name => 'AsyncAGI'})
+                mock_call.expects(:register_handler).with do |type, *guards|
+                  type.should be == :ami
+                  guards.should have(2).guards
+                  guards[0].should be_a Proc
+                  guards[1].should be == {:name => 'AsyncAGI'}
+                end
 
                 subject.execute_command command
                 command.response(0.1).should be == true

@@ -848,6 +848,37 @@ module Punchblock
             subject.send_ami_action 'foo', :foo => :bar
           end
         end
+
+        describe '#redirect_back' do
+            let(:other_channel)         { 'SIP/bar' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            it "executes the proper AMI action with only the subject call" do
+              subject.redirect_back
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+            
+            it "executes the proper AMI action with another call specified" do
+              subject.redirect_back other_call
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ami_action.headers['ExtraChannel'].should be == other_channel
+              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+        end
       end
     end
   end

@@ -650,13 +650,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.expects(:redirect_back)
+                mock_call.expects(:redirect_back!)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                mock_call.expects(:redirect_back)
+                mock_call.expects(:redirect_back!)
                 subject.execute_command command
                 original_command.should_not be_complete
                 mock_call.process_ami_event! ami_event
@@ -665,7 +665,7 @@ module Punchblock
               end
 
               it "redirects the call by unjoining it" do
-                mock_call.expects(:redirect_back).with(nil)
+                mock_call.expects(:redirect_back!).with(nil)
                 subject.execute_command command
               end
             end

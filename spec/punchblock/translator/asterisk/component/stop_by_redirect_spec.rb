@@ -35,7 +35,7 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.expects(:redirect_back)
+                mock_call.expects(:redirect_back!)
                 mock_call.expects(:register_handler).with do |type, *guards|
                   type.should be == :ami
                   guards.should have(2).guards

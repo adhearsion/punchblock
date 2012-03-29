@@ -153,7 +153,7 @@ module Punchblock
           before { dial_command.request! }
 
           it 'sends an Originate AMI action' do
-            expected_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+            expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
                                                                                :params => {
                                                                                  :async       => true,
                                                                                  :application => 'AGI',
@@ -161,7 +161,7 @@ module Punchblock
                                                                                  :channel     => 'SIP/1234',
                                                                                  :callerid    => 'sip:foo@bar.com',
                                                                                  :variable    => "punchblock_call_id=#{subject.id}"
-                                                                               }
+                                                                               }).tap { |a| a.request! }
 
             translator.expects(:execute_global_command!).once.with expected_action
             subject.dial dial_command
@@ -173,7 +173,7 @@ module Punchblock
             end
 
             it 'includes the timeout in the Originate AMI action' do
-              expected_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
+              expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
                                                                                  :params => {
                                                                                    :async       => true,
                                                                                    :application => 'AGI',
@@ -182,7 +182,7 @@ module Punchblock
                                                                                    :callerid    => 'sip:foo@bar.com',
                                                                                    :variable    => "punchblock_call_id=#{subject.id}",
                                                                                    :timeout     => 10000
-                                                                                 }
+                                                                                 }).tap { |a| a.request! }
 
               translator.expects(:execute_global_command!).once.with expected_action
               subject.dial dial_command

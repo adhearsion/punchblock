@@ -864,7 +864,7 @@ module Punchblock
               ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
               ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
             end
-            
+
             it "executes the proper AMI action with another call specified" do
               subject.redirect_back other_call
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')

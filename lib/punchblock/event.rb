@@ -25,4 +25,6 @@ end
   offer
   ringing
   unjoined
+  started_speaking
+  stopped_speaking
 }.each { |e| require "punchblock/event/#{e}"}

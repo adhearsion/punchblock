@@ -83,7 +83,7 @@ module Punchblock
 
               it 'sends an error in response to the command' do
                 subject.execute_command component_command
-                component_command.response.should be == ProtocolError.new('command-not-acceptable', "Did not understand command for component #{subject.id}", call.id, subject.id)
+                component_command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command for component #{subject.id}", call.id, subject.id)
               end
             end
           end

@@ -64,6 +64,7 @@ module Punchblock
         def to_s
           "#<#{self.class}:#{id} Channel: #{channel.inspect}>"
         end
+        alias :inspect :to_s
 
         def dial(dial_command)
           @direction = :outbound
@@ -163,7 +164,7 @@ module Punchblock
             if component = component_with_id(command.component_id)
               component.execute_command! command
             else
-              command.response = ProtocolError.new 'component-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+              command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
             end
           end
           case command
@@ -199,7 +200,7 @@ module Punchblock
           when Punchblock::Component::Input
             execute_component Component::Input, command
           else
-            command.response = ProtocolError.new 'command-not-acceptable', "Did not understand command for call #{id}", id
+            command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
         end
 
@@ -226,8 +227,6 @@ module Punchblock
           "#{self.class}: #{id}"
         end
 
-        private
-
         def redirect_back(other_call = nil)
           redirect_options = {
             'Channel'   => channel,
@@ -243,6 +242,8 @@ module Punchblock
           }) if other_call
           send_ami_action 'Redirect', redirect_options
         end
+
+        private
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)

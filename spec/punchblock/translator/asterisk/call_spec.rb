@@ -745,7 +745,7 @@ module Punchblock
             context "for an unknown component ID" do
               it 'sends an error in response to the command' do
                 subject.execute_command command
-                command.response.should be == ProtocolError.new('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+                command.response.should be == ProtocolError.new.setup('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
               end
             end
           end
@@ -757,7 +757,7 @@ module Punchblock
 
             it 'sends an error in response to the command' do
               subject.execute_command command
-              command.response.should be == ProtocolError.new('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
+              command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
             end
           end
 
@@ -847,6 +847,37 @@ module Punchblock
             translator.expects(:send_ami_action!).once.with action
             subject.send_ami_action 'foo', :foo => :bar
           end
+        end
+
+        describe '#redirect_back' do
+            let(:other_channel)         { 'SIP/bar' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
+            it "executes the proper AMI action with only the subject call" do
+              subject.redirect_back
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+            
+            it "executes the proper AMI action with another call specified" do
+              subject.redirect_back other_call
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ami_action.headers['ExtraChannel'].should be == other_channel
+              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
         end
       end
     end

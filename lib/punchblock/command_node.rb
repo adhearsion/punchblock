@@ -45,5 +45,9 @@ module Punchblock
       @response.resource = other
       execute!
     end
+
+    def inspect_attributes
+      super + [:state_name]
+    end
   end # CommandNode
 end # Punchblock

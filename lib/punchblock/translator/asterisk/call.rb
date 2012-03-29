@@ -98,7 +98,7 @@ module Punchblock
 
         def answer_if_not_answered
           return if answered? || outbound?
-          execute_command Command::Answer.new
+          execute_command Command::Answer.new.tap { |a| a.request! }
         end
 
         def channel=(other)

@@ -101,7 +101,7 @@ module Punchblock
         end
 
         describe '#answer_if_not_answered' do
-          let(:answer_command) { Command::Answer.new }
+          let(:answer_command) { Command::Answer.new.tap { |a| a.request! } }
 
           context "with a call that is already answered" do
             it 'should not answer the call' do

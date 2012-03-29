@@ -1,7 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Feature: Output component now responds to a Stop command on Asterisk
-  * Feature: Input component on Asterisk now responds to Stop command
+  * Feature: Input & Output components on Asterisk now responds to a Stop command
   * Feature: started/stopped-speaking events are now handled
+  * Bugfix: Asterisk output component considers an SSML doc w/ a string node w/o spaces to be a filename
+  * Bugfix: `ProtocolError` should behave like a normal exception, just with extra attributes
 
 # [v0.10.0](https://github.com/adhearsion/punchblock/compare/v0.9.2...v0.10.0) - [2012-03-19](https://rubygems.org/gems/punchblock/versions/0.10.0)
   * Feature: app_swift is now supported on Asterisk with a media_engine type of :swift

@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v0.12.0](https://github.com/adhearsion/punchblock/compare/v0.11.0...v0.12.0) - [2012-03-30](https://rubygems.org/gems/punchblock/versions/0.12.0)
   * API Change: `#call_id` and `#mixer_name` attributes changed to `#target_call_id` and `#target_mixer_name`
   * API Change: `#other_call_id` attributes changed to `#call_id` to better align with Rayo
 

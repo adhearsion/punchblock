@@ -82,10 +82,10 @@ module Punchblock
         pb_logger.trace "Executing command #{command.inspect}"
         command.request!
 
-        command.call_id ||= options[:call_id]
+        command.target_call_id ||= options[:call_id]
         command.component_id ||= options[:component_id]
 
-        if command.call_id
+        if command.target_call_id
           execute_call_command command
         elsif command.component_id
           execute_component_command command
@@ -95,10 +95,10 @@ module Punchblock
       end
 
       def execute_call_command(command)
-        if call = call_with_id(command.call_id)
+        if call = call_with_id(command.target_call_id)
           call.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'call-not-found', "Could not find a call with ID #{command.call_id}", command.call_id
+          command.response = ProtocolError.new.setup 'call-not-found', "Could not find a call with ID #{command.target_call_id}", command.target_call_id
         end
       end
 
@@ -106,7 +106,7 @@ module Punchblock
         if (component = component_with_id(command.component_id))
           component.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id}", command.call_id, command.component_id
+          command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
         end
       end
 

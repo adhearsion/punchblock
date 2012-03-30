@@ -72,7 +72,7 @@ module Punchblock
       describe 'when a rayo event is received from the translator' do
         it 'should call the event handler with the event' do
           offer = Event::Offer.new
-          offer.call_id = '9f00061'
+          offer.target_call_id = '9f00061'
 
           mock_event_handler.expects(:call).once.with offer
           subject.handle_event offer

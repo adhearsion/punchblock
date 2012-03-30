@@ -34,6 +34,7 @@ module Punchblock
         @mixers_domain  = options[:mixers_domain] || "mixers.#{@root_domain}"
 
         @callmap = {} # This hash maps call IDs to their XMPP domain.
+        @joined_mixers = []
 
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
 
@@ -59,9 +60,12 @@ module Punchblock
 
       def prep_command_for_execution(command, options = {})
         command.connection    = self
-        command.call_id       ||= options[:call_id]
-        command.mixer_name    ||= options[:mixer_name]
-        command.component_id  ||= options[:component_id]
+        command.target_call_id    ||= options[:call_id]
+        command.target_mixer_name ||= options[:mixer_name]
+        command.component_id      ||= options[:component_id]
+        if command.is_a?(Command::Join) && command.mixer_name
+          @joined_mixers << command.mixer_name
+        end
         create_iq(jid_for_command(command)).tap do |iq|
           iq << command
         end
@@ -105,12 +109,12 @@ module Punchblock
       def jid_for_command(command)
         return root_domain if command.is_a?(Command::Dial)
 
-        if command.call_id
-          node = command.call_id
-          domain = @callmap[command.call_id] || calls_domain
-        elsif command.mixer_name
-          node = command.mixer_name
-          domain = @callmap[command.mixer_name] || mixers_domain
+        if command.target_call_id
+          node = command.target_call_id
+          domain = @callmap[command.target_call_id] || calls_domain
+        elsif command.target_mixer_name
+          node = command.target_mixer_name
+          domain = @callmap[command.target_mixer_name] || mixers_domain
         else
           domain = calls_domain
         end
@@ -130,6 +134,11 @@ module Punchblock
         event = p.event
         event.connection = self
         event.domain = p.from.domain
+        if @joined_mixers.include?(p.call_id)
+          event.target_mixer_name = p.call_id
+        else
+          event.target_call_id = p.call_id
+        end
         event_handler.call event
       end
 

@@ -84,7 +84,7 @@ module Punchblock
 
         describe '#send_offer' do
           it 'sends an offer to the translator' do
-            expected_offer = Punchblock::Event::Offer.new :call_id  => subject.id,
+            expected_offer = Punchblock::Event::Offer.new :target_call_id  => subject.id,
                                                           :to       => '1000',
                                                           :from     => 'sip:5678',
                                                           :headers  => sip_headers
@@ -192,7 +192,7 @@ module Punchblock
           it 'sends the call ID as a response to the Dial' do
             subject.dial dial_command
             dial_command.response
-            dial_command.call_id.should be == subject.id
+            dial_command.target_call_id.should be == subject.id
           end
 
           it 'should make the call identify as outbound' do
@@ -241,7 +241,7 @@ module Punchblock
 
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
-                                                                :call_id  => subject.id
+                                                                :target_call_id  => subject.id
                 translator.expects(:handle_pb_event!).with expected_end_event
                 subject.process_ami_event ami_event
               end
@@ -253,7 +253,7 @@ module Punchblock
 
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
-                                                                :call_id  => subject.id
+                                                                :target_call_id  => subject.id
                 translator.expects(:handle_pb_event!).with expected_end_event
                 subject.process_ami_event ami_event
               end
@@ -265,7 +265,7 @@ module Punchblock
 
               it 'should send an end (busy) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :busy,
-                                                                :call_id  => subject.id
+                                                                :target_call_id  => subject.id
                 translator.expects(:handle_pb_event!).with expected_end_event
                 subject.process_ami_event ami_event
               end
@@ -281,7 +281,7 @@ module Punchblock
 
                 it 'should send an end (timeout) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :timeout,
-                                                                  :call_id  => subject.id
+                                                                  :target_call_id  => subject.id
                   translator.expects(:handle_pb_event!).with expected_end_event
                   subject.process_ami_event ami_event
                 end
@@ -299,7 +299,7 @@ module Punchblock
 
                 it 'should send an end (reject) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :reject,
-                                                                  :call_id  => subject.id
+                                                                  :target_call_id  => subject.id
                   translator.expects(:handle_pb_event!).with expected_end_event
                   subject.process_ami_event ami_event
                 end
@@ -351,7 +351,7 @@ module Punchblock
 
                 it 'should send an end (error) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :error,
-                                                                  :call_id  => subject.id
+                                                                  :target_call_id  => subject.id
                   translator.expects(:handle_pb_event!).with expected_end_event
                   subject.process_ami_event ami_event
                 end
@@ -406,7 +406,7 @@ module Punchblock
 
               it 'should send a ringing event' do
                 expected_ringing = Punchblock::Event::Ringing.new
-                expected_ringing.call_id = subject.id
+                expected_ringing.target_call_id = subject.id
                 translator.expects(:handle_pb_event!).with expected_ringing
                 subject.process_ami_event ami_event
               end
@@ -423,7 +423,7 @@ module Punchblock
 
               it 'should send a ringing event' do
                 expected_answered = Punchblock::Event::Answered.new
-                expected_answered.call_id = subject.id
+                expected_answered.target_call_id = subject.id
                 translator.expects(:handle_pb_event!).with expected_answered
                 subject.process_ami_event ami_event
               end
@@ -470,7 +470,7 @@ module Punchblock
             let(:other_channel) { 'SIP/5678-00000000' }
             let(:other_call_id) { 'def567' }
             let :command do
-              Punchblock::Command::Join.new :other_call_id => other_call_id
+              Punchblock::Command::Join.new :call_id => other_call_id
             end
 
             before do
@@ -530,8 +530,8 @@ module Punchblock
 
               let :expected_joined do
                 Punchblock::Event::Joined.new.tap do |joined|
-                  joined.call_id = subject.id
-                  joined.other_call_id = other_call_id
+                  joined.target_call_id = subject.id
+                  joined.call_id = other_call_id
                 end
               end
 
@@ -551,8 +551,8 @@ module Punchblock
 
               let :expected_unjoined do
                 Punchblock::Event::Unjoined.new.tap do |joined|
-                  joined.call_id = subject.id
-                  joined.other_call_id = other_call_id
+                  joined.target_call_id = subject.id
+                  joined.call_id = other_call_id
                 end
               end
 
@@ -607,8 +607,8 @@ module Punchblock
 
             let :expected_unjoined do
               Punchblock::Event::Unjoined.new.tap do |joined|
-                joined.call_id = subject.id
-                joined.other_call_id = other_call_id
+                joined.target_call_id = subject.id
+                joined.call_id = other_call_id
               end
             end
 
@@ -762,16 +762,16 @@ module Punchblock
           end
 
           context "with a join command" do
-            let(:other_call_id)         { "abc123" }
-            let(:other_channel)         { 'SIP/bar' }
-            let(:other_translator)      { stub_everything 'Translator::Asterisk' }
+            let(:other_call_id)     { "abc123" }
+            let(:other_channel)     { 'SIP/bar' }
+            let(:other_translator)  { stub_everything 'Translator::Asterisk' }
 
             let :other_call do
               Call.new other_channel, other_translator
             end
 
             let :command do
-              Punchblock::Command::Join.new :other_call_id => other_call_id
+              Punchblock::Command::Join.new :call_id => other_call_id
             end
 
             it "executes the proper dialplan Bridge application" do
@@ -790,15 +790,15 @@ module Punchblock
           end
 
           context "with an unjoin command" do
-            let(:other_call_id)         { "abc123" }
-            let(:other_channel)         { 'SIP/bar' }
+            let(:other_call_id) { "abc123" }
+            let(:other_channel) { 'SIP/bar' }
 
             let :other_call do
               Call.new other_channel, translator
             end
 
             let :command do
-              Punchblock::Command::Unjoin.new :other_call_id => other_call_id
+              Punchblock::Command::Unjoin.new :call_id => other_call_id
             end
 
             it "executes the unjoin through redirection" do

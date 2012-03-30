@@ -10,7 +10,7 @@ module Punchblock
         RayoNode.class_from_registration(:dial, 'urn:xmpp:rayo:1').should be == Dial
       end
 
-      let(:join_params) { {:other_call_id => 'abc123'} }
+      let(:join_params) { {:call_id => 'abc123'} }
 
       describe "when setting options in initializer" do
         subject { Dial.new :to => 'tel:+14155551212', :from => 'tel:+13035551212', :timeout => 30000, :headers => { :x_skill => 'agent', :x_customer_id => 8877 }, :join => join_params }
@@ -57,7 +57,7 @@ module Punchblock
 
         it "should set the call ID from the ref" do
           subject.response = ref
-          subject.call_id.should be == call_id
+          subject.target_call_id.should be == call_id
         end
       end
     end

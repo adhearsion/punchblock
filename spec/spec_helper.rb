@@ -33,8 +33,8 @@ end
 
 # FIXME: change this to rayo_event?  It can be ambigous
 shared_examples_for 'event' do
-  its(:call_id) { should be == '9f00061' }
-  its(:component_id) { should be == '1' }
+  its(:target_call_id)  { should be == '9f00061' }
+  its(:component_id)    { should be == '1' }
 end
 
 shared_examples_for 'command_headers' do

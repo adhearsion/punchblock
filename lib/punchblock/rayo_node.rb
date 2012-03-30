@@ -9,7 +9,7 @@ module Punchblock
 
     class_attribute :registered_ns, :registered_name
 
-    attr_accessor :call_id, :mixer_name, :component_id, :domain, :connection, :client, :original_component
+    attr_accessor :target_call_id, :target_mixer_name, :component_id, :domain, :connection, :client, :original_component
 
     # Register a new stanza class to a name and/or namespace
     #
@@ -48,7 +48,7 @@ module Punchblock
       else
         new.inherit node
       end.tap do |event|
-        event.call_id = call_id
+        event.target_call_id = call_id
         event.component_id = component_id
       end
     end
@@ -64,7 +64,7 @@ module Punchblock
     end
 
     def inspect_attributes # :nodoc:
-      [:call_id, :component_id]
+      [:target_call_id, :component_id, :target_mixer_name]
     end
 
     def inspect

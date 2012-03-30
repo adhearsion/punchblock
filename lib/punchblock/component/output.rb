@@ -145,7 +145,7 @@ module Punchblock
       #    returns:
       #      <pause xmlns="urn:xmpp:tropo:output:1"/>
       def pause_action
-        Pause.new :component_id => component_id, :call_id => call_id
+        Pause.new :component_id => component_id, :target_call_id => target_call_id
       end
 
       ##
@@ -170,7 +170,7 @@ module Punchblock
       #    returns:
       #      <resume xmlns="urn:xmpp:tropo:output:1"/>
       def resume_action
-        Resume.new :component_id => component_id, :call_id => call_id
+        Resume.new :component_id => component_id, :target_call_id => target_call_id
       end
 
       ##
@@ -203,7 +203,7 @@ module Punchblock
       #    returns:
       #      <seek xmlns="urn:xmpp:rayo:output:1"/>
       def seek_action(options = {})
-        Seek.new({ :component_id => component_id, :call_id => call_id }.merge(options)).tap do |s|
+        Seek.new({ :component_id => component_id, :target_call_id => target_call_id }.merge(options)).tap do |s|
           s.original_component = self
         end
       end
@@ -268,7 +268,7 @@ module Punchblock
       #    returns:
       #      <speed-up xmlns="urn:xmpp:rayo:output:1"/>
       def speed_up_action
-        SpeedUp.new(:component_id => component_id, :call_id => call_id).tap do |s|
+        SpeedUp.new(:component_id => component_id, :target_call_id => target_call_id).tap do |s|
           s.original_component = self
         end
       end
@@ -294,7 +294,7 @@ module Punchblock
       #    returns:
       #      <speed-down xmlns="urn:xmpp:rayo:output:1"/>
       def slow_down_action
-        SlowDown.new(:component_id => component_id, :call_id => call_id).tap do |s|
+        SlowDown.new(:component_id => component_id, :target_call_id => target_call_id).tap do |s|
           s.original_component = self
         end
       end
@@ -362,7 +362,7 @@ module Punchblock
       #    returns:
       #      <volume-up xmlns="urn:xmpp:rayo:output:1"/>
       def volume_up_action
-        VolumeUp.new(:component_id => component_id, :call_id => call_id).tap do |s|
+        VolumeUp.new(:component_id => component_id, :target_call_id => target_call_id).tap do |s|
           s.original_component = self
         end
       end
@@ -388,7 +388,7 @@ module Punchblock
       #    returns:
       #      <volume-down xmlns="urn:xmpp:rayo:output:1"/>
       def volume_down_action
-        VolumeDown.new(:component_id => component_id, :call_id => call_id).tap do |s|
+        VolumeDown.new(:component_id => component_id, :target_call_id => target_call_id).tap do |s|
           s.original_component = self
         end
       end

@@ -57,7 +57,7 @@ module Punchblock
 
         it "should set the call ID from the ref" do
           subject.response = ref
-          subject.call_id.should be == call_id
+          subject.target_call_id.should be == call_id
         end
       end
     end

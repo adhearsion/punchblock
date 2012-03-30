@@ -21,40 +21,40 @@ module Punchblock
           let(:options) { { :username => '1@app.rayo.net' } }
 
           its(:root_domain)   { should be == 'app.rayo.net' }
-          its(:calls_domain)   { should be == 'calls.app.rayo.net' }
-          its(:mixers_domain)  { should be == 'mixers.app.rayo.net' }
+          its(:calls_domain)  { should be == 'calls.app.rayo.net' }
+          its(:mixers_domain) { should be == 'mixers.app.rayo.net' }
         end
 
         context "with only a rayo domain set" do
           let(:options) { { :rayo_domain => 'rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)   { should be == 'calls.rayo.org' }
-          its(:mixers_domain)  { should be == 'mixers.rayo.org' }
+          its(:calls_domain)  { should be == 'calls.rayo.org' }
+          its(:mixers_domain) { should be == 'mixers.rayo.org' }
         end
 
         context "with only a root domain set" do
           let(:options) { { :root_domain => 'rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)   { should be == 'calls.rayo.org' }
-          its(:mixers_domain)  { should be == 'mixers.rayo.org' }
+          its(:calls_domain)  { should be == 'calls.rayo.org' }
+          its(:mixers_domain) { should be == 'mixers.rayo.org' }
         end
 
         context "with a root domain and calls domain set" do
           let(:options) { { :root_domain => 'rayo.org', :calls_domain => 'phone_calls.rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)   { should be == 'phone_calls.rayo.org' }
-          its(:mixers_domain)  { should be == 'mixers.rayo.org' }
+          its(:calls_domain)  { should be == 'phone_calls.rayo.org' }
+          its(:mixers_domain) { should be == 'mixers.rayo.org' }
         end
 
         context "with a root domain and mixers domain set" do
           let(:options) { { :root_domain => 'rayo.org', :mixers_domain => 'conferences.rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)   { should be == 'calls.rayo.org' }
-          its(:mixers_domain)  { should be == 'conferences.rayo.org' }
+          its(:calls_domain)  { should be == 'calls.rayo.org' }
+          its(:mixers_domain) { should be == 'conferences.rayo.org' }
         end
       end
 
@@ -182,7 +182,7 @@ module Punchblock
             it 'should call the event handler with the event' do
               mock_event_handler.expects(:call).once.with do |event|
                 event.should be_instance_of Event::Offer
-                event.call_id.should be == '9f00061'
+                event.target_call_id.should be == '9f00061'
                 event.domain.should be == 'call.rayo.net'
               end
               handle_presence
@@ -259,7 +259,7 @@ module Punchblock
         end
 
         context "with a call command" do
-          let(:command)       { Command::Answer.new.tap { |a| a.call_id = 'abc123' } }
+          let(:command)       { Command::Answer.new.tap { |a| a.target_call_id = 'abc123' } }
           let(:expected_jid)  { 'abc123@calls.rayo.net' }
 
           it "should use the correct JID" do
@@ -268,7 +268,7 @@ module Punchblock
         end
 
         context "with a call component" do
-          let(:command)       { Component::Output.new :call_id => 'abc123' }
+          let(:command)       { Component::Output.new :target_call_id => 'abc123' }
           let(:expected_jid)  { 'abc123@calls.rayo.net' }
 
           it "should use the correct JID" do
@@ -277,7 +277,7 @@ module Punchblock
         end
 
         context "with a call component command" do
-          let(:command)       { Component::Stop.new :call_id => 'abc123', :component_id => 'foobar' }
+          let(:command)       { Component::Stop.new :target_call_id => 'abc123', :component_id => 'foobar' }
           let(:expected_jid)  { 'abc123@calls.rayo.net/foobar' }
 
           it "should use the correct JID" do
@@ -286,7 +286,7 @@ module Punchblock
         end
 
         context "with a mixer component" do
-          let(:command)       { Component::Output.new :mixer_name => 'abc123' }
+          let(:command)       { Component::Output.new :target_mixer_name => 'abc123' }
           let(:expected_jid)  { 'abc123@mixers.rayo.net' }
 
           it "should use the correct JID" do
@@ -295,7 +295,7 @@ module Punchblock
         end
 
         context "with a mixer component command" do
-          let(:command)       { Component::Stop.new :mixer_name => 'abc123', :component_id => 'foobar' }
+          let(:command)       { Component::Stop.new :target_mixer_name => 'abc123', :component_id => 'foobar' }
           let(:expected_jid)  { 'abc123@mixers.rayo.net/foobar' }
 
           it "should use the correct JID" do

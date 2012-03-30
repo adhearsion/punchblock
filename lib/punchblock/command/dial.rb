@@ -88,7 +88,7 @@ module Punchblock
       end
 
       def response=(other)
-        @call_id = other.id if other.is_a?(Ref)
+        @target_call_id = other.id if other.is_a?(Ref)
         super
       end
 

@@ -31,7 +31,7 @@ module Punchblock
       end
 
       def write_action(action)
-        client.execute_command action, :call_id => call_id, :component_id => component_id
+        client.execute_command action, :target_call_id => target_call_id, :component_id => component_id
         action
       end
 
@@ -59,7 +59,7 @@ module Punchblock
       # @return [Stop] an Rayo stop message
       #
       def stop_action
-        Stop.new :component_id => component_id, :call_id => call_id
+        Stop.new :component_id => component_id, :target_call_id => target_call_id
       end
 
       ##

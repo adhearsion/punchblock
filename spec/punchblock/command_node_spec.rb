@@ -11,12 +11,12 @@ module Punchblock
         describe "with a call/component ID" do
           let(:call_id)       { 'abc123' }
           let(:component_id)  { 'abc123' }
-          let(:args)          { [{:call_id => call_id, :component_id => component_id}] }
+          let(:args)          { [{:target_call_id => call_id, :component_id => component_id}] }
 
           subject { CommandNode.new(*args) }
 
-          its(:call_id)       { should be == call_id }
-          its(:component_id)  { should be == component_id }
+          its(:target_call_id)  { should be == call_id }
+          its(:component_id)    { should be == component_id }
         end
       end
 

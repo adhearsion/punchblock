@@ -149,7 +149,7 @@ module Punchblock
       #    returns:
       #      <pause xmlns="urn:xmpp:rayo:record:1"/>
       def pause_action
-        Pause.new :component_id => component_id, :call_id => call_id
+        Pause.new :component_id => component_id, :target_call_id => target_call_id
       end
 
       ##
@@ -174,7 +174,7 @@ module Punchblock
       #    returns:
       #      <resume xmlns="urn:xmpp:rayo:record:1"/>
       def resume_action
-        Resume.new :component_id => component_id, :call_id => call_id
+        Resume.new :component_id => component_id, :target_call_id => target_call_id
       end
 
       ##

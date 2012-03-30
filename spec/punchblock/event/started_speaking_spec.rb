@@ -20,16 +20,16 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:other_call_id) { should be == "x0yz4ye-lx7-6ai9njwvw8nsb" }
-        its(:xmlns)         { should be == 'urn:xmpp:rayo:1' }
+        its(:call_id) { should be == "x0yz4ye-lx7-6ai9njwvw8nsb" }
+        its(:xmlns)   { should be == 'urn:xmpp:rayo:1' }
       end
 
       describe "when setting options in initializer" do
         subject do
-          StartedSpeaking.new :other_call_id => 'abc123'
+          StartedSpeaking.new :call_id => 'abc123'
         end
 
-        its(:other_call_id) { should be == 'abc123' }
+        its(:call_id) { should be == 'abc123' }
       end
     end
   end

@@ -50,7 +50,7 @@ module Punchblock
           it 'executes the call command' do
             subject.wrapped_object.expects(:execute_call_command).with do |c|
               c.should be command
-              c.call_id.should be == call_id
+              c.target_call_id.should be == call_id
             end
             subject.execute_command command, :call_id => call_id
           end
@@ -111,7 +111,7 @@ module Punchblock
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
         let(:call)    { Translator::Asterisk::Call.new 'SIP/foo', subject }
-        let(:command) { Command::Answer.new.tap { |c| c.call_id = call_id } }
+        let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
 
         before do
           command.request!

@@ -29,7 +29,7 @@ module Punchblock
 
             let :expected_event do
               Punchblock::Event::Complete.new.tap do |e|
-                e.call_id = call.id
+                e.target_call_id = call.id
                 e.component_id = subject.id
               end
             end

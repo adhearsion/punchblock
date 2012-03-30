@@ -13,7 +13,7 @@ module Punchblock
         element = find_first('*')
         if element
           RayoNode.import(element).tap do |reason|
-            reason.call_id = call_id
+            reason.target_call_id = target_call_id
             reason.component_id = component_id
           end
         end
@@ -28,7 +28,7 @@ module Punchblock
         element = find_first('//ns:recording', :ns => RAYO_NAMESPACES[:record_complete])
         if element
           RayoNode.import(element).tap do |recording|
-            recording.call_id = call_id
+            recording.target_call_id = target_call_id
             recording.component_id = component_id
           end
         end

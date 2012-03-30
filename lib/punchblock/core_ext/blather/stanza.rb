@@ -8,7 +8,7 @@ module Blather
     #
     def rayo_node
       first_child = children.first
-      Punchblock::RayoNode.import first_child, call_id, component_id if first_child
+      Punchblock::RayoNode.import first_child, nil, component_id if first_child
     end
 
     ##

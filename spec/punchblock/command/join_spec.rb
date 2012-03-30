@@ -11,12 +11,12 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        subject { Join.new :other_call_id => 'abc123', :mixer_name => 'blah', :direction => :duplex, :media => :bridge }
+        subject { Join.new :call_id => 'abc123', :mixer_name => 'blah', :direction => :duplex, :media => :bridge }
 
-        its(:other_call_id) { should be == 'abc123' }
-        its(:mixer_name)    { should be == 'blah' }
-        its(:direction)     { should be == :duplex }
-        its(:media)         { should be == :bridge }
+        its(:call_id)     { should be == 'abc123' }
+        its(:mixer_name)  { should be == 'blah' }
+        its(:direction)   { should be == :duplex }
+        its(:media)       { should be == :bridge }
       end
 
       describe "from a stanza" do
@@ -34,10 +34,10 @@ module Punchblock
 
         it { should be_instance_of Join }
 
-        its(:other_call_id) { should be == 'abc123' }
-        its(:mixer_name)    { should be == 'blah' }
-        its(:direction)     { should be == :duplex }
-        its(:media)         { should be == :bridge }
+        its(:call_id)     { should be == 'abc123' }
+        its(:mixer_name)  { should be == 'blah' }
+        its(:direction)   { should be == :duplex }
+        its(:media)       { should be == :bridge }
       end
     end
   end

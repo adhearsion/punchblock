@@ -9,7 +9,7 @@ module Punchblock
       # Create an ujoin message
       #
       # @param [Hash] options
-      # @option options [String, Optional] :other_call_id the call ID to unjoin
+      # @option options [String, Optional] :call_id the call ID to unjoin
       # @option options [String, Optional] :mixer_name the mixer name to unjoin
       #
       # @return [Command::Unjoin] a formatted Rayo unjoin command
@@ -22,13 +22,13 @@ module Punchblock
 
       ##
       # @return [String] the call ID to unjoin
-      def other_call_id
+      def call_id
         read_attr :'call-id'
       end
 
       ##
       # @param [String] other the call ID to unjoin
-      def other_call_id=(other)
+      def call_id=(other)
         write_attr :'call-id', other
       end
 
@@ -45,7 +45,7 @@ module Punchblock
       end
 
       def inspect_attributes # :nodoc:
-        [:other_call_id, :mixer_name] + super
+        [:call_id, :mixer_name] + super
       end
     end # Unjoin
   end # Command

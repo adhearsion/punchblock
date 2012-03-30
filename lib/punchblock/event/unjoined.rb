@@ -7,13 +7,13 @@ module Punchblock
 
       ##
       # @return [String] the call ID that was unjoined
-      def other_call_id
+      def call_id
         read_attr :'call-id'
       end
 
       ##
       # @param [String] other the call ID that was unjoined
-      def other_call_id=(other)
+      def call_id=(other)
         write_attr :'call-id', other
       end
 
@@ -30,7 +30,7 @@ module Punchblock
       end
 
       def inspect_attributes # :nodoc:
-        [:other_call_id, :mixer_name] + super
+        [:call_id, :mixer_name] + super
       end
     end # Unjoined
   end

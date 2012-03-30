@@ -40,8 +40,8 @@ module Punchblock
           end
 
           def send_event(event)
-            event.component_id  = id
-            event.call_id       = call_id
+            event.component_id    = id
+            event.target_call_id  = call_id
             pb_logger.debug "Sending event #{event}"
             if internal
               @component_node.add_event event

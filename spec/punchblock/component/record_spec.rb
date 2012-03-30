@@ -62,7 +62,7 @@ module Punchblock
 
         before do
           command.component_id = 'abc123'
-          command.call_id = '123abc'
+          command.target_call_id = '123abc'
           command.client = mock_client
         end
 
@@ -71,7 +71,7 @@ module Punchblock
 
           its(:to_xml) { should be == '<pause xmlns="urn:xmpp:rayo:record:1"/>' }
           its(:component_id) { should be == 'abc123' }
-          its(:call_id) { should be == '123abc' }
+          its(:target_call_id) { should be == '123abc' }
         end
 
         describe '#pause!' do
@@ -82,7 +82,7 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.expects(:execute_command).with(command.pause_action, :call_id => '123abc', :component_id => 'abc123').returns true
+              mock_client.expects(:execute_command).with(command.pause_action, :target_call_id => '123abc', :component_id => 'abc123').returns true
               command.expects :paused!
               command.pause!
             end
@@ -114,7 +114,7 @@ module Punchblock
 
           its(:to_xml) { should be == '<resume xmlns="urn:xmpp:rayo:record:1"/>' }
           its(:component_id) { should be == 'abc123' }
-          its(:call_id) { should be == '123abc' }
+          its(:target_call_id) { should be == '123abc' }
         end
 
         describe '#resume!' do
@@ -126,7 +126,7 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.expects(:execute_command).with(command.resume_action, :call_id => '123abc', :component_id => 'abc123').returns true
+              mock_client.expects(:execute_command).with(command.resume_action, :target_call_id => '123abc', :component_id => 'abc123').returns true
               command.expects :resumed!
               command.resume!
             end
@@ -159,7 +159,7 @@ module Punchblock
 
           its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:1"/>' }
           its(:component_id) { should be == 'abc123' }
-          its(:call_id) { should be == '123abc' }
+          its(:target_call_id) { should be == '123abc' }
         end
 
         describe '#stop!' do
@@ -170,7 +170,7 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.expects(:execute_command).with(command.stop_action, :call_id => '123abc', :component_id => 'abc123')
+              mock_client.expects(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
               command.stop!
             end
           end

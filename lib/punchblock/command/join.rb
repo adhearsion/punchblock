@@ -9,7 +9,7 @@ module Punchblock
       # Create a join message
       #
       # @param [Hash] options
-      # @option options [String, Optional] :other_call_id the call ID to join
+      # @option options [String, Optional] :call_id the call ID to join
       # @option options [String, Optional] :mixer_name the mixer name to join
       # @option options [Symbol, Optional] :direction the direction in which media should flow
       # @option options [Symbol, Optional] :media the method by which to negotiate media
@@ -29,13 +29,13 @@ module Punchblock
 
       ##
       # @return [String] the call ID to join
-      def other_call_id
+      def call_id
         read_attr :'call-id'
       end
 
       ##
       # @param [String] other the call ID to join
-      def other_call_id=(other)
+      def call_id=(other)
         write_attr :'call-id', other
       end
 
@@ -76,7 +76,7 @@ module Punchblock
       end
 
       def inspect_attributes # :nodoc:
-        [:other_call_id, :mixer_name, :direction, :media] + super
+        [:call_id, :mixer_name, :direction, :media] + super
       end
     end # Join
   end # Command

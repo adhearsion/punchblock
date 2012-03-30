@@ -12,17 +12,17 @@ module Punchblock
       describe "comparing for equality" do
         subject do
           Complete.new.tap do |c|
-            c.reason        = Complete::Stop.new
-            c.call_id       = '1234'
-            c.component_id  = 'abcd'
+            c.reason          = Complete::Stop.new
+            c.target_call_id  = '1234'
+            c.component_id    = 'abcd'
           end
         end
 
         let :other_complete do
           Complete.new.tap do |c|
-            c.reason        = reason
-            c.call_id       = call_id
-            c.component_id  = component_id
+            c.reason          = reason
+            c.target_call_id  = call_id
+            c.component_id    = component_id
           end
         end
 

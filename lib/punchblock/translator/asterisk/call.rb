@@ -98,7 +98,7 @@ module Punchblock
 
         def answer_if_not_answered
           return if answered? || outbound?
-          execute_command Command::Answer.new
+          execute_command Command::Answer.new.tap { |a| a.request! }
         end
 
         def channel=(other)
@@ -137,11 +137,11 @@ module Punchblock
               event = case ami_event['Bridgestate']
               when 'Link'
                 Event::Joined.new.tap do |e|
-                  e.other_call_id = other_call.id
+                  e.call_id = other_call.id
                 end
               when 'Unlink'
                 Event::Unjoined.new.tap do |e|
-                  e.other_call_id = other_call.id
+                  e.call_id = other_call.id
                 end
               end
               send_pb_event event
@@ -150,7 +150,7 @@ module Punchblock
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
               event = Event::Unjoined.new.tap do |e|
-                e.other_call_id = other_call.id
+                e.call_id = other_call.id
               end
               send_pb_event event
             end
@@ -187,11 +187,11 @@ module Punchblock
               command.response = true
             end
           when Command::Join
-            other_call = translator.call_with_id command.other_call_id
+            other_call = translator.call_with_id command.call_id
             pending_joins[other_call.channel] = command
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
-            other_call = translator.call_with_id command.other_call_id
+            other_call = translator.call_with_id command.call_id
             redirect_back other_call
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
@@ -206,7 +206,7 @@ module Punchblock
 
         def send_agi_action(command, *params, &block)
           pb_logger.trace "Sending AGI action #{command}"
-          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :call_id => id
+          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :target_call_id => id
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
             pb_logger.trace "AGI action received complete event #{e.inspect}"
@@ -259,7 +259,7 @@ module Punchblock
         end
 
         def send_pb_event(event)
-          event.call_id = id
+          event.target_call_id = id
           pb_logger.trace "Sending Punchblock event: #{event.inspect}"
           translator.handle_pb_event! event
         end

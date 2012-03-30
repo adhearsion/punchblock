@@ -470,7 +470,7 @@ module Punchblock
             let(:other_channel) { 'SIP/5678-00000000' }
             let(:other_call_id) { 'def567' }
             let :command do
-              Punchblock::Command::Join.new :other_call_id => other_call_id
+              Punchblock::Command::Join.new :call_id => other_call_id
             end
 
             before do
@@ -531,7 +531,7 @@ module Punchblock
               let :expected_joined do
                 Punchblock::Event::Joined.new.tap do |joined|
                   joined.target_call_id = subject.id
-                  joined.other_call_id = other_call_id
+                  joined.call_id = other_call_id
                 end
               end
 
@@ -552,7 +552,7 @@ module Punchblock
               let :expected_unjoined do
                 Punchblock::Event::Unjoined.new.tap do |joined|
                   joined.target_call_id = subject.id
-                  joined.other_call_id = other_call_id
+                  joined.call_id = other_call_id
                 end
               end
 
@@ -608,7 +608,7 @@ module Punchblock
             let :expected_unjoined do
               Punchblock::Event::Unjoined.new.tap do |joined|
                 joined.target_call_id = subject.id
-                joined.other_call_id = other_call_id
+                joined.call_id = other_call_id
               end
             end
 
@@ -762,16 +762,16 @@ module Punchblock
           end
 
           context "with a join command" do
-            let(:other_call_id)         { "abc123" }
-            let(:other_channel)         { 'SIP/bar' }
-            let(:other_translator)      { stub_everything 'Translator::Asterisk' }
+            let(:other_call_id)     { "abc123" }
+            let(:other_channel)     { 'SIP/bar' }
+            let(:other_translator)  { stub_everything 'Translator::Asterisk' }
 
             let :other_call do
               Call.new other_channel, other_translator
             end
 
             let :command do
-              Punchblock::Command::Join.new :other_call_id => other_call_id
+              Punchblock::Command::Join.new :call_id => other_call_id
             end
 
             it "executes the proper dialplan Bridge application" do
@@ -790,15 +790,15 @@ module Punchblock
           end
 
           context "with an unjoin command" do
-            let(:other_call_id)         { "abc123" }
-            let(:other_channel)         { 'SIP/bar' }
+            let(:other_call_id) { "abc123" }
+            let(:other_channel) { 'SIP/bar' }
 
             let :other_call do
               Call.new other_channel, translator
             end
 
             let :command do
-              Punchblock::Command::Unjoin.new :other_call_id => other_call_id
+              Punchblock::Command::Unjoin.new :call_id => other_call_id
             end
 
             it "executes the unjoin through redirection" do

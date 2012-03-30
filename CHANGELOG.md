@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * API Change: `#other_call_id` attributes changed to `#call_id` to better align with Rayo
 
 # [v0.11.0](https://github.com/adhearsion/punchblock/compare/v0.10.0...v0.11.0) - [2012-03-29](https://rubygems.org/gems/punchblock/versions/0.11.0)
   * Feature: Input & Output components on Asterisk now responds to a Stop command

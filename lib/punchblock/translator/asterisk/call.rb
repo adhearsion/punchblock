@@ -137,11 +137,11 @@ module Punchblock
               event = case ami_event['Bridgestate']
               when 'Link'
                 Event::Joined.new.tap do |e|
-                  e.other_call_id = other_call.id
+                  e.call_id = other_call.id
                 end
               when 'Unlink'
                 Event::Unjoined.new.tap do |e|
-                  e.other_call_id = other_call.id
+                  e.call_id = other_call.id
                 end
               end
               send_pb_event event
@@ -150,7 +150,7 @@ module Punchblock
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
               event = Event::Unjoined.new.tap do |e|
-                e.other_call_id = other_call.id
+                e.call_id = other_call.id
               end
               send_pb_event event
             end
@@ -187,11 +187,11 @@ module Punchblock
               command.response = true
             end
           when Command::Join
-            other_call = translator.call_with_id command.other_call_id
+            other_call = translator.call_with_id command.call_id
             pending_joins[other_call.channel] = command
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
-            other_call = translator.call_with_id command.other_call_id
+            other_call = translator.call_with_id command.call_id
             redirect_back other_call
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command

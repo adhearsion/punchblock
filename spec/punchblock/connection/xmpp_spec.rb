@@ -303,6 +303,35 @@ module Punchblock
           end
         end
       end
+
+      describe "receiving events from a mixer" do
+        context "after joining the mixer" do
+          before do
+            subject.send(:client).expects :write_with_handler
+            subject.write Command::Join.new(:mixer_name => 'foomixer')
+          end
+
+          let :active_speaker_xml do
+            <<-MSG
+<presence to='16577@app.rayo.net/1' from='foomixer@mixers.rayo.net'>
+  <started-speaking xmlns="urn:xmpp:rayo:1" call-id="foocall"/>
+</presence>
+            MSG
+          end
+
+          let(:active_speaker_event) { import_stanza active_speaker_xml }
+
+          it "should tag those events with a mixer name, rather than a call ID" do
+            mock_event_handler.expects(:call).once.with do |event|
+              event.should be_instance_of Event::StartedSpeaking
+              event.target_mixer_name.should be == 'foomixer'
+              event.target_call_id.should be nil
+              event.domain.should be == 'mixers.rayo.net'
+            end
+            connection.__send__ :handle_presence, active_speaker_event
+          end
+        end
+      end
     end # describe XMPP
   end # XMPP
 end # Punchblock

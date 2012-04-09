@@ -29,18 +29,7 @@ module Punchblock
             when :asterisk, nil
               raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
 
-              @execution_elements = @component_node.ssml.children.map do |node|
-                case node
-                when RubySpeech::SSML::Audio
-                  lambda { current_actor.play_audio! node.src }
-                when String
-                  raise UnrenderableDocError, 'The provided document could not be rendered.' if node.include?(' ')
-                  lambda { current_actor.play_audio! node }
-                else
-                  raise UnrenderableDocError, 'The provided document could not be rendered.'
-                end
-              end.compact
-
+              @execution_elements = collect_executable_elements
               @pending_actions = @execution_elements.count
 
               send_ref
@@ -78,6 +67,22 @@ module Punchblock
             with_error 'unrenderable document error', e.message
           rescue OptionError => e
             with_error 'option error', e.message
+          end
+
+          def collect_executable_elements
+            @component_node.ssml.children.map do |node|
+              case node
+              when RubySpeech::SSML::Audio
+                lambda { current_actor.play_audio! node.src }
+              when String
+                raise UnrenderableDocError, 'The provided document could not be rendered.' if node.include?(' ')
+                lambda { current_actor.play_audio! node }
+              else
+                raise UnrenderableDocError, 'The provided document could not be rendered.'
+              end
+            end.compact
+          rescue
+            raise UnrenderableDocError, 'The provided document could not be rendered.'
           end
 
           def process_playback_completion

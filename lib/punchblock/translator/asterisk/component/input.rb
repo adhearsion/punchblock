@@ -18,10 +18,10 @@ module Punchblock
             initial_timeout = @component_node.initial_timeout || -1
             @inter_digit_timeout = @component_node.inter_digit_timeout || -1
 
-            return with_error 'option error', 'A grammar document is required.' unless @component_node.grammar
-            return with_error 'option error', 'A mode value other than DTMF is unsupported on Asterisk.' unless @component_node.mode == :dtmf
-            return with_error 'option error', 'An initial timeout value that is negative (and not -1) is invalid.' unless initial_timeout >= -1
-            return with_error 'option error', 'An inter-digit timeout value that is negative (and not -1) is invalid.' unless @inter_digit_timeout >= -1
+            raise OptionError, 'A grammar document is required.' unless @component_node.grammar
+            raise OptionError, 'A mode value other than DTMF is unsupported on Asterisk.' unless @component_node.mode == :dtmf
+            raise OptionError, 'An initial timeout value that is negative (and not -1) is invalid.' unless initial_timeout >= -1
+            raise OptionError, 'An inter-digit timeout value that is negative (and not -1) is invalid.' unless @inter_digit_timeout >= -1
 
             send_ref
 
@@ -42,6 +42,8 @@ module Punchblock
                 component.process_dtmf! event['Digit'] if event['End'] == 'Yes'
               end
             end
+          rescue OptionError => e
+            with_error 'option error', e.message
           end
 
           def process_dtmf(digit)

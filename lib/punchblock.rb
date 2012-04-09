@@ -43,7 +43,7 @@ module Punchblock
 
   ##
   # This exception may be raised if a transport error is detected.
-  TransportError = Class.new StandardError
+  Error = Class.new StandardError
 
   BASE_RAYO_NAMESPACE     = 'urn:xmpp:rayo'
   BASE_ASTERISK_NAMESPACE = 'urn:xmpp:rayo:asterisk'

@@ -3,7 +3,7 @@
 module Punchblock
   ##
   # This exception may be raised if a transport error is detected.
-  class ProtocolError < StandardError
+  class ProtocolError < Error
     attr_accessor :name, :text, :call_id, :component_id
 
     def setup(name = nil, text = nil, call_id = nil, component_id = nil)

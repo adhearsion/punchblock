@@ -9,6 +9,8 @@ module Punchblock
         class Output < Component
           include StopByRedirect
 
+          UnrenderableDocError = Class.new OptionError
+
           def setup
             @media_engine = @call.translator.media_engine
           end
@@ -16,30 +18,18 @@ module Punchblock
           def execute
             @call.answer_if_not_answered
 
-            return with_error 'option error', 'An SSML document is required.' unless @component_node.ssml
-
-            return with_error 'option error', 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
+            raise OptionError, 'An SSML document is required.' unless @component_node.ssml
+            raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
-              return with_error 'option error', "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
+              raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
             end
 
             case @media_engine
             when :asterisk, nil
-              return with_error 'option error', "A voice value is unsupported on Asterisk." if @component_node.voice
+              raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
 
-              @execution_elements = @component_node.ssml.children.map do |node|
-                case node
-                when RubySpeech::SSML::Audio
-                  lambda { current_actor.play_audio! node.src }
-                when String
-                  return unrenderable_doc_error if node.include?(' ')
-                  lambda { current_actor.play_audio! node }
-                else
-                  return unrenderable_doc_error
-                end
-              end.compact
-
+              @execution_elements = collect_executable_elements
               @pending_actions = @execution_elements.count
 
               send_ref
@@ -73,6 +63,26 @@ module Punchblock
                 output_component.send_complete_event! success_reason
               end
             end
+          rescue UnrenderableDocError => e
+            with_error 'unrenderable document error', e.message
+          rescue OptionError => e
+            with_error 'option error', e.message
+          end
+
+          def collect_executable_elements
+            @component_node.ssml.children.map do |node|
+              case node
+              when RubySpeech::SSML::Audio
+                lambda { current_actor.play_audio! node.src }
+              when String
+                raise UnrenderableDocError, 'The provided document could not be rendered.' if node.include?(' ')
+                lambda { current_actor.play_audio! node }
+              else
+                raise UnrenderableDocError, 'The provided document could not be rendered.'
+              end
+            end.compact
+          rescue
+            raise UnrenderableDocError, 'The provided document could not be rendered.'
           end
 
           def process_playback_completion
@@ -98,10 +108,6 @@ module Punchblock
           end
 
           private
-
-          def unrenderable_doc_error
-            with_error 'unrenderable document error', 'The provided document could not be rendered.'
-          end
 
           def escaped_doc
             @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }

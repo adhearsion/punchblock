@@ -12,6 +12,8 @@ module Punchblock
         autoload :StopByRedirect
 
         class Component
+          OptionError = Class.new Punchblock::Error
+
           include Celluloid
 
           attr_reader :id, :call

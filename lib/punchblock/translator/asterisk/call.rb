@@ -193,6 +193,20 @@ module Punchblock
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
             redirect_back other_call
+          when Command::Reject
+            rejection = case command.reason
+            when :busy
+              'EXEC Busy'
+            when :decline
+              'EXEC Busy'
+            when :error
+              'EXEC Congestion'
+            else
+              'EXEC Congestion'
+            end
+            send_agi_action rejection do |response|
+              command.response = true
+            end
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output

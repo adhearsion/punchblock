@@ -1,7 +1,9 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: No longer generate warnings
   * Update: Better dependency version fixing
-  * Bugfix: Implement Reject on Asterisk
+  * Feature: Implement Reject on Asterisk
+  * Bugfix: Set 'to' attribute on an offer from Asterisk to something useful if the dnid is 'unknown'
+  * Bugfix: Include caller ID name in 'from' attribute on an offer from Asterisk
 
 # [v1.0.0](https://github.com/adhearsion/punchblock/compare/v0.12.0...v1.0.0) - [2012-04-11](https://rubygems.org/gems/punchblock/versions/1.0.0)
   * Stable release :D

@@ -279,7 +279,7 @@ module Punchblock
         end
 
         def offer_event
-          Event::Offer.new :to      => agi_env[:agi_dnid],
+          Event::Offer.new :to      => agi_env.values_at(:agi_dnid, :agi_extension).detect { |e| e && e != 'unknown' },
                            :from    => [agi_env[:agi_type].downcase, agi_env[:agi_callerid]].join(':'),
                            :headers => sip_headers
         end

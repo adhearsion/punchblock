@@ -110,6 +110,9 @@ module Punchblock
           case ami_event.name
           when 'Hangup'
             pb_logger.trace "Received a Hangup AMI event. Sending End event."
+            @components.dup.each_pair do |id, component|
+              component.call_ended if component.alive?
+            end
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
             pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."

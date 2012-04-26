@@ -52,7 +52,7 @@ module Punchblock
             if internal
               @component_node.add_event event
             else
-              translator.connection.handle_event event
+              translator.handle_pb_event! event
             end
           end
 
@@ -62,6 +62,10 @@ module Punchblock
 
           def call_id
             call.id if call
+          end
+
+          def call_ended
+            send_complete_event Punchblock::Event::Complete::Hangup.new
           end
 
           private

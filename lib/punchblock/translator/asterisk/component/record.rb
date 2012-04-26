@@ -24,13 +24,14 @@ module Punchblock
               component.finished
             end
 
+            send_ref
+
             if @component_node.start_beep
               pb_logger.debug "Playing a beep via STREAM FILE before recording"
               @call.send_agi_action! 'STREAM FILE', 'beep', '""'
             end
 
             call.send_ami_action! 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
-            send_ref
             unless max_duration == -1
               after max_duration/1000 do
                 pb_logger.trace "Max duration encountered, stopping recording"

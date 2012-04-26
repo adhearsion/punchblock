@@ -28,10 +28,10 @@ module Punchblock
       context "with other values" do
         it "returns a new object with the appropriate values" do
           e = ProtocolError.exception 'FooBar'
-          e.name.should == nil
-          e.text.should == nil
-          e.call_id.should == nil
-          e.component_id.should == nil
+          e.name.should be == nil
+          e.text.should be == nil
+          e.call_id.should be == nil
+          e.component_id.should be == nil
         end
       end
     end
@@ -52,10 +52,10 @@ module Punchblock
       context "with other values" do
         it "returns a new object with the appropriate values" do
           e = subject.exception("Boo")
-          e.name.should == name
-          e.text.should == text
-          e.call_id.should == call_id
-          e.component_id.should == component_id
+          e.name.should be == name
+          e.text.should be == text
+          e.call_id.should be == call_id
+          e.component_id.should be == component_id
         end
       end
     end

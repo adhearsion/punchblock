@@ -22,7 +22,7 @@ module Punchblock
             :agi_callingani2  => '0',
             :agi_callington   => '0',
             :agi_callingtns   => '0',
-            :agi_dnid         => '1000',
+            :agi_dnid         => 'unknown',
             :agi_rdnis        => 'unknown',
             :agi_context      => 'default',
             :agi_extension    => '1000',
@@ -47,7 +47,7 @@ module Punchblock
             :x_agi_callingani2  => '0',
             :x_agi_callington   => '0',
             :x_agi_callingtns   => '0',
-            :x_agi_dnid         => '1000',
+            :x_agi_dnid         => 'unknown',
             :x_agi_rdnis        => 'unknown',
             :x_agi_context      => 'default',
             :x_agi_extension    => '1000',
@@ -86,7 +86,7 @@ module Punchblock
           it 'sends an offer to the translator' do
             expected_offer = Punchblock::Event::Offer.new :target_call_id  => subject.id,
                                                           :to       => '1000',
-                                                          :from     => 'sip:5678',
+                                                          :from     => 'Jane Smith <sip:5678>',
                                                           :headers  => sip_headers
             translator.expects(:handle_pb_event!).with expected_offer
             subject.send_offer
@@ -645,6 +645,43 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC RINGING"
+              agi_command.execute!
+              agi_command.add_event expected_agi_complete_event
+              command.response(0.5).should be true
+            end
+          end
+
+          context 'with a reject command' do
+            let(:command) { Command::Reject.new }
+
+            it "with a :busy reason should send an EXEC Busy AGI command and set the command's response" do
+              command.reason = :busy
+              component = subject.execute_command command
+              component.internal.should be_true
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
+              agi_command.name.should be == "EXEC Busy"
+              agi_command.execute!
+              agi_command.add_event expected_agi_complete_event
+              command.response(0.5).should be true
+            end
+
+            it "with a :decline reason should send an EXEC Busy AGI command and set the command's response" do
+              command.reason = :decline
+              component = subject.execute_command command
+              component.internal.should be_true
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
+              agi_command.name.should be == "EXEC Busy"
+              agi_command.execute!
+              agi_command.add_event expected_agi_complete_event
+              command.response(0.5).should be true
+            end
+
+            it "with an :error reason should send an EXEC Congestion AGI command and set the command's response" do
+              command.reason = :error
+              component = subject.execute_command command
+              component.internal.should be_true
+              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
+              agi_command.name.should be == "EXEC Congestion"
               agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true

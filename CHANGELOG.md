@@ -1,5 +1,13 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.1.0](https://github.com/adhearsion/punchblock/compare/v1.0.0...v1.1.0) - [2012-04-26](https://rubygems.org/gems/punchblock/versions/1.1.0)
+  * Feature: Implement Reject on Asterisk
+  * Bugfix: No longer generate warnings
+  * Bugfix: Set 'to' attribute on an offer from Asterisk to something useful if the dnid is 'unknown'
+  * Bugfix: Include caller ID name in 'from' attribute on an offer from Asterisk
+  * Bugfix: Removed media engine switching on Asterisk Input component - fixes broken input when using app_swift or unimrcp for output
+  * Update: Better dependency version fixing
+
 # [v1.0.0](https://github.com/adhearsion/punchblock/compare/v0.12.0...v1.0.0) - [2012-04-11](https://rubygems.org/gems/punchblock/versions/1.0.0)
   * Stable release :D
   * Bugfix: Any issue in compiling an output document into executable elements on Asterisk should return an unrenderable doc error

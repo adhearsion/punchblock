@@ -193,6 +193,20 @@ module Punchblock
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
             redirect_back other_call
+          when Command::Reject
+            rejection = case command.reason
+            when :busy
+              'EXEC Busy'
+            when :decline
+              'EXEC Busy'
+            when :error
+              'EXEC Congestion'
+            else
+              'EXEC Congestion'
+            end
+            send_agi_action rejection do |response|
+              command.response = true
+            end
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
@@ -265,8 +279,8 @@ module Punchblock
         end
 
         def offer_event
-          Event::Offer.new :to      => agi_env[:agi_dnid],
-                           :from    => [agi_env[:agi_type].downcase, agi_env[:agi_callerid]].join(':'),
+          Event::Offer.new :to      => agi_env.values_at(:agi_dnid, :agi_extension).detect { |e| e && e != 'unknown' },
+                           :from    => "#{agi_env[:agi_calleridname]} <#{[agi_env[:agi_type].downcase, agi_env[:agi_callerid]].join(':')}>",
                            :headers => sip_headers
         end
 

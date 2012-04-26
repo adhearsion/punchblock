@@ -736,7 +736,7 @@ module Punchblock
 
             let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
-            it 'should create an AGI command component actor and execute it asynchronously' do
+            it 'should create an Output component and execute it asynchronously' do
               Component::Output.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
@@ -751,8 +751,23 @@ module Punchblock
 
             let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
 
-            it 'should create an AGI command component actor and execute it asynchronously' do
+            it 'should create an Input component and execute it asynchronously' do
               Component::Input.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:internal=).never
+              mock_action.expects(:execute!).once
+              subject.execute_command command
+            end
+          end
+
+          context 'with a Record component' do
+            let :command do
+              Punchblock::Component::Record.new
+            end
+
+            let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
+
+            it 'should create a Record component and execute it asynchronously' do
+              Component::Record.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -789,7 +804,7 @@ module Punchblock
 
           context 'with a command we do not understand' do
             let :command do
-              Punchblock::Component::Record.new
+              Punchblock::Command::Mute.new
             end
 
             it 'sends an error in response to the command' do

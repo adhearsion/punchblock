@@ -213,6 +213,8 @@ module Punchblock
             execute_component Component::Output, command
           when Punchblock::Component::Input
             execute_component Component::Input, command
+          when Punchblock::Component::Record
+            execute_component Component::Record, command
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end

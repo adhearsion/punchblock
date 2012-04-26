@@ -11,7 +11,6 @@ module Punchblock
             max_duration = @component_node.max_duration || -1
 
             raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
-            raise OptionError, 'A start-beep value of true is unsupported.' if @component_node.start_beep
             raise OptionError, 'An initial-timeout value is unsupported.' if @component_node.initial_timeout && @component_node.initial_timeout != -1
             raise OptionError, 'A final-timeout value is unsupported.' if @component_node.final_timeout && @component_node.final_timeout != -1
             raise OptionError, 'A max-duration value that is negative (and not -1) is invalid.' unless max_duration >= -1
@@ -23,6 +22,11 @@ module Punchblock
             component = current_actor
             call.register_handler :ami, :name => 'MonitorStop' do |event|
               component.finished
+            end
+
+            if @component_node.start_beep
+              pb_logger.debug "Playing a beep via STREAM FILE before recording"
+              @call.send_agi_action! 'STREAM FILE', 'beep'
             end
 
             call.send_ami_action! 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true

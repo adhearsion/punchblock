@@ -201,6 +201,7 @@ module Punchblock
                 let(:command_options) { { :start_beep => nil } }
                 it "should execute normally" do
                   mock_call.expects(:send_ami_action!).once
+                  mock_call.expects(:send_agi_action!).never.with('STREAM FILE', 'beep')
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -210,6 +211,7 @@ module Punchblock
                 let(:command_options) { { :start_beep => false } }
                 it "should execute normally" do
                   mock_call.expects(:send_ami_action!).once
+                  mock_call.expects(:send_agi_action!).never.with('STREAM FILE', 'beep')
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -217,11 +219,12 @@ module Punchblock
 
               context "set to true" do
                 let(:command_options) { { :start_beep => true } }
-                it "should return an error and not execute any actions" do
-                  mock_call.expects(:send_agi_action!).never
+                it "should play a beep before recording" do
+                  execute_seq = sequence 'beep then record'
+                  mock_call.expects(:send_agi_action!).once.with('STREAM FILE', 'beep').in_sequence(execute_seq)
+                  mock_call.expects(:send_ami_action!).once.in_sequence(execute_seq)
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A start-beep value of true is unsupported.'
-                  original_command.response(0.1).should be == error
+                  original_command.response(0.1).should be_a Ref
                 end
               end
             end

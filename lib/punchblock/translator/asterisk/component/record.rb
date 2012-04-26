@@ -8,6 +8,14 @@ module Punchblock
           RECORDING_BASE_PATH = '/var/punchblock/record'
 
           def execute
+            raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
+            raise OptionError, 'A start-beep value of true is unsupported.' if @component_node.start_beep
+            raise OptionError, 'An initial-timeout value is unsupported.' if @component_node.initial_timeout && @component_node.initial_timeout != -1
+            raise OptionError, 'A final-timeout value is unsupported.' if @component_node.final_timeout && @component_node.final_timeout != -1
+            raise OptionError, 'A max-duration value is unsupported.' if @component_node.max_duration && @component_node.max_duration != -1
+
+            @format = @component_node.format || 'wav'
+
             @call.answer_if_not_answered
 
             component = current_actor
@@ -15,7 +23,7 @@ module Punchblock
               component.finished
             end
 
-            call.send_ami_action! 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => 'wav', 'Mix' => true
+            call.send_ami_action! 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
             send_ref
           rescue OptionError => e
             with_error 'option error', e.message
@@ -55,7 +63,7 @@ module Punchblock
           end
 
           def recording
-            Punchblock::Component::Record::Recording.new :uri => "#{filename}.wav"
+            Punchblock::Component::Record::Recording.new :uri => [filename, @format].join('.')
           end
 
           def stop_reason

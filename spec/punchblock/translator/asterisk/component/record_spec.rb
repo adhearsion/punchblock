@@ -65,6 +65,196 @@ module Punchblock
               recording.uri.should be == full_filename
               original_command.should be_complete
             end
+
+            describe 'start_paused' do
+              context "set to nil" do
+                let(:command_options) { { :start_paused => nil } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to false" do
+                let(:command_options) { { :start_paused => false } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to true" do
+                let(:command_options) { { :start_paused => true } }
+                it "should return an error and not execute any actions" do
+                  mock_call.expects(:send_agi_action!).never
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'A start-paused value of true is unsupported.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+            end
+
+            describe 'initial_timeout' do
+              context "set to nil" do
+                let(:command_options) { { :initial_timeout => nil } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to -1" do
+                let(:command_options) { { :initial_timeout => -1 } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to a positive number" do
+                let(:command_options) { { :initial_timeout => 10 } }
+                it "should return an error and not execute any actions" do
+                  mock_call.expects(:send_agi_action!).never
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'An initial-timeout value is unsupported.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+            end
+
+            describe 'final_timeout' do
+              context "set to nil" do
+                let(:command_options) { { :final_timeout => nil } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to -1" do
+                let(:command_options) { { :final_timeout => -1 } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to a positive number" do
+                let(:command_options) { { :final_timeout => 10 } }
+                it "should return an error and not execute any actions" do
+                  mock_call.expects(:send_agi_action!).never
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'A final-timeout value is unsupported.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+            end
+
+            describe 'format' do
+              context "set to nil" do
+                let(:command_options) { { :format => nil } }
+                it "should execute as 'wav'" do
+                  mock_call.expects(:send_ami_action!).once.with('Monitor', has_entry('Format' => 'wav'))
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+
+                it "provides the correct filename in the recording" do
+                  mock_call.expects(:send_ami_action!)
+                  subject.execute
+                  monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
+                    e['Channel'] = channel
+                  end
+                  mock_call.process_ami_event monitor_stop_event
+                  recording.uri.should match(/.*\.wav$/)
+                end
+              end
+
+              context "set to 'mp3'" do
+                let(:command_options) { { :format => 'mp3' } }
+                it "should execute as 'mp3'" do
+                  mock_call.expects(:send_ami_action!).once.with('Monitor', has_entry('Format' => 'mp3'))
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+
+                it "provides the correct filename in the recording" do
+                  mock_call.expects(:send_ami_action!)
+                  subject.execute
+                  monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
+                    e['Channel'] = channel
+                  end
+                  mock_call.process_ami_event monitor_stop_event
+                  recording.uri.should match(/.*\.mp3$/)
+                end
+              end
+            end
+
+            describe 'start_beep' do
+              context "set to nil" do
+                let(:command_options) { { :start_beep => nil } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to false" do
+                let(:command_options) { { :start_beep => false } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to true" do
+                let(:command_options) { { :start_beep => true } }
+                it "should return an error and not execute any actions" do
+                  mock_call.expects(:send_agi_action!).never
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'A start-beep value of true is unsupported.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+            end
+
+            describe 'max_duration' do
+              context "set to nil" do
+                let(:command_options) { { :max_duration => nil } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to -1" do
+                let(:command_options) { { :max_duration => -1 } }
+                it "should execute normally" do
+                  mock_call.expects(:send_ami_action!).once
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+
+              context "set to a positive number" do
+                let(:command_options) { { :max_duration => 10 } }
+                it "should return an error and not execute any actions" do
+                  mock_call.expects(:send_agi_action!).never
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'A max-duration value is unsupported.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+            end
           end
 
           describe "#execute_command" do

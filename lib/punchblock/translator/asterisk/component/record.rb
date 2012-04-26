@@ -8,11 +8,13 @@ module Punchblock
           RECORDING_BASE_PATH = '/var/punchblock/record'
 
           def execute
+            max_duration = @component_node.max_duration || -1
+
             raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
             raise OptionError, 'A start-beep value of true is unsupported.' if @component_node.start_beep
             raise OptionError, 'An initial-timeout value is unsupported.' if @component_node.initial_timeout && @component_node.initial_timeout != -1
             raise OptionError, 'A final-timeout value is unsupported.' if @component_node.final_timeout && @component_node.final_timeout != -1
-            raise OptionError, 'A max-duration value is unsupported.' if @component_node.max_duration && @component_node.max_duration != -1
+            raise OptionError, 'A max-duration value that is negative (and not -1) is invalid.' unless max_duration >= -1
 
             @format = @component_node.format || 'wav'
 
@@ -25,6 +27,12 @@ module Punchblock
 
             call.send_ami_action! 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
             send_ref
+            unless max_duration == -1
+              after max_duration/1000 do
+                pb_logger.trace "Max duration encountered, stopping recording"
+                call.send_ami_action! 'StopMonitor', 'Channel' => call.channel
+              end
+            end
           rescue OptionError => e
             with_error 'option error', e.message
           end

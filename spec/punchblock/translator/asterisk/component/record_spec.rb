@@ -245,13 +245,44 @@ module Punchblock
                 end
               end
 
-              context "set to a positive number" do
-                let(:command_options) { { :max_duration => 10 } }
+              context 'a negative number other than -1' do
+                let(:command_options) { { :max_duration => -1000 } }
+
                 it "should return an error and not execute any actions" do
-                  mock_call.expects(:send_agi_action!).never
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A max-duration value is unsupported.'
+                  error = ProtocolError.new.setup 'option error', 'A max-duration value that is negative (and not -1) is invalid.'
                   original_command.response(0.1).should be == error
+                end
+              end
+
+              context 'a positive number' do
+                let(:reason) { original_command.complete_event(5).reason }
+                let(:recording) { original_command.complete_event(5).recording }
+                let(:command_options) { { :max_duration => 1000 } }
+
+                it "executes a StopMonitor action" do
+                  mock_call.expects :send_ami_action!
+                  mock_call.expects(:send_ami_action!).once.with('StopMonitor', 'Channel' => channel)
+                  subject.execute
+                  sleep 1.2
+                end
+
+                it "sends the correct complete event" do
+                  def mock_call.send_ami_action!(*args, &block)
+                    block.call Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new if block
+                  end
+                  full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
+                  subject.execute
+                  sleep 1.2
+
+                  monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
+                    e['Channel'] = channel
+                  end
+                  mock_call.process_ami_event monitor_stop_event
+
+                  reason.should be_a Punchblock::Component::Record::Complete::Success
+                  recording.uri.should be == full_filename
+                  original_command.should be_complete
                 end
               end
             end

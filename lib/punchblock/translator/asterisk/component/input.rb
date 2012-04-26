@@ -9,8 +9,7 @@ module Punchblock
           attr_reader :grammar, :buffer
 
           def setup
-            @media_engine = call.translator.media_engine
-            @buffer       = ""
+            @buffer = ""
           end
 
           def execute
@@ -25,22 +24,19 @@ module Punchblock
 
             send_ref
 
-            case @media_engine
-            when :asterisk, nil
-              @grammar = @component_node.grammar.value.clone
-              grammar.inline!
-              grammar.tokenize!
-              grammar.normalize_whitespace
+            @grammar = @component_node.grammar.value.clone
+            grammar.inline!
+            grammar.tokenize!
+            grammar.normalize_whitespace
 
-              begin_initial_timer initial_timeout/1000 unless initial_timeout == -1
+            begin_initial_timer initial_timeout/1000 unless initial_timeout == -1
 
-              component = current_actor
+            component = current_actor
 
-              @active = true
+            @active = true
 
-              call.register_handler :ami, :name => 'DTMF' do |event|
-                component.process_dtmf! event['Digit'] if event['End'] == 'Yes'
-              end
+            call.register_handler :ami, :name => 'DTMF' do |event|
+              component.process_dtmf! event['Digit'] if event['End'] == 'Yes'
             end
           rescue OptionError => e
             with_error 'option error', e.message

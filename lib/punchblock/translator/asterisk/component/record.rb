@@ -26,7 +26,7 @@ module Punchblock
 
             if @component_node.start_beep
               pb_logger.debug "Playing a beep via STREAM FILE before recording"
-              @call.send_agi_action! 'STREAM FILE', 'beep'
+              @call.send_agi_action! 'STREAM FILE', 'beep', '""'
             end
 
             call.send_ami_action! 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true

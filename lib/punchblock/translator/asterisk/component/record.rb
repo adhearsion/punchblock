@@ -53,7 +53,7 @@ module Punchblock
           end
 
           def finished
-            send_complete_event (@complete_reason || success_reason), recording
+            send_complete_event (@complete_reason || success_reason)
           end
 
           private
@@ -72,6 +72,10 @@ module Punchblock
 
           def success_reason
             Punchblock::Component::Record::Complete::Success.new
+          end
+
+          def send_complete_event(reason)
+            super reason, recording
           end
         end
       end

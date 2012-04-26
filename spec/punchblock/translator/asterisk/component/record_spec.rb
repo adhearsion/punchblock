@@ -54,7 +54,7 @@ module Punchblock
             end
 
             it "sends a success complete event when the recording ends" do
-              full_filename = "#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
+              full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
               mock_call.expects(:send_ami_action!)
               subject.execute
               monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
@@ -258,6 +258,9 @@ module Punchblock
           end
 
           describe "#execute_command" do
+            let(:reason) { original_command.complete_event(5).reason }
+            let(:recording) { original_command.complete_event(5).recording }
+
             context "with a command it does not understand" do
               let(:command) { Punchblock::Component::Output::Pause.new }
 
@@ -270,7 +273,6 @@ module Punchblock
 
             context "with a Stop command" do
               let(:command) { Punchblock::Component::Stop.new }
-              let(:reason) { original_command.complete_event(5).reason }
 
               before do
                 mock_call.expects :answer_if_not_answered
@@ -303,16 +305,17 @@ module Punchblock
                 def mock_call.send_ami_action!(*args, &block)
                   block.call Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new if block
                 end
+                full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
                 subject.execute_command command
                 send_stop_event
                 reason.should be_a Punchblock::Event::Complete::Stop
+                recording.uri.should be == full_filename
                 original_command.should be_complete
               end
             end
 
             context "with a Pause command" do
               let(:command) { Punchblock::Component::Record::Pause.new }
-              let(:reason) { original_command.complete_event(5).reason }
 
               before do
                 command.request!
@@ -336,7 +339,6 @@ module Punchblock
 
             context "with a Resume command" do
               let(:command) { Punchblock::Component::Record::Resume.new }
-              let(:reason) { original_command.complete_event(5).reason }
 
               before do
                 command.request!

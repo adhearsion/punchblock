@@ -63,7 +63,7 @@ module Punchblock
           end
 
           def recording
-            Punchblock::Component::Record::Recording.new :uri => [filename, @format].join('.')
+            Punchblock::Component::Record::Recording.new :uri => "file://#{filename}.#{@format}"
           end
 
           def stop_reason

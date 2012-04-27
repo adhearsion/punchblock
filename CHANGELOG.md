@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Basic support for record component on Asterisk, using MixMonitor. Currently unsupported options include: start_paused, initial_timeout, final_timeout. Hints are additionally not supported, and recordings are stored on the * machine's local filesystem.
 
 # [v1.1.0](https://github.com/adhearsion/punchblock/compare/v1.0.0...v1.1.0) - [2012-04-26](https://rubygems.org/gems/punchblock/versions/1.1.0)
   * Feature: Implement Reject on Asterisk

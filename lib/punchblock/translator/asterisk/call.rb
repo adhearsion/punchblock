@@ -110,6 +110,9 @@ module Punchblock
           case ami_event.name
           when 'Hangup'
             pb_logger.trace "Received a Hangup AMI event. Sending End event."
+            @components.dup.each_pair do |id, component|
+              component.call_ended if component.alive?
+            end
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
             pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."
@@ -213,6 +216,8 @@ module Punchblock
             execute_component Component::Output, command
           when Punchblock::Component::Input
             execute_component Component::Input, command
+          when Punchblock::Component::Record
+            execute_component Component::Record, command
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end

@@ -235,6 +235,21 @@ module Punchblock
               subject.should_not be_alive
             end
 
+            it "should cause all components to send complete events before sending end event" do
+              subject.expects :answer_if_not_answered
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command.request!
+              component = subject.execute_command comp_command
+              comp_command.response(0.1).should be_a Ref
+              expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id
+              expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
+              expected_end_event = Punchblock::Event::End.new :reason => :hangup, :target_call_id  => subject.id
+              end_sequence = sequence 'end events'
+              translator.expects(:handle_pb_event!).with(expected_complete_event).once.in_sequence(end_sequence)
+              translator.expects(:handle_pb_event!).with(expected_end_event).once.in_sequence(end_sequence)
+              subject.process_ami_event ami_event
+            end
+
             context "with an undefined cause" do
               let(:cause)     { '0' }
               let(:cause_txt) { 'Undefined' }
@@ -736,7 +751,7 @@ module Punchblock
 
             let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
-            it 'should create an AGI command component actor and execute it asynchronously' do
+            it 'should create an Output component and execute it asynchronously' do
               Component::Output.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
@@ -751,8 +766,23 @@ module Punchblock
 
             let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
 
-            it 'should create an AGI command component actor and execute it asynchronously' do
+            it 'should create an Input component and execute it asynchronously' do
               Component::Input.expects(:new).once.with(command, subject).returns mock_action
+              mock_action.expects(:internal=).never
+              mock_action.expects(:execute!).once
+              subject.execute_command command
+            end
+          end
+
+          context 'with a Record component' do
+            let :command do
+              Punchblock::Component::Record.new
+            end
+
+            let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
+
+            it 'should create a Record component and execute it asynchronously' do
+              Component::Record.expects(:new).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -789,7 +819,7 @@ module Punchblock
 
           context 'with a command we do not understand' do
             let :command do
-              Punchblock::Component::Record.new
+              Punchblock::Command::Mute.new
             end
 
             it 'sends an error in response to the command' do

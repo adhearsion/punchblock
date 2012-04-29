@@ -116,9 +116,9 @@ module Punchblock
                 it 'should send a complete event' do
                   subject.handle_ami_event ami_event
 
-                  command.should be_complete
-
                   complete_event = command.complete_event 0.5
+
+                  command.should be_complete
 
                   complete_event.component_id.should be == component_id.to_s
                   complete_event.reason.should be == expected_complete_reason

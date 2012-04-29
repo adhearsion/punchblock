@@ -71,6 +71,13 @@ module Punchblock
             end
           end
 
+          describe "#call_ended" do
+            it "should send a complete event with the call hangup reason" do
+              subject.wrapped_object.expects(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
+              subject.call_ended
+            end
+          end
+
           describe '#execute_command' do
             before do
               component_command.request!

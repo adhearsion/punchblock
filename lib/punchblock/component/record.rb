@@ -203,6 +203,10 @@ module Punchblock
           read_attr :uri
         end
 
+        def uri=(other)
+          write_attr :uri, other
+        end
+
         def duration
           read_attr :duration, :to_i
         end

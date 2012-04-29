@@ -9,6 +9,7 @@ module Punchblock
         autoload :Asterisk
         autoload :Input
         autoload :Output
+        autoload :Record
         autoload :StopByRedirect
 
         class Component
@@ -22,6 +23,7 @@ module Punchblock
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
             @id = UUIDTools::UUID.random_create.to_s
+            @complete = false
             setup
             pb_logger.debug "Starting up..."
           end
@@ -33,9 +35,12 @@ module Punchblock
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
           end
 
-          def send_complete_event(reason)
+          def send_complete_event(reason, recording = nil)
+            return if @complete
+            @complete = true
             event = Punchblock::Event::Complete.new.tap do |c|
               c.reason = reason
+              c << recording if recording
             end
             send_event event
             current_actor.terminate!
@@ -48,7 +53,7 @@ module Punchblock
             if internal
               @component_node.add_event event
             else
-              translator.connection.handle_event event
+              translator.handle_pb_event! event
             end
           end
 
@@ -58,6 +63,10 @@ module Punchblock
 
           def call_id
             call.id if call
+          end
+
+          def call_ended
+            send_complete_event Punchblock::Event::Complete::Hangup.new
           end
 
           private

@@ -336,7 +336,7 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.expects(:send_ami_action!)
+                mock_call.expects :send_ami_action!
                 subject.execute_command command
                 send_stop_event
                 command.response(0.1).should be == true
@@ -348,9 +348,16 @@ module Punchblock
               end
 
               it "sends the correct complete event" do
-                def mock_call.send_ami_action!(*args, &block)
-                  block.call Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new if block
+                mock_call.instance_exec do
+                  class << self
+                    undef :send_ami_action! # This is here because mocha has already defined #send_ami_action! above. We need to undef it to prevent a warning on redefinition.
+                  end
+
+                  def send_ami_action!(*args, &block)
+                    block.call Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new if block
+                  end
                 end
+
                 full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
                 subject.execute_command command
                 send_stop_event

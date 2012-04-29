@@ -23,6 +23,7 @@ module Punchblock
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
             @id = UUIDTools::UUID.random_create.to_s
+            @complete = false
             setup
             pb_logger.debug "Starting up..."
           end

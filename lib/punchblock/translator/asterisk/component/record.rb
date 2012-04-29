@@ -7,6 +7,10 @@ module Punchblock
         class Record < Component
           RECORDING_BASE_PATH = '/var/punchblock/record'
 
+          def setup
+            @complete_reason = nil
+          end
+
           def execute
             max_duration = @component_node.max_duration || -1
 
@@ -69,7 +73,7 @@ module Punchblock
           end
 
           def finished
-            send_complete_event (@complete_reason || success_reason)
+            send_complete_event(@complete_reason || success_reason)
           end
 
           private

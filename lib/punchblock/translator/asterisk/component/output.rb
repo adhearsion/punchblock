@@ -16,14 +16,14 @@ module Punchblock
           end
 
           def execute
-            @call.answer_if_not_answered
-
             raise OptionError, 'An SSML document is required.' unless @component_node.ssml
             raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
             end
+
+            @out_of_band = !@call.answered?
 
             case @media_engine
             when :asterisk, nil
@@ -39,6 +39,8 @@ module Punchblock
               else
                 nil
               end
+
+              send_progress if @out_of_band
 
               @execution_elements.each do |element|
                 element.call
@@ -99,12 +101,26 @@ module Punchblock
           end
 
           def play_audio(path)
-            pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
-            op = current_actor
-            @call.send_agi_action! 'STREAM FILE', path, @interrupt_digits do |complete_event|
-              pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
-              op.continue! complete_event
+            unless @out_of_band
+              pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
+              op = current_actor
+              @call.send_agi_action! 'STREAM FILE', path, @interrupt_digits do |complete_event|
+                pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
+                op.continue! complete_event
+              end
+            else
+              pb_logger.debug "Playing an audio file (#{path}) via Playback for Early Media" 
+              op = current_actor
+              @call.send_agi_action! 'Playback', path, 'noanswer' do |complete_event|
+                pb_logger.debug "Playback completed with #{complete_event}. Signalling to continue execution."
+                op.continue! complete_event
+              end
             end
+          end
+
+          def send_progress
+            pb_logger.debug "Sending Progress to start early media"
+            @call.send_agi_action "EXEC Progress"
           end
 
           private
@@ -123,6 +139,8 @@ module Punchblock
           def success_reason
             Punchblock::Component::Output::Complete::Success.new
           end
+
+
         end
       end
     end

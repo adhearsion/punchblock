@@ -143,6 +143,46 @@ module Punchblock
           end
         end
 
+        describe '#raise_if_not_answered' do
+          let(:answer_command) { Command::Answer.new.tap { |a| a.request! } }
+
+          context "with a call that is already answered" do
+            it 'should not raise an UnansweredError' do
+              subject.wrapped_object.expects(:'answered?').returns true
+              lambda { subject.raise_if_not_answered }.should_not raise_error(Call::UnansweredError)
+            end
+          end
+
+          context "with an unanswered call" do
+            before do
+              subject.wrapped_object.expects(:'answered?').returns false
+            end
+
+            context "with a call that is outbound" do
+              let(:dial_command) { Command::Dial.new }
+
+              before do
+                dial_command.request!
+                subject.dial dial_command
+              end
+
+              it 'should not raise an UnansweredError' do
+                lambda { subject.raise_if_not_answered }.should_not raise_error(Call::UnansweredError)
+              end
+            end
+
+            context "with a call that is inbound" do
+              before do
+                subject.send_offer
+              end
+
+              it 'should answer a call that is inbound and not answered' do
+                lambda { subject.raise_if_not_answered }.should raise_error(Call::UnansweredError)
+              end
+            end
+          end
+        end
+
         describe '#dial' do
           let(:dial_command_options) { {} }
 

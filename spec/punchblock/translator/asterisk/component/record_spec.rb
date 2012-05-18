@@ -33,13 +33,19 @@ module Punchblock
 
             before { original_command.request! }
 
-            it "calls answer_if_not_answered on the call" do
+            it "never calls answer_if_not_answered on the call" do
               mock_call.expects :send_ami_action!
-              mock_call.expects :answer_if_not_answered
+              mock_call.expects(:answer_if_not_answered).never
               subject.execute
             end
 
-            before { mock_call.stubs :answer_if_not_answered }
+            it "calls raise_if_not_answered on the call" do
+              mock_call.expects :send_ami_action!
+              mock_call.expects :raise_if_not_answered
+              subject.execute
+            end
+
+            before { mock_call.stubs :raise_if_not_answered }
 
             it "sets command response to a reference to the component" do
               mock_call.expects(:send_ami_action!)
@@ -321,8 +327,8 @@ module Punchblock
               let(:command) { Punchblock::Component::Stop.new }
 
               before do
-                mock_call.expects :answer_if_not_answered
                 mock_call.expects :send_ami_action!
+                mock_call.expects :raise_if_not_answered
                 command.request!
                 original_command.request!
                 subject.execute

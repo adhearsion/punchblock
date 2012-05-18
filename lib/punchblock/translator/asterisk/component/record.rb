@@ -12,6 +12,7 @@ module Punchblock
           end
 
           def execute
+            @call.raise_if_not_answered
             max_duration = @component_node.max_duration || -1
 
             raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
@@ -21,7 +22,6 @@ module Punchblock
 
             @format = @component_node.format || 'wav'
 
-            @call.answer_if_not_answered
 
             component = current_actor
             call.register_handler :ami, :name => 'MonitorStop' do |event|

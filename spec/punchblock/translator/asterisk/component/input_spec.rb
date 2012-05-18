@@ -42,12 +42,17 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            it "calls answer_if_not_answered on the call" do
-              call.expects :answer_if_not_answered
+            it "never calls answer_if_not_answered on the call" do
+              call.expects(:answer_if_not_answered).never
               subject.execute
             end
 
-            before { call.stubs :answer_if_not_answered }
+            it "calls raise_if_not_answered on the call" do
+              call.expects(:raise_if_not_answered)
+              subject.execute
+            end
+
+            before { call.stubs :raise_if_not_answered }
 
             let(:original_command_opts) { {} }
 

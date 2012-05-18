@@ -10,6 +10,8 @@ module Punchblock
         include Celluloid
 
         attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
+        
+        UnansweredError = Class.new Punchblock::Error
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[0] = :hangup
@@ -99,6 +101,11 @@ module Punchblock
         def answer_if_not_answered
           return if answered? || outbound?
           execute_command Command::Answer.new.tap { |a| a.request! }
+        end
+
+        def raise_if_not_answered
+          return if answered? || outbound?
+          raise UnansweredError
         end
 
         def channel=(other)

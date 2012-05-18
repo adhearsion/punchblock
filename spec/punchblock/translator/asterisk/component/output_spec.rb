@@ -345,7 +345,7 @@ module Punchblock
               end
 
               def expect_playback_noanswer(options = nil)
-                mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', audio_filename, 'noanswer' do |*args|
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', audio_filename + ',noanswer' do |*args|
                   subject.continue!
                   true
                 end

@@ -101,20 +101,20 @@ module Punchblock
           end
 
           def play_audio(path)
-            unless @out_of_band
-              pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
-              op = current_actor
-              @call.send_agi_action! 'STREAM FILE', path, @interrupt_digits do |complete_event|
-                pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
-                op.continue! complete_event
-              end
-            else
+            if @out_of_band
               pb_logger.debug "Playing an audio file (#{path}) via Playback for Early Media"
-              op = current_actor
-              @call.send_agi_action! 'EXEC Playback', path + ',noanswer' do |complete_event|
-                pb_logger.debug "Playback completed with #{complete_event}. Signalling to continue execution."
-                op.continue! complete_event
-              end
+              play_audio_agi 'EXEC Playback', "#{path},noanswer"
+            else
+              pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
+              play_audio_agi 'STREAM FILE', path, @interrupt_digits
+            end
+          end
+
+          def play_audio_agi(app, *opts)
+            op = current_actor
+            @call.send_agi_action! app, *opts do |complete_event|
+              pb_logger.debug "File playback completed with #{complete_event}. Signalling to continue execution."
+              op.continue! complete_event
             end
           end
 

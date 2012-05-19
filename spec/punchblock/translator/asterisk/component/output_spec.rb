@@ -432,7 +432,7 @@ module Punchblock
                     it "should play the file with Playback" do
                       expect_answered false
                       expect_playback_noanswer
-                      mock_call.expects(:send_agi_action).with('EXEC Progress')
+                      mock_call.expects(:send_progress)
                       subject.execute
                     end
                   end
@@ -720,7 +720,7 @@ module Punchblock
 
           describe "#send_progress" do
             it "sends the Progress signal" do
-              mock_call.expects(:send_agi_action).with("EXEC Progress")
+              mock_call.expects(:send_progress)
               subject.send_progress
             end
           end

@@ -183,6 +183,55 @@ module Punchblock
           end
         end
 
+        describe '#send_progress' do
+
+          context "with a call that is already answered" do
+            it 'should not send the EXEC Progress command' do
+              subject.wrapped_object.expects(:'answered?').returns true
+              subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
+              subject.send_progress
+            end
+          end
+
+          context "with an unanswered call" do
+            before do
+              subject.wrapped_object.expects(:'answered?').returns(false).at_least_once
+            end
+
+            context "with a call that is outbound" do
+              let(:dial_command) { Command::Dial.new }
+
+              before do
+                dial_command.request!
+                subject.dial dial_command
+              end
+
+              it 'should not send the EXEC Progress command' do
+                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
+                subject.send_progress
+              end
+            end
+
+            context "with a call that is inbound" do
+              before do
+                subject.send_offer
+              end
+
+              it 'should send the EXEC Progress command to a call that is inbound and not answered' do
+                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress")
+                subject.send_progress
+              end
+              
+              it 'should send the EXEC Progress command only once if called twice' do
+                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").once
+                subject.send_progress
+                subject.send_progress
+              end
+            end
+          end
+        end
+
+
         describe '#dial' do
           let(:dial_command_options) { {} }
 

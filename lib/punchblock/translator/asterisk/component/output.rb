@@ -119,8 +119,7 @@ module Punchblock
           end
 
           def send_progress
-            pb_logger.debug "Sending Progress to start early media"
-            @call.send_agi_action "EXEC Progress"
+            @call.send_progress
           end
 
           private

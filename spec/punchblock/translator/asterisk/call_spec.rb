@@ -221,7 +221,7 @@ module Punchblock
                 subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress")
                 subject.send_progress
               end
-              
+
               it 'should send the EXEC Progress command only once if called twice' do
                 subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").once
                 subject.send_progress
@@ -230,7 +230,6 @@ module Punchblock
             end
           end
         end
-
 
         describe '#dial' do
           let(:dial_command_options) { {} }

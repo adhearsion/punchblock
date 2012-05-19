@@ -325,7 +325,6 @@ module Punchblock
             end
 
             it "should cause all components to send complete events before sending end event" do
-              subject.expects :answer_if_not_answered
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command

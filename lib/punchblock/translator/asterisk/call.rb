@@ -107,8 +107,7 @@ module Punchblock
         end
 
         def raise_if_not_answered
-          return if answered? || outbound?
-          raise UnansweredError
+          raise UnansweredError unless answered? || outbound?
         end
 
         def channel=(other)

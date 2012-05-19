@@ -23,7 +23,7 @@ module Punchblock
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
             end
 
-            @out_of_band = !@call.answered?
+            @early = !@call.answered?
 
             case @media_engine
             when :asterisk, nil
@@ -40,7 +40,7 @@ module Punchblock
                 nil
               end
 
-              send_progress if @out_of_band
+              send_progress if @early
 
               @execution_elements.each do |element|
                 element.call
@@ -101,7 +101,7 @@ module Punchblock
           end
 
           def play_audio(path)
-            if @out_of_band
+            if @early
               pb_logger.debug "Playing an audio file (#{path}) via Playback for Early Media"
               play_audio_agi 'EXEC Playback', "#{path},noanswer"
             else

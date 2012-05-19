@@ -109,7 +109,7 @@ module Punchblock
                 op.continue! complete_event
               end
             else
-              pb_logger.debug "Playing an audio file (#{path}) via Playback for Early Media" 
+              pb_logger.debug "Playing an audio file (#{path}) via Playback for Early Media"
               op = current_actor
               @call.send_agi_action! 'EXEC Playback', path + ',noanswer' do |complete_event|
                 pb_logger.debug "Playback completed with #{complete_event}. Signalling to continue execution."
@@ -138,7 +138,6 @@ module Punchblock
           def success_reason
             Punchblock::Component::Output::Complete::Success.new
           end
-
 
         end
       end

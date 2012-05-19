@@ -10,7 +10,7 @@ module Punchblock
         include Celluloid
 
         attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
-        
+
         UnansweredError = Class.new Punchblock::Error
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }

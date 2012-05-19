@@ -33,12 +33,6 @@ module Punchblock
 
             before { original_command.request! }
 
-            it "never calls answer_if_not_answered on the call" do
-              mock_call.expects :send_ami_action!
-              mock_call.expects(:answer_if_not_answered).never
-              subject.execute
-            end
-
             it "calls raise_if_not_answered on the call" do
               mock_call.expects :send_ami_action!
               mock_call.expects :raise_if_not_answered

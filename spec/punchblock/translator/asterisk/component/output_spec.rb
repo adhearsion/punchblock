@@ -35,11 +35,6 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            it "never calls answer_if_not_answered on the call" do
-              mock_call.expects(:answer_if_not_answered).never
-              subject.execute
-            end
-
             context 'with a media engine of :swift' do
               let(:media_engine) { :swift }
 

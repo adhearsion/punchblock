@@ -106,11 +106,6 @@ module Punchblock
           send_agi_action "EXEC Progress"
         end
 
-        def answer_if_not_answered
-          return if answered? || outbound?
-          execute_command Command::Answer.new.tap { |a| a.request! }
-        end
-
         def raise_if_not_answered
           return if answered? || outbound?
           raise UnansweredError

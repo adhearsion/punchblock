@@ -16,6 +16,7 @@ module Punchblock
             end
 
             def execute
+              send_ref
               @call.send_ami_action! @action
             end
 

@@ -31,6 +31,8 @@ module Punchblock
             end
 
             context 'initial execution' do
+              before { command.request! }
+
               it 'should send the appropriate RubyAMI::Action' do
                 mock_call.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
                 subject.execute

@@ -748,7 +748,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC RINGING"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -763,7 +762,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Busy"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -774,7 +772,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Busy"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -785,7 +782,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Congestion"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -799,7 +795,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC ANSWER"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end

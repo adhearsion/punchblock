@@ -40,7 +40,6 @@ module Punchblock
               else
                 nil
               end
-              
 
               send_progress if @early
 
@@ -140,7 +139,6 @@ module Punchblock
           def success_reason
             Punchblock::Component::Output::Complete::Success.new
           end
-
         end
       end
     end

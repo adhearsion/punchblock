@@ -100,20 +100,19 @@ module Punchblock
           end
         end
 
-        describe '#answer_if_not_answered' do
-          let(:answer_command) { Command::Answer.new.tap { |a| a.request! } }
+        describe '#send_progress' do
 
           context "with a call that is already answered" do
-            it 'should not answer the call' do
+            it 'should not send the EXEC Progress command' do
               subject.wrapped_object.expects(:'answered?').returns true
-              subject.wrapped_object.expects(:execute_command).never
-              subject.answer_if_not_answered
+              subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
+              subject.send_progress
             end
           end
 
           context "with an unanswered call" do
             before do
-              subject.wrapped_object.expects(:'answered?').returns false
+              subject.wrapped_object.expects(:'answered?').returns(false).at_least_once
             end
 
             context "with a call that is outbound" do
@@ -124,9 +123,9 @@ module Punchblock
                 subject.dial dial_command
               end
 
-              it 'should not answer the call' do
-                subject.wrapped_object.expects(:execute_command).never
-                subject.answer_if_not_answered
+              it 'should not send the EXEC Progress command' do
+                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
+                subject.send_progress
               end
             end
 
@@ -135,9 +134,15 @@ module Punchblock
                 subject.send_offer
               end
 
-              it 'should answer a call that is inbound and not answered' do
-                subject.wrapped_object.expects(:execute_command).with(answer_command)
-                subject.answer_if_not_answered
+              it 'should send the EXEC Progress command to a call that is inbound and not answered' do
+                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress")
+                subject.send_progress
+              end
+
+              it 'should send the EXEC Progress command only once if called twice' do
+                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").once
+                subject.send_progress
+                subject.send_progress
               end
             end
           end
@@ -236,7 +241,6 @@ module Punchblock
             end
 
             it "should cause all components to send complete events before sending end event" do
-              subject.expects :answer_if_not_answered
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
@@ -660,7 +664,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC RINGING"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -675,7 +678,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Busy"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -686,7 +688,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Busy"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -697,7 +698,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Congestion"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -711,7 +711,6 @@ module Punchblock
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC ANSWER"
-              agi_command.execute!
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end

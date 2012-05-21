@@ -16,14 +16,15 @@ module Punchblock
           end
 
           def execute
-            @call.answer_if_not_answered
-
             raise OptionError, 'An SSML document is required.' unless @component_node.ssml
             raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
             end
+
+            @early = !@call.answered?
+            raise OptionError, 'Interrupt digits are not allowed with early media.' if @early && @component_node.interrupt_on
 
             case @media_engine
             when :asterisk, nil
@@ -39,6 +40,8 @@ module Punchblock
               else
                 nil
               end
+
+              send_progress if @early
 
               @execution_elements.each do |element|
                 element.call
@@ -99,12 +102,25 @@ module Punchblock
           end
 
           def play_audio(path)
-            pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
+            if @early
+              pb_logger.debug "Playing an audio file (#{path}) via Playback for Early Media"
+              play_audio_agi 'EXEC Playback', "#{path},noanswer"
+            else
+              pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
+              play_audio_agi 'STREAM FILE', path, @interrupt_digits
+            end
+          end
+
+          def play_audio_agi(app, *opts)
             op = current_actor
-            @call.send_agi_action! 'STREAM FILE', path, @interrupt_digits do |complete_event|
-              pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
+            @call.send_agi_action! app, *opts do |complete_event|
+              pb_logger.debug "File playback completed with #{complete_event}. Signalling to continue execution."
               op.continue! complete_event
             end
+          end
+
+          def send_progress
+            @call.send_progress
           end
 
           private

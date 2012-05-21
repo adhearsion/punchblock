@@ -42,11 +42,6 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            it "never calls raise_if_not_answered on the call" do
-              call.expects(:raise_if_not_answered).never
-              subject.execute
-            end
-
             it "calls send_progress on the call" do
               call.expects(:send_progress)
               subject.execute

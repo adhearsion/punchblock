@@ -11,8 +11,6 @@ module Punchblock
 
         attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
-        UnansweredError = Class.new Punchblock::Error
-
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[0] = :hangup
         HANGUP_CAUSE_TO_END_REASON[16] = :hangup
@@ -104,10 +102,6 @@ module Punchblock
           pb_logger.debug "Sending Progress to start early media"
           @progress_sent = true
           send_agi_action "EXEC Progress"
-        end
-
-        def raise_if_not_answered
-          raise UnansweredError unless answered? || outbound?
         end
 
         def channel=(other)

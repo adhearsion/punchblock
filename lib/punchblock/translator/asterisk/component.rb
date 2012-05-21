@@ -53,7 +53,7 @@ module Punchblock
             if internal
               @component_node.add_event event
             else
-              translator.handle_pb_event! event
+              translator.handle_pb_event event
             end
           end
 

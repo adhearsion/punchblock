@@ -120,7 +120,7 @@ module Punchblock
           when 'AsyncAGI'
             pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
-              component.handle_ami_event! ami_event
+              component.handle_ami_event ami_event
             else
               pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
             end
@@ -168,7 +168,7 @@ module Punchblock
           pb_logger.debug "Executing command: #{command.inspect}"
           if command.component_id
             if component = component_with_id(command.component_id)
-              component.execute_command! command
+              component.execute_command command
             else
               command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
             end
@@ -241,7 +241,7 @@ module Punchblock
           (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
             pb_logger.trace "Sending AMI action #{action.inspect}"
-            translator.send_ami_action! action
+            translator.send_ami_action action
           end
         end
 
@@ -283,7 +283,7 @@ module Punchblock
         def send_pb_event(event)
           event.target_call_id = id
           pb_logger.trace "Sending Punchblock event: #{event.inspect}"
-          translator.handle_pb_event! event
+          translator.handle_pb_event event
         end
 
         def offer_event

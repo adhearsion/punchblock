@@ -35,7 +35,7 @@ module Punchblock
               before { UUIDTools::UUID.stubs :random_create => component_id }
 
               it 'should send the appropriate RubyAMI::Action and send the component node a ref with the action ID' do
-                mock_translator.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
+                mock_translator.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
                 command.expects(:response=).once.with(expected_response)
                 subject.execute
               end

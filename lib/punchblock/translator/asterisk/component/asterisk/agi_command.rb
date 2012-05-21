@@ -17,7 +17,7 @@ module Punchblock
 
             def execute
               send_ref
-              @call.send_ami_action! @action
+              @call.send_ami_action @action
             end
 
             def handle_ami_event(event)

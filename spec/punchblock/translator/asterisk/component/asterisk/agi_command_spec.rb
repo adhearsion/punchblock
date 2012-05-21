@@ -34,7 +34,7 @@ module Punchblock
               before { command.request! }
 
               it 'should send the appropriate RubyAMI::Action' do
-                mock_call.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
+                mock_call.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
                 subject.execute
               end
 
@@ -50,7 +50,7 @@ module Punchblock
                 end
 
                 it 'should send the appropriate RubyAMI::Action' do
-                  mock_call.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
+                  mock_call.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
                   subject.execute
                 end
               end

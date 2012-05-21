@@ -88,7 +88,7 @@ module Punchblock
                                                           :to       => '1000',
                                                           :from     => 'Jane Smith <sip:5678>',
                                                           :headers  => sip_headers
-            translator.expects(:handle_pb_event!).with expected_offer
+            translator.expects(:handle_pb_event).with expected_offer
             subject.send_offer
           end
 
@@ -234,7 +234,7 @@ module Punchblock
             let(:cause_txt) { 'Normal Clearing' }
 
             it "should cause the actor to be terminated" do
-              translator.expects(:handle_pb_event!).once
+              translator.expects(:handle_pb_event).once
               subject.process_ami_event ami_event
               sleep 5.5
               subject.should_not be_alive
@@ -249,8 +249,8 @@ module Punchblock
               expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
               expected_end_event = Punchblock::Event::End.new :reason => :hangup, :target_call_id  => subject.id
               end_sequence = sequence 'end events'
-              translator.expects(:handle_pb_event!).with(expected_complete_event).once.in_sequence(end_sequence)
-              translator.expects(:handle_pb_event!).with(expected_end_event).once.in_sequence(end_sequence)
+              translator.expects(:handle_pb_event).with(expected_complete_event).once.in_sequence(end_sequence)
+              translator.expects(:handle_pb_event).with(expected_end_event).once.in_sequence(end_sequence)
               subject.process_ami_event ami_event
             end
 
@@ -261,7 +261,7 @@ module Punchblock
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
                                                                 :target_call_id  => subject.id
-                translator.expects(:handle_pb_event!).with expected_end_event
+                translator.expects(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -273,7 +273,7 @@ module Punchblock
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
                                                                 :target_call_id  => subject.id
-                translator.expects(:handle_pb_event!).with expected_end_event
+                translator.expects(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -285,7 +285,7 @@ module Punchblock
               it 'should send an end (busy) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :busy,
                                                                 :target_call_id  => subject.id
-                translator.expects(:handle_pb_event!).with expected_end_event
+                translator.expects(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -301,7 +301,7 @@ module Punchblock
                 it 'should send an end (timeout) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :timeout,
                                                                   :target_call_id  => subject.id
-                  translator.expects(:handle_pb_event!).with expected_end_event
+                  translator.expects(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -319,7 +319,7 @@ module Punchblock
                 it 'should send an end (reject) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :reject,
                                                                   :target_call_id  => subject.id
-                  translator.expects(:handle_pb_event!).with expected_end_event
+                  translator.expects(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -371,7 +371,7 @@ module Punchblock
                 it 'should send an end (error) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :error,
                                                                   :target_call_id  => subject.id
-                  translator.expects(:handle_pb_event!).with expected_end_event
+                  translator.expects(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -399,7 +399,7 @@ module Punchblock
             end
 
             it 'should send the event to the component' do
-              component.expects(:handle_ami_event!).once.with ami_event
+              component.expects(:handle_ami_event).once.with ami_event
               subject.process_ami_event ami_event
             end
           end
@@ -426,7 +426,7 @@ module Punchblock
               it 'should send a ringing event' do
                 expected_ringing = Punchblock::Event::Ringing.new
                 expected_ringing.target_call_id = subject.id
-                translator.expects(:handle_pb_event!).with expected_ringing
+                translator.expects(:handle_pb_event).with expected_ringing
                 subject.process_ami_event ami_event
               end
 
@@ -443,7 +443,7 @@ module Punchblock
               it 'should send a ringing event' do
                 expected_answered = Punchblock::Event::Answered.new
                 expected_answered.target_call_id = subject.id
-                translator.expects(:handle_pb_event!).with expected_answered
+                translator.expects(:handle_pb_event).with expected_answered
                 subject.process_ami_event ami_event
               end
 
@@ -555,12 +555,12 @@ module Punchblock
               end
 
               it 'sends the Joined event when the call is the first channel' do
-                translator.expects(:handle_pb_event!).with expected_joined
+                translator.expects(:handle_pb_event).with expected_joined
                 subject.process_ami_event ami_event
               end
 
               it 'sends the Joined event when the call is the second channel' do
-                translator.expects(:handle_pb_event!).with expected_joined
+                translator.expects(:handle_pb_event).with expected_joined
                 subject.process_ami_event switched_ami_event
               end
             end
@@ -576,12 +576,12 @@ module Punchblock
               end
 
               it 'sends the Unjoined event when the call is the first channel' do
-                translator.expects(:handle_pb_event!).with expected_unjoined
+                translator.expects(:handle_pb_event).with expected_unjoined
                 subject.process_ami_event ami_event
               end
 
               it 'sends the Unjoined event when the call is the second channel' do
-                translator.expects(:handle_pb_event!).with expected_unjoined
+                translator.expects(:handle_pb_event).with expected_unjoined
                 subject.process_ami_event switched_ami_event
               end
             end
@@ -632,12 +632,12 @@ module Punchblock
             end
 
             it 'sends the Unjoined event when the call is the first channel' do
-              translator.expects(:handle_pb_event!).with expected_unjoined
+              translator.expects(:handle_pb_event).with expected_unjoined
               subject.process_ami_event ami_event
             end
 
             it 'sends the Unjoined event when the call is the second channel' do
-              translator.expects(:handle_pb_event!).with expected_unjoined
+              translator.expects(:handle_pb_event).with expected_unjoined
               subject.process_ami_event switched_ami_event
             end
           end
@@ -803,7 +803,7 @@ module Punchblock
               before { subject.register_component mock_component }
 
               it 'should send the command to the component for execution' do
-                mock_component.expects(:execute_command!).once
+                mock_component.expects(:execute_command).once
                 subject.execute_command command
               end
             end
@@ -910,7 +910,7 @@ module Punchblock
 
           it 'should send the action to the AMI client' do
             action = RubyAMI::Action.new 'foo', :foo => :bar
-            translator.expects(:send_ami_action!).once.with action
+            translator.expects(:send_ami_action).once.with action
             subject.send_ami_action 'foo', :foo => :bar
           end
         end

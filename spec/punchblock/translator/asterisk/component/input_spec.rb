@@ -42,12 +42,12 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            it "calls answer_if_not_answered on the call" do
-              call.expects :answer_if_not_answered
+            it "calls send_progress on the call" do
+              call.expects(:send_progress)
               subject.execute
             end
 
-            before { call.stubs :answer_if_not_answered }
+            before { call.stubs :send_progress }
 
             let(:original_command_opts) { {} }
 

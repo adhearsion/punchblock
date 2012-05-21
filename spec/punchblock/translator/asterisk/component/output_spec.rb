@@ -32,15 +32,12 @@ module Punchblock
 
           subject { Output.new original_command, mock_call }
 
+          def expect_answered(value = true)
+            mock_call.expects(:answered?).returns(value).at_least_once
+          end
+
           describe '#execute' do
             before { original_command.request! }
-
-            it "calls answer_if_not_answered on the call" do
-              mock_call.expects :answer_if_not_answered
-              subject.execute
-            end
-
-            before { mock_call.stubs :answer_if_not_answered }
 
             context 'with a media engine of :swift' do
               let(:media_engine) { :swift }
@@ -90,6 +87,7 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should add the interrupt options to the argument" do
+                    expect_answered
                     mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
@@ -98,6 +96,7 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should add the interrupt options to the argument" do
+                    expect_answered
                     mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
@@ -307,6 +306,7 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should pass the i option to MRCPSynth" do
+                    expect_answered
                     expect_mrcpsynth_with_options(/i=any/)
                     subject.execute
                   end
@@ -315,6 +315,7 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should pass the i option to MRCPSynth" do
+                    expect_answered
                     expect_mrcpsynth_with_options(/i=any/)
                     subject.execute
                   end
@@ -334,9 +335,17 @@ module Punchblock
             context 'with a media engine of :asterisk' do
               let(:media_engine) { :asterisk }
 
+
               def expect_stream_file_with_options(options = nil)
                 mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename, options do |*args|
                   args[2].should be == options
+                  subject.continue!
+                  true
+                end
+              end
+
+              def expect_playback_noanswer(options = nil)
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', audio_filename + ',noanswer' do |*args|
                   subject.continue!
                   true
                 end
@@ -379,11 +388,15 @@ module Punchblock
                   end
 
                   it 'should playback the audio file using STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
 
                   it 'should send a complete event when the file finishes playback' do
+                    def mock_call.answered?
+                      true
+                    end
                     def mock_call.send_agi_action!(*args, &block)
                       block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                     end
@@ -401,16 +414,43 @@ module Punchblock
                   end
 
                   it 'should playback the audio file using STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
 
                   it 'should send a complete event when the file finishes playback' do
+                    expect_answered
                     def mock_call.send_agi_action!(*args, &block)
                       block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                     end
                     subject.execute
                     original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  end
+
+                  context "with early media playback" do
+                    it "should play the file with Playback" do
+                      expect_answered false
+                      expect_playback_noanswer
+                      mock_call.expects(:send_progress)
+                      subject.execute
+                    end
+                    
+                    context "with interrupt_on set to something that is not nil" do
+                      let(:audio_filename) { 'tt-monkeys' }
+                      let :command_options do
+                        {
+                          :ssml => RubySpeech::SSML.draw { string audio_filename },
+                          :interrupt_on => :any
+                        }
+                      end
+                      it "should return an error when the output is interruptible and it is early media" do
+                        expect_answered false
+                        error = ProtocolError.new.setup 'option error', 'Interrupt digits are not allowed with early media.'
+                        subject.execute
+                        original_command.response(0.1).should be == error
+                      end
+                    end
                   end
                 end
 
@@ -448,12 +488,14 @@ module Punchblock
                       subject.continue
                       latch.countdown!
                     end
+                    expect_answered
                     subject.execute
                     latch.wait 2
                     sleep 2
                   end
 
                   it 'should send a complete event after the final file has finished playback' do
+                    expect_answered
                     def mock_call.send_agi_action!(*args, &block)
                       block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                     end
@@ -485,6 +527,7 @@ module Punchblock
                 context 'unset' do
                   let(:command_opts) { { :start_offset => nil } }
                   it 'should not pass any options to STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
@@ -504,6 +547,7 @@ module Punchblock
                 context 'false' do
                   let(:command_opts) { { :start_paused => false } }
                   it 'should not pass any options to STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
@@ -523,6 +567,7 @@ module Punchblock
                 context 'unset' do
                   let(:command_opts) { { :repeat_interval => nil } }
                   it 'should not pass any options to STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
@@ -542,6 +587,7 @@ module Punchblock
                 context 'unset' do
                   let(:command_opts) { { :repeat_times => nil } }
                   it 'should not pass any options to STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
@@ -561,6 +607,7 @@ module Punchblock
                 context 'unset' do
                   let(:command_opts) { { :max_time => nil } }
                   it 'should not pass any options to STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
@@ -580,6 +627,7 @@ module Punchblock
                 context 'unset' do
                   let(:command_opts) { { :voice => nil } }
                   it 'should not pass the v option to STREAM FILE' do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
@@ -599,6 +647,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
                   it "should not pass any digits to STREAM FILE" do
+                    expect_answered
                     expect_stream_file_with_options
                     subject.execute
                   end
@@ -607,6 +656,7 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should pass all digits to STREAM FILE" do
+                    expect_answered
                     expect_stream_file_with_options '0123456789*#'
                     subject.execute
                   end
@@ -615,6 +665,7 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should pass all digits to STREAM FILE" do
+                    expect_answered
                     expect_stream_file_with_options '0123456789*#'
                     subject.execute
                   end
@@ -680,6 +731,13 @@ module Punchblock
                 mock_call.expects(:redirect_back!).with(nil)
                 subject.execute_command command
               end
+            end
+          end
+
+          describe "#send_progress" do
+            it "sends the Progress signal" do
+              mock_call.expects(:send_progress)
+              subject.send_progress
             end
           end
 

@@ -41,6 +41,7 @@ module Punchblock
           @answered = false
           @pending_joins = {}
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
+          @progress_sent = false
         end
 
         def register_component(component)
@@ -96,9 +97,11 @@ module Punchblock
           @answered
         end
 
-        def answer_if_not_answered
-          return if answered? || outbound?
-          execute_command Command::Answer.new.tap { |a| a.request! }
+        def send_progress
+          return if answered? || outbound? || @progress_sent
+          pb_logger.debug "Sending Progress to start early media"
+          @progress_sent = true
+          send_agi_action "EXEC Progress"
         end
 
         def channel=(other)

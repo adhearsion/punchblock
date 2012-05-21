@@ -14,6 +14,7 @@ module Punchblock
           def execute
             max_duration = @component_node.max_duration || -1
 
+            raise OptionError, 'Record cannot be used on a call that is not answered.' unless @call.answered?
             raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
             raise OptionError, 'An initial-timeout value is unsupported.' if @component_node.initial_timeout && @component_node.initial_timeout != -1
             raise OptionError, 'A final-timeout value is unsupported.' if @component_node.final_timeout && @component_node.final_timeout != -1
@@ -21,7 +22,6 @@ module Punchblock
 
             @format = @component_node.format || 'wav'
 
-            @call.answer_if_not_answered
 
             component = current_actor
             call.register_handler :ami, :name => 'MonitorStop' do |event|

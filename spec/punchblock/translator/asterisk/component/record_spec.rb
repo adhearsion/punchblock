@@ -33,13 +33,14 @@ module Punchblock
 
             before { original_command.request! }
 
-            it "calls raise_if_not_answered on the call" do
-              mock_call.expects :send_ami_action!
-              mock_call.expects :raise_if_not_answered
+            it "returns an error if the call is not answered yet" do
+              mock_call.expects(:answered?).returns(false)
               subject.execute
+              error = ProtocolError.new.setup 'option error', 'Record cannot be used on a call that is not answered.'
+              original_command.response(0.1).should be == error
             end
 
-            before { mock_call.stubs :raise_if_not_answered }
+            before { mock_call.stubs(:answered?).returns(true) }
 
             it "sets command response to a reference to the component" do
               mock_call.expects(:send_ami_action!)
@@ -322,7 +323,7 @@ module Punchblock
 
               before do
                 mock_call.expects :send_ami_action!
-                mock_call.expects :raise_if_not_answered
+                mock_call.expects(:answered?).returns(true)
                 command.request!
                 original_command.request!
                 subject.execute

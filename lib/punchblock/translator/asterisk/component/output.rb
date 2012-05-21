@@ -24,6 +24,7 @@ module Punchblock
             end
 
             @early = !@call.answered?
+            raise OptionError, 'Interrupt digits are not allowed with early media.' if @early && @component_node.interrupt_on
 
             case @media_engine
             when :asterisk, nil
@@ -39,6 +40,7 @@ module Punchblock
               else
                 nil
               end
+              
 
               send_progress if @early
 

@@ -32,6 +32,10 @@ module Punchblock
 
           subject { Output.new original_command, mock_call }
 
+          def expect_answered(value = true)
+            mock_call.expects(:answered?).returns(value).at_least_once
+          end
+
           describe '#execute' do
             before { original_command.request! }
 
@@ -83,6 +87,7 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should add the interrupt options to the argument" do
+                    expect_answered
                     mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
@@ -91,6 +96,7 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should add the interrupt options to the argument" do
+                    expect_answered
                     mock_call.expects(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
@@ -300,6 +306,7 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should pass the i option to MRCPSynth" do
+                    expect_answered
                     expect_mrcpsynth_with_options(/i=any/)
                     subject.execute
                   end
@@ -308,6 +315,7 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should pass the i option to MRCPSynth" do
+                    expect_answered
                     expect_mrcpsynth_with_options(/i=any/)
                     subject.execute
                   end
@@ -327,9 +335,6 @@ module Punchblock
             context 'with a media engine of :asterisk' do
               let(:media_engine) { :asterisk }
 
-              def expect_answered(value = true)
-                mock_call.expects(:answered?).returns(value).at_least_once
-              end
 
               def expect_stream_file_with_options(options = nil)
                 mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename, options do |*args|
@@ -429,6 +434,22 @@ module Punchblock
                       expect_playback_noanswer
                       mock_call.expects(:send_progress)
                       subject.execute
+                    end
+                    
+                    context "with interrupt_on set to something that is not nil" do
+                      let(:audio_filename) { 'tt-monkeys' }
+                      let :command_options do
+                        {
+                          :ssml => RubySpeech::SSML.draw { string audio_filename },
+                          :interrupt_on => :any
+                        }
+                      end
+                      it "should return an error when the output is interruptible and it is early media" do
+                        expect_answered false
+                        error = ProtocolError.new.setup 'option error', 'Interrupt digits are not allowed with early media.'
+                        subject.execute
+                        original_command.response(0.1).should be == error
+                      end
                     end
                   end
                 end

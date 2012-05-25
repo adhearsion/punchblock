@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Output component now exposes #recording and #recording_uri for easy access to record results.
   * Feature: Early media support for Asterisk, using Progress to start an early media session
   * BREAKING: Asterisk translator now does NOT answer the call automatically when Output, Input or Record are used.
   * Feature: Output component on Asterisk now supports early media. If the line is not answered, it runs Progress followed by Playback with noanswer.

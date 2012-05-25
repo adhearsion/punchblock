@@ -188,6 +188,22 @@ module Punchblock
         end
       end
 
+      ##
+      # Directly returns the recording for the component
+      # @return [Punchblock::Component::Record::Recording] The recording object
+      # 
+      def recording
+        complete_event.recording
+      end
+      
+      ##
+      # Directly returns the recording URI for the component
+      # @return [String] The recording URI
+      # 
+      def recording_uri
+        recording.uri
+      end
+
       class Pause < CommandNode # :nodoc:
         register :pause, :record
       end

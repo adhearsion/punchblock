@@ -154,6 +154,36 @@ module Punchblock
           end
         end
 
+          context "direct recording accessors" do
+            let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+<success xmlns='urn:xmpp:rayo:record:complete:1'/>
+<recording xmlns='urn:xmpp:rayo:record:complete:1' uri="file:/tmp/rayo7451601434771683422.mp3" duration="34000" size="23450"/>
+</complete>
+          MESSAGE
+            end
+            let(:event) { RayoNode.import(parse_stanza(stanza).root) }
+
+            before do
+              subject.request!
+              subject.execute!
+              subject.add_event event
+            end
+
+            describe "#recording" do
+              it "should be a Punchblock::Component::Record::Recording" do
+                subject.recording.should be_a Punchblock::Component::Record::Recording
+              end
+            end
+
+            describe "#recording_uri" do
+              it "should be the recording URI set earlier" do
+                subject.recording_uri.should be == "file:/tmp/rayo7451601434771683422.mp3"
+              end
+            end
+          end
+
         describe '#stop_action' do
           subject { command.stop_action }
 

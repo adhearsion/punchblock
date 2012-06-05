@@ -54,25 +54,27 @@ module Punchblock
       end
 
       def handle_ami_event(event)
-        return unless event.is_a? RubyAMI::Event
+        exclusive do
+          return unless event.is_a? RubyAMI::Event
 
-        if event.name.downcase == "fullybooted"
-          pb_logger.trace "Counting FullyBooted event"
-          @fully_booted_count += 1
-          if @fully_booted_count >= 2
-            handle_pb_event Connection::Connected.new
-            @fully_booted_count = 0
-            run_at_fully_booted
+          if event.name.downcase == "fullybooted"
+            pb_logger.trace "Counting FullyBooted event"
+            @fully_booted_count += 1
+            if @fully_booted_count >= 2
+              handle_pb_event Connection::Connected.new
+              @fully_booted_count = 0
+              run_at_fully_booted
+            end
+            return
           end
-          return
-        end
 
-        handle_varset_ami_event event
+          handle_varset_ami_event event
 
-        ami_dispatch_to_or_create_call event
+          ami_dispatch_to_or_create_call event
 
-        unless ami_event_known_call?(event)
-          handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+          unless ami_event_known_call?(event)
+            handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+          end
         end
       end
 

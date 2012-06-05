@@ -149,16 +149,24 @@ module Punchblock
       end
 
       def ami_dispatch_to_or_create_call(event)
-        if (event['Channel'] && call_for_channel(event['Channel'])) ||
-            (event['Channel1'] && call_for_channel(event['Channel1'])) ||
-            (event['Channel2'] && call_for_channel(event['Channel2']))
-          [event['Channel'], event['Channel1'], event['Channel2']].compact.each do |channel|
+        if ami_event_known_call?(event)
+          channels_for_ami_event(event).each do |channel|
             call = call_for_channel channel
             call.process_ami_event! event if call
           end
         elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event
         end
+      end
+
+      def channels_for_ami_event(event)
+        [event['Channel'], event['Channel1'], event['Channel2']].compact
+      end
+
+      def ami_event_known_call?(event)
+        (event['Channel'] && call_for_channel(event['Channel'])) ||
+          (event['Channel1'] && call_for_channel(event['Channel1'])) ||
+          (event['Channel2'] && call_for_channel(event['Channel2']))
       end
 
       def handle_async_agi_start_event(event)

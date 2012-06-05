@@ -452,12 +452,10 @@ module Punchblock
           end
 
           before do
-            subject.wrapped_object.stubs :handle_pb_event
             subject.register_call call
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event' do
-            subject.wrapped_object.expects(:handle_pb_event).once
             call.expects(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end
@@ -480,7 +478,6 @@ module Punchblock
               before { subject.register_call call2 }
 
               it 'should send the event to both calls and to the connection once as a PB event' do
-                subject.wrapped_object.expects(:handle_pb_event).once
                 call.expects(:process_ami_event!).once.with ami_event
                 call2.expects(:process_ami_event!).once.with ami_event
                 subject.handle_ami_event ami_event

@@ -234,7 +234,7 @@ module Punchblock
             let(:cause_txt) { 'Normal Clearing' }
 
             it "should cause the actor to be terminated" do
-              translator.expects(:handle_pb_event).once
+              translator.expects(:handle_pb_event).twice
               subject.process_ami_event ami_event
               sleep 5.5
               subject.should_not be_alive
@@ -641,6 +641,34 @@ module Punchblock
               subject.process_ami_event switched_ami_event
             end
           end
+
+          let :ami_event do
+            RubyAMI::Event.new('Foo').tap do |e|
+              e['Uniqueid']     = "1320842458.8"
+              e['Calleridnum']  = "5678"
+              e['Calleridname'] = "Jane Smith"
+              e['Cause']        = "0"
+              e['Cause-txt']    = "Unknown"
+              e['Channel']      = channel
+            end
+          end
+
+          let :expected_pb_event do
+            Event::Asterisk::AMI::Event.new :name => 'Foo',
+                                            :attributes => { :channel       => channel,
+                                                             :uniqueid      => "1320842458.8",
+                                                             :calleridnum   => "5678",
+                                                             :calleridname  => "Jane Smith",
+                                                             :cause         => "0",
+                                                             :'cause-txt'   => "Unknown"},
+                                            :target_call_id => subject.id
+          end
+
+          it 'sends the AMI event to the connection as a PB event' do
+            translator.expects(:handle_pb_event).with expected_pb_event
+            subject.process_ami_event ami_event
+          end
+
         end
 
         describe '#execute_command' do

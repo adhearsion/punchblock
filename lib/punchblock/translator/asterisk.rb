@@ -71,7 +71,9 @@ module Punchblock
 
         ami_dispatch_to_or_create_call event
 
-        handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+        unless ami_event_known_call?(event)
+          handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+        end
       end
 
       def handle_pb_event(event)

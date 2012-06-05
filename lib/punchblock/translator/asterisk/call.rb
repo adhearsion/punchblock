@@ -162,6 +162,7 @@ module Punchblock
             end
           end
           trigger_handler :ami, ami_event
+          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
         end
 
         def execute_command(command)

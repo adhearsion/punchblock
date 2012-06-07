@@ -38,6 +38,7 @@ module Punchblock
 
         it "terminates the actor" do
           subject.shutdown
+          sleep 0.2
           subject.should_not be_alive
         end
       end

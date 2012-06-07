@@ -67,6 +67,7 @@ module Punchblock
             it "should cause the actor to be shut down" do
               subject.wrapped_object.stubs(:send_event).returns true
               subject.send_complete_event reason
+              sleep 0.2
               subject.should_not be_alive
             end
           end

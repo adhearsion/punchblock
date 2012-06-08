@@ -114,7 +114,9 @@ module Punchblock
           when 'Hangup'
             pb_logger.trace "Received a Hangup AMI event. Sending End event."
             @components.dup.each_pair do |id, component|
-              component.call_ended if component.alive?
+              safe_from_dead_actors do
+                component.call_ended if component.alive?
+              end
             end
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
@@ -163,6 +165,12 @@ module Punchblock
           end
           trigger_handler :ami, ami_event
           send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
+        end
+
+        def safe_from_dead_actors
+          yield
+        rescue Celluloid::DeadActorError => e
+          pb_logger.error e
         end
 
         def execute_command(command)

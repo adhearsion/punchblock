@@ -335,20 +335,12 @@ module Punchblock
             context 'with a media engine of :asterisk' do
               let(:media_engine) { :asterisk }
 
-
-              def expect_stream_file_with_options(options = nil)
-                mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename, options do |*args|
-                  args[2].should be == options
-                  subject.continue!
-                  true
-                end
+              def expect_playback(filename = audio_filename)
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', filename
               end
 
-              def expect_playback_noanswer(options = nil)
-                mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', audio_filename + ',noanswer' do |*args|
-                  subject.continue!
-                  true
-                end
+              def expect_playback_noanswer
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', audio_filename + ',noanswer'
               end
 
               let(:audio_filename) { 'http://foo.com/bar.mp3' }
@@ -387,9 +379,9 @@ module Punchblock
                     }
                   end
 
-                  it 'should playback the audio file using STREAM FILE' do
+                  it 'should playback the audio file using Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
 
@@ -413,9 +405,9 @@ module Punchblock
                     }
                   end
 
-                  it 'should playback the audio file using STREAM FILE' do
+                  it 'should playback the audio file using Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
 
@@ -435,7 +427,7 @@ module Punchblock
                       mock_call.expects(:send_progress)
                       subject.execute
                     end
-                    
+
                     context "with interrupt_on set to something that is not nil" do
                       let(:audio_filename) { 'tt-monkeys' }
                       let :command_options do
@@ -478,16 +470,9 @@ module Punchblock
                     }
                   end
 
-                  it 'should playback each audio file using STREAM FILE' do
+                  it 'should playback all audio files using Playback' do
                     latch = CountDownLatch.new 2
-                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename1, nil do
-                      subject.continue
-                      latch.countdown!
-                    end
-                    mock_call.expects(:send_agi_action!).once.with 'STREAM FILE', audio_filename2, nil do
-                      subject.continue
-                      latch.countdown!
-                    end
+                    expect_playback [audio_filename1, audio_filename2].join('&')
                     expect_answered
                     subject.execute
                     latch.wait 2
@@ -499,10 +484,13 @@ module Punchblock
                     def mock_call.send_agi_action!(*args, &block)
                       block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                     end
+                    latch = CountDownLatch.new 1
                     original_command.expects(:add_event).once.with do |e|
                       e.reason.should be_a Punchblock::Component::Output::Complete::Success
+                      latch.countdown!
                     end
                     subject.execute
+                    latch.wait(2).should be_true
                   end
                 end
 
@@ -526,9 +514,9 @@ module Punchblock
               describe 'start-offset' do
                 context 'unset' do
                   let(:command_opts) { { :start_offset => nil } }
-                  it 'should not pass any options to STREAM FILE' do
+                  it 'should not pass any options to Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
                 end
@@ -546,9 +534,9 @@ module Punchblock
               describe 'start-paused' do
                 context 'false' do
                   let(:command_opts) { { :start_paused => false } }
-                  it 'should not pass any options to STREAM FILE' do
+                  it 'should not pass any options to Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
                 end
@@ -566,9 +554,9 @@ module Punchblock
               describe 'repeat-interval' do
                 context 'unset' do
                   let(:command_opts) { { :repeat_interval => nil } }
-                  it 'should not pass any options to STREAM FILE' do
+                  it 'should not pass any options to Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
                 end
@@ -586,9 +574,9 @@ module Punchblock
               describe 'repeat-times' do
                 context 'unset' do
                   let(:command_opts) { { :repeat_times => nil } }
-                  it 'should not pass any options to STREAM FILE' do
+                  it 'should not pass any options to Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
                 end
@@ -606,9 +594,9 @@ module Punchblock
               describe 'max-time' do
                 context 'unset' do
                   let(:command_opts) { { :max_time => nil } }
-                  it 'should not pass any options to STREAM FILE' do
+                  it 'should not pass any options to Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
                 end
@@ -626,9 +614,9 @@ module Punchblock
               describe 'voice' do
                 context 'unset' do
                   let(:command_opts) { { :voice => nil } }
-                  it 'should not pass the v option to STREAM FILE' do
+                  it 'should not pass the v option to Playback' do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
                 end
@@ -646,28 +634,30 @@ module Punchblock
               describe 'interrupt_on' do
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
-                  it "should not pass any digits to STREAM FILE" do
+                  it "should not pass any digits to Playback" do
                     expect_answered
-                    expect_stream_file_with_options
+                    expect_playback
                     subject.execute
                   end
                 end
 
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
-                  it "should pass all digits to STREAM FILE" do
+                  it "should return an error and not execute any actions" do
                     expect_answered
-                    expect_stream_file_with_options '0123456789*#'
                     subject.execute
+                    error = ProtocolError.new.setup 'option error', 'An interrupt-on value of any is unsupported.'
+                    original_command.response(0.1).should be == error
                   end
                 end
 
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
-                  it "should pass all digits to STREAM FILE" do
+                  it "should return an error and not execute any actions" do
                     expect_answered
-                    expect_stream_file_with_options '0123456789*#'
                     subject.execute
+                    error = ProtocolError.new.setup 'option error', 'An interrupt-on value of dtmf is unsupported.'
+                    original_command.response(0.1).should be == error
                   end
                 end
 
@@ -731,13 +721,6 @@ module Punchblock
                 mock_call.expects(:redirect_back!).with(nil)
                 subject.execute_command command
               end
-            end
-          end
-
-          describe "#send_progress" do
-            it "sends the Progress signal" do
-              mock_call.expects(:send_progress)
-              subject.send_progress
             end
           end
 

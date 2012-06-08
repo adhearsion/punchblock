@@ -7,6 +7,8 @@
   * Feature: Input component on Asterisk works the same whether the call is answered or unanswered
   * Bugfix: AMI events are processed in order by the translator
   * Feature: AMI events are emitted to the relevant calls
+  * Change: Asterisk output now uses Playback rather than STREAM FILE
+  * BREAKING: Asterisk output does not support interrupt digits
 
 # [v1.2.0](https://github.com/adhearsion/punchblock/compare/v1.1.0...v1.2.0) - [2012-04-29](https://rubygems.org/gems/punchblock/versions/1.2.0)
   * Feature: Basic support for record component on Asterisk, using MixMonitor. Currently unsupported options include: start_paused, initial_timeout, final_timeout. Hints are additionally not supported, and recordings are stored on the * machine's local filesystem.

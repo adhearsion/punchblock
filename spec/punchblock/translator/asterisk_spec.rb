@@ -156,7 +156,7 @@ module Punchblock
         context "with an unknown call ID" do
           it 'sends an error in response to the command' do
             subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
           end
         end
       end
@@ -185,7 +185,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should be == ProtocolError.new.setup('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
           end
         end
       end

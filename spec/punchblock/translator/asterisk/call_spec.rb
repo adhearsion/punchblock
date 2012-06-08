@@ -845,7 +845,7 @@ module Punchblock
             context "for an unknown component ID" do
               it 'sends an error in response to the command' do
                 subject.execute_command command
-                command.response.should be == ProtocolError.new.setup('component-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+                command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
               end
             end
           end

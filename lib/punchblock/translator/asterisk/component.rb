@@ -18,11 +18,12 @@ module Punchblock
           include Celluloid
           include DeadActorSafety
 
-          attr_reader :id, :call
+          attr_reader :id, :call, :call_id
           attr_accessor :internal
 
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
+            @call_id = safe_from_dead_actors { call.id } if call
             @id = UUIDTools::UUID.random_create.to_s
             @complete = false
             setup
@@ -59,13 +60,7 @@ module Punchblock
           end
 
           def logger_id
-            "#{self.class}: #{call ? "Call ID: #{call_id}, Component ID: #{id}" : id}"
-          end
-
-          def call_id
-            safe_from_dead_actors do
-              call.id if call
-            end
+            "#{self.class}: #{call_id ? "Call ID: #{call_id}, Component ID: #{id}" : id}"
           end
 
           def call_ended

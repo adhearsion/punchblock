@@ -55,7 +55,7 @@ module Punchblock
             if internal
               @component_node.add_event event
             else
-              translator.handle_pb_event event
+              safe_from_dead_actors { translator.handle_pb_event event }
             end
           end
 

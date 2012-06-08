@@ -8,6 +8,7 @@ module Punchblock
       class Call
         include HasGuardedHandlers
         include Celluloid
+        include DeadActorSafety
 
         attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
@@ -165,12 +166,6 @@ module Punchblock
           end
           trigger_handler :ami, ami_event
           send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
-        end
-
-        def safe_from_dead_actors
-          yield
-        rescue Celluloid::DeadActorError => e
-          pb_logger.error e
         end
 
         def execute_command(command)

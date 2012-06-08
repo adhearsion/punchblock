@@ -16,6 +16,7 @@ module Punchblock
           OptionError = Class.new Punchblock::Error
 
           include Celluloid
+          include DeadActorSafety
 
           attr_reader :id, :call
           attr_accessor :internal
@@ -58,11 +59,13 @@ module Punchblock
           end
 
           def logger_id
-            "#{self.class}: #{call ? "Call ID: #{call.id}, Component ID: #{id}" : id}"
+            "#{self.class}: #{call ? "Call ID: #{call_id}, Component ID: #{id}" : id}"
           end
 
           def call_id
-            call.id if call
+            safe_from_dead_actors do
+              call.id if call
+            end
           end
 
           def call_ended

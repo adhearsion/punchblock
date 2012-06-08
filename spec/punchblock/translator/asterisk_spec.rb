@@ -99,6 +99,29 @@ module Punchblock
         end
       end
 
+      describe '#deregister_call' do
+        let(:call_id) { 'abc123' }
+        let(:channel) { 'SIP/foo' }
+        let(:call)    { Translator::Asterisk::Call.new channel, subject }
+
+        before do
+          call.stubs(:id).returns call_id
+          subject.register_call call
+        end
+
+        it 'should make the call inaccessible by ID' do
+          subject.call_with_id(call_id).should be call
+          subject.deregister_call call
+          subject.call_with_id(call_id).should be_nil
+        end
+
+        it 'should make the call inaccessible by channel' do
+          subject.call_for_channel(channel).should be call
+          subject.deregister_call call
+          subject.call_for_channel(channel).should be_nil
+        end
+      end
+
       describe '#register_component' do
         let(:component_id) { 'abc123' }
         let(:component)    { mock 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }

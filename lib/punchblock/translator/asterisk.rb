@@ -31,6 +31,11 @@ module Punchblock
         @calls[call.id] ||= call
       end
 
+      def deregister_call(call)
+        @channel_to_call_id[call.channel] = nil
+        @calls[call.id] = nil
+      end
+
       def call_with_id(call_id)
         @calls[call_id]
       end

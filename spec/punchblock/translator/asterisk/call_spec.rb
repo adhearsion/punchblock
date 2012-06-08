@@ -240,6 +240,12 @@ module Punchblock
               subject.should_not be_alive
             end
 
+            it "de-registers the call from the translator" do
+              translator.stubs :handle_pb_event
+              translator.expects(:deregister_call).once.with(subject)
+              subject.process_ami_event ami_event
+            end
+
             it "should cause all components to send complete events before sending end event" do
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!

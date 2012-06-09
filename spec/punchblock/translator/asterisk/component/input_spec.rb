@@ -94,6 +94,11 @@ module Punchblock
                 it "should send a success complete event with the relevant data" do
                   reason.should be == expected_event
                 end
+
+                it "should not process further dtmf events" do
+                  subject.expects(:process_dtmf!).never
+                  send_ami_events_for_dtmf 3
+                end
               end
 
               context "when the match is invalid" do

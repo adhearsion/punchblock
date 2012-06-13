@@ -8,6 +8,7 @@ module Punchblock
       class Call
         include HasGuardedHandlers
         include Celluloid
+        include DeadActorSafety
 
         attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
@@ -114,7 +115,9 @@ module Punchblock
           when 'Hangup'
             pb_logger.trace "Received a Hangup AMI event. Sending End event."
             @components.dup.each_pair do |id, component|
-              component.call_ended if component.alive?
+              safe_from_dead_actors do
+                component.call_ended if component.alive?
+              end
             end
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
@@ -171,7 +174,7 @@ module Punchblock
             if component = component_with_id(command.component_id)
               component.execute_command command
             else
-              command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+              command.response = ProtocolError.new.setup 'item-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
             end
           end
           case command
@@ -270,6 +273,7 @@ module Punchblock
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
+          translator.deregister_call current_actor
           after(5) { shutdown }
         end
 

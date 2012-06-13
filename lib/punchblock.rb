@@ -18,6 +18,7 @@ module Punchblock
   autoload :CommandNode
   autoload :Component
   autoload :Connection
+  autoload :DeadActorSafety
   autoload :DisconnectedError
   autoload :HasHeaders
   autoload :Header

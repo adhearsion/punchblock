@@ -110,7 +110,7 @@ module Punchblock
           end
 
           def complete(reason)
-            call.unregister_handler :ami, @dtmf_handler_id
+            call.unregister_handler :ami, @dtmf_handler_id if instance_variable_defined?(:@dtmf_handler_id)
             cancel_initial_timer
             cancel_inter_digit_timer
             send_complete_event reason

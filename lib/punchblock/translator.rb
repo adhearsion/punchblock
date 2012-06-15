@@ -5,5 +5,6 @@ module Punchblock
     extend ActiveSupport::Autoload
 
     autoload :Asterisk
+    autoload :Freeswitch
   end
 end

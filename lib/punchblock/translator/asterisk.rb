@@ -109,7 +109,7 @@ module Punchblock
         if call = call_with_id(command.target_call_id)
           call.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'item-not-found', "Could not find a call with ID #{command.target_call_id}", command.target_call_id
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{command.target_call_id}", command.target_call_id
         end
       end
 
@@ -117,7 +117,7 @@ module Punchblock
         if (component = component_with_id(command.component_id))
           component.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'item-not-found', "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
         end
       end
 

@@ -270,7 +270,7 @@ module Punchblock
 
           it 'should instruct the call to send a dial' do
             mock_call = stub_everything 'Asterisk::Call'
-            Asterisk::Call.expects(:new).once.returns mock_call
+            Asterisk::Call.expects(:new_link).once.returns mock_call
             mock_call.expects(:dial!).once.with command
             subject.execute_global_command command
           end
@@ -409,6 +409,7 @@ module Punchblock
           it 'should instruct the call to send an offer' do
             mock_call = stub_everything 'Asterisk::Call'
             Asterisk::Call.expects(:new).once.returns mock_call
+            subject.wrapped_object.expects(:link)
             mock_call.expects(:send_offer!).once
             subject.handle_ami_event ami_event
           end

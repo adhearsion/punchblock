@@ -740,11 +740,11 @@ module Punchblock
           context 'with an answer command' do
             let(:command) { Command::Answer.new }
 
-            it "should send an EXEC ANSWER AGI command and set the command's response" do
+            it "should send an ANSWER AGI command and set the command's response" do
               component = subject.execute_command command
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC ANSWER"
+              agi_command.name.should be == "ANSWER"
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end

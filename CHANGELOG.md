@@ -11,6 +11,7 @@
   * BREAKING: Asterisk output does not support interrupt digits
   * Bugfix: Asterisk calls and components are removed from registries when they die
   * Bugfix: Commands for unknown calls/components respond with the correct `:item_not_found` name
+  * Bugfix: Use the primitive version of AGI ANSWER, rather than an app
 
 # [v1.2.0](https://github.com/adhearsion/punchblock/compare/v1.1.0...v1.2.0) - [2012-04-29](https://rubygems.org/gems/punchblock/versions/1.2.0)
   * Feature: Basic support for record component on Asterisk, using MixMonitor. Currently unsupported options include: start_paused, initial_timeout, final_timeout. Hints are additionally not supported, and recordings are stored on the * machine's local filesystem.

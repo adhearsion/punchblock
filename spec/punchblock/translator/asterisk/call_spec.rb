@@ -771,7 +771,7 @@ module Punchblock
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               mock_action.expects(:internal=).never
-              Component::Asterisk::AGICommand.expects(:new).once.with(command, subject).returns mock_action
+              Component::Asterisk::AGICommand.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:execute!).once
               subject.execute_command command
             end
@@ -785,7 +785,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
             it 'should create an Output component and execute it asynchronously' do
-              Component::Output.expects(:new).once.with(command, subject).returns mock_action
+              Component::Output.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -800,7 +800,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
 
             it 'should create an Input component and execute it asynchronously' do
-              Component::Input.expects(:new).once.with(command, subject).returns mock_action
+              Component::Input.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -815,7 +815,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
 
             it 'should create a Record component and execute it asynchronously' do
-              Component::Record.expects(:new).once.with(command, subject).returns mock_action
+              Component::Record.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command

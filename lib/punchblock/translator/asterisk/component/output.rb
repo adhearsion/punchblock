@@ -39,8 +39,6 @@ module Punchblock
 
               send_ref
 
-              @call.send_progress if early
-
               opts = early ? "#{path},noanswer" : path
               playback opts
             when :unimrcp

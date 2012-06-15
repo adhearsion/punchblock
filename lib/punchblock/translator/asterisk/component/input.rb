@@ -13,7 +13,6 @@ module Punchblock
           end
 
           def execute
-            @call.send_progress
             initial_timeout = @component_node.initial_timeout || -1
             @inter_digit_timeout = @component_node.inter_digit_timeout || -1
 

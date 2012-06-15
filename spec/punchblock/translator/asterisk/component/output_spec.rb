@@ -424,7 +424,6 @@ module Punchblock
                     it "should play the file with Playback" do
                       expect_answered false
                       expect_playback_noanswer
-                      mock_call.expects(:send_progress)
                       subject.execute
                     end
 

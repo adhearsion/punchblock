@@ -100,54 +100,6 @@ module Punchblock
           end
         end
 
-        describe '#send_progress' do
-
-          context "with a call that is already answered" do
-            it 'should not send the EXEC Progress command' do
-              subject.wrapped_object.expects(:'answered?').returns true
-              subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
-              subject.send_progress
-            end
-          end
-
-          context "with an unanswered call" do
-            before do
-              subject.wrapped_object.expects(:'answered?').returns(false).at_least_once
-            end
-
-            context "with a call that is outbound" do
-              let(:dial_command) { Command::Dial.new }
-
-              before do
-                dial_command.request!
-                subject.dial dial_command
-              end
-
-              it 'should not send the EXEC Progress command' do
-                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
-                subject.send_progress
-              end
-            end
-
-            context "with a call that is inbound" do
-              before do
-                subject.send_offer
-              end
-
-              it 'should send the EXEC Progress command to a call that is inbound and not answered' do
-                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress")
-                subject.send_progress
-              end
-
-              it 'should send the EXEC Progress command only once if called twice' do
-                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").once
-                subject.send_progress
-                subject.send_progress
-              end
-            end
-          end
-        end
-
         describe '#dial' do
           let(:dial_command_options) { {} }
 
@@ -693,11 +645,11 @@ module Punchblock
           context 'with an accept command' do
             let(:command) { Command::Accept.new }
 
-            it "should send an EXEC RINGING AGI command and set the command's response" do
+            it "should send an EXEC Progress AGI command and set the command's response" do
               component = subject.execute_command command
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC RINGING"
+              agi_command.name.should be == "EXEC Progress"
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end

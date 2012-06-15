@@ -42,13 +42,6 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            it "calls send_progress on the call" do
-              call.expects(:send_progress)
-              subject.execute
-            end
-
-            before { call.stubs :send_progress }
-
             let(:original_command_opts) { {} }
 
             let :original_command_options do

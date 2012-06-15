@@ -22,6 +22,8 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
+        trap_exit :actor_died
+
         class << self
           def parse_environment(agi_env)
             agi_env_as_array(agi_env).inject({}) do |accumulator, element|
@@ -269,6 +271,14 @@ module Punchblock
           send_ami_action 'Redirect', redirect_options
         end
 
+        def actor_died(actor, reason)
+          pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
+          if id = @components.key(actor)
+            pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
+            @components.delete id
+          end
+        end
+
         private
 
         def send_end_event(reason)
@@ -278,7 +288,7 @@ module Punchblock
         end
 
         def execute_component(type, command, options = {})
-          type.new(command, current_actor).tap do |component|
+          type.new_link(command, current_actor).tap do |component|
             register_component component
             component.internal = true if options[:internal]
             component.execute!

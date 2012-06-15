@@ -842,6 +842,38 @@ module Punchblock
               end
             end
 
+            context "for a component which began executing but crashed" do
+              let :component_command do
+                Punchblock::Component::Asterisk::AGI::Command.new :name => 'Wait'
+              end
+
+              let(:comp_id) { component_command.response.id }
+
+              let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
+
+              before do
+                component_command.request!
+                subject.execute_command component_command
+              end
+
+              it 'sends an error in response to the command' do
+                component = subject.component_with_id comp_id
+
+                component.wrapped_object.define_singleton_method(:oops) do
+                  raise 'Woops, I died'
+                end
+
+                lambda { component.oops }.should raise_error(/Woops, I died/)
+                sleep 0.1
+                component.should_not be_alive
+                subject.component_with_id(comp_id).should be_nil
+
+                subsequent_command.request!
+                subject.execute_command subsequent_command
+                subsequent_command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+              end
+            end
+
             context "for an unknown component ID" do
               it 'sends an error in response to the command' do
                 subject.execute_command command

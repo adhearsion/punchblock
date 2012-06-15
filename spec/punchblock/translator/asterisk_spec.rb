@@ -134,16 +134,14 @@ module Punchblock
 
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
-        let(:call)    { Translator::Asterisk::Call.new 'SIP/foo', subject }
         let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
 
-        before do
-          command.request!
-          call.stubs(:id).returns call_id
-        end
-
         context "with a known call ID" do
+          let(:call) { Translator::Asterisk::Call.new 'SIP/foo', subject }
+
           before do
+            command.request!
+            call.stubs(:id).returns call_id
             subject.register_call call
           end
 
@@ -153,8 +151,71 @@ module Punchblock
           end
         end
 
+        context "for an outgoing call which began executing but crashed" do
+          let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
+
+          let(:call_id) { dial_command.response.id }
+
+          before do
+            subject.execute_command dial_command
+            ami_client.stub_everything
+          end
+
+          it 'sends an error in response to the command' do
+            call = subject.call_with_id call_id
+
+            call.wrapped_object.define_singleton_method(:oops) do
+              raise 'Woops, I died'
+            end
+
+            lambda { call.oops }.should raise_error(/Woops, I died/)
+            sleep 0.1
+            call.should_not be_alive
+            subject.call_with_id(call_id).should be_nil
+
+            command.request!
+            subject.execute_call_command command
+            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a call with ID #{call_id}", call_id)
+          end
+        end
+
+        context "for an incoming call which began executing but crashed" do
+          let :ami_event do
+            RubyAMI::Event.new('AsyncAGI').tap do |e|
+              e['SubEvent'] = "Start"
+              e['Channel']  = "SIP/1234-00000000"
+              e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
+            end
+          end
+
+          let(:call)    { subject.call_for_channel('SIP/1234-00000000') }
+          let(:call_id) { call.id }
+
+          before do
+            subject.wrapped_object.stubs :handle_pb_event
+            subject.handle_ami_event ami_event
+            call_id
+          end
+
+          it 'sends an error in response to the command' do
+            call.wrapped_object.define_singleton_method(:oops) do
+              raise 'Woops, I died'
+            end
+
+            lambda { call.oops }.should raise_error(/Woops, I died/)
+            sleep 0.1
+            call.should_not be_alive
+            subject.call_with_id(call_id).should be_nil
+
+            command.request!
+            subject.execute_call_command command
+            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a call with ID #{call_id}", call_id)
+          end
+        end
+
         context "with an unknown call ID" do
           it 'sends an error in response to the command' do
+            command.request!
             subject.execute_call_command command
             command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
           end

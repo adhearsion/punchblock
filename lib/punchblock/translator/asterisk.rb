@@ -19,6 +19,8 @@ module Punchblock
       REDIRECT_EXTENSION = '1'
       REDIRECT_PRIORITY = '1'
 
+      trap_exit :actor_died
+
       def initialize(ami_client, connection, media_engine = nil)
         pb_logger.debug "Starting up..."
         @ami_client, @connection, @media_engine = ami_client, connection, media_engine
@@ -126,7 +128,7 @@ module Punchblock
           register_component component
           component.execute!
         when Punchblock::Command::Dial
-          call = Call.new command.to, current_actor
+          call = Call.new_link command.to, current_actor
           register_call call
           call.dial! command
         else
@@ -143,6 +145,14 @@ module Punchblock
           'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
         })
         pb_logger.trace "Added extension extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
+      end
+
+      def actor_died(actor, reason)
+        pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
+        if id = @calls.key(actor)
+          pb_logger.info "Dead actor was a call we know about, with ID #{id}. Removing it from the registry..."
+          @calls.delete id
+        end
       end
 
       private
@@ -186,6 +196,7 @@ module Punchblock
 
         pb_logger.trace "Handling AsyncAGI Start event by creating a new call"
         call = Call.new event['Channel'], current_actor, env
+        link call
         register_call call
         call.send_offer!
       end

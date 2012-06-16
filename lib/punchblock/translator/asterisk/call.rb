@@ -272,6 +272,7 @@ module Punchblock
         end
 
         def actor_died(actor, reason)
+          return unless reason
           pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
           if id = @components.key(actor)
             pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."

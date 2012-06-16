@@ -152,6 +152,9 @@ module Punchblock
         if id = @calls.key(actor)
           pb_logger.info "Dead actor was a call we know about, with ID #{id}. Removing it from the registry..."
           @calls.delete id
+          end_event = Punchblock::Event::End.new :target_call_id  => id,
+                                                 :reason          => :error
+          handle_pb_event end_event
         end
       end
 

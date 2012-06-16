@@ -191,7 +191,7 @@ module Punchblock
               end
             end
           when Command::Answer
-            send_agi_action 'EXEC ANSWER' do |response|
+            send_agi_action 'ANSWER' do |response|
               command.response = true
             end
           when Command::Hangup

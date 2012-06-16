@@ -851,6 +851,14 @@ module Punchblock
 
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 
+              let :expected_event do
+                Punchblock::Event::Complete.new.tap do |e|
+                  e.target_call_id = subject.id
+                  e.component_id = comp_id
+                  e.reason = Punchblock::Event::Complete::Error.new
+                end
+              end
+
               before do
                 component_command.request!
                 subject.execute_command component_command
@@ -862,6 +870,8 @@ module Punchblock
                 component.wrapped_object.define_singleton_method(:oops) do
                   raise 'Woops, I died'
                 end
+
+                translator.expects(:handle_pb_event).once.with expected_event
 
                 lambda { component.oops }.should raise_error(/Woops, I died/)
                 sleep 0.1

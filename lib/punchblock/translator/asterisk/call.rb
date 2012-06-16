@@ -276,6 +276,8 @@ module Punchblock
           if id = @components.key(actor)
             pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
             @components.delete id
+            complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
+            send_pb_event complete_event
           end
         end
 

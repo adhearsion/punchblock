@@ -113,6 +113,8 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
+          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
+
           case ami_event.name
           when 'Hangup'
             pb_logger.trace "Received a Hangup AMI event. Sending End event."
@@ -167,7 +169,6 @@ module Punchblock
             end
           end
           trigger_handler :ami, ami_event
-          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
         end
 
         def execute_command(command)

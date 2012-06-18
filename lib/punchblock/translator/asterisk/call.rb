@@ -127,7 +127,7 @@ module Punchblock
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
             else
-              pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
+              pb_logger.trace "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
             pb_logger.trace "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"

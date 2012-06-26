@@ -9,6 +9,7 @@
   * Feature: Record component on Asterisk now raises if called on an unanswered call
   * Feature: Input component on Asterisk works the same whether the call is answered or unanswered
   * Feature: AMI events are emitted to the relevant calls
+  * Feature: Simpler method of getting hold of a new client/connection
 
   * Bugfix: AMI events are processed in order by the translator
   * Bugfix: Asterisk calls and components are removed from registries when they die

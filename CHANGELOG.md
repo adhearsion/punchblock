@@ -1,14 +1,22 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * BREAKING: Asterisk translator now does NOT answer the call automatically when Output, Input or Record are used.
+  * Change: Asterisk output now uses Playback rather than STREAM FILE
+  * BREAKING: Asterisk output does not support interrupt digits
+
   * Feature: Output component now exposes #recording and #recording_uri for easy access to record results.
   * Feature: Early media support for Asterisk, using Progress to start an early media session
-  * BREAKING: Asterisk translator now does NOT answer the call automatically when Output, Input or Record are used.
   * Feature: Output component on Asterisk now supports early media. If the line is not answered, it runs Progress followed by Playback with noanswer.
   * Feature: Record component on Asterisk now raises if called on an unanswered call
   * Feature: Input component on Asterisk works the same whether the call is answered or unanswered
-  * Bugfix: AMI events are processed in order by the translator
   * Feature: AMI events are emitted to the relevant calls
-  * Change: Asterisk output now uses Playback rather than STREAM FILE
-  * BREAKING: Asterisk output does not support interrupt digits
+  * Feature: Simpler method of getting hold of a new client/connection
+
+  * Bugfix: AMI events are processed in order by the translator
+  * Bugfix: Asterisk calls and components are removed from registries when they die
+  * Bugfix: Commands for unknown calls/components respond with the correct `:item_not_found` name
+  * Bugfix: Asterisk calls send an error complete event for their dying components
+  * Bugfix: Asterisk translator sends an error end event for its dying calls
+  * Bugfix: Use the primitive version of AGI ANSWER, rather than an app
 
 # [v1.2.0](https://github.com/adhearsion/punchblock/compare/v1.1.0...v1.2.0) - [2012-04-29](https://rubygems.org/gems/punchblock/versions/1.2.0)
   * Feature: Basic support for record component on Asterisk, using MixMonitor. Currently unsupported options include: start_paused, initial_timeout, final_timeout. Hints are additionally not supported, and recordings are stored on the * machine's local filesystem.

@@ -22,6 +22,8 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
+        trap_exit :actor_died
+
         class << self
           def parse_environment(agi_env)
             agi_env_as_array(agi_env).inject({}) do |accumulator, element|
@@ -111,6 +113,8 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
+          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
+
           case ami_event.name
           when 'Hangup'
             pb_logger.trace "Received a Hangup AMI event. Sending End event."
@@ -125,7 +129,7 @@ module Punchblock
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
             else
-              pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
+              pb_logger.trace "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
             pb_logger.trace "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
@@ -165,7 +169,6 @@ module Punchblock
             end
           end
           trigger_handler :ami, ami_event
-          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
         end
 
         def execute_command(command)
@@ -174,7 +177,7 @@ module Punchblock
             if component = component_with_id(command.component_id)
               component.execute_command command
             else
-              command.response = ProtocolError.new.setup 'item-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+              command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
             end
           end
           case command
@@ -189,7 +192,7 @@ module Punchblock
               end
             end
           when Command::Answer
-            send_agi_action 'EXEC ANSWER' do |response|
+            send_agi_action 'ANSWER' do |response|
               command.response = true
             end
           when Command::Hangup
@@ -269,6 +272,17 @@ module Punchblock
           send_ami_action 'Redirect', redirect_options
         end
 
+        def actor_died(actor, reason)
+          return unless reason
+          pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
+          if id = @components.key(actor)
+            pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
+            @components.delete id
+            complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
+            send_pb_event complete_event
+          end
+        end
+
         private
 
         def send_end_event(reason)
@@ -278,7 +292,7 @@ module Punchblock
         end
 
         def execute_component(type, command, options = {})
-          type.new(command, current_actor).tap do |component|
+          type.new_link(command, current_actor).tap do |component|
             register_component component
             component.internal = true if options[:internal]
             component.execute!

@@ -740,11 +740,11 @@ module Punchblock
           context 'with an answer command' do
             let(:command) { Command::Answer.new }
 
-            it "should send an EXEC ANSWER AGI command and set the command's response" do
+            it "should send an ANSWER AGI command and set the command's response" do
               component = subject.execute_command command
               component.internal.should be_true
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC ANSWER"
+              agi_command.name.should be == "ANSWER"
               agi_command.add_event expected_agi_complete_event
               command.response(0.5).should be true
             end
@@ -771,7 +771,7 @@ module Punchblock
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               mock_action.expects(:internal=).never
-              Component::Asterisk::AGICommand.expects(:new).once.with(command, subject).returns mock_action
+              Component::Asterisk::AGICommand.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:execute!).once
               subject.execute_command command
             end
@@ -785,7 +785,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
             it 'should create an Output component and execute it asynchronously' do
-              Component::Output.expects(:new).once.with(command, subject).returns mock_action
+              Component::Output.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -800,7 +800,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
 
             it 'should create an Input component and execute it asynchronously' do
-              Component::Input.expects(:new).once.with(command, subject).returns mock_action
+              Component::Input.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -815,7 +815,7 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
 
             it 'should create a Record component and execute it asynchronously' do
-              Component::Record.expects(:new).once.with(command, subject).returns mock_action
+              Component::Record.expects(:new_link).once.with(command, subject).returns mock_action
               mock_action.expects(:internal=).never
               mock_action.expects(:execute!).once
               subject.execute_command command
@@ -842,10 +842,52 @@ module Punchblock
               end
             end
 
+            context "for a component which began executing but crashed" do
+              let :component_command do
+                Punchblock::Component::Asterisk::AGI::Command.new :name => 'Wait'
+              end
+
+              let(:comp_id) { component_command.response.id }
+
+              let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
+
+              let :expected_event do
+                Punchblock::Event::Complete.new.tap do |e|
+                  e.target_call_id = subject.id
+                  e.component_id = comp_id
+                  e.reason = Punchblock::Event::Complete::Error.new
+                end
+              end
+
+              before do
+                component_command.request!
+                subject.execute_command component_command
+              end
+
+              it 'sends an error in response to the command' do
+                component = subject.component_with_id comp_id
+
+                component.wrapped_object.define_singleton_method(:oops) do
+                  raise 'Woops, I died'
+                end
+
+                translator.expects(:handle_pb_event).once.with expected_event
+
+                lambda { component.oops }.should raise_error(/Woops, I died/)
+                sleep 0.1
+                component.should_not be_alive
+                subject.component_with_id(comp_id).should be_nil
+
+                subsequent_command.request!
+                subject.execute_command subsequent_command
+                subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+              end
+            end
+
             context "for an unknown component ID" do
               it 'sends an error in response to the command' do
                 subject.execute_command command
-                command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+                command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
               end
             end
           end

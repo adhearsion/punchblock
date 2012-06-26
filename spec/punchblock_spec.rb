@@ -24,6 +24,17 @@ describe Punchblock do
       end
     end
 
+    context 'with :freeswitch' do
+      it 'sets up an Freeswitch connection, passing options, and a client with the connection attached' do
+        mock_connection = stub_everything 'Connection'
+        options = {:username => 'foo', :password => 'bar'}
+        Punchblock::Connection::Freeswitch.expects(:new).once.with(options).returns mock_connection
+        client = Punchblock.client_with_connection :freeswitch, options
+        client.should be_a Punchblock::Client
+        client.connection.should be mock_connection
+      end
+    end
+
     context 'with :yate' do
       it 'raises ArgumentError' do
         options = {:username => 'foo', :password => 'bar'}

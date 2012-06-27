@@ -15,7 +15,9 @@ module Punchblock
 
       def run
         pb_logger.debug "Starting the librevox listener"
-        Librevox.start InboundListener, :event_handler => lambda { |e| translator.handle_es_event! e }
+        EM.run do
+          Librevox.run InboundListener, :event_handler => lambda { |e| translator.handle_es_event! e }
+        end
         raise DisconnectedError
       end
 

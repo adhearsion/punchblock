@@ -14,12 +14,12 @@ module Punchblock
       its(:connection) { should be connection }
 
       describe '#shutdown' do
-        # it "instructs all calls to shutdown" do
-        #   call = Asterisk::Call.new 'foo', subject
-        #   call.expects(:shutdown!).once
-        #   subject.register_call call
-        #   subject.shutdown
-        # end
+        it "instructs all calls to shutdown" do
+          call = described_class::Call.new 'foo', subject
+          call.expects(:shutdown).once
+          subject.register_call call
+          subject.shutdown
+        end
 
         it "terminates the actor" do
           subject.shutdown
@@ -27,181 +27,181 @@ module Punchblock
         end
       end
 
-      # describe '#execute_command' do
-      #   describe 'with a call command' do
-      #     let(:command) { Command::Answer.new }
-      #     let(:call_id) { 'abc123' }
+      describe '#execute_command' do
+        describe 'with a call command' do
+          let(:command) { Command::Answer.new }
+          let(:call_id) { 'abc123' }
 
-      #     it 'executes the call command' do
-      #       subject.wrapped_object.expects(:execute_call_command).with do |c|
-      #         c.should be command
-      #         c.target_call_id.should be == call_id
-      #       end
-      #       subject.execute_command command, :call_id => call_id
-      #     end
-      #   end
+          it 'executes the call command' do
+            subject.wrapped_object.expects(:execute_call_command).with do |c|
+              c.should be command
+              c.target_call_id.should be == call_id
+            end
+            subject.execute_command command, :call_id  =>  call_id
+          end
+        end
 
-      #   describe 'with a global component command' do
-      #     let(:command)       { Component::Stop.new }
-      #     let(:component_id)  { '123abc' }
+        describe 'with a global component command' do
+          let(:command)       { Component::Stop.new }
+          let(:component_id)  { '123abc' }
 
-      #     it 'executes the component command' do
-      #       subject.wrapped_object.expects(:execute_component_command).with do |c|
-      #         c.should be command
-      #         c.component_id.should be == component_id
-      #       end
-      #       subject.execute_command command, :component_id => component_id
-      #     end
-      #   end
+          it 'executes the component command' do
+            subject.wrapped_object.expects(:execute_component_command).with do |c|
+              c.should be command
+              c.component_id.should be == component_id
+            end
+            subject.execute_command command, :component_id  =>  component_id
+          end
+        end
 
-      #   describe 'with a global command' do
-      #     let(:command) { Command::Dial.new }
+        describe 'with a global command' do
+          let(:command) { Command::Dial.new }
 
-      #     it 'executes the command directly' do
-      #       subject.wrapped_object.expects(:execute_global_command).with command
-      #       subject.execute_command command
-      #     end
-      #   end
-      # end
+          it 'executes the command directly' do
+            subject.wrapped_object.expects(:execute_global_command).with command
+            subject.execute_command command
+          end
+        end
+      end
 
-      # describe '#register_call' do
-      #   let(:call_id) { 'abc123' }
-      #   let(:channel) { 'SIP/foo' }
-      #   let(:call)    { Translator::Asterisk::Call.new channel, subject }
+      describe '#register_call' do
+        let(:call_id)     { 'abc123' }
+        let(:platform_id) { '123abc' }
+        let(:call)        { described_class::Call.new platform_id, subject }
 
-      #   before do
-      #     call.stubs(:id).returns call_id
-      #     subject.register_call call
-      #   end
+        before do
+          call.stubs(:id).returns call_id
+          subject.register_call call
+        end
 
-      #   it 'should make the call accessible by ID' do
-      #     subject.call_with_id(call_id).should be call
-      #   end
+        it 'should make the call accessible by ID' do
+          subject.call_with_id(call_id).should be call
+        end
 
-      #   it 'should make the call accessible by channel' do
-      #     subject.call_for_channel(channel).should be call
-      #   end
-      # end
+        it 'should make the call accessible by platform_id' do
+          subject.call_for_platform_id(platform_id).should be call
+        end
+      end
 
-      # describe '#deregister_call' do
-      #   let(:call_id) { 'abc123' }
-      #   let(:channel) { 'SIP/foo' }
-      #   let(:call)    { Translator::Asterisk::Call.new channel, subject }
+      describe '#deregister_call' do
+        let(:call_id)     { 'abc123' }
+        let(:platform_id) { '123abc' }
+        let(:call)        { described_class::Call.new platform_id, subject }
 
-      #   before do
-      #     call.stubs(:id).returns call_id
-      #     subject.register_call call
-      #   end
+        before do
+          call.stubs(:id).returns call_id
+          subject.register_call call
+        end
 
-      #   it 'should make the call inaccessible by ID' do
-      #     subject.call_with_id(call_id).should be call
-      #     subject.deregister_call call
-      #     subject.call_with_id(call_id).should be_nil
-      #   end
+        it 'should make the call inaccessible by ID' do
+          subject.call_with_id(call_id).should be call
+          subject.deregister_call call
+          subject.call_with_id(call_id).should be_nil
+        end
 
-      #   it 'should make the call inaccessible by channel' do
-      #     subject.call_for_channel(channel).should be call
-      #     subject.deregister_call call
-      #     subject.call_for_channel(channel).should be_nil
-      #   end
-      # end
+        it 'should make the call inaccessible by platform_id' do
+          subject.call_for_platform_id(platform_id).should be call
+          subject.deregister_call call
+          subject.call_for_platform_id(platform_id).should be_nil
+        end
+      end
 
-      # describe '#register_component' do
-      #   let(:component_id) { 'abc123' }
-      #   let(:component)    { mock 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }
+      describe '#register_component' do
+        let(:component_id) { 'abc123' }
+        let(:component)    { mock 'Foo', :id => component_id }
 
-      #   it 'should make the component accessible by ID' do
-      #     subject.register_component component
-      #     subject.component_with_id(component_id).should be component
-      #   end
-      # end
+        it 'should make the component accessible by ID' do
+          subject.register_component component
+          subject.component_with_id(component_id).should be component
+        end
+      end
 
-      # describe '#execute_call_command' do
-      #   let(:call_id) { 'abc123' }
-      #   let(:call)    { Translator::Asterisk::Call.new 'SIP/foo', subject }
-      #   let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
+      describe '#execute_call_command' do
+        let(:call_id) { 'abc123' }
+        let(:call)    { described_class::Call.new 'foo', subject }
+        let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
 
-      #   before do
-      #     command.request!
-      #     call.stubs(:id).returns call_id
-      #   end
+        before do
+          command.request!
+          call.stubs(:id).returns call_id
+        end
 
-      #   context "with a known call ID" do
-      #     before do
-      #       subject.register_call call
-      #     end
+        context "with a known call ID" do
+          before do
+            subject.register_call call
+          end
 
-      #     it 'sends the command to the call for execution' do
-      #       call.expects(:execute_command!).once.with command
-      #       subject.execute_call_command command
-      #     end
-      #   end
+          it 'sends the command to the call for execution' do
+            call.expects(:execute_command!).once.with command
+            subject.execute_call_command command
+          end
+        end
 
-      #   context "with an unknown call ID" do
-      #     it 'sends an error in response to the command' do
-      #       subject.execute_call_command command
-      #       command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
-      #     end
-      #   end
-      # end
+        context "with an unknown call ID" do
+          it 'sends an error in response to the command' do
+            subject.execute_call_command command
+            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+          end
+        end
+      end
 
-      # describe '#execute_component_command' do
-      #   let(:component_id)  { '123abc' }
-      #   let(:component)     { mock 'Translator::Asterisk::Component', :id => component_id }
+      describe '#execute_component_command' do
+        let(:component_id)  { '123abc' }
+        let(:component)     { mock 'Translator::Freeswitch::Component', :id => component_id }
 
-      #   let(:command) { Component::Stop.new.tap { |c| c.component_id = component_id } }
+        let(:command) { Component::Stop.new.tap { |c| c.component_id = component_id } }
 
-      #   before do
-      #     command.request!
-      #   end
+        before do
+          command.request!
+        end
 
-      #   context 'with a known component ID' do
-      #     before do
-      #       subject.register_component component
-      #     end
+        context 'with a known component ID' do
+          before do
+            subject.register_component component
+          end
 
-      #     it 'sends the command to the component for execution' do
-      #       component.expects(:execute_command!).once.with command
-      #       subject.execute_component_command command
-      #     end
-      #   end
+          it 'sends the command to the component for execution' do
+            component.expects(:execute_command!).once.with command
+            subject.execute_component_command command
+          end
+        end
 
-      #   context "with an unknown component ID" do
-      #     it 'sends an error in response to the command' do
-      #       subject.execute_component_command command
-      #       command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
-      #     end
-      #   end
-      # end
+        context "with an unknown component ID" do
+          it 'sends an error in response to the command' do
+            subject.execute_component_command command
+            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+          end
+        end
+      end
 
-      # describe '#execute_global_command' do
-      #   context 'with a Dial' do
-      #     let :command do
-      #       Command::Dial.new :to => 'SIP/1234', :from => 'abc123'
-      #     end
+      describe '#execute_global_command' do
+        context 'with a Dial' do
+          let :command do
+            Command::Dial.new :to => '1234', :from => 'abc123'
+          end
 
-      #     before do
-      #       command.request!
-      #       ami_client.stub_everything
-      #     end
+          before do
+            command.request!
+            # ami_client.stub_everything
+          end
 
-      #     it 'should be able to look up the call by channel ID' do
-      #       subject.execute_global_command command
-      #       call_actor = subject.call_for_channel('SIP/1234')
-      #       call_actor.wrapped_object.should be_a Asterisk::Call
-      #     end
+          it 'should be able to look up the call by channel ID' do
+            subject.execute_global_command command
+            call_actor = subject.call_for_platform_id('1234')
+            call_actor.should be_a Freeswitch::Call
+          end
 
-      #     it 'should instruct the call to send a dial' do
-      #       mock_call = stub_everything 'Asterisk::Call'
-      #       Asterisk::Call.expects(:new).once.returns mock_call
-      #       mock_call.expects(:dial!).once.with command
-      #       subject.execute_global_command command
-      #     end
-      #   end
+          it 'should instruct the call to send a dial' do
+            mock_call = stub_everything 'Freeswitch::Call'
+            Freeswitch::Call.expects(:new).once.returns mock_call
+            mock_call.expects(:dial!).once.with command
+            subject.execute_global_command command
+          end
+        end
 
       #   context 'with an AMI action' do
       #     let :command do
-      #       Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
+      #       Component::Asterisk::AMI::Action.new :name  =>  'Status', :params  =>  { :channel  =>  'foo' }
       #     end
 
       #     let(:mock_action) { stub_everything 'Asterisk::Component::Asterisk::AMIAction' }
@@ -219,17 +219,17 @@ module Punchblock
       #     end
       #   end
 
-      #   context "with a command we don't understand" do
-      #     let :command do
-      #       Command::Answer.new
-      #     end
+        context "with a command we don't understand" do
+          let :command do
+            Command::Answer.new
+          end
 
-      #     it 'sends an error in response to the command' do
-      #       subject.execute_command command
-      #       command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command")
-      #     end
-      #   end
-      # end
+          it 'sends an error in response to the command' do
+            subject.execute_command command
+            command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command")
+          end
+        end
+      end
 
       describe '#handle_pb_event' do
         it 'should forward the event to the connection' do
@@ -239,22 +239,13 @@ module Punchblock
         end
       end
 
-      # describe '#handle_ami_event' do
-      #   let :ami_event do
-      #     RubyAMI::Event.new('Newchannel').tap do |e|
-      #       e['Channel']  = "SIP/101-3f3f"
-      #       e['State']    = "Ring"
-      #       e['Callerid'] = "101"
-      #       e['Uniqueid'] = "1094154427.10"
-      #     end
-      #   end
-
+      describe '#handle_es_event' do
       #   let :expected_pb_event do
-      #     Event::Asterisk::AMI::Event.new :name => 'Newchannel',
-      #                                     :attributes => { :channel  => "SIP/101-3f3f",
-      #                                                      :state    => "Ring",
-      #                                                      :callerid => "101",
-      #                                                      :uniqueid => "1094154427.10"}
+      #     Event::Asterisk::AMI::Event.new :name  =>  'Newchannel',
+      #                                     :attributes  =>  { :channel   =>  "SIP/101-3f3f",
+      #                                                      :state     =>  "Ring",
+      #                                                      :callerid  =>  "101",
+      #                                                      :uniqueid  =>  "1094154427.10"}
       #   end
 
       #   it 'should create a Punchblock AMI event object and pass it to the connection' do
@@ -262,238 +253,268 @@ module Punchblock
       #     subject.handle_ami_event ami_event
       #   end
 
-      #   context 'with something that is not a RubyAMI::Event' do
-      #     it 'does not send anything to the connection' do
-      #       subject.connection.expects(:handle_event).never
-      #       subject.handle_ami_event :foo
-      #     end
-      #   end
+        before { subject.wrapped_object.stubs :handle_pb_event }
 
-      #   describe 'with a FullyBooted event' do
-      #     let(:ami_event) { RubyAMI::Event.new 'FullyBooted' }
+        let(:unique_id) { "3f0e1e18-c056-11e1-b099-fffeda3ce54f" }
 
-      #     context 'once' do
-      #       it 'does not send anything to the connection' do
-      #         subject.connection.expects(:handle_event).never
-      #         subject.handle_ami_event ami_event
-      #       end
-      #     end
+        let :es_env do
+          {
+            :variable_direction                   =>  "inbound",
+            :variable_uuid                        =>  "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            :variable_session_id                  =>  "1",
+            :variable_sip_local_network_addr      =>  "109.148.160.137",
+            :variable_sip_network_ip              =>  "192.168.1.74",
+            :variable_sip_network_port            =>  "59253",
+            :variable_sip_received_ip             =>  "192.168.1.74",
+            :variable_sip_received_port           =>  "59253",
+            :variable_sip_via_protocol            =>  "udp",
+            :variable_sip_authorized              =>  "true",
+            :variable_sip_number_alias            =>  "1000",
+            :variable_sip_auth_username           =>  "1000",
+            :variable_sip_auth_realm              =>  "127.0.0.1",
+            :variable_number_alias                =>  "1000",
+            :variable_user_name                   =>  "1000",
+            :variable_domain_name                 =>  "127.0.0.1",
+            :variable_record_stereo               =>  "true",
+            :variable_default_gateway             =>  "example.com",
+            :variable_default_areacode            =>  "918",
+            :variable_transfer_fallback_extension =>  "operator",
+            :variable_toll_allow                  =>  "domestic,international,local",
+            :variable_accountcode                 =>  "1000",
+            :variable_user_context                =>  "default",
+            :variable_effective_caller_id_name    =>  "Extension%201000",
+            :variable_effective_caller_id_number  =>  "1000",
+            :variable_outbound_caller_id_name     =>  "FreeSWITCH",
+            :variable_outbound_caller_id_number   =>  "0000000000",
+            :variable_callgroup                   =>  "techsupport",
+            :variable_sip_from_user               =>  "1000",
+            :variable_sip_from_uri                =>  "1000%40127.0.0.1",
+            :variable_sip_from_host               =>  "127.0.0.1",
+            :variable_sip_from_user_stripped      =>  "1000",
+            :variable_sip_from_tag                =>  "1248111553",
+            :variable_sofia_profile_name          =>  "internal",
+            :variable_sip_full_via                =>  "SIP/2.0/UDP%20192.168.1.74%3A59253%3Brport%3D59253%3Bbranch%3Dz9hG4bK2021947958",
+            :variable_sip_full_from               =>  "%3Csip%3A1000%40127.0.0.1%3E%3Btag%3D1248111553",
+            :variable_sip_full_to                 =>  "%3Csip%3A10%40127.0.0.1%3E",
+            :variable_sip_req_user                =>  "10",
+            :variable_sip_req_uri                 =>  "10%40127.0.0.1",
+            :variable_sip_req_host                =>  "127.0.0.1",
+            :variable_sip_to_user                 =>  "10",
+            :variable_sip_to_uri                  =>  "10%40127.0.0.1",
+            :variable_sip_to_host                 =>  "127.0.0.1",
+            :variable_sip_contact_user            =>  "1000",
+            :variable_sip_contact_port            =>  "59253",
+            :variable_sip_contact_uri             =>  "1000%40192.168.1.74%3A59253",
+            :variable_sip_contact_host            =>  "192.168.1.74",
+            :variable_channel_name                =>  "sofia/internal/1000%40127.0.0.1",
+            :variable_sip_call_id                 =>  "1251435211%40127.0.0.1",
+            :variable_sip_user_agent              =>  "YATE/4.1.0",
+            :variable_sip_via_host                =>  "192.168.1.74",
+            :variable_sip_via_port                =>  "59253",
+            :variable_sip_via_rport               =>  "59253",
+            :variable_max_forwards                =>  "20",
+            :variable_presence_id                 =>  "1000%40127.0.0.1",
+            :variable_switch_r_sdp                =>  "v%3D0%0D%0Ao%3Dyate%201340801245%201340801245%20IN%20IP4%20172.20.10.3%0D%0As%3DSIP%20Call%0D%0Ac%3DIN%20IP4%20172.20.10.3%0D%0At%3D0%200%0D%0Am%3Daudio%2025048%20RTP/AVP%200%208%2011%2098%2097%20102%20103%20104%20105%20106%20101%0D%0Aa%3Drtpmap%3A0%20PCMU/8000%0D%0Aa%3Drtpmap%3A8%20PCMA/8000%0D%0Aa%3Drtpmap%3A11%20L16/8000%0D%0Aa%3Drtpmap%3A98%20iLBC/8000%0D%0Aa%3Dfmtp%3A98%20mode%3D20%0D%0Aa%3Drtpmap%3A97%20iLBC/8000%0D%0Aa%3Dfmtp%3A97%20mode%3D30%0D%0Aa%3Drtpmap%3A102%20SPEEX/8000%0D%0Aa%3Drtpmap%3A103%20SPEEX/16000%0D%0Aa%3Drtpmap%3A104%20SPEEX/32000%0D%0Aa%3Drtpmap%3A105%20iSAC/16000%0D%0Aa%3Drtpmap%3A106%20iSAC/32000%0D%0Aa%3Drtpmap%3A101%20telephone-event/8000%0D%0Aa%3Dptime%3A30%0D%0A",
+            :variable_remote_media_ip             =>  "172.20.10.3",
+            :variable_remote_media_port           =>  "25048",
+            :variable_sip_audio_recv_pt           =>  "0",
+            :variable_sip_use_codec_name          =>  "PCMU",
+            :variable_sip_use_codec_rate          =>  "8000",
+            :variable_sip_use_codec_ptime         =>  "30",
+            :variable_read_codec                  =>  "PCMU",
+            :variable_read_rate                   =>  "8000",
+            :variable_write_codec                 =>  "PCMU",
+            :variable_write_rate                  =>  "8000",
+            :variable_endpoint_disposition        =>  "RECEIVED",
+            :variable_call_uuid                   =>  "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            :variable_open                        =>  "true",
+            :variable_rfc2822_date                =>  "Wed,%2027%20Jun%202012%2013%3A47%3A25%20%2B0100",
+            :variable_export_vars                 =>  "RFC2822_DATE",
+            :variable_current_application         =>  "park"
+          }
+        end
 
-      #     context 'twice' do
-      #       it 'sends a connected event to the event handler' do
-      #         subject.connection.expects(:handle_event).once.with Connection::Connected.new
-      #         subject.wrapped_object.expects(:run_at_fully_booted).once
-      #         subject.handle_ami_event ami_event
-      #         subject.handle_ami_event ami_event
-      #       end
-      #     end
-      #   end
+        let :es_content do
+          {
+            :event_name                         =>  "CHANNEL_PARK",
+            :core_uuid                          =>  "2ad09a34-c056-11e1-b095-fffeda3ce54f",
+            :freeswitch_hostname                =>  "blmbp.home",
+            :freeswitch_switchname              =>  "blmbp.home",
+            :freeswitch_ipv4                    =>  "192.168.1.74",
+            :freeswitch_ipv6                    =>  "%3A%3A1",
+            :event_date_local                   =>  "2012-06-27%2013%3A47%3A25",
+            :event_date_gmt                     =>  "Wed,%2027%20Jun%202012%2012%3A47%3A25%20GMT",
+            :event_date_timestamp               =>  "1340801245553845",
+            :event_calling_file                 =>  "switch_ivr.c",
+            :event_calling_function             =>  "switch_ivr_park",
+            :event_calling_line_number          =>  "879",
+            :event_sequence                     =>  "485",
+            :channel_state                      =>  "CS_EXECUTE",
+            :channel_call_state                 =>  "RINGING",
+            :channel_state_number               =>  "4",
+            :channel_name                       =>  "sofia/internal/1000%40127.0.0.1",
+            :unique_id                          =>  "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            :call_direction                     =>  "inbound",
+            :presence_call_direction            =>  "inbound",
+            :channel_hit_dialplan               =>  "true",
+            :channel_presence_id                =>  "1000%40127.0.0.1",
+            :channel_call_uuid                  =>  "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            :answer_state                       =>  "ringing",
+            :channel_read_codec_name            =>  "PCMU",
+            :channel_read_codec_rate            =>  "8000",
+            :channel_read_codec_bit_rate        =>  "64000",
+            :channel_write_codec_name           =>  "PCMU",
+            :channel_write_codec_rate           =>  "8000",
+            :channel_write_codec_bit_rate       =>  "64000",
+            :caller_direction                   =>  "inbound",
+            :caller_username                    =>  "1000",
+            :caller_dialplan                    =>  "XML",
+            :caller_caller_id_name              =>  "1000",
+            :caller_caller_id_number            =>  "1000",
+            :caller_network_addr                =>  "192.168.1.74",
+            :caller_ani                         =>  "1000",
+            :caller_destination_number          =>  "10",
+            :caller_unique_id                   =>  "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            :caller_source                      =>  "mod_sofia",
+            :caller_context                     =>  "default",
+            :caller_channel_name                =>  "sofia/internal/1000%40127.0.0.1",
+            :caller_profile_index               =>  "1",
+            :caller_profile_created_time        =>  "1340801245532983",
+            :caller_channel_created_time        =>  "1340801245532983",
+            :caller_channel_answered_time       =>  "0",
+            :caller_channel_progress_time       =>  "0",
+            :caller_channel_progress_media_time =>  "0",
+            :caller_channel_hangup_time         =>  "0",
+            :caller_channel_transfer_time       =>  "0",
+            :caller_screen_bit                  =>  "true",
+            :caller_privacy_hide_name           =>  "false",
+            :caller_privacy_hide_number         =>  "false"
+          }.merge es_env
+        end
 
-      #   describe 'with an AsyncAGI Start event' do
-      #     let :ami_event do
-      #       RubyAMI::Event.new('AsyncAGI').tap do |e|
-      #         e['SubEvent'] = "Start"
-      #         e['Channel']  = "SIP/1234-00000000"
-      #         e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-      #       end
-      #     end
+        let :es_event do
+          Librevox::Response.new.tap do |e|
+            e.content = es_content
+          end
+        end
 
-      #     before { subject.wrapped_object.stubs :handle_pb_event }
+        it 'should be able to look up the call by platform ID' do
+          subject.handle_es_event es_event
+          call_actor = subject.call_for_platform_id unique_id
+          call_actor.should be_a Freeswitch::Call
+          call_actor.es_env.should be ==  {
+            :variable_direction                   => "inbound",
+            :variable_uuid                        => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            :variable_session_id                  => "1",
+            :variable_sip_local_network_addr      => "109.148.160.137",
+            :variable_sip_network_ip              => "192.168.1.74",
+            :variable_sip_network_port            => "59253",
+            :variable_sip_received_ip             => "192.168.1.74",
+            :variable_sip_received_port           => "59253",
+            :variable_sip_via_protocol            => "udp",
+            :variable_sip_authorized              => "true",
+            :variable_sip_number_alias            => "1000",
+            :variable_sip_auth_username           => "1000",
+            :variable_sip_auth_realm              => "127.0.0.1",
+            :variable_number_alias                => "1000",
+            :variable_user_name                   => "1000",
+            :variable_domain_name                 => "127.0.0.1",
+            :variable_record_stereo               => "true",
+            :variable_default_gateway             => "example.com",
+            :variable_default_areacode            => "918",
+            :variable_transfer_fallback_extension => "operator",
+            :variable_toll_allow                  => "domestic,international,local",
+            :variable_accountcode                 => "1000",
+            :variable_user_context                => "default",
+            :variable_effective_caller_id_name    => "Extension 1000",
+            :variable_effective_caller_id_number  => "1000",
+            :variable_outbound_caller_id_name     => "FreeSWITCH",
+            :variable_outbound_caller_id_number   => "0000000000",
+            :variable_callgroup                   => "techsupport",
+            :variable_sip_from_user               => "1000",
+            :variable_sip_from_uri                => "1000@127.0.0.1",
+            :variable_sip_from_host               => "127.0.0.1",
+            :variable_sip_from_user_stripped      => "1000",
+            :variable_sip_from_tag                => "1248111553",
+            :variable_sofia_profile_name          => "internal",
+            :variable_sip_full_via                => "SIP/2.0/UDP 192.168.1.74:59253;rport=59253;branch=z9hG4bK2021947958",
+            :variable_sip_full_from               => "<sip:1000@127.0.0.1>;tag=1248111553",
+            :variable_sip_full_to                 => "<sip:10@127.0.0.1>",
+            :variable_sip_req_user                => "10",
+            :variable_sip_req_uri                 => "10@127.0.0.1",
+            :variable_sip_req_host                => "127.0.0.1",
+            :variable_sip_to_user                 => "10",
+            :variable_sip_to_uri                  => "10@127.0.0.1",
+            :variable_sip_to_host                 => "127.0.0.1",
+            :variable_sip_contact_user            => "1000",
+            :variable_sip_contact_port            => "59253",
+            :variable_sip_contact_uri             => "1000@192.168.1.74:59253",
+            :variable_sip_contact_host            => "192.168.1.74",
+            :variable_channel_name                => "sofia/internal/1000@127.0.0.1",
+            :variable_sip_call_id                 => "1251435211@127.0.0.1",
+            :variable_sip_user_agent              => "YATE/4.1.0",
+            :variable_sip_via_host                => "192.168.1.74",
+            :variable_sip_via_port                => "59253",
+            :variable_sip_via_rport               => "59253",
+            :variable_max_forwards                => "20",
+            :variable_presence_id                 => "1000@127.0.0.1",
+            :variable_switch_r_sdp                => "v=0\r\no=yate 1340801245 1340801245 IN IP4 172.20.10.3\r\ns=SIP Call\r\nc=IN IP4 172.20.10.3\r\nt=0 0\r\nm=audio 25048 RTP/AVP 0 8 11 98 97 102 103 104 105 106 101\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:11 L16/8000\r\na=rtpmap:98 iLBC/8000\r\na=fmtp:98 mode=20\r\na=rtpmap:97 iLBC/8000\r\na=fmtp:97 mode=30\r\na=rtpmap:102 SPEEX/8000\r\na=rtpmap:103 SPEEX/16000\r\na=rtpmap:104 SPEEX/32000\r\na=rtpmap:105 iSAC/16000\r\na=rtpmap:106 iSAC/32000\r\na=rtpmap:101 telephone-event/8000\r\na=ptime:30\r\n",
+            :variable_remote_media_ip             => "172.20.10.3",
+            :variable_remote_media_port           => "25048",
+            :variable_sip_audio_recv_pt           => "0",
+            :variable_sip_use_codec_name          => "PCMU",
+            :variable_sip_use_codec_rate          => "8000",
+            :variable_sip_use_codec_ptime         => "30",
+            :variable_read_codec                  => "PCMU",
+            :variable_read_rate                   => "8000",
+            :variable_write_codec                 => "PCMU",
+            :variable_write_rate                  => "8000",
+            :variable_endpoint_disposition        => "RECEIVED",
+            :variable_call_uuid                   => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            :variable_open                        => "true",
+            :variable_rfc2822_date                => "Wed, 27 Jun 2012 13:47:25 +0100",
+            :variable_export_vars                 => "RFC2822_DATE",
+            :variable_current_application         => "park"
+          }
+        end
 
-      #     it 'should be able to look up the call by channel ID' do
-      #       subject.handle_ami_event ami_event
-      #       call_actor = subject.call_for_channel('SIP/1234-00000000')
-      #       call_actor.wrapped_object.should be_a Asterisk::Call
-      #       call_actor.agi_env.should be_a Hash
-      #       call_actor.agi_env.should be == {
-      #         :agi_request      => 'async',
-      #         :agi_channel      => 'SIP/1234-00000000',
-      #         :agi_language     => 'en',
-      #         :agi_type         => 'SIP',
-      #         :agi_uniqueid     => '1320835995.0',
-      #         :agi_version      => '1.8.4.1',
-      #         :agi_callerid     => '5678',
-      #         :agi_calleridname => 'Jane Smith',
-      #         :agi_callingpres  => '0',
-      #         :agi_callingani2  => '0',
-      #         :agi_callington   => '0',
-      #         :agi_callingtns   => '0',
-      #         :agi_dnid         => '1000',
-      #         :agi_rdnis        => 'unknown',
-      #         :agi_context      => 'default',
-      #         :agi_extension    => '1000',
-      #         :agi_priority     => '1',
-      #         :agi_enhanced     => '0.0',
-      #         :agi_accountcode  => '',
-      #         :agi_threadid     => '4366221312'
-      #       }
-      #     end
+        describe 'with a CHANNEL_PARK event' do
+          it 'should instruct the call to send an offer' do
+            mock_call = stub_everything 'Freeswitch::Call'
+            Freeswitch::Call.expects(:new).once.returns mock_call
+            mock_call.expects(:send_offer!).once
+            subject.handle_es_event es_event
+          end
 
-      #     it 'should instruct the call to send an offer' do
-      #       mock_call = stub_everything 'Asterisk::Call'
-      #       Asterisk::Call.expects(:new).once.returns mock_call
-      #       mock_call.expects(:send_offer!).once
-      #       subject.handle_ami_event ami_event
-      #     end
+          context 'if a call already exists for a matching platform ID' do
+            let(:call) { Freeswitch::Call.new unique_id, subject }
 
-      #     context 'if a call already exists for a matching channel' do
-      #       let(:call) { Asterisk::Call.new "SIP/1234-00000000", subject }
+            before do
+              subject.register_call call
+            end
 
-      #       before do
-      #         subject.register_call call
-      #       end
+            it "should not create a new call" do
+              Freeswitch::Call.expects(:new).never
+              subject.handle_es_event es_event
+            end
+          end
+        end
 
-      #       it "should not create a new call" do
-      #         Asterisk::Call.expects(:new).never
-      #         subject.handle_ami_event ami_event
-      #       end
-      #     end
+        describe 'with an ES event for a known ID' do
+          let :call do
+            Freeswitch::Call.new unique_id, subject
+          end
 
-      #     context "for a 'h' extension" do
-      #       let :ami_event do
-      #         RubyAMI::Event.new('AsyncAGI').tap do |e|
-      #           e['SubEvent'] = "Start"
-      #           e['Channel']  = "SIP/1234-00000000"
-      #           e['Env']      = "agi_extension%3A%20h%0A%0A"
-      #         end
-      #       end
+          before do
+            subject.register_call call
+          end
 
-      #       it "should not create a new call" do
-      #         Asterisk::Call.expects(:new).never
-      #         subject.handle_ami_event ami_event
-      #       end
-
-      #       it 'should not be able to look up the call by channel ID' do
-      #         subject.handle_ami_event ami_event
-      #         subject.call_for_channel('SIP/1234-00000000').should be nil
-      #       end
-      #     end
-
-      #     context "for a 'Kill' type" do
-      #       let :ami_event do
-      #         RubyAMI::Event.new('AsyncAGI').tap do |e|
-      #           e['SubEvent'] = "Start"
-      #           e['Channel']  = "SIP/1234-00000000"
-      #           e['Env']      = "agi_type%3A%20Kill%0A%0A"
-      #         end
-      #       end
-
-      #       it "should not create a new call" do
-      #         Asterisk::Call.expects(:new).never
-      #         subject.handle_ami_event ami_event
-      #       end
-
-      #       it 'should not be able to look up the call by channel ID' do
-      #         subject.handle_ami_event ami_event
-      #         subject.call_for_channel('SIP/1234-00000000').should be nil
-      #       end
-      #     end
-      #   end
-
-      #   describe 'with a VarSet event including a punchblock_call_id' do
-      #     let :ami_event do
-      #       RubyAMI::Event.new('VarSet').tap do |e|
-      #         e["Privilege"]  = "dialplan,all"
-      #         e["Channel"]    = "SIP/1234-00000000"
-      #         e["Variable"]   = "punchblock_call_id"
-      #         e["Value"]      = call_id
-      #         e["Uniqueid"]   = "1326210224.0"
-      #       end
-      #     end
-
-      #     before do
-      #       ami_client.stub_everything
-      #       subject.wrapped_object.stubs :handle_pb_event
-      #     end
-
-      #     context "matching a call that was created by a Dial command" do
-      #       let(:dial_command) { Punchblock::Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
-
-      #       before do
-      #         dial_command.request!
-      #         subject.execute_global_command dial_command
-      #         call
-      #       end
-
-      #       let(:call)    { subject.call_for_channel 'SIP/1234' }
-      #       let(:call_id) { call.id }
-
-      #       it "should set the correct channel on the call" do
-      #         subject.handle_ami_event ami_event
-      #         call.channel.should be == 'SIP/1234-00000000'
-      #       end
-
-      #       it "should make it possible to look up the call by the full channel name" do
-      #         subject.handle_ami_event ami_event
-      #         subject.call_for_channel("SIP/1234-00000000").should be call
-      #       end
-
-      #       it "should make looking up the channel by the requested channel name impossible" do
-      #         subject.handle_ami_event ami_event
-      #         subject.call_for_channel('SIP/1234').should be_nil
-      #       end
-      #     end
-
-      #     context "for a call that doesn't exist" do
-      #       let(:call_id) { 'foobarbaz' }
-
-      #       it "should not raise" do
-      #         lambda { subject.handle_ami_event ami_event }.should_not raise_error
-      #       end
-      #     end
-      #   end
-
-      #   describe 'with an AMI event for a known channel' do
-      #     let :ami_event do
-      #       RubyAMI::Event.new('Hangup').tap do |e|
-      #         e['Uniqueid']     = "1320842458.8"
-      #         e['Calleridnum']  = "5678"
-      #         e['Calleridname'] = "Jane Smith"
-      #         e['Cause']        = "0"
-      #         e['Cause-txt']    = "Unknown"
-      #         e['Channel']      = "SIP/1234-00000000"
-      #       end
-      #     end
-
-      #     let(:call) do
-      #       Asterisk::Call.new "SIP/1234-00000000", subject, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-      #     end
-
-      #     before do
-      #       subject.register_call call
-      #     end
-
-      #     it 'sends the AMI event to the call and to the connection as a PB event' do
-      #       call.expects(:process_ami_event!).once.with ami_event
-      #       subject.handle_ami_event ami_event
-      #     end
-
-      #     context 'with a Channel1 and Channel2 specified on the event' do
-      #       let :ami_event do
-      #         RubyAMI::Event.new('BridgeAction').tap do |e|
-      #           e['Privilege'] = "call,all"
-      #           e['Response'] = "Success"
-      #           e['Channel1']  = "SIP/1234-00000000"
-      #           e['Channel2']  = "SIP/5678-00000000"
-      #         end
-      #       end
-
-      #       context 'with calls for those channels' do
-      #         let(:call2) do
-      #           Asterisk::Call.new "SIP/5678-00000000", subject, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-      #         end
-
-      #         before { subject.register_call call2 }
-
-      #         it 'should send the event to both calls and to the connection once as a PB event' do
-      #           call.expects(:process_ami_event!).once.with ami_event
-      #           call2.expects(:process_ami_event!).once.with ami_event
-      #           subject.handle_ami_event ami_event
-      #         end
-      #       end
-      #     end
-      #   end
-      # end
+          it 'sends the ES event to the call' do
+            call.expects(:handle_es_event!).once.with es_event
+            subject.handle_es_event es_event
+          end
+        end
+      end
     end
   end
 end

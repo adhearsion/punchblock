@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'spec_helper'
+require 'ostruct'
 
 module Punchblock
   module Translator
@@ -592,8 +593,30 @@ module Punchblock
       end
 
       describe '#run_at_fully_booted' do
+        let(:passed_show) do
+          OpenStruct.new({:text_body => "[ Context 'adhearsion-redirect' created by 'pbx_config' ]\n '1' => 1. AGI(agi:async)[pbx_config]\n\n-= 1 extension (1 priority) in 1 context. =-"})
+        end
+
+        let(:failed_show) do
+          OpenStruct.new({:text_body => "There is no existence of 'adhearsion-redirect' context\nCommand 'dialplan show adhearsion-redirect' failed."})
+        end
+
         it 'should send the redirect extension Command to the AMI client' do
           ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
+          subject.run_at_fully_booted
+        end
+
+        it 'should check the context for existence and do nothing if it is there' do
+          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").yields(passed_show)
+          subject.run_at_fully_booted
+        end
+
+        it 'should check the context for existence and log an error if it is not there' do
+          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").yields(failed_show)
+          Punchblock.logger.expects(:error).once.with("Punchblock failed to add the #{Asterisk::REDIRECT_EXTENSION} extension to the #{Asterisk::REDIRECT_CONTEXT} context. Please add a [#{Asterisk::REDIRECT_CONTEXT}] entry to your dialplan.")
           subject.run_at_fully_booted
         end
       end

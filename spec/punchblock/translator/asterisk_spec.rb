@@ -597,6 +597,14 @@ module Punchblock
           subject.run_at_fully_booted
         end
       end
+      
+      describe '#check_recording_directory' do
+        it 'logs an error if the recording directory does not exist' do
+          Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH = '/this/is/not/a/valid/path'
+          Punchblock.logger.expects(:error).once.with("Recordings directory /this/is/not/a/valid/path does not exist. Recording will not work.")
+          subject.check_recording_directory
+        end
+      end
     end
   end
 end

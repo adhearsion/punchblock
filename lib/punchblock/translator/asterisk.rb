@@ -147,6 +147,11 @@ module Punchblock
         pb_logger.trace "Added extension extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
       end
 
+      def check_recording_directory
+        p Component::Record::RECORDING_BASE_PATH
+        pb_logger.error "Recordings directory #{Component::Record::RECORDING_BASE_PATH} does not exist. Recording will not work." unless File.exists?(Component::Record::RECORDING_BASE_PATH)
+      end
+
       def actor_died(actor, reason)
         return unless reason
         pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"

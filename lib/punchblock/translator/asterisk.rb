@@ -148,7 +148,6 @@ module Punchblock
       end
 
       def check_recording_directory
-        p Component::Record::RECORDING_BASE_PATH
         pb_logger.error "Recordings directory #{Component::Record::RECORDING_BASE_PATH} does not exist. Recording will not work." unless File.exists?(Component::Record::RECORDING_BASE_PATH)
       end
 

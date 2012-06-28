@@ -599,9 +599,19 @@ module Punchblock
       end
       
       describe '#check_recording_directory' do
+        let(:broken_path) { "/this/is/not/a/valid/path" }
+        before do
+          @new_constant = broken_path
+          @old_constant = Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH  
+          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH') 
+          Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @new_constant)
+        end
+        after do
+          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH')
+          Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @old_constant)
+        end
         it 'logs an error if the recording directory does not exist' do
-          Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH = '/this/is/not/a/valid/path'
-          Punchblock.logger.expects(:error).once.with("Recordings directory /this/is/not/a/valid/path does not exist. Recording will not work.")
+          Punchblock.logger.expects(:error).once.with("Recordings directory #{broken_path} does not exist. Recording will not work.")
           subject.check_recording_directory
         end
       end

@@ -1,24 +1,23 @@
 # encoding: utf-8
 
-require 'librevox'
+require 'ruby_fs'
 
 module Punchblock
   module Connection
     class Freeswitch < GenericConnection
-      attr_reader :translator
+      attr_reader :translator, :stream
       attr_accessor :event_handler
 
       def initialize(options = {})
         @translator = Translator::Freeswitch.new self
+        @stream = new_fs_stream *options.values_at(:host, :port, :password)
         super()
       end
 
       def run
-        pb_logger.debug "Starting the librevox listener"
-        EM.run do
-          Librevox.run InboundListener, :event_handler => lambda { |e| translator.handle_es_event! e }
-        end
-        raise DisconnectedError
+        pb_logger.debug "Starting the RubyFS stream"
+        @stream.run!
+        # raise DisconnectedError
       end
 
       def stop
@@ -30,18 +29,13 @@ module Punchblock
       end
 
       def handle_event(event)
-        event_handler.call event
+        event_handler.call event if event_handler.respond_to?(:call)
       end
 
-      class InboundListener < Librevox::Listener::Inbound
-        def initialize(args)
-          super
-          @event_handler = args[:event_handler]
-        end
+      private
 
-        def on_event(e)
-          @event_handler[e]
-        end
+      def new_fs_stream(*args)
+        RubyFS::Stream.new *args, lambda { |e| translator.handle_es_event! e }
       end
     end
   end

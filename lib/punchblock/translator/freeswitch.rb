@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 require 'celluloid'
-require 'librevox'
+require 'ruby_fs'
 
 module Punchblock
   module Translator
@@ -50,16 +50,21 @@ module Punchblock
       end
 
       def setup_handlers
-        register_handler :es, :event => 'CHANNEL_PARK' do |event|
+        register_handler :es, RubyFS::Stream::Connected do
+          handle_pb_event Connection::Connected.new
+          throw :halt
+        end
+
+        register_handler :es, :event_name => 'CHANNEL_PARK' do |event|
           throw :pass if es_event_known_call? event
           pb_logger.info "A channel was parked. Creating a new call."
-          call = Call.new event.content[:unique_id], current_actor, Call.es_env_variables(event.content)
+          call = Call.new event[:unique_id], current_actor, Call.es_env_variables(event.content)
           register_call call
           call.send_offer!
         end
 
         register_handler :es, lambda { |event| es_event_known_call? event } do |event|
-          call = call_for_platform_id event.content[:unique_id]
+          call = call_for_platform_id event[:unique_id]
           call.handle_es_event! event
         end
       end
@@ -139,7 +144,7 @@ module Punchblock
       private
 
       def es_event_known_call?(event)
-        event.content[:unique_id] && call_for_platform_id(event.content[:unique_id])
+        event[:unique_id] && call_for_platform_id(event[:unique_id])
       end
     end
   end

@@ -54,8 +54,7 @@ module Punchblock
 
         class << self
           def es_env_variables(content)
-            variables = content.select { |k,v| k.to_s =~ /variable/ }
-            variables.each { |k,v| variables[k] = URI::Parser.new.unescape(v) }
+            content.select { |k,v| k.to_s =~ /variable/ }
           end
         end
 
@@ -92,14 +91,14 @@ module Punchblock
         alias :inspect :to_s
 
         def setup_handlers
-          register_handler :es, :event => 'CHANNEL_HANGUP' do |event|
+          register_handler :es, :event_name => 'CHANNEL_HANGUP' do |event|
             pb_logger.info "The channel hung up: #{event.inspect}"
             # @components.dup.each_pair do |id, component|
             #   safe_from_dead_actors do
             #     component.call_ended if component.alive?
             #   end
             # end
-            send_end_event HANGUP_CAUSE_TO_END_REASON[event.content[:hangup_cause]]
+            send_end_event HANGUP_CAUSE_TO_END_REASON[event[:hangup_cause]]
           end
         end
 

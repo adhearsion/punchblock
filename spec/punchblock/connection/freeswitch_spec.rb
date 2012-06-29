@@ -9,7 +9,6 @@ module Punchblock
         {
           :host     => '127.0.0.1',
           :port     => 8021,
-          :username => 'test',
           :password => 'test'
         }
       end
@@ -17,6 +16,8 @@ module Punchblock
       let(:mock_event_handler) { stub_everything 'Event Handler' }
 
       let(:connection) { described_class.new options }
+
+      let(:mock_stream) { mock 'RubyFS::Stream' }
 
       subject { connection }
 
@@ -29,17 +30,17 @@ module Punchblock
       end
 
       describe '#run' do
-        it 'starts the Librevox listener' do
-          pending
-          Librevox.expects(:start).once.with(Freeswitch::InboundListener, :event_handler => lambda {})
-          lambda { subject.run }.should raise_error DisconnectedError
+        it 'starts a RubyFS stream' do
+          # subject.expects(:new_fs_stream).once.with('127.0.0.1', 8021, 'test').returns mock_stream
+          subject.stream.expects(:run!).once
+          subject.run
         end
       end
 
       describe '#stop' do
-        it 'stops the RubyAMI::Client' do
+        it 'stops the RubyFS::Stream' do
           pending
-          subject.ami_client.expects(:stop).once
+          subject.stream.expects(:stop).once
           subject.stop
         end
 
@@ -49,11 +50,10 @@ module Punchblock
         end
       end
 
-      it 'sends events from Librevox listener to the translator' do
-        pending
-        event = mock 'Librevox::Response'
+      it 'sends events from RubyFS to the translator' do
+        event = mock 'RubyFS::Event'
         subject.translator.expects(:handle_es_event!).once.with event
-        subject.ami_client.handle_event event
+        subject.stream.fire_event event
       end
 
       describe '#write' do

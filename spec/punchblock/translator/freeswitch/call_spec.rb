@@ -276,16 +276,16 @@ module Punchblock
         describe '#handle_es_event' do
           context 'with a CHANNEL_HANGUP event' do
             let :es_event do
-              Librevox::Response.new '', :event_name => "CHANNEL_HANGUP",
-                :hangup_cause                         => cause,
-                :channel_state                        => "CS_HANGUP",
-                :channel_call_state                   => "HANGUP",
-                :channel_state_number                 => "10",
-                :unique_id                            => "756bdd8e-c064-11e1-b0ac-fffeda3ce54f",
-                :answer_state                         => "hangup",
-                :variable_sip_term_status             => "487",
-                :variable_proto_specific_hangup_cause => "sip%3A487",
-                :variable_sip_term_cause              => "487"
+              RubyFS::Event.new nil, :event_name     => "CHANNEL_HANGUP",
+                :hangup_cause                           => cause,
+                :channel_state                          => "CS_HANGUP",
+                :channel_call_state                     => "HANGUP",
+                :channel_state_number                   => "10",
+                :unique_id                              => "756bdd8e-c064-11e1-b0ac-fffeda3ce54f",
+                :answer_state                           => "hangup",
+                :variable_sip_term_status               => "487",
+                :variable_proto_specific_hangup_cause   => "sip%3A487",
+                :variable_sip_term_cause                => "487"
             end
 
             let(:cause) { 'ORIGINATOR_CANCEL' }
@@ -524,14 +524,14 @@ module Punchblock
 
           context 'with a handler registered for a matching event' do
             let :es_event do
-              Librevox::Response.new '', :event_name => 'DTMF'
+              RubyFS::Event.new nil, :event_name => 'DTMF'
             end
 
             let(:response) { mock 'Response' }
 
             it 'should execute the handler' do
               response.expects(:call).once.with es_event
-              subject.register_handler :es, :event => 'DTMF' do |event|
+              subject.register_handler :es, :event_name => 'DTMF' do |event|
                 response.call event
               end
               subject.handle_es_event es_event

@@ -148,7 +148,7 @@ module Punchblock
       end
 
       def check_recording_directory
-        pb_logger.error "Recordings directory #{Component::Record::RECORDING_BASE_PATH} does not exist. Recording will not work." unless File.exists?(Component::Record::RECORDING_BASE_PATH)
+        pb_logger.warning "Recordings directory #{Component::Record::RECORDING_BASE_PATH} does not exist. Recording might not work." unless File.exists?(Component::Record::RECORDING_BASE_PATH)
       end
 
       def actor_died(actor, reason)

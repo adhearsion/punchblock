@@ -610,8 +610,8 @@ module Punchblock
           Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH')
           Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @old_constant)
         end
-        it 'logs an error if the recording directory does not exist' do
-          Punchblock.logger.expects(:error).once.with("Recordings directory #{broken_path} does not exist. Recording will not work.")
+        it 'logs a warning if the recording directory does not exist' do
+          Punchblock.logger.expects(:warning).once.with("Recordings directory #{broken_path} does not exist. Recording might not work.")
           subject.check_recording_directory
         end
       end

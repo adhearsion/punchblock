@@ -12,9 +12,11 @@ module Punchblock
       extend ActiveSupport::Autoload
 
       autoload :Call
-      # autoload :Component
+      autoload :Component
 
       attr_reader :connection, :calls
+
+      trap_exit :actor_died
 
       def initialize(connection)
         pb_logger.debug "Starting up..."
@@ -63,6 +65,7 @@ module Punchblock
           throw :pass if es_event_known_call? event
           pb_logger.info "A channel was parked. Creating a new call."
           call = Call.new event[:unique_id], current_actor, Call.es_env_variables(event.content), stream
+          link call
           register_call call
           call.send_offer!
         end
@@ -122,7 +125,7 @@ module Punchblock
         if call = call_with_id(command.target_call_id)
           call.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'item-not-found', "Could not find a call with ID #{command.target_call_id}", command.target_call_id
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{command.target_call_id}", command.target_call_id
         end
       end
 
@@ -130,7 +133,7 @@ module Punchblock
         if (component = component_with_id(command.component_id))
           component.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'item-not-found', "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
         end
       end
 
@@ -141,11 +144,23 @@ module Punchblock
       #     register_component component
       #     component.execute!
         when Punchblock::Command::Dial
-          call = Call.new command.to, current_actor, nil, stream
+          call = Call.new_link command.to, current_actor, nil, stream
           register_call call
           call.dial! command
         else
           command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command"
+        end
+      end
+
+      def actor_died(actor, reason)
+        return unless reason
+        pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
+        if id = @calls.key(actor)
+          pb_logger.info "Dead actor was a call we know about, with ID #{id}. Removing it from the registry..."
+          @calls.delete id
+          end_event = Punchblock::Event::End.new :target_call_id  => id,
+                                                 :reason          => :error
+          handle_pb_event end_event
         end
       end
 

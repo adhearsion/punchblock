@@ -149,13 +149,13 @@ module Punchblock
 
         def execute_command(command)
           pb_logger.debug "Executing command: #{command.inspect}"
-        #   if command.component_id
-        #     if component = component_with_id(command.component_id)
-        #       component.execute_command command
-        #     else
-        #       command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
-        #     end
-        #   end
+          if command.component_id
+            if component = component_with_id(command.component_id)
+              component.execute_command command
+            else
+              command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+            end
+          end
           case command
           when Command::Accept
             application 'respond', '180 Ringing' do |response|
@@ -182,8 +182,8 @@ module Punchblock
             end
         #   when Punchblock::Component::Asterisk::AGI::Command
         #     execute_component Component::Asterisk::AGICommand, command
-        #   when Punchblock::Component::Output
-        #     execute_component Component::Output, command
+          when Punchblock::Component::Output
+            execute_component Component::Output, command
         #   when Punchblock::Component::Input
         #     execute_component Component::Input, command
         #   when Punchblock::Component::Record
@@ -201,16 +201,16 @@ module Punchblock
           "#{self.class}: #{id}"
         end
 
-        # def actor_died(actor, reason)
-        #   return unless reason
-        #   pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
-        #   if id = @components.key(actor)
-        #     pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
-        #     @components.delete id
-        #     complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
-        #     send_pb_event complete_event
-        #   end
-        # end
+        def actor_died(actor, reason)
+          return unless reason
+          pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
+          if id = @components.key(actor)
+            pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
+            @components.delete id
+            complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
+            send_pb_event complete_event
+          end
+        end
 
         private
 
@@ -220,13 +220,12 @@ module Punchblock
           after(5) { shutdown }
         end
 
-        # def execute_component(type, command, options = {})
-        #   type.new_link(command, current_actor).tap do |component|
-        #     register_component component
-        #     component.internal = true if options[:internal]
-        #     component.execute!
-        #   end
-        # end
+        def execute_component(type, command)
+          type.new_link(command, current_actor).tap do |component|
+            register_component component
+            component.execute!
+          end
+        end
 
         def send_pb_event(event)
           event.target_call_id = id

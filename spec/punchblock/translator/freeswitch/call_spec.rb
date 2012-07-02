@@ -547,14 +547,6 @@ module Punchblock
         end
 
         describe '#execute_command' do
-        #   let :expected_agi_complete_event do
-        #     Punchblock::Event::Complete.new.tap do |c|
-        #       c.reason = Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code    => 200,
-        #                                                                                       :result  => 'Success',
-        #                                                                                       :data    => 'FOO'
-        #     end
-        #   end
-
           before do
             command.request!
           end
@@ -633,20 +625,20 @@ module Punchblock
         #     end
         #   end
 
-        #   context 'with an Output component' do
-        #     let :command do
-        #       Punchblock::Component::Output.new
-        #     end
+          context 'with an Output component' do
+            let :command do
+              Punchblock::Component::Output.new
+            end
 
-        #     let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
+            let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
-        #     it 'should create an Output component and execute it asynchronously' do
-        #       Component::Output.expects(:new_link).once.with(command, subject).returns mock_action
-        #       mock_action.expects(:internal=).never
-        #       mock_action.expects(:execute!).once
-        #       subject.execute_command command
-        #     end
-        #   end
+            it 'should create an Output component and execute it asynchronously' do
+              Component::Output.expects(:new_link).once.with(command, subject).returns mock_action
+              mock_action.expects(:execute!).once
+              subject.execute_command command
+              subject.component_with_id('foo').should be mock_action
+            end
+          end
 
         #   context 'with an Input component' do
         #     let :command do
@@ -678,75 +670,75 @@ module Punchblock
         #     end
         #   end
 
-        #   context 'with a component command' do
-        #     let(:component_id) { 'foobar' }
+          context 'with a component command' do
+            let(:component_id) { 'foobar' }
 
-        #     let :command do
-        #       Punchblock::Component::Stop.new :component_id => component_id
-        #     end
+            let :command do
+              Punchblock::Component::Stop.new :component_id => component_id
+            end
 
-        #     let :mock_component do
-        #       mock 'Component', :id => component_id
-        #     end
+            let :mock_component do
+              mock 'Component', :id => component_id
+            end
 
-        #     context "for a known component ID" do
-        #       before { subject.register_component mock_component }
+            context "for a known component ID" do
+              before { subject.register_component mock_component }
 
-        #       it 'should send the command to the component for execution' do
-        #         mock_component.expects(:execute_command).once
-        #         subject.execute_command command
-        #       end
-        #     end
+              it 'should send the command to the component for execution' do
+                mock_component.expects(:execute_command).once
+                subject.execute_command command
+              end
+            end
 
-        #     context "for a component which began executing but crashed" do
-        #       let :component_command do
-        #         Punchblock::Component::Asterisk::AGI::Command.new :name => 'Wait'
-        #       end
+            context "for a component which began executing but crashed" do
+              let :component_command do
+                Punchblock::Component::Output.new :ssml => RubySpeech::SSML.draw
+              end
 
-        #       let(:comp_id) { component_command.response.id }
+              let(:comp_id) { component_command.response.id }
 
-        #       let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
+              let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 
-        #       let :expected_event do
-        #         Punchblock::Event::Complete.new.tap do |e|
-        #           e.target_call_id = subject.id
-        #           e.component_id = comp_id
-        #           e.reason = Punchblock::Event::Complete::Error.new
-        #         end
-        #       end
+              let :expected_event do
+                Punchblock::Event::Complete.new.tap do |e|
+                  e.target_call_id = subject.id
+                  e.component_id = comp_id
+                  e.reason = Punchblock::Event::Complete::Error.new
+                end
+              end
 
-        #       before do
-        #         component_command.request!
-        #         subject.execute_command component_command
-        #       end
+              before do
+                component_command.request!
+                subject.execute_command component_command
+              end
 
-        #       it 'sends an error in response to the command' do
-        #         component = subject.component_with_id comp_id
+              it 'sends an error in response to the command' do
+                component = subject.component_with_id comp_id
 
-        #         component.wrapped_object.define_singleton_method(:oops) do
-        #           raise 'Woops, I died'
-        #         end
+                component.wrapped_object.define_singleton_method(:oops) do
+                  raise 'Woops, I died'
+                end
 
-        #         translator.expects(:handle_pb_event).once.with expected_event
+                translator.expects(:handle_pb_event).once.with expected_event
 
-        #         lambda { component.oops }.should raise_error(/Woops, I died/)
-        #         sleep 0.1
-        #         component.should_not be_alive
-        #         subject.component_with_id(comp_id).should be_nil
+                lambda { component.oops }.should raise_error(/Woops, I died/)
+                sleep 0.1
+                component.should_not be_alive
+                subject.component_with_id(comp_id).should be_nil
 
-        #         subsequent_command.request!
-        #         subject.execute_command subsequent_command
-        #         subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
-        #       end
-        #     end
+                subsequent_command.request!
+                subject.execute_command subsequent_command
+                subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+              end
+            end
 
-        #     context "for an unknown component ID" do
-        #       it 'sends an error in response to the command' do
-        #         subject.execute_command command
-        #         command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
-        #       end
-        #     end
-        #   end
+            context "for an unknown component ID" do
+              it 'sends an error in response to the command' do
+                subject.execute_command command
+                command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+              end
+            end
+          end
 
           context 'with a command we do not understand' do
             let :command do

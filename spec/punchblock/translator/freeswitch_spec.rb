@@ -122,16 +122,14 @@ module Punchblock
 
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
-        let(:call)    { described_class::Call.new 'foo', subject }
         let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
 
-        before do
-          command.request!
-          call.stubs(:id).returns call_id
-        end
-
         context "with a known call ID" do
+          let(:call) { described_class::Call.new 'SIP/foo', subject }
+
           before do
+            command.request!
+            call.stubs(:id).returns call_id
             subject.register_call call
           end
 
@@ -141,10 +139,80 @@ module Punchblock
           end
         end
 
+        let :end_error_event do
+          Punchblock::Event::End.new.tap do |e|
+            e.target_call_id = call_id
+            e.reason = :error
+          end
+        end
+
+        context "for an outgoing call which began executing but crashed" do
+          let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
+
+          let(:call_id) { dial_command.response.id }
+
+          before do
+            subject.execute_command dial_command
+            stream.stub_everything
+          end
+
+          it 'sends an error in response to the command' do
+            call = subject.call_with_id call_id
+
+            call.wrapped_object.define_singleton_method(:oops) do
+              raise 'Woops, I died'
+            end
+
+            connection.expects(:handle_event).once.with end_error_event
+
+            lambda { call.oops }.should raise_error(/Woops, I died/)
+            sleep 0.1
+            call.should_not be_alive
+            subject.call_with_id(call_id).should be_nil
+
+            command.request!
+            subject.execute_call_command command
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+          end
+        end
+
+        context "for an incoming call which began executing but crashed" do
+          let :es_event do
+            RubyFS::Event.new nil, :event_name => 'CHANNEL_PARK', :unique_id => 'abc123'
+          end
+
+          let(:call)    { subject.call_for_platform_id('abc123') }
+          let(:call_id) { call.id }
+
+          before do
+            connection.expects(:handle_event).at_least(1)
+            subject.handle_es_event es_event
+            call_id
+          end
+
+          it 'sends an error in response to the command' do
+            call.wrapped_object.define_singleton_method(:oops) do
+              raise 'Woops, I died'
+            end
+
+            connection.expects(:handle_event).once.with end_error_event
+
+            lambda { call.oops }.should raise_error(/Woops, I died/)
+            sleep 0.1
+            call.should_not be_alive
+            subject.call_with_id(call_id).should be_nil
+
+            command.request!
+            subject.execute_call_command command
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+          end
+        end
+
         context "with an unknown call ID" do
           it 'sends an error in response to the command' do
+            command.request!
             subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id, nil)
           end
         end
       end
@@ -173,7 +241,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should be == ProtocolError.new.setup('item-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id}", nil, component_id)
           end
         end
       end
@@ -199,7 +267,7 @@ module Punchblock
 
           it 'should instruct the call to send a dial' do
             mock_call = stub_everything 'Freeswitch::Call'
-            Freeswitch::Call.expects(:new).once.returns mock_call
+            Freeswitch::Call.expects(:new_link).once.returns mock_call
             mock_call.expects(:dial!).once.with command
             subject.execute_global_command command
           end
@@ -505,6 +573,7 @@ module Punchblock
           it 'should instruct the call to send an offer' do
             mock_call = stub_everything 'Freeswitch::Call'
             Freeswitch::Call.expects(:new).once.returns mock_call
+            subject.wrapped_object.expects(:link)
             mock_call.expects(:send_offer!).once
             subject.handle_es_event es_event
           end

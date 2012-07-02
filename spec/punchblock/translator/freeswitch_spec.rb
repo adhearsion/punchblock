@@ -7,14 +7,15 @@ module Punchblock
     describe Freeswitch do
       let(:connection) { mock 'Connection::Freeswitch' }
 
-      let(:translator) { described_class.new connection }
+      let(:translator)  { described_class.new connection }
+      let(:stream)      { mock 'RubyFS::Stream' }
 
-      before { connection.expects(:stream).times(0..1).returns :foo }
+      before { connection.expects(:stream).times(0..1).returns stream }
 
       subject { translator }
 
       its(:connection)  { should be connection }
-      its(:stream)      { should be :foo }
+      its(:stream)      { should be stream }
 
       describe '#shutdown' do
         it "instructs all calls to shutdown" do
@@ -190,8 +191,10 @@ module Punchblock
 
           it 'should be able to look up the call by channel ID' do
             subject.execute_global_command command
-            call_actor = subject.call_for_platform_id('1234')
-            call_actor.should be_a Freeswitch::Call
+            call = subject.call_for_platform_id '1234'
+            call.should be_a Freeswitch::Call
+            call.translator.should be subject
+            call.stream.should be stream
           end
 
           it 'should instruct the call to send a dial' do
@@ -401,9 +404,11 @@ module Punchblock
 
         it 'should be able to look up the call by platform ID' do
           subject.handle_es_event es_event
-          call_actor = subject.call_for_platform_id unique_id
-          call_actor.should be_a Freeswitch::Call
-          call_actor.es_env.should be ==  {
+          call = subject.call_for_platform_id unique_id
+          call.should be_a Freeswitch::Call
+          call.translator.should be subject
+          call.stream.should be stream
+          call.es_env.should be ==  {
             :variable_direction                   => "inbound",
             :variable_uuid                        => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
             :variable_session_id                  => "1",

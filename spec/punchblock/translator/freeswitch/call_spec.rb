@@ -8,6 +8,7 @@ module Punchblock
       describe Call do
         let(:platform_id) { 'foo' }
         let(:translator)  { stub_everything 'Translator::Freeswitch' }
+        let(:stream)      { stub_everything 'RubyFS::Stream' }
         let(:es_env) do
           {
             :variable_direction                   => "inbound",
@@ -162,12 +163,13 @@ module Punchblock
           }
         end
 
-        subject { Call.new platform_id, translator, es_env }
+        subject { Call.new platform_id, translator, es_env, stream }
 
         its(:id)          { should be_a String }
         its(:platform_id) { should be == platform_id }
         its(:translator)  { should be translator }
         its(:es_env)      { should be == es_env }
+        its(:stream)      { should be stream }
 
         describe '#shutdown' do
           it 'should terminate the actor' do
@@ -201,6 +203,20 @@ module Punchblock
             subject.direction.should be == :inbound
             subject.inbound?.should be true
             subject.outbound?.should be false
+          end
+        end
+
+        describe "#application" do
+          it "should execute a FS application on the current call" do
+            stream.expects(:application).once.with(platform_id, 'appname', 'options')
+            subject.application 'appname', 'options'
+          end
+        end
+
+        describe "#sendmsg" do
+          it "should execute a FS sendmsg on the current call" do
+            stream.expects(:sendmsg).once.with(platform_id, 'msg', :foo => 'bar')
+            subject.sendmsg 'msg', :foo => 'bar'
           end
         end
 

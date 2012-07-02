@@ -58,7 +58,7 @@ module Punchblock
         register_handler :es, :event_name => 'CHANNEL_PARK' do |event|
           throw :pass if es_event_known_call? event
           pb_logger.info "A channel was parked. Creating a new call."
-          call = Call.new event[:unique_id], current_actor, Call.es_env_variables(event.content)
+          call = Call.new event[:unique_id], current_actor, Call.es_env_variables(event.content), stream
           register_call call
           call.send_offer!
         end
@@ -137,7 +137,7 @@ module Punchblock
       #     register_component component
       #     component.execute!
         when Punchblock::Command::Dial
-          call = Call.new command.to, current_actor
+          call = Call.new command.to, current_actor, nil, stream
           register_call call
           call.dial! command
         else

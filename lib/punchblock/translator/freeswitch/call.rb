@@ -48,7 +48,7 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON['FACILITY_NOT_IMPLEMENTED']        = :reject
         HANGUP_CAUSE_TO_END_REASON['SERVICE_NOT_IMPLEMENTED']         = :reject
 
-        attr_reader :id, :platform_id, :translator, :es_env, :direction#, :pending_joins
+        attr_reader :id, :platform_id, :translator, :es_env, :direction, :stream#, :pending_joins
 
         trap_exit :actor_died
 
@@ -58,8 +58,8 @@ module Punchblock
           end
         end
 
-        def initialize(platform_id, translator, es_env = nil)
-          @platform_id, @translator = platform_id, translator
+        def initialize(platform_id, translator, es_env = nil, stream = nil)
+          @platform_id, @translator, @stream = platform_id, translator, stream
           @es_env = es_env || {}
           @id, @components = UUIDTools::UUID.random_create.to_s, {}
         #   @answered = false
@@ -104,6 +104,14 @@ module Punchblock
 
         def handle_es_event(event)
           trigger_handler :es, event
+        end
+
+        def application(*args, &block)
+          stream.application platform_id, *args, &block
+        end
+
+        def sendmsg(*args, &block)
+          stream.sendmsg platform_id, *args, &block
         end
 
         def dial(dial_command)

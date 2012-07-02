@@ -9,9 +9,12 @@ module Punchblock
 
       let(:translator) { described_class.new connection }
 
+      before { connection.expects(:stream).times(0..1).returns :foo }
+
       subject { translator }
 
-      its(:connection) { should be connection }
+      its(:connection)  { should be connection }
+      its(:stream)      { should be :foo }
 
       describe '#shutdown' do
         it "instructs all calls to shutdown" do

@@ -69,6 +69,10 @@ module Punchblock
         end
       end
 
+      def stream
+        connection.stream
+      end
+
       def shutdown
         pb_logger.debug "Shutting down"
         @calls.values.each(&:shutdown)

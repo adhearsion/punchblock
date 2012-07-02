@@ -278,15 +278,6 @@ module Punchblock
             subject.outbound?.should be true
             subject.inbound?.should be false
           end
-
-          # it 'causes accepting the call to be a null operation' do
-          #   subject.dial dial_command
-          #   accept_command = Command::Accept.new
-          #   accept_command.request!
-          #   subject.wrapped_object.expects(:send_agi_action).never
-          #   subject.execute_command accept_command
-          #   accept_command.response(0.5).should be true
-          # end
         end
 
         describe '#handle_es_event' do

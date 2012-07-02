@@ -154,16 +154,6 @@ module Punchblock
         #     end
         #   end
           case command
-        #   when Command::Accept
-        #     if outbound?
-        #       pb_logger.trace "Attempting to accept an outbound call. Skipping RINGING."
-        #       command.response = true
-        #     else
-        #       pb_logger.trace "Attempting to accept an inbound call. Executing RINGING."
-        #       send_agi_action 'EXEC RINGING' do |response|
-        #         command.response = true
-        #       end
-        #     end
           when Command::Accept
             application 'respond', '180 Ringing' do |response|
               command.response = true

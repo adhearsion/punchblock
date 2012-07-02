@@ -41,7 +41,7 @@ module Punchblock
               c.should be command
               c.target_call_id.should be == call_id
             end
-            subject.execute_command command, :call_id  =>  call_id
+            subject.execute_command command, :call_id => call_id
           end
         end
 
@@ -54,7 +54,7 @@ module Punchblock
               c.should be command
               c.component_id.should be == component_id
             end
-            subject.execute_command command, :component_id  =>  component_id
+            subject.execute_command command, :component_id => component_id
           end
         end
 

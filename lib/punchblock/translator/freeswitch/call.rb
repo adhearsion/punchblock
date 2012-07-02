@@ -153,7 +153,7 @@ module Punchblock
         #       command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         #     end
         #   end
-          # case command
+          case command
         #   when Command::Accept
         #     if outbound?
         #       pb_logger.trace "Attempting to accept an outbound call. Skipping RINGING."
@@ -164,14 +164,18 @@ module Punchblock
         #         command.response = true
         #       end
         #     end
-        #   when Command::Answer
-        #     send_agi_action 'ANSWER' do |response|
-        #       command.response = true
-        #     end
-        #   when Command::Hangup
-        #     send_ami_action 'Hangup', 'Channel' => channel do |response|
-        #       command.response = true
-        #     end
+          when Command::Accept
+            application 'respond', '180 Ringing' do |response|
+              command.response = true
+            end
+          when Command::Answer
+            application 'answer' do |response|
+              command.response = true
+            end
+          when Command::Hangup
+            sendmsg :call_command => 'hangup', :hangup_cause => 'NORMAL_CLEARING' do |response|
+              command.response = true
+            end
         #   when Command::Join
         #     other_call = translator.call_with_id command.call_id
         #     pending_joins[other_call.channel] = command
@@ -201,9 +205,9 @@ module Punchblock
         #     execute_component Component::Input, command
         #   when Punchblock::Component::Record
         #     execute_component Component::Record, command
-          # else
+          else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
-          # end
+          end
         end
 
         def logger_id

@@ -568,18 +568,35 @@ module Punchblock
             command.request!
           end
 
-        #   context 'with an accept command' do
-        #     let(:command) { Command::Accept.new }
+          context 'with an accept command' do
+            let(:command) { Command::Accept.new }
 
-        #     it "should send an EXEC RINGING AGI command and set the command's response" do
-        #       component = subject.execute_command command
-        #       component.internal.should be_true
-        #       agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-        #       agi_command.name.should be == "EXEC RINGING"
-        #       agi_command.add_event expected_agi_complete_event
-        #       command.response(0.5).should be true
-        #     end
-        #   end
+            it "should send a respond 180 command and set the command's response" do
+              subject.wrapped_object.expects(:application).once.with('respond', '180 Ringing').yields(true)
+              subject.execute_command command
+              command.response(0.5).should be true
+            end
+          end
+
+          context 'with an answer command' do
+            let(:command) { Command::Answer.new }
+
+            it "should execute the answer application and set the command's response" do
+              subject.wrapped_object.expects(:application).once.with('answer').yields(true)
+              subject.execute_command command
+              command.response(0.5).should be true
+            end
+          end
+
+          context 'with a hangup command' do
+            let(:command) { Command::Hangup.new }
+
+            it "should send a hangup message and set the command's response" do
+              subject.wrapped_object.expects(:sendmsg).once.with(:call_command => 'hangup', :hangup_cause => 'NORMAL_CLEARING').yields(true)
+              subject.execute_command command
+              command.response(0.5).should be true
+            end
+          end
 
         #   context 'with a reject command' do
         #     let(:command) { Command::Reject.new }
@@ -611,31 +628,6 @@ module Punchblock
         #       agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
         #       agi_command.name.should be == "EXEC Congestion"
         #       agi_command.add_event expected_agi_complete_event
-        #       command.response(0.5).should be true
-        #     end
-        #   end
-
-        #   context 'with an answer command' do
-        #     let(:command) { Command::Answer.new }
-
-        #     it "should send an ANSWER AGI command and set the command's response" do
-        #       component = subject.execute_command command
-        #       component.internal.should be_true
-        #       agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-        #       agi_command.name.should be == "ANSWER"
-        #       agi_command.add_event expected_agi_complete_event
-        #       command.response(0.5).should be true
-        #     end
-        #   end
-
-        #   context 'with a hangup command' do
-        #     let(:command) { Command::Hangup.new }
-
-        #     it "should send a Hangup AMI command and set the command's response" do
-        #       subject.execute_command command
-        #       ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-        #       ami_action.name.should be == "hangup"
-        #       ami_action << RubyAMI::Response.new
         #       command.response(0.5).should be true
         #     end
         #   end

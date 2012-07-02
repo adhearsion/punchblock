@@ -16,11 +16,12 @@ module Punchblock
 
       def run
         pb_logger.debug "Starting the RubyFS stream"
-        @stream.run!
-        # raise DisconnectedError
+        @stream.run
+        raise DisconnectedError
       end
 
       def stop
+        stream.shutdown
         translator.shutdown!
       end
 

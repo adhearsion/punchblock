@@ -32,15 +32,14 @@ module Punchblock
       describe '#run' do
         it 'starts a RubyFS stream' do
           # subject.expects(:new_fs_stream).once.with('127.0.0.1', 8021, 'test').returns mock_stream
-          subject.stream.expects(:run!).once
-          subject.run
+          subject.stream.expects(:run).once
+          lambda { subject.run }.should raise_error(DisconnectedError)
         end
       end
 
       describe '#stop' do
         it 'stops the RubyFS::Stream' do
-          pending
-          subject.stream.expects(:stop).once
+          subject.stream.expects(:shutdown).once
           subject.stop
         end
 

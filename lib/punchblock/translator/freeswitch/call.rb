@@ -11,7 +11,7 @@ module Punchblock
         include Celluloid
         include DeadActorSafety
 
-        HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
+        HANGUP_CAUSE_TO_END_REASON = Hash.new :error
 
         HANGUP_CAUSE_TO_END_REASON['USER_BUSY']           = :busy
         HANGUP_CAUSE_TO_END_REASON['NORMAL_CLEARING']     = :hangup
@@ -47,6 +47,9 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON['CHAN_NOT_IMPLEMENTED']            = :reject
         HANGUP_CAUSE_TO_END_REASON['FACILITY_NOT_IMPLEMENTED']        = :reject
         HANGUP_CAUSE_TO_END_REASON['SERVICE_NOT_IMPLEMENTED']         = :reject
+
+        REJECT_TO_HANGUP_REASON = Hash.new 'NORMAL_TEMPORARY_FAILURE'
+        REJECT_TO_HANGUP_REASON.merge! :busy => 'USER_BUSY', :decline => 'CALL_REJECTED'
 
         attr_reader :id, :platform_id, :translator, :es_env, :direction, :stream#, :pending_joins
 
@@ -163,7 +166,7 @@ module Punchblock
               command.response = true
             end
           when Command::Hangup
-            sendmsg :call_command => 'hangup', :hangup_cause => 'NORMAL_CLEARING' do |response|
+            hangup do |response|
               command.response = true
             end
         #   when Command::Join
@@ -173,20 +176,10 @@ module Punchblock
         #   when Command::Unjoin
         #     other_call = translator.call_with_id command.call_id
         #     redirect_back other_call
-        #   when Command::Reject
-        #     rejection = case command.reason
-        #     when :busy
-        #       'EXEC Busy'
-        #     when :decline
-        #       'EXEC Busy'
-        #     when :error
-        #       'EXEC Congestion'
-        #     else
-        #       'EXEC Congestion'
-        #     end
-        #     send_agi_action rejection do |response|
-        #       command.response = true
-        #     end
+          when Command::Reject
+            hangup REJECT_TO_HANGUP_REASON[command.reason] do |response|
+              command.response = true
+            end
         #   when Punchblock::Component::Asterisk::AGI::Command
         #     execute_component Component::Asterisk::AGICommand, command
         #   when Punchblock::Component::Output
@@ -198,6 +191,10 @@ module Punchblock
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        end
+
+        def hangup(reason = 'NORMAL_CLEARING', &block)
+          sendmsg :call_command => 'hangup', :hangup_cause => reason, &block
         end
 
         def logger_id

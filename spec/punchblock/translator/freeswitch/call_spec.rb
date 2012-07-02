@@ -579,49 +579,44 @@ module Punchblock
             end
           end
 
+          def expect_hangup_with_reason(reason)
+            subject.wrapped_object.expects(:sendmsg).once.with(:call_command => 'hangup', :hangup_cause => reason).yields(true)
+          end
+
           context 'with a hangup command' do
             let(:command) { Command::Hangup.new }
 
             it "should send a hangup message and set the command's response" do
-              subject.wrapped_object.expects(:sendmsg).once.with(:call_command => 'hangup', :hangup_cause => 'NORMAL_CLEARING').yields(true)
+              expect_hangup_with_reason 'NORMAL_CLEARING'
               subject.execute_command command
               command.response(0.5).should be true
             end
           end
 
-        #   context 'with a reject command' do
-        #     let(:command) { Command::Reject.new }
+          context 'with a reject command' do
+            let(:command) { Command::Reject.new }
 
-        #     it "with a :busy reason should send an EXEC Busy AGI command and set the command's response" do
-        #       command.reason = :busy
-        #       component = subject.execute_command command
-        #       component.internal.should be_true
-        #       agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-        #       agi_command.name.should be == "EXEC Busy"
-        #       agi_command.add_event expected_agi_complete_event
-        #       command.response(0.5).should be true
-        #     end
+            it "with a :busy reason should send a USER_BUSY hangup command and set the command's response" do
+              command.reason = :busy
+              expect_hangup_with_reason 'USER_BUSY'
+              subject.execute_command command
+              command.response(0.5).should be true
+            end
 
-        #     it "with a :decline reason should send an EXEC Busy AGI command and set the command's response" do
-        #       command.reason = :decline
-        #       component = subject.execute_command command
-        #       component.internal.should be_true
-        #       agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-        #       agi_command.name.should be == "EXEC Busy"
-        #       agi_command.add_event expected_agi_complete_event
-        #       command.response(0.5).should be true
-        #     end
+            it "with a :decline reason should send a CALL_REJECTED hangup command and set the command's response" do
+              command.reason = :decline
+              expect_hangup_with_reason 'CALL_REJECTED'
+              subject.execute_command command
+              command.response(0.5).should be true
+            end
 
-        #     it "with an :error reason should send an EXEC Congestion AGI command and set the command's response" do
-        #       command.reason = :error
-        #       component = subject.execute_command command
-        #       component.internal.should be_true
-        #       agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-        #       agi_command.name.should be == "EXEC Congestion"
-        #       agi_command.add_event expected_agi_complete_event
-        #       command.response(0.5).should be true
-        #     end
-        #   end
+            it "with an :error reason should send a NORMAL_TEMPORARY_FAILURE hangup command and set the command's response" do
+              command.reason = :error
+              expect_hangup_with_reason 'NORMAL_TEMPORARY_FAILURE'
+              subject.execute_command command
+              command.response(0.5).should be true
+            end
+          end
 
         #   context 'with an AGI command component' do
         #     let :command do

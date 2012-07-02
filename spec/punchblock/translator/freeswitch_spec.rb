@@ -476,6 +476,15 @@ module Punchblock
           }
         end
 
+        describe "with a RubyFS::Stream::Connected" do
+          let(:es_event) { RubyFS::Stream::Connected.new }
+
+          it "should send a Punchblock::Connection::Connected event" do
+            subject.wrapped_object.expects(:handle_pb_event).once.with(Punchblock::Connection::Connected.new)
+            subject.handle_es_event es_event
+          end
+        end
+
         describe 'with a CHANNEL_PARK event' do
           it 'should instruct the call to send an offer' do
             mock_call = stub_everything 'Freeswitch::Call'

@@ -493,6 +493,14 @@ module Punchblock
           end
         end
 
+        describe "with a RubyFS::Stream::Disconnected" do
+          let(:es_event) { RubyFS::Stream::Disconnected.new }
+
+          it "should not raise an error" do
+            subject.handle_es_event es_event
+          end
+        end
+
         describe 'with a CHANNEL_PARK event' do
           it 'should instruct the call to send an offer' do
             mock_call = stub_everything 'Freeswitch::Call'

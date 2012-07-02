@@ -55,6 +55,10 @@ module Punchblock
           throw :halt
         end
 
+        register_handler :es, RubyFS::Stream::Disconnected do
+          throw :halt
+        end
+
         register_handler :es, :event_name => 'CHANNEL_PARK' do |event|
           throw :pass if es_event_known_call? event
           pb_logger.info "A channel was parked. Creating a new call."

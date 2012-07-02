@@ -29,8 +29,8 @@ module Punchblock
       end
 
       def deregister_call(call)
-        @platform_id_to_call_id[call.platform_id] = nil
-        @calls[call.id] = nil
+        @platform_id_to_call_id.delete call.platform_id
+        @calls.delete call.id
       end
 
       def call_with_id(call_id)

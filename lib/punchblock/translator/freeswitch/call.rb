@@ -104,9 +104,8 @@ module Punchblock
             send_end_event HANGUP_CAUSE_TO_END_REASON[event[:hangup_cause]]
           end
 
-          register_handler :es do |event|
-            if event[:scope_variable_punchblock_component_id] &&
-              component = component_with_id(event[:scope_variable_punchblock_component_id])
+          register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
+            if component = component_with_id(event[:scope_variable_punchblock_component_id])
               component.handle_es_event event
             else
               pb_logger.trace "Could not find component for ES event: #{event.inspect}"

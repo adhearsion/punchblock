@@ -453,31 +453,25 @@ module Punchblock
             end
           end
 
-        #   context 'with an event for a known AGI command component' do
-        #     let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER', :params_array => [] }
-        #     let :component do
-        #       Component::Asterisk::AGICommand.new mock_component_node, subject.translator
-        #     end
+          context 'with an event for a known component' do
+            let(:mock_component_node) { mock 'Punchblock::Component::Output' }
+            let :component do
+              Component::Output.new mock_component_node, subject.translator
+            end
 
-        #     let(:ami_event) do
-        #       RubyAMI::Event.new("AsyncAGI").tap do |e|
-        #         e["SubEvent"]   = "End"
-        #         e["Channel"]    = "SIP/1234-00000000"
-        #         e["CommandID"]  = component.id
-        #         e["Command"]    = "EXEC ANSWER"
-        #         e["Result"]     = "200%20result=123%20(timeout)%0A"
-        #       end
-        #     end
+            let(:es_event) do
+              RubyFS::Event.new nil, :scope_variable_punchblock_component_id => component.id
+            end
 
-        #     before do
-        #       subject.register_component component
-        #     end
+            before do
+              subject.register_component component
+            end
 
-        #     it 'should send the event to the component' do
-        #       component.expects(:handle_ami_event).once.with ami_event
-        #       subject.process_ami_event ami_event
-        #     end
-        #   end
+            it 'should send the event to the component' do
+              component.expects(:handle_es_event).once.with es_event
+              subject.handle_es_event es_event
+            end
+          end
 
         #   context 'with a Newstate event' do
         #     let :ami_event do

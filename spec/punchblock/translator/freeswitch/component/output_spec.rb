@@ -39,7 +39,7 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(filename = audio_filename)
-              mock_call.expects(:application).once.with 'playback', filename
+              subject.wrapped_object.expects(:application).once.with 'playback', filename
             end
 
             let(:audio_filename) { 'http://foo.com/bar.mp3' }

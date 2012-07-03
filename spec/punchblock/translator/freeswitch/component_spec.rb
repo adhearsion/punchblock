@@ -20,6 +20,24 @@ module Punchblock
 
           before { command.request! }
 
+          describe '#handle_es_event' do
+            context 'with a handler registered for a matching event' do
+              let :es_event do
+                RubyFS::Event.new nil, :event_name => 'CHANNEL_EXECUTE'
+              end
+
+              let(:response) { mock 'Response' }
+
+              it 'should execute the handler' do
+                response.expects(:call).once.with es_event
+                subject.register_handler :es, :event_name => 'CHANNEL_EXECUTE' do |event|
+                  response.call event
+                end
+                subject.handle_es_event es_event
+              end
+            end
+          end
+
           describe "#send_event" do
             before { command.execute! }
 
@@ -67,6 +85,13 @@ module Punchblock
             it "should send a complete event with the call hangup reason" do
               subject.wrapped_object.expects(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
               subject.call_ended
+            end
+          end
+
+          describe "#application" do
+            it "should execute a FS application on the current call" do
+              call.expects(:application).once.with('appname', "%[punchblock_component_id=#{subject.id}]options")
+              subject.application 'appname', 'options'
             end
           end
 

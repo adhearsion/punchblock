@@ -13,6 +13,7 @@ module Punchblock
 
           include Celluloid
           include DeadActorSafety
+          include HasGuardedHandlers
 
           attr_reader :id, :call, :call_id
 
@@ -30,6 +31,10 @@ module Punchblock
 
           def execute_command(command)
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
+          end
+
+          def handle_es_event(event)
+            trigger_handler :es, event
           end
 
           def send_complete_event(reason, recording = nil)
@@ -56,6 +61,10 @@ module Punchblock
 
           def call_ended
             send_complete_event Punchblock::Event::Complete::Hangup.new
+          end
+
+          def application(appname, options = nil, &block)
+            call.application appname, "%[punchblock_component_id=#{id}]#{options}", &block
           end
 
           private

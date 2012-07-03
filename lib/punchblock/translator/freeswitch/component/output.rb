@@ -62,7 +62,7 @@ module Punchblock
           def playback(path)
             pb_logger.debug "Playing an audio file (#{path}) via playback"
             op = current_actor
-            @call.application 'playback', path do |response|
+            application 'playback', path do |response|
               pb_logger.debug "File playback completed with #{response.inspect}. Sending complete event"
               op.send_complete_event! success_reason
             end

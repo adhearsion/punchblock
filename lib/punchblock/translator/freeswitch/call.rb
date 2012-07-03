@@ -170,9 +170,11 @@ module Punchblock
               command.response = true
             end
           when Command::Answer
-            application 'answer' do |response|
+            command_id = Punchblock.new_uuid
+            register_tmp_handler :es, :event_name => 'CHANNEL_ANSWER', [:[], :scope_variable_punchblock_command_id] => command_id do
               command.response = true
             end
+            application 'answer', "%[punchblock_command_id=#{command_id}]"
           when Command::Hangup
             hangup do |response|
               command.response = true

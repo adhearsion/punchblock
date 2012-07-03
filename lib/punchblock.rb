@@ -55,6 +55,10 @@ module Punchblock
     rescue NameError
       raise ArgumentError, "Connection type #{type.inspect} is not valid."
     end
+
+    def new_uuid
+      UUIDTools::UUID.random_create.to_s
+    end
   end
 
   ##

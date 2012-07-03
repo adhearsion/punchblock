@@ -559,8 +559,10 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should execute the answer application and set the command's response" do
-              subject.wrapped_object.expects(:application).once.with('answer').yields(true)
+              Punchblock.expects(:new_uuid).once.returns 'abc123'
+              subject.wrapped_object.expects(:application).once.with('answer', '%[punchblock_command_id=abc123]')
               subject.execute_command command
+              subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123')
               command.response(0.5).should be true
             end
           end

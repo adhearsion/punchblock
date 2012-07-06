@@ -55,6 +55,10 @@ module Punchblock
     rescue NameError
       raise ArgumentError, "Connection type #{type.inspect} is not valid."
     end
+
+    def jruby?
+      @jruby ||= !!(RUBY_PLATFORM =~ /java/)
+    end
   end
 
   ##

@@ -60,6 +60,7 @@ module Punchblock
     # not provided one will be created
     # @return a new object with the registered name and namespace
     def self.new(name = registered_name, doc = nil)
+      raise "Trying to create a new #{self} with no name" unless name
       super name, doc, registered_ns
     end
 

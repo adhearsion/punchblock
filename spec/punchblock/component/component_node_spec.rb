@@ -5,6 +5,10 @@ require 'spec_helper'
 module Punchblock
   module Component
     describe ComponentNode do
+      subject do
+        Class.new(described_class) { register 'foo'}.new
+      end
+
       it { should be_new }
 
       describe "#add_event" do

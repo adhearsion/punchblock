@@ -41,7 +41,7 @@ module Punchblock
       # @return [Symbol] the reason type for rejecting a call
       #
       def reason
-        children.select { |c| c.is_a? Nokogiri::XML::Element }.first.name.to_sym
+        children.select { |c| [Nokogiri::XML::Element, Niceogiri::XML::Node].any? { |k| c.is_a?(k) } }.first.name.to_sym
       end
 
       ##

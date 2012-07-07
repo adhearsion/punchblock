@@ -3,6 +3,7 @@
   * Change: Asterisk output now uses Playback rather than STREAM FILE
   * BREAKING: Asterisk output does not support interrupt digits
   * Feature: The recordings dir is now checked for existence on startup, and logs an error if it is not there. Asterisk only.
+  * Feature: Punchblock now logs an error if it was unable to add the redirect context on Asterisk on startup.
 
   * Feature: Output component now exposes #recording and #recording_uri for easy access to record results.
   * Feature: Early media support for Asterisk, using Progress to start an early media session

@@ -145,6 +145,13 @@ module Punchblock
           'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
         })
         pb_logger.trace "Added extension extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
+        send_ami_action('Command', {
+          'Command' => "dialplan show #{REDIRECT_CONTEXT}"
+        }) do |result|
+          if result.text_body =~ /failed/
+            pb_logger.error "Punchblock failed to add the #{REDIRECT_EXTENSION} extension to the #{REDIRECT_CONTEXT} context. Please add a [#{REDIRECT_CONTEXT}] entry to your dialplan."
+          end
+        end
       end
 
       def check_recording_directory

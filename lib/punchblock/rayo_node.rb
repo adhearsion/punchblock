@@ -41,6 +41,7 @@ module Punchblock
     # @param [XML::Node] node the node to import
     # @return the appropriate object based on the node name and namespace
     def self.import(node, call_id = nil, component_id = nil)
+      node = Nokogiri::XML(node.to_xml).root if Punchblock.jruby?
       ns = (node.namespace.href if node.namespace)
       klass = class_from_registration(node.element_name, ns)
       if klass && klass != self
@@ -60,6 +61,7 @@ module Punchblock
     # not provided one will be created
     # @return a new object with the registered name and namespace
     def self.new(name = registered_name, doc = nil)
+      raise "Trying to create a new #{self} with no name" unless name
       super name, doc, registered_ns
     end
 

@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'uri'
+require 'cgi'
 
 module Punchblock
   module Translator
@@ -33,7 +34,7 @@ module Punchblock
           end
 
           def agi_env_as_array(agi_env)
-            URI::Parser.new.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
+            CGI.unescape(agi_env).split("\n").map { |p| p.split ': ' }
           end
         end
 

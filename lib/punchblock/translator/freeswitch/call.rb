@@ -64,7 +64,7 @@ module Punchblock
         def initialize(platform_id, translator, es_env = nil, stream = nil)
           @platform_id, @translator, @stream = platform_id, translator, stream
           @es_env = es_env || {}
-          @id, @components = UUIDTools::UUID.random_create.to_s, {}
+          @id, @components = Punchblock.new_uuid, {}
         #   @answered = false
           pb_logger.debug "Starting up call with platform ID #{@platform_id}, id #{@id}"
           setup_handlers

@@ -981,7 +981,7 @@ module Punchblock
         end
 
         describe '#send_ami_action' do
-          let(:component_id) { UUIDTools::UUID.random_create }
+          let(:component_id) { Punchblock.new_uuid }
           before { UUIDTools::UUID.stubs :random_create => component_id }
 
           it 'should send the action to the AMI client' do

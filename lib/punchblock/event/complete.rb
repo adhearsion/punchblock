@@ -10,12 +10,11 @@ module Punchblock
       register :complete, :ext
 
       def reason
-        element = find_first('*')
-        if element
-          RayoNode.import(element).tap do |reason|
-            reason.target_call_id = target_call_id
-            reason.component_id = component_id
-          end
+        element = find_first '*'
+        return unless element
+        RayoNode.import(element).tap do |reason|
+          reason.target_call_id = target_call_id
+          reason.component_id = component_id
         end
       end
 
@@ -26,11 +25,10 @@ module Punchblock
 
       def recording
         element = find_first('//ns:recording', :ns => RAYO_NAMESPACES[:record_complete])
-        if element
-          RayoNode.import(element).tap do |recording|
-            recording.target_call_id = target_call_id
-            recording.component_id = component_id
-          end
+        return unless element
+        RayoNode.import(element).tap do |recording|
+          recording.target_call_id = target_call_id
+          recording.component_id = component_id
         end
       end
 

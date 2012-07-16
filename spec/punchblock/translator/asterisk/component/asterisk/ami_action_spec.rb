@@ -26,7 +26,7 @@ module Punchblock
             end
 
             context 'initial execution' do
-              let(:component_id) { UUIDTools::UUID.random_create }
+              let(:component_id) { Punchblock.new_uuid }
 
               let :expected_response do
                 Ref.new :id => component_id

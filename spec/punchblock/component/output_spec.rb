@@ -230,7 +230,7 @@ module Punchblock
           describe '#seek_action' do
             subject { command.seek_action seek_options }
 
-            its(:to_xml) { should be == '<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>' }
+            its(:to_xml) { should be == Nokogiri::XML('<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>').root.to_xml }
             its(:component_id) { should be == 'abc123' }
             its(:target_call_id) { should be == '123abc' }
           end

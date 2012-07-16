@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 require 'punchblock'
-require 'mocha'
 require 'countdownlatch'
 require 'logger'
 

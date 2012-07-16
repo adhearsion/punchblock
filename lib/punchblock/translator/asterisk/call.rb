@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require 'uri'
+require 'cgi'
 
 module Punchblock
   module Translator
@@ -33,14 +33,14 @@ module Punchblock
           end
 
           def agi_env_as_array(agi_env)
-            URI::Parser.new.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
+            CGI.unescape(agi_env).split("\n").map { |p| p.split ': ' }
           end
         end
 
         def initialize(channel, translator, agi_env = nil)
           @channel, @translator = channel, translator
           @agi_env = agi_env || {}
-          @id, @components = UUIDTools::UUID.random_create.to_s, {}
+          @id, @components = Punchblock.new_uuid, {}
           @answered = false
           @pending_joins = {}
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"

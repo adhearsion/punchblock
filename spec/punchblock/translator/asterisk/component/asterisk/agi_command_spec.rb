@@ -16,7 +16,7 @@ module Punchblock
             end
             let(:translator)    { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
             let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator }
-            let(:component_id)  { UUIDTools::UUID.random_create }
+            let(:component_id)  { Punchblock.new_uuid }
 
             before { UUIDTools::UUID.stubs :random_create => component_id }
 

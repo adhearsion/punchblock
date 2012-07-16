@@ -59,6 +59,10 @@ module Punchblock
     def new_uuid
       UUIDTools::UUID.random_create.to_s
     end
+
+    def jruby?
+      @jruby ||= !!(RUBY_PLATFORM =~ /java/)
+    end
   end
 
   ##

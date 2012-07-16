@@ -40,7 +40,7 @@ module Punchblock
         def initialize(channel, translator, agi_env = nil)
           @channel, @translator = channel, translator
           @agi_env = agi_env || {}
-          @id, @components = UUIDTools::UUID.random_create.to_s, {}
+          @id, @components = Punchblock.new_uuid, {}
           @answered = false
           @pending_joins = {}
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"

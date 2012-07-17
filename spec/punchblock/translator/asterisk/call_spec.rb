@@ -460,6 +460,55 @@ module Punchblock
             end
           end
 
+          context 'with an OriginateResponse event' do
+            let :ami_event do
+              RubyAMI::Event.new('OriginateResponse').tap do |e|
+                e['Privilege']    = 'call,all'
+                e['ActionID']     = '9d0c1aa4-5e3b-4cae-8aef-76a6119e2909'
+                e['Response']     = response
+                e['Channel']      = 'SIP/15557654321'
+                e['Context']      = ''
+                e['Exten']        = ''
+                e['Reason']       = '0'
+                e['Uniqueid']     = uniqueid
+                e['CallerIDNum']  = 'sip:5551234567'
+                e['CallerIDName'] = 'Bryan 100'
+              end
+            end
+
+            context 'sucessful' do
+              let(:response)  { 'Success' }
+              let(:uniqueid)  { nil }
+
+              it 'should not send an end event' do
+                translator.expects(:handle_pb_event).once.with is_a(Punchblock::Event::Asterisk::AMI::Event)
+                subject.process_ami_event ami_event
+              end
+            end
+
+            context 'failed after being connected' do
+              let(:response)  { 'Failure' }
+              let(:uniqueid)  { '1235' }
+
+              it 'should not send an end event' do
+                translator.expects(:handle_pb_event).once.with is_a(Punchblock::Event::Asterisk::AMI::Event)
+                subject.process_ami_event ami_event
+              end
+            end
+
+            context 'failed without ever having connected' do
+              let(:response)  { 'Failure' }
+              let(:uniqueid)  { nil }
+
+              it 'should send an error end event' do
+                expected_end_event = Punchblock::Event::End.new :reason         => :error,
+                                                                :target_call_id => subject.id
+                translator.expects(:handle_pb_event).with expected_end_event
+                subject.process_ami_event ami_event
+              end
+            end
+          end
+
           context 'with a handler registered for a matching event' do
             let :ami_event do
               RubyAMI::Event.new('DTMF').tap do |e|

@@ -140,6 +140,11 @@ module Punchblock
               @answered = true
               send_pb_event Event::Answered.new
             end
+          when 'OriginateResponse'
+            if ami_event['Response'] == 'Failure' && !ami_event['Uniqueid']
+              pb_logger.info "Outbound call could not be established!"
+              send_end_event :error
+            end
           when 'BridgeExec'
             if join_command = pending_joins[ami_event['Channel2']]
               join_command.response = true

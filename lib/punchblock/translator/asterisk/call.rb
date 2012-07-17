@@ -141,7 +141,7 @@ module Punchblock
               send_pb_event Event::Answered.new
             end
           when 'OriginateResponse'
-            if ami_event['Response'] == 'Failure' && !ami_event['Uniqueid']
+            if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'
               pb_logger.info "Outbound call could not be established!"
               send_end_event :error
             end

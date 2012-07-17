@@ -478,7 +478,7 @@ module Punchblock
 
             context 'sucessful' do
               let(:response)  { 'Success' }
-              let(:uniqueid)  { nil }
+              let(:uniqueid)  { '<null>' }
 
               it 'should not send an end event' do
                 translator.expects(:handle_pb_event).once.with is_a(Punchblock::Event::Asterisk::AMI::Event)
@@ -498,7 +498,7 @@ module Punchblock
 
             context 'failed without ever having connected' do
               let(:response)  { 'Failure' }
-              let(:uniqueid)  { nil }
+              let(:uniqueid)  { '<null>' }
 
               it 'should send an error end event' do
                 expected_end_event = Punchblock::Event::End.new :reason         => :error,

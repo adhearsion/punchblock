@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<future-resource>, ["~> 1.0"]
   s.add_runtime_dependency %q<has-guarded-handlers>, ["~> 1.0"]
   s.add_runtime_dependency %q<celluloid>, [">= 0.10.0"]
-  s.add_runtime_dependency %q<ruby_ami>, ["~> 1.0"]
+  s.add_runtime_dependency %q<ruby_ami>, ["~> 1.2"]
   s.add_runtime_dependency %q<ruby_speech>, ["~> 1.0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]

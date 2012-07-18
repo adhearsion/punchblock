@@ -127,41 +127,6 @@ module Punchblock
                 end
               end
             end
-
-            describe '#parse_agi_result' do
-              context 'with a simple result with no data' do
-                let(:result_string) { "200%20result=123%0A" }
-
-                it 'should provide the code and result' do
-                  code, result, data = subject.parse_agi_result result_string
-                  code.should be == 200
-                  result.should be == 123
-                  data.should be == ''
-                end
-              end
-
-              context 'with a result and data in parens' do
-                let(:result_string) { "200%20result=-123%20(timeout)%0A" }
-
-                it 'should provide the code and result' do
-                  code, result, data = subject.parse_agi_result result_string
-                  code.should be == 200
-                  result.should be == -123
-                  data.should be == 'timeout'
-                end
-              end
-
-              context 'with a result and key-value data' do
-                let(:result_string) { "200%20result=123%20foo=bar%0A" }
-
-                it 'should provide the code and result' do
-                  code, result, data = subject.parse_agi_result result_string
-                  code.should be == 200
-                  result.should be == 123
-                  data.should be == 'foo=bar'
-                end
-              end
-            end
           end
         end
       end

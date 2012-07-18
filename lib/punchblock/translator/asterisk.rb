@@ -200,7 +200,7 @@ module Punchblock
       end
 
       def handle_async_agi_start_event(event)
-        env = Call.parse_environment event['Env']
+        env = RubyAMI::AsyncAGIEnvironmentParser.new(event['Env']).to_hash
 
         return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'h' extension" if env[:agi_extension] == 'h'
         return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'Kill' type" if env[:agi_type] == 'Kill'

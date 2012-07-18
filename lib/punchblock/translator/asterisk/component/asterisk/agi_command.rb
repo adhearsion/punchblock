@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-require 'uri'
 require 'active_support/core_ext/string/filters'
 
 module Punchblock
@@ -27,14 +26,6 @@ module Punchblock
                   pb_logger.debug "Received AsyncAGI:Exec event, sending complete event."
                   send_complete_event success_reason(event)
                 end
-              end
-            end
-
-            def parse_agi_result(result)
-              match = URI::Parser.new.unescape(result).chomp.match(/^(\d{3}) result=(-?\d*) ?(\(?.*\)?)?$/)
-              if match
-                data = match[3] ? match[3].gsub(/(^\()|(\)$)/, '') : nil
-                [match[1].to_i, match[2].to_i, data]
               end
             end
 

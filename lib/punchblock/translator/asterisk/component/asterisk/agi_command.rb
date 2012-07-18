@@ -38,11 +38,22 @@ module Punchblock
               end
             end
 
+            def handle_response(response)
+              pb_logger.debug "Handling response: #{response.inspect}"
+              case response
+              when RubyAMI::Error
+                set_node_response false
+              when RubyAMI::Response
+                send_ref
+              end
+            end
+
             private
 
             def create_action
+              command = current_actor
               RubyAMI::Action.new 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id do |response|
-                handle_response response
+                command.handle_response response
               end
             end
 
@@ -56,19 +67,9 @@ module Punchblock
               '"' + arg.to_s.gsub(/["\\]/) { |m| "\\#{m}" } + '"'
             end
 
-            def handle_response(response)
-              pb_logger.debug "Handling response: #{response.inspect}"
-              case response
-              when RubyAMI::Error
-                set_node_response false
-              when RubyAMI::Response
-                send_ref
-              end
-            end
-
             def success_reason(event)
-              code, result, data = parse_agi_result event['Result']
-              Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code => code, :result => result, :data => data
+              parser = RubyAMI::AGIResultParser.new event['Result']
+              Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code => parser.code, :result => parser.result, :data => parser.data
             end
           end
         end

@@ -154,6 +154,10 @@ module Punchblock
         end
       end
 
+      def check_recording_directory
+        pb_logger.warning "Recordings directory #{Component::Record::RECORDING_BASE_PATH} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording" unless File.exists?(Component::Record::RECORDING_BASE_PATH)
+      end
+
       def actor_died(actor, reason)
         return unless reason
         pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"

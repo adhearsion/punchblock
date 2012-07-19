@@ -5,6 +5,8 @@ require 'niceogiri'
 
 module Punchblock
   class RayoNode < Niceogiri::XML::Node
+    InvalidNodeError = Class.new Punchblock::Error
+
     @@registrations = {}
 
     class_attribute :registered_ns, :registered_name
@@ -61,7 +63,7 @@ module Punchblock
     # not provided one will be created
     # @return a new object with the registered name and namespace
     def self.new(name = registered_name, doc = nil)
-      raise "Trying to create a new #{self} with no name" unless name
+      raise InvalidNodeError, "Trying to create a new #{self} with no name" unless name
       super name, doc, registered_ns
     end
 

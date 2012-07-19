@@ -10,7 +10,7 @@ module Punchblock
 
       def initialize(options = {})
         @translator = Translator::Freeswitch.new self
-        @stream = new_fs_stream *options.values_at(:host, :port, :password)
+        @stream = new_fs_stream(*options.values_at(:host, :port, :password))
         super()
       end
 
@@ -36,7 +36,7 @@ module Punchblock
       private
 
       def new_fs_stream(*args)
-        RubyFS::Stream.new *args, lambda { |e| translator.handle_es_event! e }
+        RubyFS::Stream.new(*args, lambda { |e| translator.handle_es_event! e })
       end
     end
   end

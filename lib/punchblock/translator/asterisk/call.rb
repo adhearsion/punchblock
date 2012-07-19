@@ -195,7 +195,14 @@ module Punchblock
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
-            redirect_back other_call
+            redirect_back other_call do |response|
+              case response
+              when RubyAMI::Error
+                command.response = ProtocolError.new.setup 'error', response.message
+              else
+                command.response = true
+              end
+            end
           when Command::Reject
             rejection = case command.reason
             when :busy
@@ -246,7 +253,7 @@ module Punchblock
           "#{self.class}: #{id}"
         end
 
-        def redirect_back(other_call = nil)
+        def redirect_back(other_call = nil, &block)
           redirect_options = {
             'Channel'   => channel,
             'Exten'     => Asterisk::REDIRECT_EXTENSION,
@@ -259,7 +266,7 @@ module Punchblock
             'ExtraPriority'  => Asterisk::REDIRECT_PRIORITY,
             'ExtraContext'   => Asterisk::REDIRECT_CONTEXT
           }) if other_call
-          send_ami_action 'Redirect', redirect_options
+          send_ami_action 'Redirect', redirect_options, &block
         end
 
         def actor_died(actor, reason)

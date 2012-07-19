@@ -20,6 +20,7 @@
   * Bugfix: Asterisk translator sends an error end event for its dying calls
   * Bugfix: Use the primitive version of AGI ANSWER, rather than an app
   * Bugfix: Outbound calls which never begin progress on Asterisk end with an error
+  * Bugfix: Asterisk now responds correctly to unjoin commands
 
 # [v1.2.0](https://github.com/adhearsion/punchblock/compare/v1.1.0...v1.2.0) - [2012-04-29](https://rubygems.org/gems/punchblock/versions/1.2.0)
   * Feature: Basic support for record component on Asterisk, using MixMonitor. Currently unsupported options include: start_paused, initial_timeout, final_timeout. Hints are additionally not supported, and recordings are stored on the * machine's local filesystem.

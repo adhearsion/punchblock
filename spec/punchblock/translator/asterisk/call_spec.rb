@@ -1001,6 +1001,9 @@ module Punchblock
               ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
               ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
               ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+
+              ami_action << RubyAMI::Response.new
+              command.response(1).should be_true
             end
 
             it "executes the unjoin through redirection, on the subject call and the other call" do
@@ -1017,6 +1020,22 @@ module Punchblock
               ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
               ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
               ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            end
+
+            it "handles redirect errors" do
+              translator.expects(:call_with_id).with(other_call_id).returns(nil)
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+
+              ami_action << RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+              response = command.response(1)
+              response.should be_a ProtocolError
+              response.text.should == 'FooBar'
             end
           end
         end#execute_command

@@ -57,7 +57,7 @@ module Punchblock
           raise ArgumentError, "Invalid Reason (#{reject_reason}), use: #{VALID_REASONS*' '}"
         end
         children.each(&:remove)
-        self << RayoNode.new(reject_reason)
+        self << RayoNode.new(reject_reason) if reject_reason
       end
 
       def inspect_attributes # :nodoc:

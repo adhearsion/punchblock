@@ -30,6 +30,11 @@ def import_stanza(xml)
   Blather::Stanza.import parse_stanza(xml).root
 end
 
+def stub_uuids(value)
+  RubyAMI.stubs :new_uuid => value
+  Punchblock.stubs :new_uuid => value
+end
+
 # FIXME: change this to rayo_event?  It can be ambigous
 shared_examples_for 'event' do
   its(:target_call_id)  { should be == '9f00061' }

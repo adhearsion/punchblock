@@ -18,7 +18,7 @@ module Punchblock
             let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator }
             let(:component_id)  { Punchblock.new_uuid }
 
-            before { UUIDTools::UUID.stubs :random_create => component_id }
+            before { stub_uuids component_id }
 
             let :command do
               Punchblock::Component::Asterisk::AGI::Command.new :name => 'EXEC ANSWER'

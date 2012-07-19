@@ -4,7 +4,6 @@
   active_support/dependencies/autoload
   active_support/core_ext/object/blank
   active_support/core_ext/module/delegation
-  uuidtools
   future-resource
   has_guarded_handlers
   ruby_speech
@@ -58,7 +57,7 @@ module Punchblock
     end
 
     def new_uuid
-      UUIDTools::UUID.random_create.to_s
+      SecureRandom.uuid
     end
 
     def jruby?

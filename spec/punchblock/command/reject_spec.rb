@@ -45,6 +45,12 @@ module Punchblock
           end
         end
 
+        describe "no reason" do
+          subject { Reject.new }
+
+          its(:reason) { should be_nil }
+        end
+
         describe "blahblahblah" do
           it "should raise an error" do
             expect { Reject.new(:reason => :blahblahblah) }.to raise_error ArgumentError

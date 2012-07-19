@@ -2,6 +2,7 @@
   * BREAKING: Asterisk translator now does NOT answer the call automatically when Output, Input or Record are used.
   * Change: Asterisk output now uses Playback rather than STREAM FILE
   * BREAKING: Asterisk output does not support interrupt digits
+  * Feature: The recordings dir is now checked for existence on startup, and logs an error if it is not there. Asterisk only.
   * Feature: Punchblock now logs an error if it was unable to add the redirect context on Asterisk on startup.
 
   * Feature: Output component now exposes #recording and #recording_uri for easy access to record results.
@@ -18,6 +19,8 @@
   * Bugfix: Asterisk calls send an error complete event for their dying components
   * Bugfix: Asterisk translator sends an error end event for its dying calls
   * Bugfix: Use the primitive version of AGI ANSWER, rather than an app
+  * Bugfix: Outbound calls which never begin progress on Asterisk end with an error
+  * Bugfix: Asterisk now responds correctly to unjoin commands
 
 # [v1.2.0](https://github.com/adhearsion/punchblock/compare/v1.1.0...v1.2.0) - [2012-04-29](https://rubygems.org/gems/punchblock/versions/1.2.0)
   * Feature: Basic support for record component on Asterisk, using MixMonitor. Currently unsupported options include: start_paused, initial_timeout, final_timeout. Hints are additionally not supported, and recordings are stored on the * machine's local filesystem.

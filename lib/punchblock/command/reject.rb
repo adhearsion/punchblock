@@ -41,7 +41,8 @@ module Punchblock
       # @return [Symbol] the reason type for rejecting a call
       #
       def reason
-        children.select { |c| [Nokogiri::XML::Element, Niceogiri::XML::Node].any? { |k| c.is_a?(k) } }.first.name.to_sym
+        node = reason_node
+        node ? node.name.to_sym : nil
       end
 
       ##
@@ -61,6 +62,13 @@ module Punchblock
 
       def inspect_attributes # :nodoc:
         [:reason] + super
+      end
+
+      private
+
+      def reason_node
+        node_children = children.select { |c| [Nokogiri::XML::Element, Niceogiri::XML::Node].any? { |k| c.is_a?(k) } }
+        node_children.first
       end
     end # Reject
   end # Command

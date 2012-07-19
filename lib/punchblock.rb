@@ -57,7 +57,7 @@ module Punchblock
     end
 
     def new_uuid
-      UUIDTools::UUID.random_create.to_s
+      SecureRandom.uuid
     end
 
     def jruby?

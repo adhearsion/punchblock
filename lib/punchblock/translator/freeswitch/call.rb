@@ -1,8 +1,5 @@
 # encoding: utf-8
 
-# require 'uri'
-require 'uuidtools'
-
 module Punchblock
   module Translator
     class Freeswitch

@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-require 'cgi'
-
 module Punchblock
   module Translator
     class Asterisk
@@ -23,19 +21,6 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
         trap_exit :actor_died
-
-        class << self
-          def parse_environment(agi_env)
-            agi_env_as_array(agi_env).inject({}) do |accumulator, element|
-              accumulator[element[0].to_sym] = element[1] || ''
-              accumulator
-            end
-          end
-
-          def agi_env_as_array(agi_env)
-            CGI.unescape(agi_env).split("\n").map { |p| p.split ': ' }
-          end
-        end
 
         def initialize(channel, translator, agi_env = nil)
           @channel, @translator = channel, translator
@@ -140,6 +125,11 @@ module Punchblock
               @answered = true
               send_pb_event Event::Answered.new
             end
+          when 'OriginateResponse'
+            if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'
+              pb_logger.info "Outbound call could not be established!"
+              send_end_event :error
+            end
           when 'BridgeExec'
             if join_command = pending_joins[ami_event['Channel2']]
               join_command.response = true
@@ -205,7 +195,14 @@ module Punchblock
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
-            redirect_back other_call
+            redirect_back other_call do |response|
+              case response
+              when RubyAMI::Error
+                command.response = ProtocolError.new.setup 'error', response.message
+              else
+                command.response = true
+              end
+            end
           when Command::Reject
             rejection = case command.reason
             when :busy
@@ -256,7 +253,7 @@ module Punchblock
           "#{self.class}: #{id}"
         end
 
-        def redirect_back(other_call = nil)
+        def redirect_back(other_call = nil, &block)
           redirect_options = {
             'Channel'   => channel,
             'Exten'     => Asterisk::REDIRECT_EXTENSION,
@@ -269,7 +266,7 @@ module Punchblock
             'ExtraPriority'  => Asterisk::REDIRECT_PRIORITY,
             'ExtraContext'   => Asterisk::REDIRECT_CONTEXT
           }) if other_call
-          send_ami_action 'Redirect', redirect_options
+          send_ami_action 'Redirect', redirect_options, &block
         end
 
         def actor_died(actor, reason)

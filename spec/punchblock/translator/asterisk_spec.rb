@@ -620,6 +620,24 @@ module Punchblock
           subject.run_at_fully_booted
         end
       end
+      
+      describe '#check_recording_directory' do
+        let(:broken_path) { "/this/is/not/a/valid/path" }
+        before do
+          @new_constant = broken_path
+          @old_constant = Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH  
+          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH') 
+          Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @new_constant)
+        end
+        after do
+          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH')
+          Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @old_constant)
+        end
+        it 'logs a warning if the recording directory does not exist' do
+          Punchblock.logger.expects(:warning).once.with("Recordings directory #{broken_path} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording")
+          subject.check_recording_directory
+        end
+      end
     end
   end
 end

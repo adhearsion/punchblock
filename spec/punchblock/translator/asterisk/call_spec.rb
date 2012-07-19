@@ -460,6 +460,55 @@ module Punchblock
             end
           end
 
+          context 'with an OriginateResponse event' do
+            let :ami_event do
+              RubyAMI::Event.new('OriginateResponse').tap do |e|
+                e['Privilege']    = 'call,all'
+                e['ActionID']     = '9d0c1aa4-5e3b-4cae-8aef-76a6119e2909'
+                e['Response']     = response
+                e['Channel']      = 'SIP/15557654321'
+                e['Context']      = ''
+                e['Exten']        = ''
+                e['Reason']       = '0'
+                e['Uniqueid']     = uniqueid
+                e['CallerIDNum']  = 'sip:5551234567'
+                e['CallerIDName'] = 'Bryan 100'
+              end
+            end
+
+            context 'sucessful' do
+              let(:response)  { 'Success' }
+              let(:uniqueid)  { '<null>' }
+
+              it 'should not send an end event' do
+                translator.expects(:handle_pb_event).once.with is_a(Punchblock::Event::Asterisk::AMI::Event)
+                subject.process_ami_event ami_event
+              end
+            end
+
+            context 'failed after being connected' do
+              let(:response)  { 'Failure' }
+              let(:uniqueid)  { '1235' }
+
+              it 'should not send an end event' do
+                translator.expects(:handle_pb_event).once.with is_a(Punchblock::Event::Asterisk::AMI::Event)
+                subject.process_ami_event ami_event
+              end
+            end
+
+            context 'failed without ever having connected' do
+              let(:response)  { 'Failure' }
+              let(:uniqueid)  { '<null>' }
+
+              it 'should send an error end event' do
+                expected_end_event = Punchblock::Event::End.new :reason         => :error,
+                                                                :target_call_id => subject.id
+                translator.expects(:handle_pb_event).with expected_end_event
+                subject.process_ami_event ami_event
+              end
+            end
+          end
+
           context 'with a handler registered for a matching event' do
             let :ami_event do
               RubyAMI::Event.new('DTMF').tap do |e|
@@ -952,6 +1001,9 @@ module Punchblock
               ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
               ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
               ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+
+              ami_action << RubyAMI::Response.new
+              command.response(1).should be_true
             end
 
             it "executes the unjoin through redirection, on the subject call and the other call" do
@@ -969,6 +1021,22 @@ module Punchblock
               ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
               ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
             end
+
+            it "handles redirect errors" do
+              translator.expects(:call_with_id).with(other_call_id).returns(nil)
+              subject.execute_command command
+              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
+              ami_action.name.should be == "redirect"
+              ami_action.headers['Channel'].should be == channel
+              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
+              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
+              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+
+              ami_action << RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+              response = command.response(1)
+              response.should be_a ProtocolError
+              response.text.should == 'FooBar'
+            end
           end
         end#execute_command
 
@@ -982,7 +1050,7 @@ module Punchblock
 
         describe '#send_ami_action' do
           let(:component_id) { Punchblock.new_uuid }
-          before { UUIDTools::UUID.stubs :random_create => component_id }
+          before { stub_uuids component_id }
 
           it 'should send the action to the AMI client' do
             action = RubyAMI::Action.new 'foo', :foo => :bar

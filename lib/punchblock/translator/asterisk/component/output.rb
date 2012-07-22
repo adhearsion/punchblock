@@ -25,14 +25,16 @@ module Punchblock
 
             early = !@call.answered?
 
+            output_component = current_actor
+
             case @media_engine
             when :asterisk, nil
               raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
               raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on
 
               case @component_node.interrupt_on
-              when :dtmf, :any
-                raise OptionError, "An interrupt-on value of #{@component_node.interrupt_on} is unsupported."
+              when :any, :dtmf
+                interrupt = true
               end
 
               path = filenames.join '&'
@@ -41,18 +43,22 @@ module Punchblock
 
               @call.send_progress if early
 
+              if interrupt
+                call.register_handler :ami, :name => 'DTMF' do |event|
+                  output_component.stop_by_redirect Punchblock::Component::Output::Complete::Success.new if event['End'] == 'Yes'
+                end
+              end
+
               opts = early ? "#{path},noanswer" : path
               playback opts
             when :unimrcp
               send_ref
-              output_component = current_actor
               @call.send_agi_action! 'EXEC MRCPSynth', escaped_doc, mrcpsynth_options do |complete_event|
                 pb_logger.debug "MRCPSynth completed with #{complete_event}."
                 output_component.send_complete_event! success_reason
               end
             when :swift
               send_ref
-              output_component = current_actor
               @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
                 pb_logger.debug "Swift completed with #{complete_event}."
                 output_component.send_complete_event! success_reason

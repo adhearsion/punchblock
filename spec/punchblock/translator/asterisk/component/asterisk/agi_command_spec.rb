@@ -16,9 +16,9 @@ module Punchblock
             end
             let(:translator)    { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
             let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator }
-            let(:component_id)  { UUIDTools::UUID.random_create }
+            let(:component_id)  { Punchblock.new_uuid }
 
-            before { UUIDTools::UUID.stubs :random_create => component_id }
+            before { stub_uuids component_id }
 
             let :command do
               Punchblock::Component::Asterisk::AGI::Command.new :name => 'EXEC ANSWER'
@@ -31,8 +31,10 @@ module Punchblock
             end
 
             context 'initial execution' do
+              before { command.request! }
+
               it 'should send the appropriate RubyAMI::Action' do
-                mock_call.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
+                mock_call.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
                 subject.execute
               end
 
@@ -48,7 +50,7 @@ module Punchblock
                 end
 
                 it 'should send the appropriate RubyAMI::Action' do
-                  mock_call.expects(:send_ami_action!).once.with(expected_action).returns(expected_action)
+                  mock_call.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
                   subject.execute
                 end
               end
@@ -122,41 +124,6 @@ module Punchblock
 
                   complete_event.component_id.should be == component_id.to_s
                   complete_event.reason.should be == expected_complete_reason
-                end
-              end
-            end
-
-            describe '#parse_agi_result' do
-              context 'with a simple result with no data' do
-                let(:result_string) { "200%20result=123%0A" }
-
-                it 'should provide the code and result' do
-                  code, result, data = subject.parse_agi_result result_string
-                  code.should be == 200
-                  result.should be == 123
-                  data.should be == ''
-                end
-              end
-
-              context 'with a result and data in parens' do
-                let(:result_string) { "200%20result=-123%20(timeout)%0A" }
-
-                it 'should provide the code and result' do
-                  code, result, data = subject.parse_agi_result result_string
-                  code.should be == 200
-                  result.should be == -123
-                  data.should be == 'timeout'
-                end
-              end
-
-              context 'with a result and key-value data' do
-                let(:result_string) { "200%20result=123%20foo=bar%0A" }
-
-                it 'should provide the code and result' do
-                  code, result, data = subject.parse_agi_result result_string
-                  code.should be == 200
-                  result.should be == 123
-                  data.should be == 'foo=bar'
                 end
               end
             end

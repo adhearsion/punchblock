@@ -13,7 +13,7 @@ module Punchblock
           end
 
           def execute
-            @call.answer_if_not_answered
+            @call.send_progress
             initial_timeout = @component_node.initial_timeout || -1
             @inter_digit_timeout = @component_node.inter_digit_timeout || -1
 
@@ -33,9 +33,7 @@ module Punchblock
 
             component = current_actor
 
-            @active = true
-
-            call.register_handler :ami, :name => 'DTMF' do |event|
+            @dtmf_handler_id = call.register_handler :ami, :name => 'DTMF' do |event|
               component.process_dtmf! event['Digit'] if event['End'] == 'Yes'
             end
           rescue OptionError => e
@@ -43,7 +41,6 @@ module Punchblock
           end
 
           def process_dtmf(digit)
-            return unless @active
             pb_logger.trace "Processing incoming DTMF digit #{digit}"
             buffer << digit
             cancel_initial_timer
@@ -113,7 +110,7 @@ module Punchblock
           end
 
           def complete(reason)
-            @active = false
+            call.unregister_handler :ami, @dtmf_handler_id if instance_variable_defined?(:@dtmf_handler_id)
             cancel_initial_timer
             cancel_inter_digit_timer
             send_complete_event reason

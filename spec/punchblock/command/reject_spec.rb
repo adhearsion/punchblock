@@ -37,12 +37,18 @@ module Punchblock
       end
 
       describe "with the reason" do
-        [:decline, :busy, :error].each do |reason|
+        [nil, :decline, :busy, :error].each do |reason|
           describe reason do
             subject { Reject.new :reason => reason }
 
             its(:reason) { should be == reason }
           end
+        end
+
+        describe "no reason" do
+          subject { Reject.new }
+
+          its(:reason) { should be_nil }
         end
 
         describe "blahblahblah" do

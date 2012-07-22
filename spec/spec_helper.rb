@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 require 'punchblock'
-require 'mocha'
 require 'countdownlatch'
 require 'logger'
 
@@ -29,6 +28,11 @@ end
 
 def import_stanza(xml)
   Blather::Stanza.import parse_stanza(xml).root
+end
+
+def stub_uuids(value)
+  RubyAMI.stubs :new_uuid => value
+  Punchblock.stubs :new_uuid => value
 end
 
 # FIXME: change this to rayo_event?  It can be ambigous

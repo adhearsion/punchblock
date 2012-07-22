@@ -5,6 +5,11 @@ require 'spec_helper'
 module Punchblock
   module Command
     describe CommandNode do
+      let(:args) { [] }
+      subject do
+        Class.new(described_class) { register 'foo'}.new(*args)
+      end
+
       its(:state_name) { should be == :new }
 
       describe "#new" do
@@ -12,8 +17,6 @@ module Punchblock
           let(:call_id)       { 'abc123' }
           let(:component_id)  { 'abc123' }
           let(:args)          { [{:target_call_id => call_id, :component_id => component_id}] }
-
-          subject { CommandNode.new(*args) }
 
           its(:target_call_id)  { should be == call_id }
           its(:component_id)    { should be == component_id }

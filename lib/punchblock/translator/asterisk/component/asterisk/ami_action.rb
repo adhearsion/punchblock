@@ -48,7 +48,7 @@ module Punchblock
             end
 
             def send_action
-              @translator.send_ami_action! @action
+              @translator.send_ami_action @action
             end
 
             def error_reason(response)

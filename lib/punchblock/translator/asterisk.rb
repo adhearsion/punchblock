@@ -19,6 +19,8 @@ module Punchblock
       REDIRECT_EXTENSION = '1'
       REDIRECT_PRIORITY = '1'
 
+      trap_exit :actor_died
+
       def initialize(ami_client, connection, media_engine = nil)
         pb_logger.debug "Starting up..."
         @ami_client, @connection, @media_engine = ami_client, connection, media_engine
@@ -29,6 +31,11 @@ module Punchblock
       def register_call(call)
         @channel_to_call_id[call.channel] = call.id
         @calls[call.id] ||= call
+      end
+
+      def deregister_call(call)
+        @channel_to_call_id.delete call.channel
+        @calls.delete call.id
       end
 
       def call_with_id(call_id)
@@ -54,24 +61,28 @@ module Punchblock
       end
 
       def handle_ami_event(event)
-        return unless event.is_a? RubyAMI::Event
+        exclusive do
+          return unless event.is_a? RubyAMI::Event
 
-        if event.name.downcase == "fullybooted"
-          pb_logger.trace "Counting FullyBooted event"
-          @fully_booted_count += 1
-          if @fully_booted_count >= 2
-            handle_pb_event Connection::Connected.new
-            @fully_booted_count = 0
-            run_at_fully_booted
+          if event.name.downcase == "fullybooted"
+            pb_logger.trace "Counting FullyBooted event"
+            @fully_booted_count += 1
+            if @fully_booted_count >= 2
+              handle_pb_event Connection::Connected.new
+              @fully_booted_count = 0
+              run_at_fully_booted
+            end
+            return
           end
-          return
+
+          handle_varset_ami_event event
+
+          ami_dispatch_to_or_create_call event
+
+          unless ami_event_known_call?(event)
+            handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
+          end
         end
-
-        handle_varset_ami_event event
-
-        ami_dispatch_to_or_create_call event
-
-        handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
       end
 
       def handle_pb_event(event)
@@ -98,7 +109,7 @@ module Punchblock
         if call = call_with_id(command.target_call_id)
           call.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'call-not-found', "Could not find a call with ID #{command.target_call_id}", command.target_call_id
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{command.target_call_id}", command.target_call_id
         end
       end
 
@@ -106,7 +117,7 @@ module Punchblock
         if (component = component_with_id(command.component_id))
           component.execute_command! command
         else
-          command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
         end
       end
 
@@ -117,7 +128,7 @@ module Punchblock
           register_component component
           component.execute!
         when Punchblock::Command::Dial
-          call = Call.new command.to, current_actor
+          call = Call.new_link command.to, current_actor
           register_call call
           call.dial! command
         else
@@ -134,6 +145,29 @@ module Punchblock
           'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
         })
         pb_logger.trace "Added extension extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
+        send_ami_action('Command', {
+          'Command' => "dialplan show #{REDIRECT_CONTEXT}"
+        }) do |result|
+          if result.text_body =~ /failed/
+            pb_logger.error "Punchblock failed to add the #{REDIRECT_EXTENSION} extension to the #{REDIRECT_CONTEXT} context. Please add a [#{REDIRECT_CONTEXT}] entry to your dialplan."
+          end
+        end
+      end
+
+      def check_recording_directory
+        pb_logger.warning "Recordings directory #{Component::Record::RECORDING_BASE_PATH} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording" unless File.exists?(Component::Record::RECORDING_BASE_PATH)
+      end
+
+      def actor_died(actor, reason)
+        return unless reason
+        pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
+        if id = @calls.key(actor)
+          pb_logger.info "Dead actor was a call we know about, with ID #{id}. Removing it from the registry..."
+          @calls.delete id
+          end_event = Punchblock::Event::End.new :target_call_id  => id,
+                                                 :reason          => :error
+          handle_pb_event end_event
+        end
       end
 
       private
@@ -149,10 +183,8 @@ module Punchblock
       end
 
       def ami_dispatch_to_or_create_call(event)
-        if (event['Channel'] && call_for_channel(event['Channel'])) ||
-            (event['Channel1'] && call_for_channel(event['Channel1'])) ||
-            (event['Channel2'] && call_for_channel(event['Channel2']))
-          [event['Channel'], event['Channel1'], event['Channel2']].compact.each do |channel|
+        if ami_event_known_call?(event)
+          channels_for_ami_event(event).each do |channel|
             call = call_for_channel channel
             call.process_ami_event! event if call
           end
@@ -161,14 +193,25 @@ module Punchblock
         end
       end
 
+      def channels_for_ami_event(event)
+        [event['Channel'], event['Channel1'], event['Channel2']].compact
+      end
+
+      def ami_event_known_call?(event)
+        (event['Channel'] && call_for_channel(event['Channel'])) ||
+          (event['Channel1'] && call_for_channel(event['Channel1'])) ||
+          (event['Channel2'] && call_for_channel(event['Channel2']))
+      end
+
       def handle_async_agi_start_event(event)
-        env = Call.parse_environment event['Env']
+        env = RubyAMI::AsyncAGIEnvironmentParser.new(event['Env']).to_hash
 
         return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'h' extension" if env[:agi_extension] == 'h'
         return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'Kill' type" if env[:agi_type] == 'Kill'
 
         pb_logger.trace "Handling AsyncAGI Start event by creating a new call"
         call = Call.new event['Channel'], current_actor, env
+        link call
         register_call call
         call.send_offer!
       end

@@ -16,8 +16,6 @@ module Punchblock
           end
 
           def execute
-            @call.answer_if_not_answered
-
             raise OptionError, 'An SSML document is required.' unless @component_node.ssml
             raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
 
@@ -25,40 +23,43 @@ module Punchblock
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
             end
 
+            early = !@call.answered?
+
+            output_component = current_actor
+
             case @media_engine
             when :asterisk, nil
               raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
+              raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on
 
-              @execution_elements = collect_executable_elements
-              @pending_actions = @execution_elements.count
+              case @component_node.interrupt_on
+              when :any, :dtmf
+                interrupt = true
+              end
+
+              path = filenames.join '&'
 
               send_ref
 
-              @interrupt_digits = if [:any, :dtmf].include? @component_node.interrupt_on
-                '0123456789*#'
-              else
-                nil
+              @call.send_progress if early
+
+              if interrupt
+                call.register_handler :ami, :name => 'DTMF' do |event|
+                  output_component.stop_by_redirect Punchblock::Component::Output::Complete::Success.new if event['End'] == 'Yes'
+                end
               end
 
-              @execution_elements.each do |element|
-                element.call
-                wait :continue
-                process_playback_completion
-              end
+              opts = early ? "#{path},noanswer" : path
+              playback opts
             when :unimrcp
               send_ref
-              output_component = current_actor
               @call.send_agi_action! 'EXEC MRCPSynth', escaped_doc, mrcpsynth_options do |complete_event|
                 pb_logger.debug "MRCPSynth completed with #{complete_event}."
                 output_component.send_complete_event! success_reason
               end
             when :swift
-              doc = escaped_doc
-              doc << "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
-              doc.insert 0, "#{@component_node.voice}^" if @component_node.voice
               send_ref
-              output_component = current_actor
-              @call.send_agi_action! 'EXEC Swift', doc do |complete_event|
+              @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
                 pb_logger.debug "Swift completed with #{complete_event}."
                 output_component.send_complete_event! success_reason
               end
@@ -69,45 +70,32 @@ module Punchblock
             with_error 'option error', e.message
           end
 
-          def collect_executable_elements
-            @component_node.ssml.children.map do |node|
+          private
+
+          def filenames
+            @filenames ||= @component_node.ssml.children.map do |node|
               case node
               when RubySpeech::SSML::Audio
-                lambda { current_actor.play_audio! node.src }
+                node.src
               when String
-                raise UnrenderableDocError, 'The provided document could not be rendered.' if node.include?(' ')
-                lambda { current_actor.play_audio! node }
+                raise if node.include?(' ')
+                node
               else
-                raise UnrenderableDocError, 'The provided document could not be rendered.'
+                raise
               end
             end.compact
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered.'
           end
 
-          def process_playback_completion
-            @pending_actions -= 1
-            pb_logger.debug "Received action completion. Now waiting on #{@pending_actions} actions."
-            if @pending_actions < 1
-              pb_logger.debug "Sending complete event"
-              send_complete_event success_reason
-            end
-          end
-
-          def continue(event = nil)
-            signal :continue, event
-          end
-
-          def play_audio(path)
-            pb_logger.debug "Playing an audio file (#{path}) via STREAM FILE"
+          def playback(path)
+            pb_logger.debug "Playing an audio file (#{path}) via Playback"
             op = current_actor
-            @call.send_agi_action! 'STREAM FILE', path, @interrupt_digits do |complete_event|
-              pb_logger.debug "STREAM FILE completed with #{complete_event}. Signalling to continue execution."
-              op.continue! complete_event
+            @call.send_agi_action! 'EXEC Playback', path do |complete_event|
+              pb_logger.debug "File playback completed with #{complete_event}. Sending complete event"
+              op.send_complete_event! success_reason
             end
           end
-
-          private
 
           def escaped_doc
             @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
@@ -118,6 +106,13 @@ module Punchblock
               opts << 'i=any' if [:any, :dtmf].include? @component_node.interrupt_on
               opts << "v=#{@component_node.voice}" if @component_node.voice
             end.join '&'
+          end
+
+          def swift_doc
+            doc = escaped_doc
+            doc << "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
+            doc.insert 0, "#{@component_node.voice}^" if @component_node.voice
+            doc
           end
 
           def success_reason

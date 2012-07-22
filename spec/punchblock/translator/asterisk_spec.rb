@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'spec_helper'
+require 'ostruct'
 
 module Punchblock
   module Translator
@@ -38,6 +39,7 @@ module Punchblock
 
         it "terminates the actor" do
           subject.shutdown
+          sleep 0.2
           subject.should_not be_alive
         end
       end
@@ -98,6 +100,29 @@ module Punchblock
         end
       end
 
+      describe '#deregister_call' do
+        let(:call_id) { 'abc123' }
+        let(:channel) { 'SIP/foo' }
+        let(:call)    { Translator::Asterisk::Call.new channel, subject }
+
+        before do
+          call.stubs(:id).returns call_id
+          subject.register_call call
+        end
+
+        it 'should make the call inaccessible by ID' do
+          subject.call_with_id(call_id).should be call
+          subject.deregister_call call
+          subject.call_with_id(call_id).should be_nil
+        end
+
+        it 'should make the call inaccessible by channel' do
+          subject.call_for_channel(channel).should be call
+          subject.deregister_call call
+          subject.call_for_channel(channel).should be_nil
+        end
+      end
+
       describe '#register_component' do
         let(:component_id) { 'abc123' }
         let(:component)    { mock 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }
@@ -110,16 +135,14 @@ module Punchblock
 
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
-        let(:call)    { Translator::Asterisk::Call.new 'SIP/foo', subject }
         let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
 
-        before do
-          command.request!
-          call.stubs(:id).returns call_id
-        end
-
         context "with a known call ID" do
+          let(:call) { Translator::Asterisk::Call.new 'SIP/foo', subject }
+
           before do
+            command.request!
+            call.stubs(:id).returns call_id
             subject.register_call call
           end
 
@@ -129,10 +152,84 @@ module Punchblock
           end
         end
 
+        let :end_error_event do
+          Punchblock::Event::End.new.tap do |e|
+            e.target_call_id = call_id
+            e.reason = :error
+          end
+        end
+
+        context "for an outgoing call which began executing but crashed" do
+          let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
+
+          let(:call_id) { dial_command.response.id }
+
+          before do
+            subject.execute_command dial_command
+            ami_client.stub_everything
+          end
+
+          it 'sends an error in response to the command' do
+            call = subject.call_with_id call_id
+
+            call.wrapped_object.define_singleton_method(:oops) do
+              raise 'Woops, I died'
+            end
+
+            connection.expects(:handle_event).once.with end_error_event
+
+            lambda { call.oops }.should raise_error(/Woops, I died/)
+            sleep 0.1
+            call.should_not be_alive
+            subject.call_with_id(call_id).should be_nil
+
+            command.request!
+            subject.execute_call_command command
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+          end
+        end
+
+        context "for an incoming call which began executing but crashed" do
+          let :ami_event do
+            RubyAMI::Event.new('AsyncAGI').tap do |e|
+              e['SubEvent'] = "Start"
+              e['Channel']  = "SIP/1234-00000000"
+              e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
+            end
+          end
+
+          let(:call)    { subject.call_for_channel('SIP/1234-00000000') }
+          let(:call_id) { call.id }
+
+          before do
+            connection.expects(:handle_event).at_least(1)
+            subject.handle_ami_event ami_event
+            call_id
+          end
+
+          it 'sends an error in response to the command' do
+            call.wrapped_object.define_singleton_method(:oops) do
+              raise 'Woops, I died'
+            end
+
+            connection.expects(:handle_event).once.with end_error_event
+
+            lambda { call.oops }.should raise_error(/Woops, I died/)
+            sleep 0.1
+            call.should_not be_alive
+            subject.call_with_id(call_id).should be_nil
+
+            command.request!
+            subject.execute_call_command command
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+          end
+        end
+
         context "with an unknown call ID" do
           it 'sends an error in response to the command' do
+            command.request!
             subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup('call-not-found', "Could not find a call with ID #{call_id}", call_id, nil)
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id, nil)
           end
         end
       end
@@ -161,7 +258,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should be == ProtocolError.new.setup('component-not-found', "Could not find a component with ID #{component_id}", nil, component_id)
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id}", nil, component_id)
           end
         end
       end
@@ -185,7 +282,7 @@ module Punchblock
 
           it 'should instruct the call to send a dial' do
             mock_call = stub_everything 'Asterisk::Call'
-            Asterisk::Call.expects(:new).once.returns mock_call
+            Asterisk::Call.expects(:new_link).once.returns mock_call
             mock_call.expects(:dial!).once.with command
             subject.execute_global_command command
           end
@@ -324,6 +421,7 @@ module Punchblock
           it 'should instruct the call to send an offer' do
             mock_call = stub_everything 'Asterisk::Call'
             Asterisk::Call.expects(:new).once.returns mock_call
+            subject.wrapped_object.expects(:link)
             mock_call.expects(:send_offer!).once
             subject.handle_ami_event ami_event
           end
@@ -452,12 +550,10 @@ module Punchblock
           end
 
           before do
-            subject.wrapped_object.stubs :handle_pb_event
             subject.register_call call
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event' do
-            subject.wrapped_object.expects(:handle_pb_event).once
             call.expects(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end
@@ -480,7 +576,6 @@ module Punchblock
               before { subject.register_call call2 }
 
               it 'should send the event to both calls and to the connection once as a PB event' do
-                subject.wrapped_object.expects(:handle_pb_event).once
                 call.expects(:process_ami_event!).once.with ami_event
                 call2.expects(:process_ami_event!).once.with ami_event
                 subject.handle_ami_event ami_event
@@ -498,9 +593,49 @@ module Punchblock
       end
 
       describe '#run_at_fully_booted' do
+        let(:passed_show) do
+          OpenStruct.new({:text_body => "[ Context 'adhearsion-redirect' created by 'pbx_config' ]\n '1' => 1. AGI(agi:async)[pbx_config]\n\n-= 1 extension (1 priority) in 1 context. =-"})
+        end
+
+        let(:failed_show) do
+          OpenStruct.new({:text_body => "There is no existence of 'adhearsion-redirect' context\nCommand 'dialplan show adhearsion-redirect' failed."})
+        end
+
         it 'should send the redirect extension Command to the AMI client' do
           ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
           subject.run_at_fully_booted
+        end
+
+        it 'should check the context for existence and do nothing if it is there' do
+          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").yields(passed_show)
+          subject.run_at_fully_booted
+        end
+
+        it 'should check the context for existence and log an error if it is not there' do
+          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").yields(failed_show)
+          Punchblock.logger.expects(:error).once.with("Punchblock failed to add the #{Asterisk::REDIRECT_EXTENSION} extension to the #{Asterisk::REDIRECT_CONTEXT} context. Please add a [#{Asterisk::REDIRECT_CONTEXT}] entry to your dialplan.")
+          subject.run_at_fully_booted
+        end
+      end
+      
+      describe '#check_recording_directory' do
+        let(:broken_path) { "/this/is/not/a/valid/path" }
+        before do
+          @new_constant = broken_path
+          @old_constant = Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH  
+          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH') 
+          Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @new_constant)
+        end
+        after do
+          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH')
+          Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @old_constant)
+        end
+        it 'logs a warning if the recording directory does not exist' do
+          Punchblock.logger.expects(:warning).once.with("Recordings directory #{broken_path} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording")
+          subject.check_recording_directory
         end
       end
     end

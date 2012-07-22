@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-require 'uri'
 require 'active_support/core_ext/string/filters'
 
 module Punchblock
@@ -16,7 +15,8 @@ module Punchblock
             end
 
             def execute
-              @call.send_ami_action! @action
+              send_ref
+              @call.send_ami_action @action
             end
 
             def handle_ami_event(event)
@@ -29,19 +29,22 @@ module Punchblock
               end
             end
 
-            def parse_agi_result(result)
-              match = URI::Parser.new.unescape(result).chomp.match(/^(\d{3}) result=(-?\d*) ?(\(?.*\)?)?$/)
-              if match
-                data = match[3] ? match[3].gsub(/(^\()|(\)$)/, '') : nil
-                [match[1].to_i, match[2].to_i, data]
+            def handle_response(response)
+              pb_logger.debug "Handling response: #{response.inspect}"
+              case response
+              when RubyAMI::Error
+                set_node_response false
+              when RubyAMI::Response
+                send_ref
               end
             end
 
             private
 
             def create_action
+              command = current_actor
               RubyAMI::Action.new 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id do |response|
-                handle_response response
+                command.handle_response response
               end
             end
 
@@ -55,19 +58,9 @@ module Punchblock
               '"' + arg.to_s.gsub(/["\\]/) { |m| "\\#{m}" } + '"'
             end
 
-            def handle_response(response)
-              pb_logger.debug "Handling response: #{response.inspect}"
-              case response
-              when RubyAMI::Error
-                set_node_response false
-              when RubyAMI::Response
-                send_ref
-              end
-            end
-
             def success_reason(event)
-              code, result, data = parse_agi_result event['Result']
-              Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code => code, :result => result, :data => data
+              parser = RubyAMI::AGIResultParser.new event['Result']
+              Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code => parser.code, :result => parser.result, :data => parser.data
             end
           end
         end

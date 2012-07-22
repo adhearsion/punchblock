@@ -1,13 +1,12 @@
 # encoding: utf-8
 
-require 'uri'
-
 module Punchblock
   module Translator
     class Asterisk
       class Call
         include HasGuardedHandlers
         include Celluloid
+        include DeadActorSafety
 
         attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
@@ -21,26 +20,16 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
-        class << self
-          def parse_environment(agi_env)
-            agi_env_as_array(agi_env).inject({}) do |accumulator, element|
-              accumulator[element[0].to_sym] = element[1] || ''
-              accumulator
-            end
-          end
-
-          def agi_env_as_array(agi_env)
-            URI::Parser.new.unescape(agi_env).encode.split("\n").map { |p| p.split ': ' }
-          end
-        end
+        trap_exit :actor_died
 
         def initialize(channel, translator, agi_env = nil)
           @channel, @translator = channel, translator
           @agi_env = agi_env || {}
-          @id, @components = UUIDTools::UUID.random_create.to_s, {}
+          @id, @components = Punchblock.new_uuid, {}
           @answered = false
           @pending_joins = {}
           pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
+          @progress_sent = false
         end
 
         def register_component(component)
@@ -96,9 +85,11 @@ module Punchblock
           @answered
         end
 
-        def answer_if_not_answered
-          return if answered? || outbound?
-          execute_command Command::Answer.new.tap { |a| a.request! }
+        def send_progress
+          return if answered? || outbound? || @progress_sent
+          pb_logger.debug "Sending Progress to start early media"
+          @progress_sent = true
+          send_agi_action "EXEC Progress"
         end
 
         def channel=(other)
@@ -107,19 +98,23 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
+          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
+
           case ami_event.name
           when 'Hangup'
             pb_logger.trace "Received a Hangup AMI event. Sending End event."
             @components.dup.each_pair do |id, component|
-              component.call_ended if component.alive?
+              safe_from_dead_actors do
+                component.call_ended if component.alive?
+              end
             end
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
             pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
-              component.handle_ami_event! ami_event
+              component.handle_ami_event ami_event
             else
-              pb_logger.warn "Could not find component for AMI event: #{ami_event.inspect}"
+              pb_logger.trace "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
             pb_logger.trace "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
@@ -129,6 +124,11 @@ module Punchblock
             when '6'
               @answered = true
               send_pb_event Event::Answered.new
+            end
+          when 'OriginateResponse'
+            if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'
+              pb_logger.info "Outbound call could not be established!"
+              send_end_event :error
             end
           when 'BridgeExec'
             if join_command = pending_joins[ami_event['Channel2']]
@@ -165,9 +165,9 @@ module Punchblock
           pb_logger.debug "Executing command: #{command.inspect}"
           if command.component_id
             if component = component_with_id(command.component_id)
-              component.execute_command! command
+              component.execute_command command
             else
-              command.response = ProtocolError.new.setup 'component-not-found', "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+              command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
             end
           end
           case command
@@ -182,7 +182,7 @@ module Punchblock
               end
             end
           when Command::Answer
-            send_agi_action 'EXEC ANSWER' do |response|
+            send_agi_action 'ANSWER' do |response|
               command.response = true
             end
           when Command::Hangup
@@ -195,7 +195,14 @@ module Punchblock
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
-            redirect_back other_call
+            redirect_back other_call do |response|
+              case response
+              when RubyAMI::Error
+                command.response = ProtocolError.new.setup 'error', response.message
+              else
+                command.response = true
+              end
+            end
           when Command::Reject
             rejection = case command.reason
             when :busy
@@ -238,7 +245,7 @@ module Punchblock
           (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
             pb_logger.trace "Sending AMI action #{action.inspect}"
-            translator.send_ami_action! action
+            translator.send_ami_action action
           end
         end
 
@@ -246,7 +253,7 @@ module Punchblock
           "#{self.class}: #{id}"
         end
 
-        def redirect_back(other_call = nil)
+        def redirect_back(other_call = nil, &block)
           redirect_options = {
             'Channel'   => channel,
             'Exten'     => Asterisk::REDIRECT_EXTENSION,
@@ -259,18 +266,30 @@ module Punchblock
             'ExtraPriority'  => Asterisk::REDIRECT_PRIORITY,
             'ExtraContext'   => Asterisk::REDIRECT_CONTEXT
           }) if other_call
-          send_ami_action 'Redirect', redirect_options
+          send_ami_action 'Redirect', redirect_options, &block
+        end
+
+        def actor_died(actor, reason)
+          return unless reason
+          pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
+          if id = @components.key(actor)
+            pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
+            @components.delete id
+            complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
+            send_pb_event complete_event
+          end
         end
 
         private
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
+          translator.deregister_call current_actor
           after(5) { shutdown }
         end
 
         def execute_component(type, command, options = {})
-          type.new(command, current_actor).tap do |component|
+          type.new_link(command, current_actor).tap do |component|
             register_component component
             component.internal = true if options[:internal]
             component.execute!
@@ -280,7 +299,7 @@ module Punchblock
         def send_pb_event(event)
           event.target_call_id = id
           pb_logger.trace "Sending Punchblock event: #{event.inspect}"
-          translator.handle_pb_event! event
+          translator.handle_pb_event event
         end
 
         def offer_event

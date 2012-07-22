@@ -16,13 +16,15 @@ module Punchblock
           OptionError = Class.new Punchblock::Error
 
           include Celluloid
+          include DeadActorSafety
 
-          attr_reader :id, :call
+          attr_reader :id, :call, :call_id
           attr_accessor :internal
 
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
-            @id = UUIDTools::UUID.random_create.to_s
+            @call_id = safe_from_dead_actors { call.id } if call
+            @id = Punchblock.new_uuid
             @complete = false
             setup
             pb_logger.debug "Starting up..."
@@ -53,16 +55,12 @@ module Punchblock
             if internal
               @component_node.add_event event
             else
-              translator.handle_pb_event! event
+              safe_from_dead_actors { translator.handle_pb_event event }
             end
           end
 
           def logger_id
-            "#{self.class}: #{call ? "Call ID: #{call.id}, Component ID: #{id}" : id}"
-          end
-
-          def call_id
-            call.id if call
+            "#{self.class}: #{call_id ? "Call ID: #{call_id}, Component ID: #{id}" : id}"
           end
 
           def call_ended

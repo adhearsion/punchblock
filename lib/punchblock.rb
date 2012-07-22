@@ -18,6 +18,7 @@ module Punchblock
   autoload :CommandNode
   autoload :Component
   autoload :Connection
+  autoload :DeadActorSafety
   autoload :DisconnectedError
   autoload :HasHeaders
   autoload :Header
@@ -38,6 +39,29 @@ module Punchblock
 
     def reset_logger
       @logger = NullObject.new
+    end
+
+    #
+    # Get a new Punchblock client with a connection attached
+    #
+    # @param [Symbol] type the connection type (eg :XMPP, :asterisk)
+    # @param [Hash] options the options to pass to the connection (credentials, etc
+    #
+    # @return [Punchblock::Client] a punchblock client object
+    #
+    def client_with_connection(type, options)
+      connection = Connection.const_get(type.to_s.classify).new options
+      Client.new :connection => connection
+    rescue NameError
+      raise ArgumentError, "Connection type #{type.inspect} is not valid."
+    end
+
+    def new_uuid
+      SecureRandom.uuid
+    end
+
+    def jruby?
+      @jruby ||= !!(RUBY_PLATFORM =~ /java/)
     end
   end
 

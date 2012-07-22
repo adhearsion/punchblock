@@ -12,7 +12,7 @@ module Punchblock
             include StopByRedirect
           end
 
-          let(:mock_call) { mock('Call') }
+          let(:mock_call) { mock 'Call', :id => 'foo' }
           subject { MockComponent.new Hash.new, mock_call }
 
           describe "#execute_command" do
@@ -21,7 +21,6 @@ module Punchblock
 
               before { command.request! }
               it "returns a ProtocolError response" do
-                mock_call.expects(:id)
                 subject.execute_command command
                 command.response(0.1).should be_a ProtocolError
               end

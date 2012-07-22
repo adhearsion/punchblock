@@ -9,6 +9,16 @@ module Punchblock
         RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1').should be == Complete
       end
 
+      describe "setting a reason" do
+        let(:reason) { Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new }
+
+        subject { described_class.new }
+
+        before { subject.reason = reason }
+
+        its(:reason) { should == reason }
+      end
+
       describe "comparing for equality" do
         subject do
           Complete.new.tap do |c|

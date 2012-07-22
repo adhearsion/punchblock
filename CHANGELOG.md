@@ -1,5 +1,4 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * BREAKING: Asterisk output does not support interrupt digits
   * Change: Asterisk output now uses Playback rather than STREAM FILE
   * Feature: The recordings dir is now checked for existence on startup, and logs an error if it is not there. Asterisk only.
   * Feature: Punchblock now logs an error if it was unable to add the redirect context on Asterisk on startup.

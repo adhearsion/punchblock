@@ -9,12 +9,15 @@ module Punchblock
         module StopByRedirect
           def execute_command(command)
             return super unless command.is_a?(Punchblock::Component::Stop)
+            stop_by_redirect Punchblock::Event::Complete::Stop.new
+            command.response = true
+          end
 
+          def stop_by_redirect(complete_reason)
             component_actor = current_actor
             call.register_handler :ami, lambda { |e| e['SubEvent'] == 'Start' }, :name => 'AsyncAGI' do |event|
-              component_actor.send_complete_event! Punchblock::Event::Complete::Stop.new
+              component_actor.send_complete_event! complete_reason
             end
-            command.response = true
             call.redirect_back!
           end
         end

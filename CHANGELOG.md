@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.3.0](https://github.com/adhearsion/punchblock/compare/v1.2.0...v1.3.0) - [2012-07-22](https://rubygems.org/gems/punchblock/versions/1.3.0)
   * Change: Asterisk output now uses Playback rather than STREAM FILE
   * Feature: The recordings dir is now checked for existence on startup, and logs an error if it is not there. Asterisk only.
   * Feature: Punchblock now logs an error if it was unable to add the redirect context on Asterisk on startup.

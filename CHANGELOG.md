@@ -12,6 +12,7 @@
   * Bugfix: AMI events are processed in order by the translator
   * Bugfix: Asterisk calls and components are removed from registries when they die
   * Bugfix: Commands for unknown calls/components respond with the correct `:item_not_found` name
+  * Bugfix: AMI events relevant to a particular call are emitted by that call to the client
   * Bugfix: Asterisk calls send an error complete event for their dying components
   * Bugfix: Asterisk translator sends an error end event for its dying calls
   * Bugfix: Use the primitive version of AGI ANSWER, rather than an app

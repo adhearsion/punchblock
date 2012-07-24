@@ -162,7 +162,7 @@ module Punchblock
         end
 
         def execute_command(command)
-          pb_logger.debug "Executing command: #{command.inspect}"
+          pb_logger.trace "Executing command: #{command.inspect}"
           if command.component_id
             if component = component_with_id(command.component_id)
               component.execute_command command

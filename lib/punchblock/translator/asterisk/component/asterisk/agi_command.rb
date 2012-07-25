@@ -20,17 +20,14 @@ module Punchblock
             end
 
             def handle_ami_event(event)
-              pb_logger.debug "Handling AMI event: #{event.inspect}"
               if event.name == 'AsyncAGI'
                 if event['SubEvent'] == 'Exec'
-                  pb_logger.debug "Received AsyncAGI:Exec event, sending complete event."
                   send_complete_event success_reason(event)
                 end
               end
             end
 
             def handle_response(response)
-              pb_logger.debug "Handling response: #{response.inspect}"
               case response
               when RubyAMI::Error
                 set_node_response false

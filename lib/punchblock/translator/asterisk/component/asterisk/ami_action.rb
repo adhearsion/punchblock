@@ -24,7 +24,6 @@ module Punchblock
             end
 
             def handle_response(response)
-              pb_logger.debug "Handling response #{response.inspect}"
               case response
               when RubyAMI::Error
                 send_complete_event error_reason(response)

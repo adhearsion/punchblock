@@ -41,18 +41,14 @@ module Punchblock
           end
 
           def process_dtmf(digit)
-            pb_logger.trace "Processing incoming DTMF digit #{digit}"
             buffer << digit
             cancel_initial_timer
             case (match = grammar.match buffer.dup)
             when RubySpeech::GRXML::Match
-              pb_logger.trace "Found a match against buffer #{buffer}"
               complete success_reason(match)
             when RubySpeech::GRXML::NoMatch
-              pb_logger.trace "Buffer #{buffer} does not match grammar"
               complete Punchblock::Component::Input::Complete::NoMatch.new
             when RubySpeech::GRXML::PotentialMatch
-              pb_logger.trace "Buffer #{buffer} potentially matches grammar. Waiting..."
               reset_inter_digit_timer
             end
           end
@@ -70,9 +66,7 @@ module Punchblock
           private
 
           def begin_initial_timer(timeout)
-            pb_logger.trace "Setting initial timer for #{timeout} seconds"
             @initial_timer = after timeout do
-              pb_logger.trace "Initial timer expired."
               complete Punchblock::Component::Input::Complete::NoInput.new
             end
           end
@@ -86,13 +80,10 @@ module Punchblock
           def reset_inter_digit_timer
             return if @inter_digit_timeout == -1
             @inter_digit_timer ||= begin
-              pb_logger.trace "Setting inter-digit timer for #{@inter_digit_timeout/1000} seconds"
               after @inter_digit_timeout/1000 do
-                pb_logger.trace "Inter digit-timer expired."
                 complete Punchblock::Component::Input::Complete::NoMatch.new
               end
             end
-            pb_logger.trace "Resetting inter-digit timer"
             @inter_digit_timer.reset
           end
 

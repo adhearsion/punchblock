@@ -15,7 +15,6 @@ module Punchblock
       end
 
       def run
-        pb_logger.debug "Starting the RubyAMI client"
         ami_client.start
         raise DisconnectedError
       end

@@ -87,11 +87,10 @@ module Punchblock
       end
 
       def handle_es_event(event)
-        exclusive do
-          pb_logger.trace "Received event #{event.inspect}"
-          trigger_handler :es, event
-        end
+        pb_logger.trace "Received event #{event.inspect}"
+        trigger_handler :es, event
       end
+      exclusive :handle_es_event
 
       # def handle_ami_event(event)
       #   exclusive do

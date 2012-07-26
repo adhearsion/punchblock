@@ -613,7 +613,7 @@ module Punchblock
               Punchblock::Component::Output.new
             end
 
-            let(:mock_component) { mock 'Component::Asterisk::Output', :id => 'foo' }
+            let(:mock_component) { mock 'Freeswitch::Component::Output', :id => 'foo' }
 
             it 'should create an Output component and execute it asynchronously' do
               Component::Output.expects(:new_link).once.with(command, subject).returns mock_component
@@ -638,20 +638,19 @@ module Punchblock
         #     end
         #   end
 
-        #   context 'with a Record component' do
-        #     let :command do
-        #       Punchblock::Component::Record.new
-        #     end
+          context 'with a Record component' do
+            let :command do
+              Punchblock::Component::Record.new
+            end
 
-        #     let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
+            let(:mock_component) { mock 'Freeswitch::Component::Record', :id => 'foo' }
 
-        #     it 'should create a Record component and execute it asynchronously' do
-        #       Component::Record.expects(:new_link).once.with(command, subject).returns mock_action
-        #       mock_action.expects(:internal=).never
-        #       mock_action.expects(:execute!).once
-        #       subject.execute_command command
-        #     end
-        #   end
+            it 'should create a Record component and execute it asynchronously' do
+              Component::Record.expects(:new_link).once.with(command, subject).returns mock_component
+              mock_component.expects(:execute!).once
+              subject.execute_command command
+            end
+          end
 
           context 'with a component command' do
             let(:component_id) { 'foobar' }

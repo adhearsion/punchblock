@@ -7,6 +7,7 @@ module Punchblock
         extend ActiveSupport::Autoload
 
         autoload :Output
+        autoload :Record
 
         class Component
           OptionError = Class.new Punchblock::Error

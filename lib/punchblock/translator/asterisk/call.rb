@@ -55,10 +55,12 @@ module Punchblock
 
         def dial(dial_command)
           @direction = :outbound
+          channel = dial_command.to || ''
+          channel.match(/.* <(?<channel>.*)>/) { |m| channel = m[:channel] }
           params = { :async       => true,
                      :application => 'AGI',
                      :data        => 'agi:async',
-                     :channel     => dial_command.to,
+                     :channel     => channel,
                      :callerid    => dial_command.from,
                      :variable    => "punchblock_call_id=#{id}"
                    }

@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Report the correct caller ID in offers from Asterisk
+  * Bugfix: Strip out caller ID name from dial commands on Asterisk
 
 # [v1.3.0](https://github.com/adhearsion/punchblock/compare/v1.2.0...v1.3.0) - [2012-07-22](https://rubygems.org/gems/punchblock/versions/1.3.0)
   * Change: Asterisk output now uses Playback rather than STREAM FILE

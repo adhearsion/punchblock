@@ -310,19 +310,22 @@ module Punchblock
               subject.handle_es_event es_event
             end
 
-        #     it "should cause all components to send complete events before sending end event" do
-        #       comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
-        #       comp_command.request!
-        #       component = subject.execute_command comp_command
-        #       comp_command.response(0.1).should be_a Ref
-        #       expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id
-        #       expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
-        #       expected_end_event = Punchblock::Event::End.new :reason => :hangup, :target_call_id  => subject.id
-        #       end_sequence = sequence 'end events'
-        #       translator.expects(:handle_pb_event).with(expected_complete_event).once.in_sequence(end_sequence)
-        #       translator.expects(:handle_pb_event).with(expected_end_event).once.in_sequence(end_sequence)
-        #       subject.process_ami_event ami_event
-        #     end
+            it "should cause all components to send complete events before sending end event" do
+              ssml_doc = RubySpeech::SSML.draw { audio { 'foo.wav' } }
+              comp_command = Punchblock::Component::Output.new :ssml => ssml_doc
+              comp_command.request!
+              component = subject.execute_command comp_command
+              comp_command.response(0.1).should be_a Ref
+
+              expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id
+              expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
+              expected_end_event = Punchblock::Event::End.new :reason => :hangup, :target_call_id  => subject.id
+
+              end_sequence = sequence 'end events'
+              translator.expects(:handle_pb_event).with(expected_complete_event).once.in_sequence(end_sequence)
+              translator.expects(:handle_pb_event).with(expected_end_event).once.in_sequence(end_sequence)
+              subject.handle_es_event es_event
+            end
 
             [
               'NORMAL_CLEARING',

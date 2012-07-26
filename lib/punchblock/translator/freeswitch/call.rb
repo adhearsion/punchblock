@@ -92,11 +92,11 @@ module Punchblock
         def setup_handlers
           register_handler :es, :event_name => 'CHANNEL_HANGUP' do |event|
             pb_logger.info "The channel hung up: #{event.inspect}"
-            # @components.dup.each_pair do |id, component|
-            #   safe_from_dead_actors do
-            #     component.call_ended if component.alive?
-            #   end
-            # end
+            @components.dup.each_pair do |id, component|
+              safe_from_dead_actors do
+                component.call_ended if component.alive?
+              end
+            end
             send_end_event HANGUP_CAUSE_TO_END_REASON[event[:hangup_cause]]
           end
 

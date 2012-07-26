@@ -623,20 +623,19 @@ module Punchblock
             end
           end
 
-        #   context 'with an Input component' do
-        #     let :command do
-        #       Punchblock::Component::Input.new
-        #     end
+          context 'with an Input component' do
+            let :command do
+              Punchblock::Component::Input.new
+            end
 
-        #     let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
+            let(:mock_component) { mock 'Freeswitch::Component::Input', :id => 'foo' }
 
-        #     it 'should create an Input component and execute it asynchronously' do
-        #       Component::Input.expects(:new_link).once.with(command, subject).returns mock_action
-        #       mock_action.expects(:internal=).never
-        #       mock_action.expects(:execute!).once
-        #       subject.execute_command command
-        #     end
-        #   end
+            it 'should create an Input component and execute it asynchronously' do
+              Component::Input.expects(:new_link).once.with(command, subject).returns mock_component
+              mock_component.expects(:execute!).once
+              subject.execute_command command
+            end
+          end
 
           context 'with a Record component' do
             let :command do

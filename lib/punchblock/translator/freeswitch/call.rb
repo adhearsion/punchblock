@@ -180,8 +180,8 @@ module Punchblock
             command.response = true
           when Punchblock::Component::Output
             execute_component Component::Output, command
-        #   when Punchblock::Component::Input
-        #     execute_component Component::Input, command
+          when Punchblock::Component::Input
+            execute_component Component::Input, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
           else

@@ -222,48 +222,41 @@ module Punchblock
         describe '#dial' do
           let(:dial_command_options) { {} }
 
+          let(:to)    { 'sofia/internal/1000' }
+          let(:from)  { '1001' }
+
           let :dial_command do
-            Punchblock::Command::Dial.new({:to => 'SIP/1234', :from => 'sip:foo@bar.com'}.merge(dial_command_options))
+            Punchblock::Command::Dial.new({:to => to, :from => from}.merge(dial_command_options))
           end
 
           before { dial_command.request! }
 
-        #   it 'sends an Originate AMI action' do
-        #     expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
-        #                                                                        :params => {
-        #                                                                          :async       => true,
-        #                                                                          :application => 'AGI',
-        #                                                                          :data        => 'agi:async',
-        #                                                                          :channel     => 'SIP/1234',
-        #                                                                          :callerid    => 'sip:foo@bar.com',
-        #                                                                          :variable    => "punchblock_call_id=#{subject.id}"
-        #                                                                        }).tap { |a| a.request! }
+          it 'sends an originate bgapi command' do
+            stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}'}#{to} &park()"
+            subject.dial dial_command
+          end
 
-        #     translator.expects(:execute_global_command!).once.with expected_action
-        #     subject.dial dial_command
-        #   end
+          context 'with a name and channel in the from field' do
+            let(:from_name)   { 'Jane Smith' }
+            let(:from_number) { '1001' }
+            let(:from)        { "#{from_name} <#{from_number}>" }
 
-        #   context 'with a timeout specified' do
-        #     let :dial_command_options do
-        #       { :timeout => 10000 }
-        #     end
+            it 'sends an originate bgapi command with the cid fields set correctly' do
+              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from_number}',origination_caller_id_name='#{from_name}'}#{to} &park()"
+              subject.dial dial_command
+            end
+          end
 
-        #     it 'includes the timeout in the Originate AMI action' do
-        #       expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
-        #                                                                          :params => {
-        #                                                                            :async       => true,
-        #                                                                            :application => 'AGI',
-        #                                                                            :data        => 'agi:async',
-        #                                                                            :channel     => 'SIP/1234',
-        #                                                                            :callerid    => 'sip:foo@bar.com',
-        #                                                                            :variable    => "punchblock_call_id=#{subject.id}",
-        #                                                                            :timeout     => 10000
-        #                                                                          }).tap { |a| a.request! }
+          context 'with a timeout specified' do
+            let :dial_command_options do
+              { :timeout => 10000 }
+            end
 
-        #       translator.expects(:execute_global_command!).once.with expected_action
-        #       subject.dial dial_command
-        #     end
-        #   end
+            it 'includes the timeout in the originate command' do
+              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}',originate_timeout=10}#{to} &park()"
+              subject.dial dial_command
+            end
+          end
 
           it 'sends the call ID as a response to the Dial' do
             subject.dial dial_command

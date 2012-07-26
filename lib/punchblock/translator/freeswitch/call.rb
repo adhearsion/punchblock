@@ -117,19 +117,26 @@ module Punchblock
 
         def dial(dial_command)
           @direction = :outbound
-        #   params = { :async       => true,
-        #              :application => 'AGI',
-        #              :data        => 'agi:async',
-        #              :channel     => dial_command.to,
-        #              :callerid    => dial_command.from,
-        #              :variable    => "punchblock_call_id=#{id}"
-        #            }
-        #   params[:timeout] = dial_command.timeout unless dial_command.timeout.nil?
 
-        #   originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
-        #                                                                       :params => params
-        #   originate_action.request!
-        #   translator.execute_global_command! originate_action
+          cid_number, cid_name = dial_command.from, nil
+          dial_command.from.match(/(?<cid_name>.*) <(?<cid_number>.*)>/) do |m|
+            cid_name = m[:cid_name]
+            cid_number = m[:cid_number]
+          end
+
+          options = {
+            :return_ring_ready            => true,
+            :origination_uuid             => id,
+            :origination_caller_id_number => "'#{cid_number}'"
+          }
+          options[:origination_caller_id_name] = "'#{cid_name}'" if cid_name
+          options[:originate_timeout] = dial_command.timeout/1000 if dial_command.timeout
+          opts = options.inject([]) do |a, (k, v)|
+            a << "#{k}=#{v}"
+          end.join(',')
+
+          stream.bgapi "originate {#{opts}}#{dial_command.to} &park()"
+
           dial_command.response = Ref.new :id => id
         end
 

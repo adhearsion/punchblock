@@ -138,8 +138,8 @@ module Punchblock
           let(:call_id) { dial_command.response.id }
 
           before do
-            subject.execute_command dial_command
             stream.stub_everything
+            subject.execute_command dial_command
           end
 
           it 'sends an error in response to the command' do
@@ -238,14 +238,18 @@ module Punchblock
             Command::Dial.new :to => '1234', :from => 'abc123'
           end
 
+          let(:id) { Punchblock.new_uuid }
+
           before do
+            id
+            Punchblock.expects(:new_uuid).once.returns id
             command.request!
-            # ami_client.stub_everything
+            stream.stub_everything
           end
 
           it 'should be able to look up the call by ID' do
             subject.execute_global_command command
-            call = subject.call_with_id '1234'
+            call = subject.call_with_id id
             call.should be_a Freeswitch::Call
             call.translator.should be subject
             call.stream.should be stream

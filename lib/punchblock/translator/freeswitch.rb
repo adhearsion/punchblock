@@ -125,7 +125,7 @@ module Punchblock
       def execute_global_command(command)
         case command
         when Punchblock::Command::Dial
-          call = Call.new_link command.to, current_actor, nil, stream
+          call = Call.new_link Punchblock.new_uuid, current_actor, nil, stream
           register_call call
           call.dial! command
         else

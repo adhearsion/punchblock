@@ -110,6 +110,10 @@ module Punchblock
           stream.sendmsg id, *args, &block
         end
 
+        def uuid_foo(app, args = '', &block)
+          stream.bgapi "uuid_#{app} #{id} #{args}", &block
+        end
+
         def dial(dial_command)
           @direction = :outbound
 

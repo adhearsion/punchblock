@@ -92,14 +92,6 @@ module Punchblock
       end
       exclusive :handle_es_event
 
-      # def handle_ami_event(event)
-      #   exclusive do
-      #     unless ami_event_known_call?(event)
-      #       handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
-      #     end
-      #   end
-      # end
-
       def handle_pb_event(event)
         connection.handle_event event
       end
@@ -138,10 +130,6 @@ module Punchblock
 
       def execute_global_command(command)
         case command
-      #   when Punchblock::Component::Asterisk::AMI::Action
-      #     component = Component::Asterisk::AMIAction.new command, current_actor
-      #     register_component component
-      #     component.execute!
         when Punchblock::Command::Dial
           call = Call.new_link command.to, current_actor, nil, stream
           register_call call

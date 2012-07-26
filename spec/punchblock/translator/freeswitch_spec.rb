@@ -273,26 +273,6 @@ module Punchblock
           end
         end
 
-      #   context 'with an AMI action' do
-      #     let :command do
-      #       Component::Asterisk::AMI::Action.new :name  =>  'Status', :params  =>  { :channel  =>  'foo' }
-      #     end
-
-      #     let(:mock_action) { stub_everything 'Asterisk::Component::Asterisk::AMIAction' }
-
-      #     it 'should create a component actor and execute it asynchronously' do
-      #       Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
-      #       mock_action.expects(:execute!).once
-      #       subject.execute_global_command command
-      #     end
-
-      #     it 'registers the component' do
-      #       Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
-      #       subject.wrapped_object.expects(:register_component).with mock_action
-      #       subject.execute_global_command command
-      #     end
-      #   end
-
         context "with a command we don't understand" do
           let :command do
             Command::Answer.new
@@ -314,19 +294,6 @@ module Punchblock
       end
 
       describe '#handle_es_event' do
-      #   let :expected_pb_event do
-      #     Event::Asterisk::AMI::Event.new :name  =>  'Newchannel',
-      #                                     :attributes  =>  { :channel   =>  "SIP/101-3f3f",
-      #                                                      :state     =>  "Ring",
-      #                                                      :callerid  =>  "101",
-      #                                                      :uniqueid  =>  "1094154427.10"}
-      #   end
-
-      #   it 'should create a Punchblock AMI event object and pass it to the connection' do
-      #     subject.connection.expects(:handle_event).once.with expected_pb_event
-      #     subject.handle_ami_event ami_event
-      #   end
-
         before { subject.wrapped_object.stubs :handle_pb_event }
 
         let(:unique_id) { "3f0e1e18-c056-11e1-b099-fffeda3ce54f" }

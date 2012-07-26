@@ -283,7 +283,7 @@ module Punchblock
         describe '#handle_es_event' do
           context 'with a CHANNEL_HANGUP event' do
             let :es_event do
-              RubyFS::Event.new nil, :event_name     => "CHANNEL_HANGUP",
+              RubyFS::Event.new nil, :event_name        => "CHANNEL_HANGUP",
                 :hangup_cause                           => cause,
                 :channel_state                          => "CS_HANGUP",
                 :channel_call_state                     => "HANGUP",
@@ -606,33 +606,18 @@ module Punchblock
             end
           end
 
-        #   context 'with an AGI command component' do
-        #     let :command do
-        #       Punchblock::Component::Asterisk::AGI::Command.new :name => 'Answer'
-        #     end
-
-        #     let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
-
-        #     it 'should create an AGI command component actor and execute it asynchronously' do
-        #       mock_action.expects(:internal=).never
-        #       Component::Asterisk::AGICommand.expects(:new_link).once.with(command, subject).returns mock_action
-        #       mock_action.expects(:execute!).once
-        #       subject.execute_command command
-        #     end
-        #   end
-
           context 'with an Output component' do
             let :command do
               Punchblock::Component::Output.new
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
+            let(:mock_component) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
             it 'should create an Output component and execute it asynchronously' do
-              Component::Output.expects(:new_link).once.with(command, subject).returns mock_action
-              mock_action.expects(:execute!).once
+              Component::Output.expects(:new_link).once.with(command, subject).returns mock_component
+              mock_component.expects(:execute!).once
               subject.execute_command command
-              subject.component_with_id('foo').should be mock_action
+              subject.component_with_id('foo').should be mock_component
             end
           end
 

@@ -62,7 +62,6 @@ module Punchblock
           @platform_id, @translator, @stream = platform_id, translator, stream
           @es_env = es_env || {}
           @id, @components = Punchblock.new_uuid, {}
-        #   @answered = false
           pb_logger.debug "Starting up call with platform ID #{@platform_id}, id #{@id}"
           setup_handlers
         end
@@ -148,10 +147,6 @@ module Punchblock
           direction == :inbound
         end
 
-        # def answered?
-        #   @answered
-        # end
-
         def execute_command(command)
           pb_logger.debug "Executing command: #{command.inspect}"
           if command.component_id
@@ -187,8 +182,6 @@ module Punchblock
             hangup REJECT_TO_HANGUP_REASON[command.reason] do |response|
               command.response = true
             end
-        #   when Punchblock::Component::Asterisk::AGI::Command
-        #     execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
             execute_component Component::Output, command
         #   when Punchblock::Component::Input

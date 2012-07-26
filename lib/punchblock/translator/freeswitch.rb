@@ -21,26 +21,20 @@ module Punchblock
       def initialize(connection)
         pb_logger.debug "Starting up..."
         @connection = connection
-        @calls, @components, @platform_id_to_call_id = {}, {}, {}
+        @calls, @components = {}, {}
         setup_handlers
       end
 
       def register_call(call)
-        @platform_id_to_call_id[call.platform_id] = call.id
         @calls[call.id] ||= call
       end
 
       def deregister_call(call)
-        @platform_id_to_call_id.delete call.platform_id
         @calls.delete call.id
       end
 
       def call_with_id(call_id)
         @calls[call_id]
-      end
-
-      def call_for_platform_id(platform_id)
-        call_with_id @platform_id_to_call_id[platform_id]
       end
 
       def register_component(component)
@@ -64,14 +58,14 @@ module Punchblock
         register_handler :es, :event_name => 'CHANNEL_PARK' do |event|
           throw :pass if es_event_known_call? event
           pb_logger.info "A channel was parked. Creating a new call."
-          call = Call.new event[:unique_id], current_actor, Call.es_env_variables(event.content), stream
+          call = Call.new event[:unique_id], current_actor, event.content.select { |k,v| k.to_s =~ /variable/ }, stream
           link call
           register_call call
           call.send_offer!
         end
 
         register_handler :es, lambda { |event| es_event_known_call? event } do |event|
-          call = call_for_platform_id event[:unique_id]
+          call = call_with_id event[:unique_id]
           call.handle_es_event! event
         end
       end
@@ -154,7 +148,7 @@ module Punchblock
       private
 
       def es_event_known_call?(event)
-        event[:unique_id] && call_for_platform_id(event[:unique_id])
+        event[:unique_id] && call_with_id(event[:unique_id])
       end
     end
   end

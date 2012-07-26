@@ -6,7 +6,7 @@ module Punchblock
   module Translator
     class Freeswitch
       describe Call do
-        let(:platform_id) { 'foo' }
+        let(:id) { 'foo' }
         let(:translator)  { stub_everything 'Translator::Freeswitch' }
         let(:stream)      { stub_everything 'RubyFS::Stream' }
         let(:es_env) do
@@ -163,10 +163,9 @@ module Punchblock
           }
         end
 
-        subject { Call.new platform_id, translator, es_env, stream }
+        subject { Call.new id, translator, es_env, stream }
 
-        its(:id)          { should be_a String }
-        its(:platform_id) { should be == platform_id }
+        its(:id)          { should be == id }
         its(:translator)  { should be translator }
         its(:es_env)      { should be == es_env }
         its(:stream)      { should be stream }
@@ -208,14 +207,14 @@ module Punchblock
 
         describe "#application" do
           it "should execute a FS application on the current call" do
-            stream.expects(:application).once.with(platform_id, 'appname', 'options')
+            stream.expects(:application).once.with(id, 'appname', 'options')
             subject.application 'appname', 'options'
           end
         end
 
         describe "#sendmsg" do
           it "should execute a FS sendmsg on the current call" do
-            stream.expects(:sendmsg).once.with(platform_id, 'msg', :foo => 'bar')
+            stream.expects(:sendmsg).once.with(id, 'msg', :foo => 'bar')
             subject.sendmsg 'msg', :foo => 'bar'
           end
         end
@@ -562,7 +561,7 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should execute the answer application and set the command's response" do
-              Punchblock.expects(:new_uuid).twice.returns 'abc123'
+              Punchblock.expects(:new_uuid).once.returns 'abc123'
               subject.wrapped_object.expects(:application).once.with('answer', '%[punchblock_command_id=abc123]')
               subject.execute_command command
               subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123')

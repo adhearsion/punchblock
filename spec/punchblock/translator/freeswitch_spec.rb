@@ -69,31 +69,23 @@ module Punchblock
       end
 
       describe '#register_call' do
-        let(:call_id)     { 'abc123' }
-        let(:platform_id) { '123abc' }
-        let(:call)        { described_class::Call.new platform_id, subject }
+        let(:call_id) { 'abc123' }
+        let(:call)    { described_class::Call.new call_id, subject }
 
         before do
-          call.stubs(:id).returns call_id
           subject.register_call call
         end
 
         it 'should make the call accessible by ID' do
           subject.call_with_id(call_id).should be call
         end
-
-        it 'should make the call accessible by platform_id' do
-          subject.call_for_platform_id(platform_id).should be call
-        end
       end
 
       describe '#deregister_call' do
-        let(:call_id)     { 'abc123' }
-        let(:platform_id) { '123abc' }
-        let(:call)        { described_class::Call.new platform_id, subject }
+        let(:call_id) { 'abc123' }
+        let(:call)    { described_class::Call.new call_id, subject }
 
         before do
-          call.stubs(:id).returns call_id
           subject.register_call call
         end
 
@@ -101,12 +93,6 @@ module Punchblock
           subject.call_with_id(call_id).should be call
           subject.deregister_call call
           subject.call_with_id(call_id).should be_nil
-        end
-
-        it 'should make the call inaccessible by platform_id' do
-          subject.call_for_platform_id(platform_id).should be call
-          subject.deregister_call call
-          subject.call_for_platform_id(platform_id).should be_nil
         end
       end
 
@@ -181,7 +167,7 @@ module Punchblock
             RubyFS::Event.new nil, :event_name => 'CHANNEL_PARK', :unique_id => 'abc123'
           end
 
-          let(:call)    { subject.call_for_platform_id('abc123') }
+          let(:call)    { subject.call_with_id('abc123') }
           let(:call_id) { call.id }
 
           before do
@@ -257,9 +243,9 @@ module Punchblock
             # ami_client.stub_everything
           end
 
-          it 'should be able to look up the call by channel ID' do
+          it 'should be able to look up the call by ID' do
             subject.execute_global_command command
-            call = subject.call_for_platform_id '1234'
+            call = subject.call_with_id '1234'
             call.should be_a Freeswitch::Call
             call.translator.should be subject
             call.stream.should be stream
@@ -437,9 +423,9 @@ module Punchblock
           RubyFS::Event.new nil, es_content
         end
 
-        it 'should be able to look up the call by platform ID' do
+        it 'should be able to look up the call by ID' do
           subject.handle_es_event es_event
-          call = subject.call_for_platform_id unique_id
+          call = subject.call_with_id unique_id
           call.should be_a Freeswitch::Call
           call.translator.should be subject
           call.stream.should be stream
@@ -545,7 +531,7 @@ module Punchblock
             subject.handle_es_event es_event
           end
 
-          context 'if a call already exists for a matching platform ID' do
+          context 'if a call already exists for a matching ID' do
             let(:call) { Freeswitch::Call.new unique_id, subject }
 
             before do

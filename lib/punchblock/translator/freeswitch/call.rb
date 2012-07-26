@@ -48,21 +48,15 @@ module Punchblock
         REJECT_TO_HANGUP_REASON = Hash.new 'NORMAL_TEMPORARY_FAILURE'
         REJECT_TO_HANGUP_REASON.merge! :busy => 'USER_BUSY', :decline => 'CALL_REJECTED'
 
-        attr_reader :id, :platform_id, :translator, :es_env, :direction, :stream#, :pending_joins
+        attr_reader :id, :translator, :es_env, :direction, :stream#, :pending_joins
 
         trap_exit :actor_died
 
-        class << self
-          def es_env_variables(content)
-            content.select { |k,v| k.to_s =~ /variable/ }
-          end
-        end
-
-        def initialize(platform_id, translator, es_env = nil, stream = nil)
-          @platform_id, @translator, @stream = platform_id, translator, stream
+        def initialize(id, translator, es_env = nil, stream = nil)
+          @id, @translator, @stream = id, translator, stream
           @es_env = es_env || {}
-          @id, @components = Punchblock.new_uuid, {}
-          pb_logger.debug "Starting up call with platform ID #{@platform_id}, id #{@id}"
+          @components = {}
+          pb_logger.debug "Starting up call with id #{@id}"
           setup_handlers
         end
 
@@ -85,7 +79,7 @@ module Punchblock
         end
 
         def to_s
-          "#<#{self.class}:#{id} Platform ID: #{platform_id.inspect}>"
+          "#<#{self.class}:#{id}>"
         end
         alias :inspect :to_s
 
@@ -114,11 +108,11 @@ module Punchblock
         end
 
         def application(*args, &block)
-          stream.application platform_id, *args, &block
+          stream.application id, *args, &block
         end
 
         def sendmsg(*args, &block)
-          stream.sendmsg platform_id, *args, &block
+          stream.sendmsg id, *args, &block
         end
 
         def dial(dial_command)

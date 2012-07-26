@@ -102,16 +102,16 @@ module Punchblock
           trigger_handler :es, event
         end
 
-        def application(*args, &block)
-          stream.application id, *args, &block
+        def application(*args)
+          stream.application id, *args
         end
 
-        def sendmsg(*args, &block)
-          stream.sendmsg id, *args, &block
+        def sendmsg(*args)
+          stream.sendmsg id, *args
         end
 
-        def uuid_foo(app, args = '', &block)
-          stream.bgapi "uuid_#{app} #{id} #{args}", &block
+        def uuid_foo(app, args = '')
+          stream.bgapi "uuid_#{app} #{id} #{args}"
         end
 
         def dial(dial_command)
@@ -157,9 +157,8 @@ module Punchblock
           end
           case command
           when Command::Accept
-            application 'respond', '180 Ringing' do |response|
-              command.response = true
-            end
+            application 'respond', '180 Ringing'
+            command.response = true
           when Command::Answer
             command_id = Punchblock.new_uuid
             register_tmp_handler :es, :event_name => 'CHANNEL_ANSWER', [:[], :scope_variable_punchblock_command_id] => command_id do
@@ -167,9 +166,8 @@ module Punchblock
             end
             application 'answer', "%[punchblock_command_id=#{command_id}]"
           when Command::Hangup
-            hangup do |response|
-              command.response = true
-            end
+            hangup
+            command.response = true
         #   when Command::Join
         #     other_call = translator.call_with_id command.call_id
         #     pending_joins[other_call.channel] = command
@@ -178,9 +176,8 @@ module Punchblock
         #     other_call = translator.call_with_id command.call_id
         #     redirect_back other_call
           when Command::Reject
-            hangup REJECT_TO_HANGUP_REASON[command.reason] do |response|
-              command.response = true
-            end
+            hangup REJECT_TO_HANGUP_REASON[command.reason]
+            command.response = true
           when Punchblock::Component::Output
             execute_component Component::Output, command
         #   when Punchblock::Component::Input
@@ -192,8 +189,8 @@ module Punchblock
           end
         end
 
-        def hangup(reason = 'NORMAL_CLEARING', &block)
-          sendmsg :call_command => 'hangup', :hangup_cause => reason, &block
+        def hangup(reason = 'NORMAL_CLEARING')
+          sendmsg :call_command => 'hangup', :hangup_cause => reason
         end
 
         def logger_id

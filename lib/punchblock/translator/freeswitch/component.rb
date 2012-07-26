@@ -61,8 +61,8 @@ module Punchblock
             send_complete_event Punchblock::Event::Complete::Hangup.new
           end
 
-          def application(appname, options = nil, &block)
-            call.application appname, "%[punchblock_component_id=#{id}]#{options}", &block
+          def application(appname, options = nil)
+            call.application appname, "%[punchblock_component_id=#{id}]#{options}"
           end
 
           private

@@ -23,7 +23,6 @@ module Punchblock
             @id = Punchblock.new_uuid
             @complete = false
             setup
-            pb_logger.debug "Starting up..."
           end
 
           def setup
@@ -51,7 +50,6 @@ module Punchblock
           def send_event(event)
             event.component_id    = id
             event.target_call_id  = call_id
-            pb_logger.debug "Sending event #{event}"
             safe_from_dead_actors { translator.handle_pb_event event }
           end
 
@@ -74,7 +72,6 @@ module Punchblock
           end
 
           def set_node_response(value)
-            pb_logger.debug "Setting response on component node to #{value}"
             @component_node.response = value
           end
 

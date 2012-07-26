@@ -56,7 +56,6 @@ module Punchblock
           @id, @translator, @stream = id, translator, stream
           @es_env = es_env || {}
           @components = {}
-          pb_logger.debug "Starting up call with id #{@id}"
           setup_handlers
         end
 
@@ -74,7 +73,6 @@ module Punchblock
         end
 
         def shutdown
-          pb_logger.debug "Shutting down"
           current_actor.terminate!
         end
 
@@ -85,7 +83,6 @@ module Punchblock
 
         def setup_handlers
           register_handler :es, :event_name => 'CHANNEL_HANGUP' do |event|
-            pb_logger.info "The channel hung up: #{event.inspect}"
             @components.dup.each_pair do |id, component|
               safe_from_dead_actors do
                 component.call_ended if component.alive?
@@ -97,8 +94,6 @@ module Punchblock
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
             if component = component_with_id(event[:scope_variable_punchblock_component_id])
               component.handle_es_event event
-            else
-              pb_logger.trace "Could not find component for ES event: #{event.inspect}"
             end
           end
         end
@@ -149,7 +144,6 @@ module Punchblock
         end
 
         def execute_command(command)
-          pb_logger.debug "Executing command: #{command.inspect}"
           if command.component_id
             if component = component_with_id(command.component_id)
               component.execute_command command
@@ -206,7 +200,6 @@ module Punchblock
           return unless reason
           pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
           if id = @components.key(actor)
-            pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
             @components.delete id
             complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
             send_pb_event complete_event
@@ -230,7 +223,6 @@ module Punchblock
 
         def send_pb_event(event)
           event.target_call_id = id
-          pb_logger.trace "Sending Punchblock event: #{event.inspect}"
           translator.handle_pb_event event
         end
 

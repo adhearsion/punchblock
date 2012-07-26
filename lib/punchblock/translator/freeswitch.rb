@@ -19,7 +19,6 @@ module Punchblock
       trap_exit :actor_died
 
       def initialize(connection)
-        pb_logger.debug "Starting up..."
         @connection = connection
         @calls, @components = {}, {}
         setup_handlers
@@ -57,7 +56,6 @@ module Punchblock
 
         register_handler :es, :event_name => 'CHANNEL_PARK' do |event|
           throw :pass if es_event_known_call? event
-          pb_logger.info "A channel was parked. Creating a new call."
           call = Call.new event[:unique_id], current_actor, event.content.select { |k,v| k.to_s =~ /variable/ }, stream
           link call
           register_call call
@@ -75,13 +73,11 @@ module Punchblock
       end
 
       def shutdown
-        pb_logger.debug "Shutting down"
         @calls.values.each(&:shutdown)
         terminate
       end
 
       def handle_es_event(event)
-        pb_logger.trace "Received event #{event.inspect}"
         trigger_handler :es, event
       end
       exclusive :handle_es_event
@@ -91,7 +87,6 @@ module Punchblock
       end
 
       def execute_command(command, options = {})
-        pb_logger.trace "Executing command #{command.inspect}"
         command.request!
 
         command.target_call_id ||= options[:call_id]
@@ -137,7 +132,6 @@ module Punchblock
         return unless reason
         pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
         if id = @calls.key(actor)
-          pb_logger.info "Dead actor was a call we know about, with ID #{id}. Removing it from the registry..."
           @calls.delete id
           end_event = Punchblock::Event::End.new :target_call_id  => id,
                                                  :reason          => :error

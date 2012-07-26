@@ -60,10 +60,8 @@ module Punchblock
           end
 
           def playback(path)
-            pb_logger.debug "Playing an audio file (#{path}) via playback"
             op = current_actor
             register_handler :es, :event_name => 'CHANNEL_EXECUTE_COMPLETE' do |event|
-              pb_logger.debug "File playback completed with #{event.inspect}. Sending complete event"
               op.send_complete_event! success_reason
             end
             application 'playback', path

@@ -86,7 +86,7 @@ module Punchblock
           it 'sends an offer to the translator' do
             expected_offer = Punchblock::Event::Offer.new :target_call_id  => subject.id,
                                                           :to       => '1000',
-                                                          :from     => 'Jane Smith <sip:5678>',
+                                                          :from     => 'Jane Smith <SIP/5678>',
                                                           :headers  => sip_headers
             translator.expects(:handle_pb_event).with expected_offer
             subject.send_offer

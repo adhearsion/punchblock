@@ -22,7 +22,7 @@ module Punchblock
 
       def stop
         stream.shutdown
-        translator.shutdown!
+        translator.terminate
       end
 
       def write(command, options)

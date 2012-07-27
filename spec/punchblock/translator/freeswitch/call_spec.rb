@@ -170,14 +170,6 @@ module Punchblock
         its(:es_env)      { should be == es_env }
         its(:stream)      { should be stream }
 
-        describe '#shutdown' do
-          it 'should terminate the actor' do
-            subject.shutdown
-            sleep 0.5
-            subject.should_not be_alive
-          end
-        end
-
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'

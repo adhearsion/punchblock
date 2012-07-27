@@ -58,10 +58,6 @@ module Punchblock
           send_pb_event offer_event
         end
 
-        def shutdown
-          current_actor.terminate!
-        end
-
         def to_s
           "#<#{self.class}:#{id}>"
         end
@@ -219,7 +215,7 @@ module Punchblock
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
           translator.deregister_call current_actor
-          after(5) { shutdown }
+          after(5) { terminate }
         end
 
         def execute_component(type, command)

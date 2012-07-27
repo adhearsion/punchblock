@@ -17,17 +17,12 @@ module Punchblock
       its(:connection)  { should be connection }
       its(:stream)      { should be stream }
 
-      describe '#shutdown' do
-        it "instructs all calls to shutdown" do
+      describe '#terminate' do
+        it "terminates all calls" do
           call = described_class::Call.new 'foo', subject
-          call.expects(:shutdown).once
           subject.register_call call
-          subject.shutdown
-        end
-
-        it "terminates the actor" do
-          subject.shutdown
-          subject.should_not be_alive
+          subject.terminate
+          call.should_not be_alive
         end
       end
 

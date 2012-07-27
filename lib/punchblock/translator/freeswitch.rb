@@ -77,9 +77,8 @@ module Punchblock
         connection.stream
       end
 
-      def shutdown
-        @calls.values.each(&:shutdown)
-        terminate
+      def finalize
+        @calls.values.each(&:terminate)
       end
 
       def handle_es_event(event)

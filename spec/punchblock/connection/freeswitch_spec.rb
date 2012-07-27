@@ -44,7 +44,7 @@ module Punchblock
         end
 
         it 'shuts down the translator' do
-          subject.translator.expects(:shutdown!).once
+          subject.translator.expects(:terminate).once
           subject.stop
         end
       end

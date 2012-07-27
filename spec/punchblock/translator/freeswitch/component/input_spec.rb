@@ -128,7 +128,7 @@ module Punchblock
                 let(:original_command_opts) { { :mode => nil } }
                 it "should return an error and not execute any actions" do
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported on FreeSWITCH.'
+                  error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -137,7 +137,7 @@ module Punchblock
                 let(:original_command_opts) { { :mode => :any } }
                 it "should return an error and not execute any actions" do
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported on FreeSWITCH.'
+                  error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -146,7 +146,7 @@ module Punchblock
                 let(:original_command_opts) { { :mode => :speech } }
                 it "should return an error and not execute any actions" do
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported on FreeSWITCH.'
+                  error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end

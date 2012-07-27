@@ -13,8 +13,6 @@ module Punchblock
         autoload :StopByRedirect
 
         class Component
-          OptionError = Class.new Punchblock::Error
-
           include Celluloid
           include DeadActorSafety
 

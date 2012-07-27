@@ -11,8 +11,6 @@ module Punchblock
         autoload :Record
 
         class Component
-          OptionError = Class.new Punchblock::Error
-
           include Celluloid
           include DeadActorSafety
           include HasGuardedHandlers

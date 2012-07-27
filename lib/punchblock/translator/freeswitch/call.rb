@@ -48,14 +48,14 @@ module Punchblock
         REJECT_TO_HANGUP_REASON = Hash.new 'NORMAL_TEMPORARY_FAILURE'
         REJECT_TO_HANGUP_REASON.merge! :busy => 'USER_BUSY', :decline => 'CALL_REJECTED'
 
-        attr_reader :id, :translator, :es_env, :direction, :stream#, :pending_joins
+        attr_reader :id, :translator, :es_env, :direction, :stream
 
         trap_exit :actor_died
 
         def initialize(id, translator, es_env = nil, stream = nil)
           @id, @translator, @stream = id, translator, stream
           @es_env = es_env || {}
-          @components = {}
+          @components, @pending_joins = {}, {}
           @answered = false
           setup_handlers
         end
@@ -99,6 +99,14 @@ module Punchblock
               end
             end
             send_end_event HANGUP_CAUSE_TO_END_REASON[event[:hangup_cause]]
+          end
+
+          register_handler :es, :event_name => 'CHANNEL_BRIDGE' do |event|
+            command = @pending_joins[event[:other_leg_unique_id]]
+            command.response = true if command
+
+            other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
+            send_pb_event Event::Joined.new(:call_id => other_call_id)
           end
 
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
@@ -183,10 +191,9 @@ module Punchblock
           when Command::Hangup
             hangup
             command.response = true
-        #   when Command::Join
-        #     other_call = translator.call_with_id command.call_id
-        #     pending_joins[other_call.channel] = command
-        #     send_agi_action 'EXEC Bridge', other_call.channel
+          when Command::Join
+            uuid_foo :bridge, command.call_id
+            @pending_joins[command.call_id] = command
         #   when Command::Unjoin
         #     other_call = translator.call_with_id command.call_id
         #     redirect_back other_call

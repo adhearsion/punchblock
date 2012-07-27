@@ -6,9 +6,9 @@ module Punchblock
   module Translator
     class Freeswitch
       describe Call do
-        let(:id) { 'foo' }
-        let(:translator)  { stub_everything 'Translator::Freeswitch' }
+        let(:id) { Punchblock.new_uuid }
         let(:stream)      { stub_everything 'RubyFS::Stream' }
+        let(:translator)  { Freeswitch.new stub_everything('Connection::Freeswitch') }
         let(:es_env) do
           {
             :variable_direction                   => "inbound",
@@ -458,7 +458,7 @@ module Punchblock
           context 'with an event for a known component' do
             let(:mock_component_node) { mock 'Punchblock::Component::Output' }
             let :component do
-              Component::Output.new mock_component_node, subject.translator
+              Component::Output.new mock_component_node, subject
             end
 
             let(:es_event) do
@@ -547,6 +547,47 @@ module Punchblock
               subject.handle_es_event es_event
             end
           end
+
+          context 'with a CHANNEL_BRIDGE event' do
+            let(:other_call_id) { Punchblock.new_uuid }
+
+            let :expected_joined do
+              Punchblock::Event::Joined.new.tap do |joined|
+                joined.target_call_id = subject.id
+                joined.call_id = other_call_id
+              end
+            end
+
+            context "where this is the joining call" do
+              let :bridge_event do
+                RubyFS::Event.new nil, {
+                  :unique_id            => id,
+                  :event_name           => 'CHANNEL_BRIDGE',
+                  :other_leg_unique_id  => other_call_id
+                }
+              end
+
+              it "should send a joined event with the correct call ID" do
+                translator.expects(:handle_pb_event).with expected_joined
+                subject.handle_es_event bridge_event
+              end
+            end
+
+            context "where this is the joined call" do
+              let :bridge_event do
+                RubyFS::Event.new nil, {
+                  :unique_id            => other_call_id,
+                  :event_name           => 'CHANNEL_BRIDGE',
+                  :other_leg_unique_id  => id
+                }
+              end
+
+              it "should send a joined event with the correct call ID" do
+                translator.expects(:handle_pb_event).with expected_joined
+                subject.handle_es_event bridge_event
+              end
+            end
+          end
         end
 
         describe '#execute_command' do
@@ -568,8 +609,9 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should execute the answer application and set the command's response" do
+              subject
               Punchblock.expects(:new_uuid).once.returns 'abc123'
-              subject.wrapped_object.expects(:application).once.with('answer', '%[punchblock_command_id=abc123]')
+              subject.wrapped_object.expects(:application).once.with('answer', "%[punchblock_command_id=abc123]")
               subject.should_not be_answered
               subject.execute_command command
               subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123')
@@ -741,33 +783,38 @@ module Punchblock
             end
           end
 
-        #   context "with a join command" do
-        #     let(:other_call_id)     { "abc123" }
-        #     let(:other_channel)     { 'SIP/bar' }
-        #     let(:other_translator)  { stub_everything 'Translator::Asterisk' }
+          context "with a join command" do
+            let(:other_call_id) { Punchblock.new_uuid }
 
-        #     let :other_call do
-        #       Call.new other_channel, other_translator
-        #     end
+            let :command do
+              Punchblock::Command::Join.new :call_id => other_call_id
+            end
 
-        #     let :command do
-        #       Punchblock::Command::Join.new :call_id => other_call_id
-        #     end
+            it "executes the proper uuid_bridge command" do
+              subject.wrapped_object.expects(:uuid_foo).once.with :bridge, other_call_id
+              subject.execute_command command
+              expect { command.response 1 }.to raise_exception(Timeout::Error)
+            end
 
-        #     it "executes the proper dialplan Bridge application" do
-        #       translator.expects(:call_with_id).with(other_call_id).returns(other_call)
-        #       subject.execute_command command
-        #       agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-        #       agi_command.name.should be == "EXEC Bridge"
-        #       agi_command.params_array.should be == [other_channel]
-        #     end
+            context "subsequently receiving a CHANNEL_BRIDGE event" do
+              let :bridge_event do
+                RubyFS::Event.new nil, {
+                  :event_name           => 'CHANNEL_BRIDGE',
+                  :other_leg_unique_id  => other_call_id
+                }
+              end
 
-        #     it "adds the join to the @pending_joins hash" do
-        #       translator.expects(:call_with_id).with(other_call_id).returns(other_call)
-        #       subject.execute_command command
-        #       subject.pending_joins[other_channel].should be command
-        #     end
-        #   end
+              before do
+                subject.execute_command command
+
+              end
+
+              it "should set the command response to true" do
+                subject.handle_es_event bridge_event
+                command.response.should be_true
+              end
+            end
+          end
 
         #   context "with an unjoin command" do
         #     let(:other_call_id) { "abc123" }

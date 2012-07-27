@@ -549,6 +549,33 @@ module Punchblock
           end
         end
 
+        describe 'with an event with an Other-Leg-Unique-ID value' do
+          let(:call_a) { Freeswitch::Call.new Punchblock.new_uuid, subject }
+          let(:call_b) { Freeswitch::Call.new Punchblock.new_uuid, subject }
+
+          before do
+            subject.register_call call_a
+            subject.register_call call_b
+          end
+
+          let :es_event do
+            RubyFS::Event.new nil, {
+              :unique_id            => call_a.id,
+              :other_leg_unique_id  => call_b.id
+            }
+          end
+
+          it "is delivered to the bridging leg" do
+            call_a.expects(:handle_es_event!).once.with es_event
+            subject.handle_es_event es_event
+          end
+
+          it "is delivered to the other leg" do
+            call_b.expects(:handle_es_event!).once.with es_event
+            subject.handle_es_event es_event
+          end
+        end
+
         describe 'with an ES event for a known ID' do
           let :call do
             Freeswitch::Call.new unique_id, subject

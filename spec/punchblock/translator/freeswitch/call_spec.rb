@@ -580,6 +580,47 @@ module Punchblock
               end
             end
           end
+
+          context 'with a CHANNEL_UNBRIDGE event' do
+            let(:other_call_id) { Punchblock.new_uuid }
+
+            let :expected_unjoined do
+              Punchblock::Event::Unjoined.new.tap do |joined|
+                joined.target_call_id = subject.id
+                joined.call_id = other_call_id
+              end
+            end
+
+            context "where this is the unjoining call" do
+              let :unbridge_event do
+                RubyFS::Event.new nil, {
+                  :unique_id            => id,
+                  :event_name           => 'CHANNEL_UNBRIDGE',
+                  :other_leg_unique_id  => other_call_id
+                }
+              end
+
+              it "should send a unjoined event with the correct call ID" do
+                translator.expects(:handle_pb_event).with expected_unjoined
+                subject.handle_es_event unbridge_event
+              end
+            end
+
+            context "where this is the joined call" do
+              let :unbridge_event do
+                RubyFS::Event.new nil, {
+                  :unique_id            => other_call_id,
+                  :event_name           => 'CHANNEL_UNBRIDGE',
+                  :other_leg_unique_id  => id
+                }
+              end
+
+              it "should send a unjoined event with the correct call ID" do
+                translator.expects(:handle_pb_event).with expected_unjoined
+                subject.handle_es_event unbridge_event
+              end
+            end
+          end
         end
 
         describe '#execute_command' do
@@ -807,45 +848,37 @@ module Punchblock
             end
           end
 
-        #   context "with an unjoin command" do
-        #     let(:other_call_id) { "abc123" }
-        #     let(:other_channel) { 'SIP/bar' }
+          context "with an unjoin command" do
+            let(:other_call_id) { Punchblock.new_uuid }
 
-        #     let :other_call do
-        #       Call.new other_channel, translator
-        #     end
+            let :command do
+              Punchblock::Command::Unjoin.new :call_id => other_call_id
+            end
 
-        #     let :command do
-        #       Punchblock::Command::Unjoin.new :call_id => other_call_id
-        #     end
+            it "executes the unjoin via transfer to park" do
+              subject.wrapped_object.expects(:uuid_foo).once.with :transfer, '-both park inline'
+              subject.execute_command command
+              expect { command.response 1 }.to raise_exception(Timeout::Error)
+            end
 
-        #     it "executes the unjoin through redirection" do
-        #       translator.expects(:call_with_id).with(other_call_id).returns(nil)
-        #       subject.execute_command command
-        #       ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-        #       ami_action.name.should be == "redirect"
-        #       ami_action.headers['Channel'].should be == channel
-        #       ami_action.headers['Exten'].should be == Punchblock::Translator::Freeswitch::REDIRECT_EXTENSION
-        #       ami_action.headers['Priority'].should be == Punchblock::Translator::Freeswitch::REDIRECT_PRIORITY
-        #       ami_action.headers['Context'].should be == Punchblock::Translator::Freeswitch::REDIRECT_CONTEXT
-        #     end
+            context "subsequently receiving a CHANNEL_UNBRIDGE event" do
+              let :unbridge_event do
+                RubyFS::Event.new nil, {
+                  :event_name           => 'CHANNEL_UNBRIDGE',
+                  :other_leg_unique_id  => other_call_id
+                }
+              end
 
-        #     it "executes the unjoin through redirection, on the subject call and the other call" do
-        #       translator.expects(:call_with_id).with(other_call_id).returns(other_call)
-        #       subject.execute_command command
-        #       ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-        #       ami_action.name.should be == "redirect"
-        #       ami_action.headers['Channel'].should be == channel
-        #       ami_action.headers['Exten'].should be == Punchblock::Translator::Freeswitch::REDIRECT_EXTENSION
-        #       ami_action.headers['Priority'].should be == Punchblock::Translator::Freeswitch::REDIRECT_PRIORITY
-        #       ami_action.headers['Context'].should be == Punchblock::Translator::Freeswitch::REDIRECT_CONTEXT
+              before do
+                subject.execute_command command
+              end
 
-        #       ami_action.headers['ExtraChannel'].should be == other_channel
-        #       ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Freeswitch::REDIRECT_EXTENSION
-        #       ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Freeswitch::REDIRECT_PRIORITY
-        #       ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Freeswitch::REDIRECT_CONTEXT
-        #     end
-        #   end
+              it "should set the command response to true" do
+                subject.handle_es_event unbridge_event
+                command.response.should be_true
+              end
+            end
+          end
         end
       end
     end

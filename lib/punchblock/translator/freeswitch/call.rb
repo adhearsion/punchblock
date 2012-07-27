@@ -40,7 +40,8 @@ module Punchblock
         def initialize(id, translator, es_env = nil, stream = nil)
           @id, @translator, @stream = id, translator, stream
           @es_env = es_env || {}
-          @components, @pending_joins = {}, {}
+          @components = {}
+          @pending_joins, @pending_unjoins = {}, {}
           @answered = false
           setup_handlers
         end
@@ -89,6 +90,15 @@ module Punchblock
             other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
             send_pb_event Event::Joined.new(:call_id => other_call_id)
           end
+
+          register_handler :es, :event_name => 'CHANNEL_UNBRIDGE' do |event|
+            command = @pending_unjoins[event[:other_leg_unique_id]]
+            command.response = true if command
+
+            other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
+            send_pb_event Event::Unjoined.new(:call_id => other_call_id)
+          end
+
 
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
             if component = component_with_id(event[:scope_variable_punchblock_component_id])
@@ -173,11 +183,11 @@ module Punchblock
             hangup
             command.response = true
           when Command::Join
-            uuid_foo :bridge, command.call_id
             @pending_joins[command.call_id] = command
-        #   when Command::Unjoin
-        #     other_call = translator.call_with_id command.call_id
-        #     redirect_back other_call
+            uuid_foo :bridge, command.call_id
+          when Command::Unjoin
+            @pending_unjoins[command.call_id] = command
+            uuid_foo :transfer, '-both park inline'
           when Command::Reject
             hangup REJECT_TO_HANGUP_REASON[command.reason]
             command.response = true

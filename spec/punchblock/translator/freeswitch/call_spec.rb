@@ -798,7 +798,6 @@ module Punchblock
 
               before do
                 subject.execute_command command
-
               end
 
               it "should set the command response to true" do

@@ -475,55 +475,62 @@ module Punchblock
             end
           end
 
-        #   context 'with a Newstate event' do
-        #     let :ami_event do
-        #       RubyAMI::Event.new('Newstate').tap do |e|
-        #         e['Privilege']          = 'call,all'
-        #         e['Channel']            = 'SIP/1234-00000000'
-        #         e['ChannelState']       = channel_state
-        #         e['ChannelStateDesc']   = channel_state_desc
-        #         e['CallerIDNum']        = ''
-        #         e['CallerIDName']       = ''
-        #         e['ConnectedLineNum']   = ''
-        #         e['ConnectedLineName']  = ''
-        #         e['Uniqueid']           = '1326194671.0'
-        #       end
-        #     end
+          context 'with a CHANNEL_STATE event' do
+            let :es_event do
+              RubyFS::Event.new nil, {
+                :event_name         => 'CHANNEL_STATE',
+                :channel_call_state => channel_call_state
+              }
+            end
 
-        #     context 'ringing' do
-        #       let(:channel_state)       { '5' }
-        #       let(:channel_state_desc)  { 'Ringing' }
+            context 'ringing' do
+              let(:channel_call_state) { 'RINGING' }
 
-        #       it 'should send a ringing event' do
-        #         expected_ringing = Punchblock::Event::Ringing.new
-        #         expected_ringing.target_call_id = subject.id
-        #         translator.expects(:handle_pb_event).with expected_ringing
-        #         subject.process_ami_event ami_event
-        #       end
+              it 'should send a ringing event' do
+                expected_ringing = Punchblock::Event::Ringing.new
+                expected_ringing.target_call_id = subject.id
+                translator.expects(:handle_pb_event).with expected_ringing
+                subject.handle_es_event es_event
+              end
 
-        #       it '#answered? should return false' do
-        #         subject.process_ami_event ami_event
-        #         subject.answered?.should be_false
-        #       end
-        #     end
+              it '#answered? should return false' do
+                subject.handle_es_event es_event
+                subject.should_not be_answered
+              end
+            end
 
-        #     context 'up' do
-        #       let(:channel_state)       { '6' }
-        #       let(:channel_state_desc)  { 'Up' }
+            context 'something else' do
+              let(:channel_call_state) { 'FOO' }
 
-        #       it 'should send a ringing event' do
-        #         expected_answered = Punchblock::Event::Answered.new
-        #         expected_answered.target_call_id = subject.id
-        #         translator.expects(:handle_pb_event).with expected_answered
-        #         subject.process_ami_event ami_event
-        #       end
+              it 'should not send a ringing event' do
+                translator.expects(:handle_pb_event).never
+                subject.handle_es_event es_event
+              end
 
-        #       it '#answered? should be true' do
-        #         subject.process_ami_event ami_event
-        #         subject.answered?.should be_true
-        #       end
-        #     end
-        #   end
+              it '#answered? should return false' do
+                subject.handle_es_event es_event
+                subject.should_not be_answered
+              end
+            end
+          end
+
+          context 'with a CHANNEL_ANSWER event' do
+            let :es_event do
+              RubyFS::Event.new nil, :event_name => 'CHANNEL_ANSWER'
+            end
+
+            it 'should send an answered event' do
+              expected_answered = Punchblock::Event::Answered.new
+              expected_answered.target_call_id = subject.id
+              translator.expects(:handle_pb_event).with expected_answered
+              subject.handle_es_event es_event
+            end
+
+            it '#answered? should be true' do
+              subject.handle_es_event es_event
+              subject.should be_answered
+            end
+          end
 
           context 'with a handler registered for a matching event' do
             let :es_event do
@@ -563,9 +570,11 @@ module Punchblock
             it "should execute the answer application and set the command's response" do
               Punchblock.expects(:new_uuid).once.returns 'abc123'
               subject.wrapped_object.expects(:application).once.with('answer', '%[punchblock_command_id=abc123]')
+              subject.should_not be_answered
               subject.execute_command command
               subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123')
               command.response(0.5).should be true
+              subject.should be_answered
             end
           end
 

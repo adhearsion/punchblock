@@ -56,6 +56,7 @@ module Punchblock
           @id, @translator, @stream = id, translator, stream
           @es_env = es_env || {}
           @components = {}
+          @answered = false
           setup_handlers
         end
 
@@ -82,6 +83,15 @@ module Punchblock
         alias :inspect :to_s
 
         def setup_handlers
+          register_handler :es, :event_name => 'CHANNEL_ANSWER' do
+            @answered = true
+            send_pb_event Event::Answered.new
+          end
+
+          register_handler :es, :event_name => 'CHANNEL_STATE', [:[], :channel_call_state] => 'RINGING' do
+            send_pb_event Event::Ringing.new
+          end
+
           register_handler :es, :event_name => 'CHANNEL_HANGUP' do |event|
             @components.dup.each_pair do |id, component|
               safe_from_dead_actors do
@@ -147,6 +157,10 @@ module Punchblock
           direction == :inbound
         end
 
+        def answered?
+          @answered
+        end
+
         def execute_command(command)
           if command.component_id
             if component = component_with_id(command.component_id)
@@ -162,6 +176,7 @@ module Punchblock
           when Command::Answer
             command_id = Punchblock.new_uuid
             register_tmp_handler :es, :event_name => 'CHANNEL_ANSWER', [:[], :scope_variable_punchblock_command_id] => command_id do
+              @answered = true
               command.response = true
             end
             application 'answer', "%[punchblock_command_id=#{command_id}]"

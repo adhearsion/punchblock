@@ -5,11 +5,13 @@ require 'spec_helper'
 module Punchblock
   module Connection
     describe Freeswitch do
+      let(:media_engine) { :flite }
       let :options do
         {
-          :host     => '127.0.0.1',
-          :port     => 8021,
-          :password => 'test'
+          :host         => '127.0.0.1',
+          :port         => 8021,
+          :password     => 'test',
+          :media_engine => :flite
         }
       end
 
@@ -27,6 +29,10 @@ module Punchblock
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
+      end
+
+      it 'should set the media engine on the translator' do
+        subject.translator.media_engine.should be media_engine
       end
 
       describe '#run' do

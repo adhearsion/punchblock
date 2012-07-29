@@ -6,14 +6,15 @@ module Punchblock
   module Translator
     class Freeswitch
       module Component
-        describe Output do
+        describe TTSOutput do
           let(:connection) do
             mock_connection_with_event_handler do |event|
               original_command.add_event event
             end
           end
-          let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
-          let(:mock_call)   { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
+          let(:media_engine)  { :flite }
+          let(:translator)    { Punchblock::Translator::Freeswitch.new connection }
+          let(:mock_call)     { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
 
           let :original_command do
             Punchblock::Component::Output.new command_options
@@ -29,19 +30,21 @@ module Punchblock
             { :ssml => ssml_doc }
           end
 
-          subject { Output.new original_command, mock_call }
+          def execute
+            subject.execute media_engine
+          end
+
+          subject { described_class.new original_command, mock_call }
 
           describe '#execute' do
             before { original_command.request! }
-            def expect_playback(filename = audio_filename)
-              subject.wrapped_object.expects(:application).once.with 'playback', filename
+            def expect_playback(voice = 'kal')
+              subject.wrapped_object.expects(:application).once.with :speak, "#{media_engine}|#{voice}|#{ssml_doc}"
             end
-
-            let(:audio_filename) { 'http://foo.com/bar.mp3' }
 
             let :ssml_doc do
               RubySpeech::SSML.draw do
-                audio :src => audio_filename
+                audio :src => 'http://foo.com/bar.mp3'
               end
             end
 
@@ -59,83 +62,23 @@ module Punchblock
               context 'unset' do
                 let(:command_opts) { { :ssml => nil } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
                   original_command.response(0.1).should be == error
                 end
               end
 
-              context 'with a string (not SSML)' do
-                let :command_options do
-                  { :text => 'Foo Bar' }
-                end
-
-                it "should return an unrenderable document error" do
-                  subject.execute
-                  error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
-                  original_command.response(0.1).should be == error
-                end
-              end
-
-              context 'with a single audio SSML node' do
-                let(:audio_filename) { 'http://foo.com/bar.mp3' }
-                let :command_options do
-                  {
-                    :ssml => RubySpeech::SSML.draw { audio :src => audio_filename }
-                  }
-                end
-
-                it 'should playback the audio file using the playback application' do
+              context 'with an SSML node' do
+                it 'should speak the document using the speak application' do
                   expect_playback
-                  subject.execute
+                  execute
                 end
 
-                it 'should send a complete event when the file finishes playback' do
+                it 'should send a complete event when the speak finishes' do
                   expect_playback.yields true
-                  subject.execute
+                  execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
-                end
-              end
-
-              context 'with multiple audio SSML nodes' do
-                let(:audio_filename1) { 'http://foo.com/bar.mp3' }
-                let(:audio_filename2) { 'http://foo.com/baz.mp3' }
-                let :command_options do
-                  {
-                    :ssml => RubySpeech::SSML.draw do
-                      audio :src => audio_filename1
-                      audio :src => audio_filename2
-                    end
-                  }
-                end
-
-                it 'should playback all audio files using playback' do
-                  expect_playback [audio_filename1, audio_filename2].join('&')
-                  subject.execute
-                end
-
-                it 'should send a complete event when the files finish playback' do
-                  expect_playback([audio_filename1, audio_filename2].join('&')).yields true
-                  subject.execute
-                  subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
-                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
-                end
-              end
-
-              context "with an SSML document containing elements other than <audio/>" do
-                let :command_options do
-                  {
-                    :ssml => RubySpeech::SSML.draw do
-                      string "Foo Bar"
-                    end
-                  }
-                end
-
-                it "should return an unrenderable document error" do
-                  subject.execute
-                  error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
-                  original_command.response(0.1).should be == error
                 end
               end
             end
@@ -145,14 +88,14 @@ module Punchblock
                 let(:command_opts) { { :start_offset => nil } }
                 it 'should not pass any options to Playback' do
                   expect_playback
-                  subject.execute
+                  execute
                 end
               end
 
               context 'set' do
                 let(:command_opts) { { :start_offset => 10 } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -164,14 +107,14 @@ module Punchblock
                 let(:command_opts) { { :start_paused => false } }
                 it 'should not pass any options to Playback' do
                   expect_playback
-                  subject.execute
+                  execute
                 end
               end
 
               context 'true' do
                 let(:command_opts) { { :start_paused => true } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -183,14 +126,14 @@ module Punchblock
                 let(:command_opts) { { :repeat_interval => nil } }
                 it 'should not pass any options to Playback' do
                   expect_playback
-                  subject.execute
+                  execute
                 end
               end
 
               context 'set' do
                 let(:command_opts) { { :repeat_interval => 10 } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -202,14 +145,14 @@ module Punchblock
                 let(:command_opts) { { :repeat_times => nil } }
                 it 'should not pass any options to Playback' do
                   expect_playback
-                  subject.execute
+                  execute
                 end
               end
 
               context 'set' do
                 let(:command_opts) { { :repeat_times => 2 } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -221,14 +164,14 @@ module Punchblock
                 let(:command_opts) { { :max_time => nil } }
                 it 'should not pass any options to Playback' do
                   expect_playback
-                  subject.execute
+                  execute
                 end
               end
 
               context 'set' do
                 let(:command_opts) { { :max_time => 30 } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -238,18 +181,17 @@ module Punchblock
             describe 'voice' do
               context 'unset' do
                 let(:command_opts) { { :voice => nil } }
-                it 'should not pass the v option to Playback' do
+                it 'should use the default voice' do
                   expect_playback
-                  subject.execute
+                  execute
                 end
               end
 
               context 'set' do
                 let(:command_opts) { { :voice => 'alison' } }
-                it "should return an error and not execute any actions" do
-                  subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A voice value is unsupported.'
-                  original_command.response(0.1).should be == error
+                it "should execute speak with the specified voice" do
+                  expect_playback 'alison'
+                  execute
                 end
               end
             end
@@ -259,14 +201,14 @@ module Punchblock
                 let(:command_opts) { { :interrupt_on => nil } }
                 it "should not pass any digits to Playback" do
                   expect_playback
-                  subject.execute
+                  execute
                 end
               end
 
               context "set to :any" do
                 let(:command_opts) { { :interrupt_on => :any } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of any is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -275,7 +217,7 @@ module Punchblock
               context "set to :dtmf" do
                 let(:command_opts) { { :interrupt_on => :dtmf } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of dtmf is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -284,7 +226,7 @@ module Punchblock
               context "set to :speech" do
                 let(:command_opts) { { :interrupt_on => :speech } }
                 it "should return an error and not execute any actions" do
-                  subject.execute
+                  execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
                   original_command.response(0.1).should be == error
                 end
@@ -324,14 +266,14 @@ module Punchblock
               it "sets the command response to true" do
                 pending
                 mock_call.expects(:redirect_back!)
-                subject.execute_command command
+                execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
                 pending
                 mock_call.expects(:redirect_back!)
-                subject.execute_command command
+                execute_command command
                 original_command.should_not be_complete
                 mock_call.process_ami_event! ami_event
                 reason.should be_a Punchblock::Event::Complete::Stop
@@ -341,7 +283,7 @@ module Punchblock
               it "redirects the call by unjoining it" do
                 pending
                 mock_call.expects(:redirect_back!).with(nil)
-                subject.execute_command command
+                execute_command command
               end
             end
           end

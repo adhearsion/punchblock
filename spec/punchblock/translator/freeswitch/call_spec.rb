@@ -7,8 +7,9 @@ module Punchblock
     class Freeswitch
       describe Call do
         let(:id) { Punchblock.new_uuid }
-        let(:stream)      { stub_everything 'RubyFS::Stream' }
-        let(:translator)  { Freeswitch.new stub_everything('Connection::Freeswitch') }
+        let(:stream)        { stub_everything 'RubyFS::Stream' }
+        let(:media_engine)  { :freeswitch }
+        let(:translator)    { Freeswitch.new stub_everything('Connection::Freeswitch') }
         let(:es_env) do
           {
             :variable_direction                   => "inbound",
@@ -163,12 +164,13 @@ module Punchblock
           }
         end
 
-        subject { Call.new id, translator, es_env, stream }
+        subject { Call.new id, translator, es_env, stream, media_engine }
 
-        its(:id)          { should be == id }
-        its(:translator)  { should be translator }
-        its(:es_env)      { should be == es_env }
-        its(:stream)      { should be stream }
+        its(:id)            { should be == id }
+        its(:translator)    { should be translator }
+        its(:es_env)        { should be == es_env }
+        its(:stream)        { should be stream }
+        its(:media_engine)  { should be media_engine }
 
         describe '#register_component' do
           it 'should make the component accessible by ID' do
@@ -704,6 +706,17 @@ module Punchblock
               mock_component.expects(:execute!).once
               subject.execute_command command
               subject.component_with_id('foo').should be mock_component
+            end
+
+            context 'with the media engine of :flite' do
+              let(:media_engine) { :flite }
+
+              it 'should create a TTSOutput component and execute it asynchronously using flite' do
+                Component::TTSOutput.expects(:new_link).once.with(command, subject).returns mock_component
+                mock_component.expects(:execute!).once.with(media_engine)
+                subject.execute_command command
+                subject.component_with_id('foo').should be mock_component
+              end
             end
           end
 

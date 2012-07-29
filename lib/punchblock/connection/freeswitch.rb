@@ -9,7 +9,7 @@ module Punchblock
       attr_accessor :event_handler
 
       def initialize(options = {})
-        @translator = Translator::Freeswitch.new self
+        @translator = Translator::Freeswitch.new self, options[:media_engine]
         @stream = new_fs_stream(*options.values_at(:host, :port, :password))
         super()
       end

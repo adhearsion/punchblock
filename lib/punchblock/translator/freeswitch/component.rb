@@ -6,9 +6,11 @@ module Punchblock
       module Component
         extend ActiveSupport::Autoload
 
+        autoload :AbstractOutput
         autoload :Input
         autoload :Output
         autoload :Record
+        autoload :TTSOutput
 
         class Component
           include Celluloid

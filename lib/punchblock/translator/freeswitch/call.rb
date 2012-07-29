@@ -33,12 +33,12 @@ module Punchblock
         REJECT_TO_HANGUP_REASON = Hash.new 'NORMAL_TEMPORARY_FAILURE'
         REJECT_TO_HANGUP_REASON.merge! :busy => 'USER_BUSY', :decline => 'CALL_REJECTED'
 
-        attr_reader :id, :translator, :es_env, :direction, :stream
+        attr_reader :id, :translator, :es_env, :direction, :stream, :media_engine
 
         trap_exit :actor_died
 
-        def initialize(id, translator, es_env = nil, stream = nil)
-          @id, @translator, @stream = id, translator, stream
+        def initialize(id, translator, es_env = nil, stream = nil, media_engine = nil)
+          @id, @translator, @stream, @media_engine = id, translator, stream, media_engine
           @es_env = es_env || {}
           @components = {}
           @pending_joins, @pending_unjoins = {}, {}
@@ -192,7 +192,12 @@ module Punchblock
             hangup REJECT_TO_HANGUP_REASON[command.reason]
             command.response = true
           when Punchblock::Component::Output
-            execute_component Component::Output, command
+            case media_engine
+            when :freeswitch, :native, nil
+              execute_component Component::Output, command
+            else
+              execute_component Component::TTSOutput, command, media_engine
+            end
           when Punchblock::Component::Input
             execute_component Component::Input, command
           when Punchblock::Component::Record
@@ -228,10 +233,10 @@ module Punchblock
           after(5) { terminate }
         end
 
-        def execute_component(type, command)
+        def execute_component(type, command, *execute_args)
           type.new_link(command, current_actor).tap do |component|
             register_component component
-            component.execute!
+            component.execute! *execute_args
           end
         end
 

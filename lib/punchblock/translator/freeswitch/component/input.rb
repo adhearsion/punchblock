@@ -13,7 +13,9 @@ module Punchblock
           def register_dtmf_event_handler
             component = current_actor
             call.register_handler :es, :event_name => 'DTMF' do |event|
-              component.process_dtmf! event[:dtmf_digit]
+              safe_from_dead_actors do
+                component.process_dtmf! event[:dtmf_digit]
+              end
             end
           end
 

@@ -32,10 +32,6 @@ module Punchblock
 
           subject { Output.new original_command, mock_call }
 
-          # def expect_answered(value = true)
-          #   mock_call.expects(:answered?).returns(value).at_least_once
-          # end
-
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(filename = audio_filename)
@@ -70,6 +66,18 @@ module Punchblock
                 end
               end
 
+              context 'with a string (not SSML)' do
+                let :command_options do
+                  { :text => 'Foo Bar' }
+                end
+
+                it "should return an unrenderable document error" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+
               context 'with a single audio SSML node' do
                 let(:audio_filename) { 'http://foo.com/bar.mp3' }
                 let :command_options do
@@ -79,7 +87,6 @@ module Punchblock
                 end
 
                 it 'should playback the audio file using the playback application' do
-                  # expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -89,73 +96,6 @@ module Punchblock
                   subject.execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
-                end
-              end
-
-              context 'with a single text node without spaces' do
-                let(:audio_filename) { 'tt-monkeys' }
-                let :command_options do
-                  {
-                    :ssml => RubySpeech::SSML.draw { string audio_filename }
-                  }
-                end
-
-                it 'should playback the audio file using Playback' do
-                  pending
-                  expect_answered
-                  expect_playback
-                  subject.execute
-                end
-
-                it 'should send a complete event when the file finishes playback' do
-                  pending
-                  expect_answered
-                  def mock_call.send_agi_action!(*args, &block)
-                    block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
-                  end
-                  subject.execute
-                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
-                end
-
-                context "with early media playback" do
-                  it "should play the file with Playback" do
-                    pending
-                    expect_answered false
-                    expect_playback_noanswer
-                    mock_call.expects(:send_progress)
-                    subject.execute
-                  end
-
-                  context "with interrupt_on set to something that is not nil" do
-                    let(:audio_filename) { 'tt-monkeys' }
-                    let :command_options do
-                      {
-                        :ssml => RubySpeech::SSML.draw { string audio_filename },
-                        :interrupt_on => :any
-                      }
-                    end
-
-                    it "should return an error when the output is interruptible and it is early media" do
-                      pending
-                      expect_answered false
-                      error = ProtocolError.new.setup 'option error', 'Interrupt digits are not allowed with early media.'
-                      subject.execute
-                      original_command.response(0.1).should be == error
-                    end
-                  end
-                end
-              end
-
-              context 'with a string (not SSML)' do
-                let :command_options do
-                  { :text => 'Foo Bar' }
-                end
-
-                it "should return an unrenderable document error" do
-                  pending
-                  subject.execute
-                  error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
-                  original_command.response(0.1).should be == error
                 end
               end
 
@@ -171,29 +111,16 @@ module Punchblock
                   }
                 end
 
-                it 'should playback all audio files using Playback' do
-                  pending
-                  latch = CountDownLatch.new 2
+                it 'should playback all audio files using playback' do
                   expect_playback [audio_filename1, audio_filename2].join('&')
-                  expect_answered
                   subject.execute
-                  latch.wait 2
-                  sleep 2
                 end
 
-                it 'should send a complete event after the final file has finished playback' do
-                  pending
-                  expect_answered
-                  def mock_call.send_agi_action!(*args, &block)
-                    block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
-                  end
-                  latch = CountDownLatch.new 1
-                  original_command.expects(:add_event).once.with do |e|
-                    e.reason.should be_a Punchblock::Component::Output::Complete::Success
-                    latch.countdown!
-                  end
+                it 'should send a complete event when the files finish playback' do
+                  expect_playback([audio_filename1, audio_filename2].join('&')).yields true
                   subject.execute
-                  latch.wait(2).should be_true
+                  subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
+                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
                 end
               end
 
@@ -207,7 +134,6 @@ module Punchblock
                 end
 
                 it "should return an unrenderable document error" do
-                  pending
                   subject.execute
                   error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
                   original_command.response(0.1).should be == error
@@ -219,8 +145,6 @@ module Punchblock
               context 'unset' do
                 let(:command_opts) { { :start_offset => nil } }
                 it 'should not pass any options to Playback' do
-                  pending
-                  expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -229,9 +153,8 @@ module Punchblock
               context 'set' do
                 let(:command_opts) { { :start_offset => 10 } }
                 it "should return an error and not execute any actions" do
-                  pending
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
+                  error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -241,8 +164,6 @@ module Punchblock
               context 'false' do
                 let(:command_opts) { { :start_paused => false } }
                 it 'should not pass any options to Playback' do
-                  pending
-                  expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -251,9 +172,8 @@ module Punchblock
               context 'true' do
                 let(:command_opts) { { :start_paused => true } }
                 it "should return an error and not execute any actions" do
-                  pending
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
+                  error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -263,8 +183,6 @@ module Punchblock
               context 'unset' do
                 let(:command_opts) { { :repeat_interval => nil } }
                 it 'should not pass any options to Playback' do
-                  pending
-                  expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -273,9 +191,8 @@ module Punchblock
               context 'set' do
                 let(:command_opts) { { :repeat_interval => 10 } }
                 it "should return an error and not execute any actions" do
-                  pending
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
+                  error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -285,8 +202,6 @@ module Punchblock
               context 'unset' do
                 let(:command_opts) { { :repeat_times => nil } }
                 it 'should not pass any options to Playback' do
-                  pending
-                  expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -295,9 +210,8 @@ module Punchblock
               context 'set' do
                 let(:command_opts) { { :repeat_times => 2 } }
                 it "should return an error and not execute any actions" do
-                  pending
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported on Asterisk.'
+                  error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -307,8 +221,6 @@ module Punchblock
               context 'unset' do
                 let(:command_opts) { { :max_time => nil } }
                 it 'should not pass any options to Playback' do
-                  pending
-                  expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -317,9 +229,8 @@ module Punchblock
               context 'set' do
                 let(:command_opts) { { :max_time => 30 } }
                 it "should return an error and not execute any actions" do
-                  pending
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
+                  error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -329,8 +240,6 @@ module Punchblock
               context 'unset' do
                 let(:command_opts) { { :voice => nil } }
                 it 'should not pass the v option to Playback' do
-                  pending
-                  expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -339,9 +248,8 @@ module Punchblock
               context 'set' do
                 let(:command_opts) { { :voice => 'alison' } }
                 it "should return an error and not execute any actions" do
-                  pending
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A voice value is unsupported on Asterisk.'
+                  error = ProtocolError.new.setup 'option error', 'A voice value is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -351,8 +259,6 @@ module Punchblock
               context "set to nil" do
                 let(:command_opts) { { :interrupt_on => nil } }
                 it "should not pass any digits to Playback" do
-                  pending
-                  expect_answered
                   expect_playback
                   subject.execute
                 end
@@ -361,8 +267,6 @@ module Punchblock
               context "set to :any" do
                 let(:command_opts) { { :interrupt_on => :any } }
                 it "should return an error and not execute any actions" do
-                  pending
-                  expect_answered
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of any is unsupported.'
                   original_command.response(0.1).should be == error
@@ -372,8 +276,6 @@ module Punchblock
               context "set to :dtmf" do
                 let(:command_opts) { { :interrupt_on => :dtmf } }
                 it "should return an error and not execute any actions" do
-                  pending
-                  expect_answered
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of dtmf is unsupported.'
                   original_command.response(0.1).should be == error
@@ -383,7 +285,6 @@ module Punchblock
               context "set to :speech" do
                 let(:command_opts) { { :interrupt_on => :speech } }
                 it "should return an error and not execute any actions" do
-                  pending
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
                   original_command.response(0.1).should be == error
@@ -397,6 +298,7 @@ module Punchblock
               let(:command) { Punchblock::Component::Output::Pause.new }
 
               before { command.request! }
+
               it "returns a ProtocolError response" do
                 subject.execute_command command
                 command.response(0.1).should be_a ProtocolError
@@ -406,7 +308,6 @@ module Punchblock
             context "with a Stop command" do
               let(:command) { Punchblock::Component::Stop.new }
               let(:reason) { original_command.complete_event(5).reason }
-              let(:channel) { "SIP/1234-00000000" }
               let :ami_event do
                 RubyAMI::Event.new('AsyncAGI').tap do |e|
                   e['SubEvent'] = "Start"

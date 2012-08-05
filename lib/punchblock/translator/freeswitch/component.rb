@@ -7,6 +7,7 @@ module Punchblock
         extend ActiveSupport::Autoload
 
         autoload :AbstractOutput
+        autoload :FliteOutput
         autoload :Input
         autoload :Output
         autoload :Record

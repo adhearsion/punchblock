@@ -711,7 +711,29 @@ module Punchblock
             context 'with the media engine of :flite' do
               let(:media_engine) { :flite }
 
-              it 'should create a TTSOutput component and execute it asynchronously using flite' do
+              it 'should create a FliteOutput component and execute it asynchronously using flite' do
+                Component::FliteOutput.expects(:new_link).once.with(command, subject).returns mock_component
+                mock_component.expects(:execute!).once.with(media_engine)
+                subject.execute_command command
+                subject.component_with_id('foo').should be mock_component
+              end
+            end
+
+            context 'with the media engine of :cepstral' do
+              let(:media_engine) { :cepstral }
+
+              it 'should create a TTSOutput component and execute it asynchronously using cepstral' do
+                Component::TTSOutput.expects(:new_link).once.with(command, subject).returns mock_component
+                mock_component.expects(:execute!).once.with(media_engine)
+                subject.execute_command command
+                subject.component_with_id('foo').should be mock_component
+              end
+            end
+
+            context 'with the media engine of :unimrcp' do
+              let(:media_engine) { :unimrcp }
+
+              it 'should create a TTSOutput component and execute it asynchronously using unimrcp' do
                 Component::TTSOutput.expects(:new_link).once.with(command, subject).returns mock_component
                 mock_component.expects(:execute!).once.with(media_engine)
                 subject.execute_command command

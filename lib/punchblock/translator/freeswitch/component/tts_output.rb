@@ -13,7 +13,11 @@ module Punchblock
               op.send_complete_event! success_reason
             end
             voice = @component_node.voice || 'kal'
-            application :speak, [engine, voice, @component_node.ssml.to_s].join('|')
+            application :speak, [engine, voice, document].join('|')
+          end
+
+          def document
+            @component_node.ssml.to_s
           end
         end
       end

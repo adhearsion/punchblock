@@ -195,6 +195,8 @@ module Punchblock
             case media_engine
             when :freeswitch, :native, nil
               execute_component Component::Output, command
+            when :flite
+              execute_component Component::FliteOutput, command, media_engine
             else
               execute_component Component::TTSOutput, command, media_engine
             end

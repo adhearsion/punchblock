@@ -17,6 +17,17 @@ module Punchblock
             with_error 'option error', e.message
           end
 
+          def execute_command(command)
+            case command
+            when Punchblock::Component::Stop
+              command.response = true
+              application 'break'
+              send_complete_event Punchblock::Event::Complete::Stop.new
+            else
+              super
+            end
+          end
+
           private
 
           def do_output

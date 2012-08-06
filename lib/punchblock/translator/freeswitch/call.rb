@@ -102,7 +102,7 @@ module Punchblock
 
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
             if component = component_with_id(event[:scope_variable_punchblock_component_id])
-              component.handle_es_event event
+              safe_from_dead_actors { component.handle_es_event event }
             end
           end
         end

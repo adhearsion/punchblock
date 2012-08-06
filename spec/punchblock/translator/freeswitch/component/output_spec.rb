@@ -93,8 +93,21 @@ module Punchblock
                 it 'should send a complete event when the file finishes playback' do
                   expect_playback.yields true
                   subject.execute
-                  subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
+                  subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE", :application_response => 'FILE PLAYED')
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                end
+
+                context "when playback returns an error" do
+                  let(:fs_event) { RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE", :application_response => "PLAYBACK ERROR") }
+                  let(:complete_reason) { original_command.complete_event(0.1).reason }
+
+                  it "sends a complete event with an error reason" do
+                    expect_playback.yields true
+                    subject.execute
+                    subject.handle_es_event fs_event
+                    complete_reason.should be_a Punchblock::Event::Complete::Error
+                    complete_reason.details.should == 'Engine error: PLAYBACK ERROR'
+                  end
                 end
               end
 
@@ -118,7 +131,7 @@ module Punchblock
                 it 'should send a complete event when the files finish playback' do
                   expect_playback([audio_filename1, audio_filename2].join('!')).yields true
                   subject.execute
-                  subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
+                  subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE", :application_response => "FILE PLAYED")
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
                 end
               end

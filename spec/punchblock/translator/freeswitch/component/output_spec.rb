@@ -75,6 +75,20 @@ module Punchblock
                   error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
                   original_command.response(0.1).should be == error
                 end
+
+                context 'with a single text node without spaces' do
+                  let(:audio_filename) { 'http://foo.com/bar.mp3' }
+                  let :command_options do
+                    {
+                      :ssml => RubySpeech::SSML.draw { string audio_filename }
+                    }
+                  end
+
+                  it 'should playback the audio file using the playback application' do
+                    expect_playback
+                    subject.execute
+                  end
+                end
               end
 
               context 'with a single audio SSML node' do

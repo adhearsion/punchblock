@@ -10,13 +10,14 @@ module Punchblock
 
       def initialize(options = {})
         @translator = Translator::Freeswitch.new self, options[:media_engine]
-        @stream = new_fs_stream(*options.values_at(:host, :port, :password))
+        @stream_options = options.values_at(:host, :port, :password)
+        @stream = new_fs_stream
         super()
       end
 
       def run
         pb_logger.debug "Starting the RubyFS stream"
-        @stream.run
+        start_stream
         raise DisconnectedError
       end
 
@@ -35,8 +36,13 @@ module Punchblock
 
       private
 
-      def new_fs_stream(*args)
-        RubyFS::Stream.new(*args, lambda { |e| translator.handle_es_event! e })
+      def new_fs_stream
+        RubyFS::Stream.new(*@stream_options, lambda { |e| translator.handle_es_event! e })
+      end
+
+      def start_stream
+        @stream = new_fs_stream unless @stream.alive?
+        @stream.run
       end
     end
   end

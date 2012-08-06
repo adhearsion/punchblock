@@ -34,7 +34,7 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(filename = audio_filename)
-              subject.wrapped_object.expects(:application).once.with 'playback', filename
+              subject.wrapped_object.expects(:application).once.with 'playback', "file_string://#{filename}"
             end
 
             let(:audio_filename) { 'http://foo.com/bar.mp3' }
@@ -111,12 +111,12 @@ module Punchblock
                 end
 
                 it 'should playback all audio files using playback' do
-                  expect_playback [audio_filename1, audio_filename2].join('&')
+                  expect_playback [audio_filename1, audio_filename2].join('!')
                   subject.execute
                 end
 
                 it 'should send a complete event when the files finish playback' do
-                  expect_playback([audio_filename1, audio_filename2].join('&')).yields true
+                  expect_playback([audio_filename1, audio_filename2].join('!')).yields true
                   subject.execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success

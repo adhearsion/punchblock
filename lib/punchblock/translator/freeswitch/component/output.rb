@@ -14,7 +14,7 @@ module Punchblock
           end
 
           def do_output
-            playback filenames.join('&')
+            playback "file_string://#{filenames.join('!')}"
           end
 
           def filenames

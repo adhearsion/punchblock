@@ -44,7 +44,7 @@ module Punchblock
     #
     # Get a new Punchblock client with a connection attached
     #
-    # @param [Symbol] type the connection type (eg :XMPP, :asterisk)
+    # @param [Symbol] type the connection type (eg :XMPP, :asterisk, :freeswitch)
     # @param [Hash] options the options to pass to the connection (credentials, etc
     #
     # @return [Punchblock::Client] a punchblock client object

@@ -28,7 +28,7 @@ module Punchblock
       end
 
       def inspect
-        "#<Punchblock::Event::Offer to=\"#{to}\", from=\"#{from}\", call_id=\"#{target_call_id}\""
+        "#<Punchblock::Event::Offer to=\"#{to}\", from=\"#{from}\", headers=#{headers_hash.inspect}, call_id=\"#{target_call_id}\""
       end
     end # Offer
   end

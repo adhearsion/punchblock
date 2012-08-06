@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module Punchblock
   module Translator
-    class Asterisk
+    class Freeswitch
       module Component
         describe Input do
           let(:connection) do
@@ -12,9 +12,11 @@ module Punchblock
               original_command.add_event event
             end
           end
-          let(:media_engine)    { nil }
-          let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
-          let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
+          let(:id)          { Punchblock.new_uuid }
+          let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
+          let(:mock_stream) { mock('RubyFS::Stream') }
+          let(:call)        { Punchblock::Translator::Freeswitch::Call.new id, translator, nil, mock_stream }
+
           let(:original_command_options) { {} }
 
           let :original_command do
@@ -42,30 +44,22 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            it "calls send_progress on the call" do
-              call.expects(:send_progress)
-              subject.execute
-            end
-
-            before { call.stubs :send_progress }
-
             let(:original_command_opts) { {} }
 
             let :original_command_options do
               { :mode => :dtmf, :grammar => { :value => grammar } }.merge(original_command_opts)
             end
 
-            def ami_event_for_dtmf(digit, position)
-              RubyAMI::Event.new('DTMF').tap do |e|
-                e['Digit']  = digit.to_s
-                e['Start']  = position == :start ? 'Yes' : 'No'
-                e['End']    = position == :end ? 'Yes' : 'No'
-              end
+            def dtmf_event(digit)
+              RubyFS::Event.new nil, {
+                :event_name     => 'DTMF',
+                :dtmf_digit     => digit.to_s,
+                :dtmf_duration  => "1600"
+              }
             end
 
-            def send_ami_events_for_dtmf(digit)
-              call.process_ami_event ami_event_for_dtmf(digit, :start)
-              call.process_ami_event ami_event_for_dtmf(digit, :end)
+            def send_dtmf(digit)
+              call.handle_es_event dtmf_event(digit)
             end
 
             let(:reason) { original_command.complete_event(5).reason }
@@ -78,8 +72,8 @@ module Punchblock
 
               context "when a match is found" do
                 before do
-                  send_ami_events_for_dtmf 1
-                  send_ami_events_for_dtmf 2
+                  send_dtmf 1
+                  send_dtmf 2
                 end
 
                 let :expected_event do
@@ -97,14 +91,14 @@ module Punchblock
 
                 it "should not process further dtmf events" do
                   subject.expects(:process_dtmf!).never
-                  send_ami_events_for_dtmf 3
+                  send_dtmf 3
                 end
               end
 
               context "when the match is invalid" do
                 before do
-                  send_ami_events_for_dtmf 1
-                  send_ami_events_for_dtmf '#'
+                  send_dtmf 1
+                  send_dtmf '#'
                 end
 
                 let :expected_event do
@@ -172,17 +166,17 @@ module Punchblock
 
                 it "should not cause a NoInput if first input is received in time" do
                   subject.execute
-                  send_ami_events_for_dtmf 1
+                  send_dtmf 1
                   sleep 1.5
-                  send_ami_events_for_dtmf 2
+                  send_dtmf 2
                   reason.should be_a Punchblock::Component::Input::Complete::Success
                 end
 
                 it "should cause a NoInput complete event to be sent after the timeout" do
                   subject.execute
                   sleep 1.5
-                  send_ami_events_for_dtmf 1
-                  send_ami_events_for_dtmf 2
+                  send_dtmf 1
+                  send_dtmf 2
                   reason.should be_a Punchblock::Component::Input::Complete::NoInput
                 end
               end
@@ -223,18 +217,18 @@ module Punchblock
                 it "should not prevent a Match if input is received in time" do
                   subject.execute
                   sleep 1.5
-                  send_ami_events_for_dtmf 1
+                  send_dtmf 1
                   sleep 0.5
-                  send_ami_events_for_dtmf 2
+                  send_dtmf 2
                   reason.should be_a Punchblock::Component::Input::Complete::Success
                 end
 
                 it "should cause a NoMatch complete event to be sent after the timeout" do
                   subject.execute
                   sleep 1.5
-                  send_ami_events_for_dtmf 1
+                  send_dtmf 1
                   sleep 1.5
-                  send_ami_events_for_dtmf 2
+                  send_dtmf 2
                   reason.should be_a Punchblock::Component::Input::Complete::NoMatch
                 end
               end

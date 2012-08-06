@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: FreeSWITCH support (mostly complete, experimental, proceed with caution)
   * Bugfix: Report the correct caller ID in offers from Asterisk
   * Bugfix: Strip out caller ID name from dial commands on Asterisk
 

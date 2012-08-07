@@ -1,5 +1,10 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.4.0](https://github.com/adhearsion/punchblock/compare/v1.3.0...v1.4.0) - [2012-08-07](https://rubygems.org/gems/punchblock/versions/1.4.0)
+  * Feature: FreeSWITCH support (mostly complete, experimental, proceed with caution)
+  * Bugfix: Report the correct caller ID in offers from Asterisk
+  * Bugfix: Strip out caller ID name from dial commands on Asterisk
+
 # [v1.3.0](https://github.com/adhearsion/punchblock/compare/v1.2.0...v1.3.0) - [2012-07-22](https://rubygems.org/gems/punchblock/versions/1.3.0)
   * Change: Asterisk output now uses Playback rather than STREAM FILE
   * Feature: The recordings dir is now checked for existence on startup, and logs an error if it is not there. Asterisk only.

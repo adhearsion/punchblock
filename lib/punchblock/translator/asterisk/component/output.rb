@@ -54,13 +54,11 @@ module Punchblock
             when :unimrcp
               send_ref
               @call.send_agi_action! 'EXEC MRCPSynth', escaped_doc, mrcpsynth_options do |complete_event|
-                pb_logger.debug "MRCPSynth completed with #{complete_event}."
                 output_component.send_complete_event! success_reason
               end
             when :swift
               send_ref
               @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
-                pb_logger.debug "Swift completed with #{complete_event}."
                 output_component.send_complete_event! success_reason
               end
             end
@@ -89,10 +87,8 @@ module Punchblock
           end
 
           def playback(path)
-            pb_logger.debug "Playing an audio file (#{path}) via Playback"
             op = current_actor
             @call.send_agi_action! 'EXEC Playback', path do |complete_event|
-              pb_logger.debug "File playback completed with #{complete_event}. Sending complete event"
               op.send_complete_event! success_reason
             end
           end

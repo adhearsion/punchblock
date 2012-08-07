@@ -22,7 +22,6 @@ module Punchblock
       trap_exit :actor_died
 
       def initialize(ami_client, connection, media_engine = nil)
-        pb_logger.debug "Starting up..."
         @ami_client, @connection, @media_engine = ami_client, connection, media_engine
         @calls, @components, @channel_to_call_id = {}, {}, {}
         @fully_booted_count = 0
@@ -55,42 +54,38 @@ module Punchblock
       end
 
       def shutdown
-        pb_logger.debug "Shutting down"
         @calls.values.each(&:shutdown!)
         current_actor.terminate!
       end
 
       def handle_ami_event(event)
-        exclusive do
-          return unless event.is_a? RubyAMI::Event
+        return unless event.is_a? RubyAMI::Event
 
-          if event.name.downcase == "fullybooted"
-            pb_logger.trace "Counting FullyBooted event"
-            @fully_booted_count += 1
-            if @fully_booted_count >= 2
-              handle_pb_event Connection::Connected.new
-              @fully_booted_count = 0
-              run_at_fully_booted
-            end
-            return
+        if event.name.downcase == "fullybooted"
+          @fully_booted_count += 1
+          if @fully_booted_count >= 2
+            handle_pb_event Connection::Connected.new
+            @fully_booted_count = 0
+            run_at_fully_booted
           end
+          return
+        end
 
-          handle_varset_ami_event event
+        handle_varset_ami_event event
 
-          ami_dispatch_to_or_create_call event
+        ami_dispatch_to_or_create_call event
 
-          unless ami_event_known_call?(event)
-            handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
-          end
+        unless ami_event_known_call?(event)
+          handle_pb_event Event::Asterisk::AMI::Event.new(:name => event.name, :attributes => event.headers)
         end
       end
+      exclusive :handle_ami_event
 
       def handle_pb_event(event)
         connection.handle_event event
       end
 
       def execute_command(command, options = {})
-        pb_logger.trace "Executing command #{command.inspect}"
         command.request!
 
         command.target_call_id ||= options[:call_id]
@@ -144,7 +139,6 @@ module Punchblock
         send_ami_action('Command', {
           'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
         })
-        pb_logger.trace "Added extension extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
         send_ami_action('Command', {
           'Command' => "dialplan show #{REDIRECT_CONTEXT}"
         }) do |result|
@@ -160,9 +154,7 @@ module Punchblock
 
       def actor_died(actor, reason)
         return unless reason
-        pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
         if id = @calls.key(actor)
-          pb_logger.info "Dead actor was a call we know about, with ID #{id}. Removing it from the registry..."
           @calls.delete id
           end_event = Punchblock::Event::End.new :target_call_id  => id,
                                                  :reason          => :error
@@ -175,9 +167,7 @@ module Punchblock
       def handle_varset_ami_event(event)
         return unless event.name == 'VarSet' && event['Variable'] == 'punchblock_call_id' && (call = call_with_id event['Value'])
 
-        pb_logger.trace "Received a VarSet event indicating the full channel for call #{call}"
         @channel_to_call_id.delete call.channel
-        pb_logger.trace "Removed call with old channel from channel map: #{@channel_to_call_id}"
         call.channel = event['Channel']
         register_call call
       end
@@ -206,10 +196,8 @@ module Punchblock
       def handle_async_agi_start_event(event)
         env = RubyAMI::AsyncAGIEnvironmentParser.new(event['Env']).to_hash
 
-        return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'h' extension" if env[:agi_extension] == 'h'
-        return pb_logger.warn "Ignoring AsyncAGI Start event because it is for an 'Kill' type" if env[:agi_type] == 'Kill'
+        return if env[:agi_extension] == 'h' || env[:agi_type] == 'Kill'
 
-        pb_logger.trace "Handling AsyncAGI Start event by creating a new call"
         call = Call.new event['Channel'], current_actor, env
         link call
         register_call call

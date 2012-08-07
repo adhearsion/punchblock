@@ -392,7 +392,7 @@ module Punchblock
           it 'should be able to look up the call by channel ID' do
             subject.handle_ami_event ami_event
             call_actor = subject.call_for_channel('SIP/1234-00000000')
-            call_actor.wrapped_object.should be_a Asterisk::Call
+            call_actor.should be_a Asterisk::Call
             call_actor.agi_env.should be_a Hash
             call_actor.agi_env.should be == {
               :agi_request      => 'async',

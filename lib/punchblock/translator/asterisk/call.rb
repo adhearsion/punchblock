@@ -28,7 +28,6 @@ module Punchblock
           @id, @components = Punchblock.new_uuid, {}
           @answered = false
           @pending_joins = {}
-          pb_logger.debug "Starting up call with channel #{channel}, id #{@id}"
           @progress_sent = false
         end
 
@@ -46,7 +45,6 @@ module Punchblock
         end
 
         def shutdown
-          pb_logger.debug "Shutting down"
           current_actor.terminate!
         end
 
@@ -57,10 +55,12 @@ module Punchblock
 
         def dial(dial_command)
           @direction = :outbound
+          channel = dial_command.to || ''
+          channel.match(/.* <(?<channel>.*)>/) { |m| channel = m[:channel] }
           params = { :async       => true,
                      :application => 'AGI',
                      :data        => 'agi:async',
-                     :channel     => dial_command.to,
+                     :channel     => channel,
                      :callerid    => dial_command.from,
                      :variable    => "punchblock_call_id=#{id}"
                    }
@@ -87,13 +87,11 @@ module Punchblock
 
         def send_progress
           return if answered? || outbound? || @progress_sent
-          pb_logger.debug "Sending Progress to start early media"
           @progress_sent = true
           send_agi_action "EXEC Progress"
         end
 
         def channel=(other)
-          pb_logger.info "Channel is changing from #{channel} to #{other}."
           @channel = other
         end
 
@@ -102,7 +100,6 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
-            pb_logger.trace "Received a Hangup AMI event. Sending End event."
             @components.dup.each_pair do |id, component|
               safe_from_dead_actors do
                 component.call_ended if component.alive?
@@ -110,14 +107,10 @@ module Punchblock
             end
             send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
-            pb_logger.trace "Received an AsyncAGI event. Looking for matching AGICommand component."
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
-            else
-              pb_logger.trace "Could not find component for AMI event: #{ami_event.inspect}"
             end
           when 'Newstate'
-            pb_logger.trace "Received a Newstate AMI event with state #{ami_event['ChannelState']}: #{ami_event['ChannelStateDesc']}"
             case ami_event['ChannelState']
             when '5'
               send_pb_event Event::Ringing.new
@@ -127,7 +120,6 @@ module Punchblock
             end
           when 'OriginateResponse'
             if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'
-              pb_logger.info "Outbound call could not be established!"
               send_end_event :error
             end
           when 'BridgeExec'
@@ -162,7 +154,6 @@ module Punchblock
         end
 
         def execute_command(command)
-          pb_logger.debug "Executing command: #{command.inspect}"
           if command.component_id
             if component = component_with_id(command.component_id)
               component.execute_command command
@@ -173,10 +164,8 @@ module Punchblock
           case command
           when Command::Accept
             if outbound?
-              pb_logger.trace "Attempting to accept an outbound call. Skipping RINGING."
               command.response = true
             else
-              pb_logger.trace "Attempting to accept an inbound call. Executing RINGING."
               send_agi_action 'EXEC RINGING' do |response|
                 command.response = true
               end
@@ -231,11 +220,9 @@ module Punchblock
         end
 
         def send_agi_action(command, *params, &block)
-          pb_logger.trace "Sending AGI action #{command}"
           @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :target_call_id => id
           @current_agi_command.request!
           @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
-            pb_logger.trace "AGI action received complete event #{e.inspect}"
             block.call e if block
           end
           execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
@@ -244,7 +231,6 @@ module Punchblock
         def send_ami_action(name, headers = {}, &block)
           (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
             @current_ami_action = action
-            pb_logger.trace "Sending AMI action #{action.inspect}"
             translator.send_ami_action action
           end
         end
@@ -271,9 +257,7 @@ module Punchblock
 
         def actor_died(actor, reason)
           return unless reason
-          pb_logger.error "A linked actor (#{actor.inspect}) died due to #{reason.inspect}"
           if id = @components.key(actor)
-            pb_logger.info "Dead actor was a component we know about, with ID #{id}. Removing it from the registry..."
             @components.delete id
             complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
             send_pb_event complete_event
@@ -298,13 +282,12 @@ module Punchblock
 
         def send_pb_event(event)
           event.target_call_id = id
-          pb_logger.trace "Sending Punchblock event: #{event.inspect}"
           translator.handle_pb_event event
         end
 
         def offer_event
           Event::Offer.new :to      => agi_env.values_at(:agi_dnid, :agi_extension).detect { |e| e && e != 'unknown' },
-                           :from    => "#{agi_env[:agi_calleridname]} <#{[agi_env[:agi_type].downcase, agi_env[:agi_callerid]].join(':')}>",
+                           :from    => "#{agi_env[:agi_calleridname]} <#{[agi_env[:agi_type], agi_env[:agi_callerid]].join('/')}>",
                            :headers => sip_headers
         end
 

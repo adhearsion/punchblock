@@ -2,22 +2,23 @@
 
 module Punchblock
   module Translator
-    class Asterisk
+    class Freeswitch
       module Component
         extend ActiveSupport::Autoload
 
-        autoload :Asterisk
+        autoload :AbstractOutput
+        autoload :FliteOutput
         autoload :Input
         autoload :Output
         autoload :Record
-        autoload :StopByRedirect
+        autoload :TTSOutput
 
         class Component
           include Celluloid
           include DeadActorSafety
+          include HasGuardedHandlers
 
           attr_reader :id, :call, :call_id
-          attr_accessor :internal
 
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
@@ -34,6 +35,10 @@ module Punchblock
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
           end
 
+          def handle_es_event(event)
+            trigger_handler :es, event
+          end
+
           def send_complete_event(reason, recording = nil)
             return if @complete
             @complete = true
@@ -48,11 +53,7 @@ module Punchblock
           def send_event(event)
             event.component_id    = id
             event.target_call_id  = call_id
-            if internal
-              @component_node.add_event event
-            else
-              safe_from_dead_actors { translator.handle_pb_event event }
-            end
+            safe_from_dead_actors { translator.handle_pb_event event }
           end
 
           def logger_id
@@ -61,6 +62,10 @@ module Punchblock
 
           def call_ended
             send_complete_event Punchblock::Event::Complete::Hangup.new
+          end
+
+          def application(appname, options = nil)
+            call.application appname, "%[punchblock_component_id=#{id}]#{options}"
           end
 
           private

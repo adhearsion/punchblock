@@ -14,12 +14,12 @@ module Punchblock
       autoload :Call
       autoload :Component
 
-      attr_reader :connection, :media_engine, :calls
+      attr_reader :connection, :media_engine, :default_voice, :calls
 
       trap_exit :actor_died
 
-      def initialize(connection, media_engine = nil)
-        @connection, @media_engine = connection, media_engine
+      def initialize(connection, media_engine = nil, default_voice = nil)
+        @connection, @media_engine, @default_voice = connection, media_engine, default_voice
         @calls, @components = {}, {}
         setup_handlers
       end
@@ -56,7 +56,7 @@ module Punchblock
 
         register_handler :es, :event_name => 'CHANNEL_PARK' do |event|
           throw :pass if es_event_known_call? event
-          call = Call.new event[:unique_id], current_actor, event.content.select { |k,v| k.to_s =~ /variable/ }, stream, @media_engine
+          call = Call.new event[:unique_id], current_actor, event.content.select { |k,v| k.to_s =~ /variable/ }, stream, @media_engine, @default_voice
           link call
           register_call call
           call.send_offer!
@@ -124,7 +124,7 @@ module Punchblock
       def execute_global_command(command)
         case command
         when Punchblock::Command::Dial
-          call = Call.new_link Punchblock.new_uuid, current_actor, nil, stream, @media_engine
+          call = Call.new_link Punchblock.new_uuid, current_actor, nil, stream, @media_engine, @default_voice
           register_call call
           call.dial! command
         else

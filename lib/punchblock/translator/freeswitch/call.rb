@@ -33,12 +33,12 @@ module Punchblock
         REJECT_TO_HANGUP_REASON = Hash.new 'NORMAL_TEMPORARY_FAILURE'
         REJECT_TO_HANGUP_REASON.merge! :busy => 'USER_BUSY', :decline => 'CALL_REJECTED'
 
-        attr_reader :id, :translator, :es_env, :direction, :stream, :media_engine
+        attr_reader :id, :translator, :es_env, :direction, :stream, :media_engine, :default_voice
 
         trap_exit :actor_died
 
-        def initialize(id, translator, es_env = nil, stream = nil, media_engine = nil)
-          @id, @translator, @stream, @media_engine = id, translator, stream, media_engine
+        def initialize(id, translator, es_env = nil, stream = nil, media_engine = nil, default_voice = nil)
+          @id, @translator, @stream, @media_engine, @default_voice = id, translator, stream, media_engine, default_voice
           @es_env = es_env || {}
           @components = {}
           @pending_joins, @pending_unjoins = {}, {}
@@ -196,9 +196,9 @@ module Punchblock
             when :freeswitch, :native, nil
               execute_component Component::Output, command
             when :flite
-              execute_component Component::FliteOutput, command, media_engine
+              execute_component Component::FliteOutput, command, media_engine, default_voice
             else
-              execute_component Component::TTSOutput, command, media_engine
+              execute_component Component::TTSOutput, command, media_engine, default_voice
             end
           when Punchblock::Component::Input
             execute_component Component::Input, command

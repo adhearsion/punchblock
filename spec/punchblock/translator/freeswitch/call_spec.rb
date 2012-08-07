@@ -9,6 +9,7 @@ module Punchblock
         let(:id) { Punchblock.new_uuid }
         let(:stream)        { stub_everything 'RubyFS::Stream' }
         let(:media_engine)  { :freeswitch }
+        let(:default_voice) { :hal }
         let(:translator)    { Freeswitch.new stub_everything('Connection::Freeswitch') }
         let(:es_env) do
           {
@@ -164,7 +165,7 @@ module Punchblock
           }
         end
 
-        subject { Call.new id, translator, es_env, stream, media_engine }
+        subject { Call.new id, translator, es_env, stream, media_engine, default_voice }
 
         its(:id)            { should be == id }
         its(:translator)    { should be translator }
@@ -711,9 +712,9 @@ module Punchblock
             context 'with the media engine of :flite' do
               let(:media_engine) { :flite }
 
-              it 'should create a FliteOutput component and execute it asynchronously using flite' do
+              it 'should create a FliteOutput component and execute it asynchronously using flite and the calls default voice' do
                 Component::FliteOutput.expects(:new_link).once.with(command, subject).returns mock_component
-                mock_component.expects(:execute!).once.with(media_engine)
+                mock_component.expects(:execute!).once.with(media_engine, default_voice)
                 subject.execute_command command
                 subject.component_with_id('foo').should be mock_component
               end
@@ -722,9 +723,9 @@ module Punchblock
             context 'with the media engine of :cepstral' do
               let(:media_engine) { :cepstral }
 
-              it 'should create a TTSOutput component and execute it asynchronously using cepstral' do
+              it 'should create a TTSOutput component and execute it asynchronously using cepstral and the calls default voice' do
                 Component::TTSOutput.expects(:new_link).once.with(command, subject).returns mock_component
-                mock_component.expects(:execute!).once.with(media_engine)
+                mock_component.expects(:execute!).once.with(media_engine, default_voice)
                 subject.execute_command command
                 subject.component_with_id('foo').should be mock_component
               end
@@ -733,9 +734,9 @@ module Punchblock
             context 'with the media engine of :unimrcp' do
               let(:media_engine) { :unimrcp }
 
-              it 'should create a TTSOutput component and execute it asynchronously using unimrcp' do
+              it 'should create a TTSOutput component and execute it asynchronously using unimrcp and the calls default voice' do
                 Component::TTSOutput.expects(:new_link).once.with(command, subject).returns mock_component
-                mock_component.expects(:execute!).once.with(media_engine)
+                mock_component.expects(:execute!).once.with(media_engine, default_voice)
                 subject.execute_command command
                 subject.component_with_id('foo').should be mock_component
               end

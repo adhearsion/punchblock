@@ -13,6 +13,7 @@ module Punchblock
             end
           end
           let(:media_engine)  { :flite }
+          let(:default_voice) { nil }
           let(:translator)    { Punchblock::Translator::Freeswitch.new connection }
           let(:mock_call)     { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
 
@@ -31,14 +32,14 @@ module Punchblock
           end
 
           def execute
-            subject.execute media_engine
+            subject.execute media_engine, default_voice
           end
 
           subject { described_class.new original_command, mock_call }
 
           describe '#execute' do
             before { original_command.request! }
-            def expect_playback(voice = 'kal')
+            def expect_playback(voice = :kal)
               subject.wrapped_object.expects(:application).once.with :speak, "#{media_engine}|#{voice}|FOO"
             end
 

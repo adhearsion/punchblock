@@ -1,6 +1,7 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: Cleaning up DTMF handlers for input components with a dead call should not crash on FreeSWITCH
   * Bugfix: Reduced a race condition on FreeSWITCH when dispatching events from calls to dead components
+  * Bugfix: Events relevant to bridged channels were not being routed to the call
 
 # [v1.4.0](https://github.com/adhearsion/punchblock/compare/v1.3.0...v1.4.0) - [2012-08-07](https://rubygems.org/gems/punchblock/versions/1.4.0)
   * Feature: FreeSWITCH support (mostly complete, experimental, proceed with caution)

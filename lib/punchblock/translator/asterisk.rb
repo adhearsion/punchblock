@@ -19,6 +19,8 @@ module Punchblock
       REDIRECT_EXTENSION = '1'
       REDIRECT_PRIORITY = '1'
 
+      CHANNEL_NORMALIZATION_REGEXP = /^(Bridge\/)*(?<channel>[^<>]*)(<.*>)*$/.freeze
+
       trap_exit :actor_died
 
       def initialize(ami_client, connection, media_engine = nil)
@@ -42,7 +44,7 @@ module Punchblock
       end
 
       def call_for_channel(channel)
-        call_with_id @channel_to_call_id[channel]
+        call_with_id @channel_to_call_id[channel.match(CHANNEL_NORMALIZATION_REGEXP)[:channel]]
       end
 
       def register_component(component)

@@ -20,7 +20,7 @@ module Punchblock
       REDIRECT_PRIORITY = '1'
 
       CHANNEL_NORMALIZATION_REGEXP = /^(?<prefix>Bridge\/)*(?<channel>[^<>]*)(?<suffix><.*>)*$/.freeze
-      EVENTS_ALLOWED_BRIDGED = %w{agiexec}
+      EVENTS_ALLOWED_BRIDGED = %w{agiexec asyncagi}
 
       trap_exit :actor_died
 

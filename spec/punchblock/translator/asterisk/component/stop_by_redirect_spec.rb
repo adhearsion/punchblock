@@ -46,7 +46,7 @@ module Punchblock
                 end
 
                 subject.execute_command command
-               command.response(0.1).should be == true
+                command.response(0.1).should be == true
               end
 
               it "returns an error if the component is already complete" do

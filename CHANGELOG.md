@@ -1,5 +1,12 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.4.1](https://github.com/adhearsion/punchblock/compare/v1.4.0...v1.4.1) - [2012-09-06](https://rubygems.org/gems/punchblock/versions/1.4.1)
+  * Bugfix: Cleaning up DTMF handlers for input components with a dead call should not crash on FreeSWITCH
+  * Bugfix: Reduced a race condition on FreeSWITCH when dispatching events from calls to dead components
+  * Bugfix: Events relevant to bridged channels were not being routed to the call
+  * Bugfix: Components using #stop_by_redirect now return an error response if stopped when they are complete
+  * Bugfix: Hold back ruby_ami and ruby_fs dependencies pending fixes for Celluloid 0.12.0
+
 # [v1.4.0](https://github.com/adhearsion/punchblock/compare/v1.3.0...v1.4.0) - [2012-08-07](https://rubygems.org/gems/punchblock/versions/1.4.0)
   * Feature: FreeSWITCH support (mostly complete, experimental, proceed with caution)
   * Bugfix: Report the correct caller ID in offers from Asterisk

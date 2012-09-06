@@ -10,6 +10,9 @@ module Punchblock
 
           class MockComponent < Component
             include StopByRedirect
+            def set_complete
+              @complete = true
+            end
           end
 
           let(:mock_call) { mock 'Call', :id => 'foo' }
@@ -46,9 +49,13 @@ module Punchblock
                 command.response(0.1).should be == true
               end
 
+              it "returns an error if the component is already complete" do
+                subject.set_complete
+                subject.execute_command command
+                command.response(0.1).should be_a ProtocolError
+              end
             end
           end
-
         end
       end
     end

@@ -19,6 +19,9 @@ module Punchblock
       REDIRECT_EXTENSION = '1'
       REDIRECT_PRIORITY = '1'
 
+      CHANNEL_NORMALIZATION_REGEXP = /^(?<prefix>Bridge\/)*(?<channel>[^<>]*)(?<suffix><.*>)*$/.freeze
+      EVENTS_ALLOWED_BRIDGED = %w{agiexec asyncagi}
+
       trap_exit :actor_died
 
       def initialize(ami_client, connection, media_engine = nil)
@@ -42,7 +45,7 @@ module Punchblock
       end
 
       def call_for_channel(channel)
-        call_with_id @channel_to_call_id[channel]
+        call_with_id @channel_to_call_id[channel.match(CHANNEL_NORMALIZATION_REGEXP)[:channel]]
       end
 
       def register_component(component)
@@ -176,7 +179,13 @@ module Punchblock
         if ami_event_known_call?(event)
           channels_for_ami_event(event).each do |channel|
             call = call_for_channel channel
-            call.process_ami_event! event if call
+            if call
+              if channel_is_bridged?(channel)
+                call.process_ami_event! event if EVENTS_ALLOWED_BRIDGED.include?(event.name.downcase)
+              else
+                call.process_ami_event! event
+              end
+            end
           end
         elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event
@@ -191,6 +200,11 @@ module Punchblock
         (event['Channel'] && call_for_channel(event['Channel'])) ||
           (event['Channel1'] && call_for_channel(event['Channel1'])) ||
           (event['Channel2'] && call_for_channel(event['Channel2']))
+      end
+
+      def channel_is_bridged?(channel)
+        matches = channel.match CHANNEL_NORMALIZATION_REGEXP
+        matches[:prefix] || matches[:suffix]
       end
 
       def handle_async_agi_start_event(event)

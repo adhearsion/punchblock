@@ -593,30 +593,55 @@ module Punchblock
                 e['Privilege'] = "call,all"
                 e['Response'] = "Success"
                 e['Channel1']  = "SIP/foo"
-                e['Channel2']  = "SIP/5678-00000000"
+                e['Channel2']  = other_channel
               end
             end
 
             let(:other_channel) { 'SIP/5678-00000000' }
-            let :other_call do
-              Call.new other_channel, translator
+
+            context "when a join has been executed against another call" do
+              let :other_call do
+                Call.new other_channel, translator
+              end
+
+              let(:other_call_id) { 'def567' }
+              let :command do
+                Punchblock::Command::Join.new :call_id => other_call_id
+              end
+
+              before do
+                translator.register_call other_call
+                translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+                command.request!
+                subject.execute_command command
+              end
+
+              it 'retrieves and sets success on the correct Join' do
+                subject.process_ami_event ami_event
+                command.response(0.5).should be == true
+              end
+
+              context "with the channel names reversed" do
+                let :ami_event do
+                  RubyAMI::Event.new('BridgeExec').tap do |e|
+                    e['Privilege'] = "call,all"
+                    e['Response'] = "Success"
+                    e['Channel1']  = other_channel
+                    e['Channel2']  = "SIP/foo"
+                  end
+                end
+
+                it 'retrieves and sets success on the correct Join' do
+                  subject.process_ami_event ami_event
+                  command.response(0.5).should be == true
+                end
+              end
             end
 
-            let(:other_call_id) { 'def567' }
-            let :command do
-              Punchblock::Command::Join.new :call_id => other_call_id
-            end
-
-            before do
-              translator.register_call other_call
-              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
-              command.request!
-              subject.execute_command command
-            end
-
-            it 'retrieves and sets success on the correct Join' do
-              subject.process_ami_event ami_event
-              command.response(0.5).should be == true
+            context "with no matching join command" do
+              it "should do nothing" do
+                expect { subject.process_ami_event ami_event }.not_to raise_error
+              end
             end
           end
 

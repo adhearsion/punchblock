@@ -125,8 +125,8 @@ module Punchblock
               send_end_event :error
             end
           when 'BridgeExec'
-            join_command   = @pending_joins[ami_event['Channel1']]
-            join_command ||= @pending_joins[ami_event['Channel2']]
+            join_command   = @pending_joins.delete ami_event['Channel1']
+            join_command ||= @pending_joins.delete ami_event['Channel2']
             join_command.response = true if join_command
           when 'Bridge'
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first

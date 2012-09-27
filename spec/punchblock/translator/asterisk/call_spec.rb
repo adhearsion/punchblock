@@ -598,14 +598,20 @@ module Punchblock
             end
 
             let(:other_channel) { 'SIP/5678-00000000' }
+            let :other_call do
+              Call.new other_channel, translator
+            end
+
             let(:other_call_id) { 'def567' }
             let :command do
               Punchblock::Command::Join.new :call_id => other_call_id
             end
 
             before do
-              subject.pending_joins[other_channel] = command
+              translator.register_call other_call
+              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
               command.request!
+              subject.execute_command command
             end
 
             it 'retrieves and sets success on the correct Join' do
@@ -1040,12 +1046,6 @@ module Punchblock
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Bridge"
               agi_command.params_array.should be == [other_channel]
-            end
-
-            it "adds the join to the @pending_joins hash" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
-              subject.execute_command command
-              subject.pending_joins[other_channel].should be command
             end
           end
 

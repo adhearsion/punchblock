@@ -8,7 +8,7 @@ module Punchblock
         include Celluloid
         include DeadActorSafety
 
-        attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
+        attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[0] = :hangup
@@ -125,7 +125,7 @@ module Punchblock
               send_end_event :error
             end
           when 'BridgeExec'
-            if join_command = pending_joins[ami_event['Channel2']]
+            if join_command = @pending_joins[ami_event['Channel2']]
               join_command.response = true
             end
           when 'Bridge'
@@ -186,7 +186,7 @@ module Punchblock
             end
           when Command::Join
             other_call = translator.call_with_id command.call_id
-            pending_joins[other_call.channel] = command
+            @pending_joins[other_call.channel] = command
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id

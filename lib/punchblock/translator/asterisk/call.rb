@@ -175,7 +175,7 @@ module Punchblock
               command.response = true
             end
           when Command::Hangup
-            send_ami_action 'Hangup', 'Channel' => channel do |response|
+            send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16 do |response|
               command.response = true
             end
           when Command::Join

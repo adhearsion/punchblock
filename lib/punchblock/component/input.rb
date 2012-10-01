@@ -218,6 +218,7 @@ module Punchblock
       # @param [Hash] choices
       # @option choices [String] :content_type
       # @option choices [String] :value the choices available
+      # @option options [String] :url the url from which to fetch the grammar
       #
       def grammar=(other)
         return unless other
@@ -235,6 +236,7 @@ module Punchblock
         # @param [Hash] options
         # @option options [String] :content_type
         # @option options [String] :value the choices available
+        # @option options [String] :url the url from which to fetch the grammar
         #
         def self.new(options = {})
           super(:grammar).tap do |new_node|
@@ -244,6 +246,7 @@ module Punchblock
             when Hash
               new_node.content_type = options[:content_type]
               new_node.value = options[:value]
+              new_node.url = options[:url]
             end
           end
         end
@@ -265,6 +268,7 @@ module Punchblock
         ##
         # @return [String] the choices available
         def value
+          return nil unless content.present?
           if grxml?
             RubySpeech::GRXML.import content
           else
@@ -284,6 +288,20 @@ module Punchblock
           end
         end
 
+        ##
+        # @return [String] the URL from which the fetch the grammar
+        #
+        def url
+          read_attr 'url'
+        end
+
+        ##
+        # @param [String] other the URL from which the fetch the grammar
+        #
+        def url=(other)
+          write_attr 'url', other
+        end
+
         # Compare two Choices objects by content type, and value
         # @param [Header] o the Choices object to compare against
         # @return [true, false]
@@ -292,7 +310,7 @@ module Punchblock
         end
 
         def inspect_attributes # :nodoc:
-          [:content_type, :value] + super
+          [:content_type, :value, :url] + super
         end
 
         private

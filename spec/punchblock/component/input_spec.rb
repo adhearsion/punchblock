@@ -132,6 +132,24 @@ module Punchblock
             it { should_not be == grammar4 }
           end
         end
+
+        describe 'with a grammar reference by URL' do
+          let(:url) { 'http://foo.com/bar.grxml' }
+
+          subject { Input::Grammar.new :url => url }
+
+          its(:url) { should be == url }
+
+          describe "comparison" do
+            it "should be the same with the same url" do
+              Input::Grammar.new(:url => url).should be == Input::Grammar.new(:url => url)
+            end
+
+            it "should be different with a different url" do
+              Input::Grammar.new(:url => url).should_not be == Input::Grammar.new(:url => 'http://doo.com/dah')
+            end
+          end
+        end
       end
 
       describe "actions" do

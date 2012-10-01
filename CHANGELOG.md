@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: Hanging up Asterisk calls now correctly specifies normal clearing cause
+  * Bugfix: Input component now supports grammar URLs
 
 # [v1.4.1](https://github.com/adhearsion/punchblock/compare/v1.4.0...v1.4.1) - [2012-09-06](https://rubygems.org/gems/punchblock/versions/1.4.1)
   * Bugfix: Cleaning up DTMF handlers for input components with a dead call should not crash on FreeSWITCH

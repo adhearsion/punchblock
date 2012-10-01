@@ -54,16 +54,16 @@ module Punchblock
       end
 
       ##
-      # Create an Rayo stop message
+      # Create a Rayo stop message
       #
-      # @return [Stop] an Rayo stop message
+      # @return [Stop] a Rayo stop message
       #
       def stop_action
         Stop.new :component_id => component_id, :target_call_id => target_call_id
       end
 
       ##
-      # Sends an Rayo stop message for the current component
+      # Sends a Rayo stop message for the current component
       #
       def stop!(options = {})
         raise InvalidActionError, "Cannot stop a #{self.class.name.split("::").last} that is not executing" unless executing?

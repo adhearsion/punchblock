@@ -76,7 +76,7 @@ module Punchblock
         offer.call_id = '9f00061'
         offer.to = 'sip:whatever@127.0.0.1'
         output = <<-MSG
-<output xmlns='urn:xmpp:tropo:say:1'>
+<output xmlns='urn:xmpp:rayo:output:1'>
   <audio url='http://acme.com/greeting.mp3'>
   Thanks for calling ACME company
   </audio>

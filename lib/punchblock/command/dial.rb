@@ -8,7 +8,7 @@ module Punchblock
       include HasHeaders
 
       ##
-      # Create a dial message
+      # Create a dial command
       #
       # @param [Hash] options
       # @option options [String] :to destination to dial

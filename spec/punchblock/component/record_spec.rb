@@ -14,7 +14,6 @@ module Punchblock
           Record.new :format          => 'WAV',
                      :start_beep      => true,
                      :start_paused    => false,
-                     :stop_beep       => true,
                      :max_duration    => 500000,
                      :initial_timeout => 10000,
                      :final_timeout   => 30000
@@ -23,7 +22,6 @@ module Punchblock
         its(:format)          { should be == 'WAV' }
         its(:start_beep)      { should be == true }
         its(:start_paused)    { should be == false }
-        its(:stop_beep)       { should be == true }
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }
         its(:final_timeout)   { should be == 30000 }
@@ -36,7 +34,6 @@ module Punchblock
         format="WAV"
         start-beep="true"
         start-paused="false"
-        stop-beep="true"
         max-duration="500000"
         initial-timeout="10000"
         final-timeout="30000"/>
@@ -50,7 +47,6 @@ module Punchblock
         its(:format)          { should be == 'WAV' }
         its(:start_beep)      { should be == true }
         its(:start_paused)    { should be == false }
-        its(:stop_beep)       { should be == true }
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }
         its(:final_timeout)   { should be == 30000 }

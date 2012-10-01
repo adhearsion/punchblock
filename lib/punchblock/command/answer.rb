@@ -8,7 +8,7 @@ module Punchblock
       include HasHeaders
 
       ##
-      # Create an Rayo answer command. This is equivalent to a SIP "200 OK"
+      # Create a Rayo answer command. This is equivalent to a SIP "200 OK"
       #
       # @param [Hash] options
       # @option options [Array[Header], Hash, Optional] :headers SIP headers to attach to

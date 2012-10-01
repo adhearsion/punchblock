@@ -6,7 +6,7 @@ module Punchblock
       register :join, :core
 
       ##
-      # Create a join message
+      # Create a join command
       #
       # @param [Hash] options
       # @option options [String, Optional] :call_id the call ID to join

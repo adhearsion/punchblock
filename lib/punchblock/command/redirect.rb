@@ -8,7 +8,7 @@ module Punchblock
       include HasHeaders
 
       ##
-      # Create an Rayo redirect message
+      # Create a Rayo redirect command
       #
       # @param [Hash] options
       # @option options [String] :to redirect target

@@ -22,7 +22,6 @@ module Punchblock
   autoload :DisconnectedError
   autoload :HasHeaders
   autoload :Header
-  autoload :MediaContainer
   autoload :MediaNode
   autoload :ProtocolError
   autoload :RayoNode

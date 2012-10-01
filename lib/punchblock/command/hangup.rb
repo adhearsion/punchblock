@@ -8,7 +8,7 @@ module Punchblock
       include HasHeaders
 
       ##
-      # Create an Rayo hangup message
+      # Create a Rayo hangup command
       #
       # @param [Hash] options
       # @option options [Array[Header], Hash, Optional] :headers SIP headers to attach to

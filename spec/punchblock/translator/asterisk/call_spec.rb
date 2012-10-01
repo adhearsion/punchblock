@@ -827,6 +827,7 @@ module Punchblock
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should be == "hangup"
+              ami_action.headers['Cause'].should be == 16
               ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
             end

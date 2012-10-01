@@ -1,5 +1,10 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.5.0](https://github.com/adhearsion/punchblock/compare/v1.4.1...v1.5.0) - [2012-10-01](https://rubygems.org/gems/punchblock/versions/1.5.0)
+  * Feature: Input component now supports grammar URLs
+  * Bugfix: Hanging up Asterisk calls now correctly specifies normal clearing cause
+  * Doc: Fix a bunch of API documentation
+
 # [v1.4.1](https://github.com/adhearsion/punchblock/compare/v1.4.0...v1.4.1) - [2012-09-06](https://rubygems.org/gems/punchblock/versions/1.4.1)
   * Bugfix: Cleaning up DTMF handlers for input components with a dead call should not crash on FreeSWITCH
   * Bugfix: Reduced a race condition on FreeSWITCH when dispatching events from calls to dead components

@@ -5,8 +5,6 @@ module Punchblock
     class Output < ComponentNode
       register :output, :output
 
-      include MediaContainer
-
       ##
       # Creates an Rayo Output command
       #
@@ -14,6 +12,12 @@ module Punchblock
       # @option options [String, Optional] :text to speak back
       # @option options [String, Optional] :voice with which to render TTS
       # @option options [String, Optional] :ssml document to render TTS
+      # @option options [Symbol] :interrupt_on input type on which to interrupt output. May be :speech, :dtmf or :any
+      # @option options [Integer] :start_offset Indicates some offset through which the output should be skipped before rendering begins.
+      # @option options [true, false] :start_paused Indicates wether or not the component should be started in a paused state to be resumed at a later time.
+      # @option options [Integer] :repeat_interval Indicates the duration of silence that should space repeats of the rendered document.
+      # @option options [Integer] :repeat_times Indicates the number of times the output should be played.
+      # @option options [Integer] :max_time Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
       #
       # @return [Command::Output] an Rayo "output" command
       #
@@ -21,13 +25,12 @@ module Punchblock
       #   output :text => 'Hello brown cow.'
       #
       #   returns:
-      #     <output xmlns="urn:xmpp:tropo:output:1">Hello brown cow.</output>
+      #     <output xmlns="urn:xmpp:rayo:output:1">Hello brown cow.</output>
       #
       def self.new(options = {})
         super().tap do |new_node|
           case options
           when Hash
-            new_node.voice = options.delete(:voice) if options[:voice]
             new_node.ssml = options.delete(:ssml) if options[:ssml]
             new_node << options.delete(:text) if options[:text]
             options.each_pair { |k,v| new_node.send :"#{k}=", v }
@@ -40,89 +43,122 @@ module Punchblock
       ##
       # @return [String] the TTS voice to use
       #
+      def voice
+        read_attr :voice
+      end
+
+      ##
+      # @param [String] voice to use when rendering TTS
+      #
+      def voice=(voice)
+        write_attr :voice, voice
+      end
+
+      ##
+      # @return [String] the SSML document to render TTS
+      #
+      def ssml
+        node = children.first
+        RubySpeech::SSML.import node if node
+      end
+
+      ##
+      # @param [String] ssml the SSML document to render TTS
+      #
+      def ssml=(ssml)
+        return unless ssml
+        unless ssml.is_a?(RubySpeech::SSML::Element)
+          ssml = RubySpeech::SSML.import ssml
+        end
+        self << ssml
+      end
+
+      ##
+      # @return [Symbol] input type on which to interrupt output
+      #
       def interrupt_on
         read_attr :'interrupt-on', :to_sym
       end
 
       ##
-      # @param [String] voice to use when rendering TTS
+      # @param [Symbol] other input type on which to interrupt output. May be :speech, :dtmf or :any
       #
       def interrupt_on=(other)
         write_attr :'interrupt-on', other
       end
 
       ##
-      # @return [String] the TTS voice to use
+      # @return [Integer] Indicates some offset through which the output should be skipped before rendering begins.
       #
       def start_offset
         read_attr :'start-offset', :to_i
       end
 
       ##
-      # @param [String] voice to use when rendering TTS
+      # @param [Integer] other Indicates some offset through which the output should be skipped before rendering begins.
       #
       def start_offset=(other)
         write_attr :'start-offset', other
       end
 
       ##
-      # @return [String] the TTS voice to use
+      # @return [true, false] Indicates wether or not the component should be started in a paused state to be resumed at a later time.
       #
       def start_paused
         read_attr(:'start-paused') == 'true'
       end
 
       ##
-      # @param [String] voice to use when rendering TTS
+      # @param [true, false] other Indicates wether or not the component should be started in a paused state to be resumed at a later time.
       #
       def start_paused=(other)
         write_attr :'start-paused', other.to_s
       end
 
       ##
-      # @return [String] the TTS voice to use
+      # @return [Integer] Indicates the duration of silence that should space repeats of the rendered document.
       #
       def repeat_interval
         read_attr :'repeat-interval', :to_i
       end
 
       ##
-      # @param [String] voice to use when rendering TTS
+      # @param [Integer] other Indicates the duration of silence that should space repeats of the rendered document.
       #
       def repeat_interval=(other)
         write_attr :'repeat-interval', other
       end
 
       ##
-      # @return [String] the TTS voice to use
+      # @return [Integer] Indicates the number of times the output should be played.
       #
       def repeat_times
         read_attr :'repeat-times', :to_i
       end
 
       ##
-      # @param [String] voice to use when rendering TTS
+      # @param [Integer] other Indicates the number of times the output should be played.
       #
       def repeat_times=(other)
         write_attr :'repeat-times', other
       end
 
       ##
-      # @return [String] the TTS voice to use
+      # @return [Integer] Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
       #
       def max_time
         read_attr :'max-time', :to_i
       end
 
       ##
-      # @param [String] voice to use when rendering TTS
+      # @param [Integer] other Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
       #
       def max_time=(other)
         write_attr :'max-time', other
       end
 
       def inspect_attributes
-        super + [:interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time]
+        super + [:voice, :ssml, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time]
       end
 
       state_machine :state do
@@ -143,7 +179,7 @@ module Punchblock
       #    output_obj.pause_action.to_xml
       #
       #    returns:
-      #      <pause xmlns="urn:xmpp:tropo:output:1"/>
+      #      <pause xmlns="urn:xmpp:rayo:output:1"/>
       def pause_action
         Pause.new :component_id => component_id, :target_call_id => target_call_id
       end
@@ -168,7 +204,7 @@ module Punchblock
       #    output_obj.resume_action.to_xml
       #
       #    returns:
-      #      <resume xmlns="urn:xmpp:tropo:output:1"/>
+      #      <resume xmlns="urn:xmpp:rayo:output:1"/>
       def resume_action
         Resume.new :component_id => component_id, :target_call_id => target_call_id
       end

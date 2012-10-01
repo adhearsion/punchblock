@@ -6,7 +6,7 @@ module Punchblock
       register :unjoin, :core
 
       ##
-      # Create an ujoin message
+      # Create an ujoin command
       #
       # @param [Hash] options
       # @option options [String, Optional] :call_id the call ID to unjoin

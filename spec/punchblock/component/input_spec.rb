@@ -14,14 +14,10 @@ module Punchblock
           Input.new :grammar              => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'},
                     :mode                 => :speech,
                     :terminator           => '#',
-                    :max_digits           => 10,
                     :max_silence          => 1000,
                     :recognizer           => 'en-US',
                     :initial_timeout      => 2000,
                     :inter_digit_timeout  => 2000,
-                    :term_timeout         => 2000,
-                    :complete_timeout     => 2000,
-                    :incomplete_timeout   => 2000,
                     :sensitivity          => 0.5,
                     :min_confidence       => 0.5
         end
@@ -29,14 +25,10 @@ module Punchblock
         its(:grammar)             { should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
         its(:mode)                { should be == :speech }
         its(:terminator)          { should be == '#' }
-        its(:max_digits)          { should be == 10 }
         its(:max_silence)         { should be == 1000 }
         its(:recognizer)          { should be == 'en-US' }
         its(:initial_timeout)     { should be == 2000 }
         its(:inter_digit_timeout) { should be == 2000 }
-        its(:term_timeout)        { should be == 2000 }
-        its(:complete_timeout)    { should be == 2000 }
-        its(:incomplete_timeout)  { should be == 2000 }
         its(:sensitivity)         { should be == 0.5 }
         its(:min_confidence)      { should be == 0.5 }
       end
@@ -47,14 +39,10 @@ module Punchblock
 <input xmlns="urn:xmpp:rayo:input:1"
        mode="speech"
        terminator="#"
-       max-digits="10"
        max-silence="1000"
        recognizer="en-US"
        initial-timeout="2000"
        inter-digit-timeout="2000"
-       term-timeout="2000"
-       complete-timeout="2000"
-       incomplete-timeout="2000"
        sensitivity="0.5"
        min-confidence="0.5">
   <grammar content-type="application/grammar+custom">
@@ -71,14 +59,10 @@ module Punchblock
         its(:grammar)             { should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
         its(:mode)                { should be == :speech }
         its(:terminator)          { should be == '#' }
-        its(:max_digits)          { should be == 10 }
         its(:max_silence)         { should be == 1000 }
         its(:recognizer)          { should be == 'en-US' }
         its(:initial_timeout)     { should be == 2000 }
         its(:inter_digit_timeout) { should be == 2000 }
-        its(:term_timeout)        { should be == 2000 }
-        its(:complete_timeout)    { should be == 2000 }
-        its(:incomplete_timeout)  { should be == 2000 }
         its(:sensitivity)         { should be == 0.5 }
         its(:min_confidence)      { should be == 0.5 }
       end
@@ -130,6 +114,24 @@ module Punchblock
             it { should be == grammar2 }
             it { should be == grammar3 }
             it { should_not be == grammar4 }
+          end
+        end
+
+        describe 'with a grammar reference by URL' do
+          let(:url) { 'http://foo.com/bar.grxml' }
+
+          subject { Input::Grammar.new :url => url }
+
+          its(:url) { should be == url }
+
+          describe "comparison" do
+            it "should be the same with the same url" do
+              Input::Grammar.new(:url => url).should be == Input::Grammar.new(:url => url)
+            end
+
+            it "should be different with a different url" do
+              Input::Grammar.new(:url => url).should_not be == Input::Grammar.new(:url => 'http://doo.com/dah')
+            end
           end
         end
       end

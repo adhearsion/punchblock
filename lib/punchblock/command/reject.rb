@@ -10,7 +10,7 @@ module Punchblock
       VALID_REASONS = [:busy, :decline, :error].freeze
 
       ##
-      # Create an Rayo reject message
+      # Create a Rayo reject command
       #
       # @param [Hash] options
       # @option options [Symbol] :reason for rejecting the call. Can be any one of VALID_REASONS. Defaults to :decline

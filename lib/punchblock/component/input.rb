@@ -302,13 +302,6 @@ module Punchblock
           write_attr 'url', other
         end
 
-        # Compare two Choices objects by content type, and value
-        # @param [Header] o the Choices object to compare against
-        # @return [true, false]
-        def eql?(o, *fields)
-          super o, *(fields + [:content_type, :value])
-        end
-
         def inspect_attributes # :nodoc:
           [:content_type, :value, :url] + super
         end

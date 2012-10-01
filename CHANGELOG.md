@@ -1,6 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.5.0](https://github.com/adhearsion/punchblock/compare/v1.4.1...v1.5.0) - [2012-10-01](https://rubygems.org/gems/punchblock/versions/1.5.0)
+  * Feature: Input component now supports grammar URLs
   * Bugfix: Hanging up Asterisk calls now correctly specifies normal clearing cause
-  * Bugfix: Input component now supports grammar URLs
   * Doc: Fix a bunch of API documentation
 
 # [v1.4.1](https://github.com/adhearsion/punchblock/compare/v1.4.0...v1.4.1) - [2012-09-06](https://rubygems.org/gems/punchblock/versions/1.4.1)

@@ -122,7 +122,8 @@ module Punchblock
 
           subject { Input::Grammar.new :url => url }
 
-          its(:url) { should be == url }
+          its(:url)           { should be == url }
+          its(:content_type)  { should be nil}
 
           describe "comparison" do
             it "should be the same with the same url" do

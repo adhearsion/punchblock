@@ -249,6 +249,36 @@ module Punchblock
             end
           end
 
+          context 'with a name and empty channel in the from field' do
+            let(:from_name)   { 'Jane Smith' }
+            let(:from_number) { '' }
+            let(:from)        { "#{from_name} <#{from_number}>" }
+
+            it 'sends an originate bgapi command with the cid fields set correctly' do
+              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_name='#{from_name}'}#{to} &park()"
+              subject.dial dial_command
+            end
+          end
+
+          context 'with a number in the from field with angled brackets' do
+            let(:from_number) { '1001' }
+            let(:from)        { "<#{from_number}>" }
+
+            it 'sends an originate bgapi command with the cid fields set correctly' do
+              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from_number}'}#{to} &park()"
+              subject.dial dial_command
+            end
+          end
+
+          context 'with an empty from attribute' do
+            let(:from) { '' }
+
+            it 'sends an originate bgapi command with the cid fields set correctly' do
+              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id}}#{to} &park()"
+              subject.dial dial_command
+            end
+          end
+
           context 'with a timeout specified' do
             let :dial_command_options do
               { :timeout => 10000 }

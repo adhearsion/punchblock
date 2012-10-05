@@ -127,17 +127,17 @@ module Punchblock
           @direction = :outbound
 
           cid_number, cid_name = dial_command.from, nil
-          dial_command.from.match(/(?<cid_name>.*) <(?<cid_number>.*)>/) do |m|
-            cid_name = m[:cid_name]
+          dial_command.from.match(/(?<cid_name>.*)<(?<cid_number>.*)>/) do |m|
+            cid_name = m[:cid_name].strip
             cid_number = m[:cid_number]
           end
 
           options = {
-            :return_ring_ready            => true,
-            :origination_uuid             => id,
-            :origination_caller_id_number => "'#{cid_number}'"
+            :return_ring_ready  => true,
+            :origination_uuid   => id
           }
-          options[:origination_caller_id_name] = "'#{cid_name}'" if cid_name
+          options[:origination_caller_id_number] = "'#{cid_number}'" if cid_number.present?
+          options[:origination_caller_id_name] = "'#{cid_name}'" if cid_name.present?
           options[:originate_timeout] = dial_command.timeout/1000 if dial_command.timeout
           opts = options.inject([]) do |a, (k, v)|
             a << "#{k}=#{v}"

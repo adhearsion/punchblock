@@ -205,7 +205,8 @@ module Punchblock
         # @param [String] content_type Defaults to GRXML
         #
         def content_type=(content_type)
-          write_attr 'content-type', content_type || grxml_content_type
+          return unless content_type
+          write_attr 'content-type', content_type
         end
 
         ##
@@ -223,6 +224,7 @@ module Punchblock
         # @param [String, RubySpeech::GRXML::Grammar] value the grammar document
         def value=(value)
           return unless value
+          self.content_type = grxml_content_type unless self.content_type
           if grxml? && !value.is_a?(RubySpeech::GRXML::Element)
             value = RubySpeech::GRXML.import value
           end

@@ -91,10 +91,12 @@ module Punchblock
       end
 
       def success_reason(match)
-        Punchblock::Component::Input::Complete::Success.new :mode           => match.mode,
-                                                            :confidence     => match.confidence,
-                                                            :utterance      => match.utterance,
-                                                            :interpretation => match.interpretation
+        nlsml = RubySpeech::NLSML.draw do
+          interpretation confidence: match.confidence do
+            input match.utterance, mode: match.mode
+          end
+        end
+        Punchblock::Component::Input::Complete::Match.new :nlsml => nlsml
       end
 
       def complete(reason)

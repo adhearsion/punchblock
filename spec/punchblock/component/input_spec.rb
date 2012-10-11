@@ -176,41 +176,75 @@ module Punchblock
         end
       end
 
-      describe Input::Complete::Success do
+      describe Input::Complete::Match do
+        let :nlsml_string do
+          '''
+<result xmlns:myApp="foo" xmlns:xf="http://www.w3.org/2000/xforms" grammar="http://flight">
+  <interpretation confidence="60">
+    <input mode="speech">I want to go to Pittsburgh</input>
+    <xf:model>
+      <xf:group name="airline">
+        <xf:string name="to_city"/>
+      </xf:group>
+    </xf:model>
+    <xf:instance>
+      <myApp:airline>
+        <myApp:to_city>Pittsburgh</myApp:to_city>
+      </myApp:airline>
+    </xf:instance>
+  </interpretation>
+  <interpretation confidence="40">
+    <input>I want to go to Stockholm</input>
+    <xf:model>
+      <xf:group name="airline">
+        <xf:string name="to_city"/>
+      </xf:group>
+    </xf:model>
+    <xf:instance>
+      <myApp:airline>
+        <myApp:to_city>Stockholm</myApp:to_city>
+      </myApp:airline>
+    </xf:instance>
+  </interpretation>
+</result>
+          '''
+        end
+
         let :stanza do
           <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-<success mode="speech" confidence="0.45" xmlns='urn:xmpp:rayo:input:complete:1'>
-  <interpretation>1234</interpretation>
-  <utterance>one two three four</utterance>
-</success>
+  <match xmlns="urn:xmpp:rayo:input:complete:1">
+    #{nlsml_string}
+  </match>
 </complete>
           MESSAGE
         end
 
+        let :expected_nlsml do
+          RubySpeech.parse nlsml_string
+        end
+
         subject { RayoNode.import(parse_stanza(stanza).root).reason }
 
-        it { should be_instance_of Input::Complete::Success }
+        it { should be_instance_of Input::Complete::Match }
 
-        its(:name)            { should be == :success }
+        its(:name)            { should be == :match }
+        its(:nlsml)           { should be == expected_nlsml }
         its(:mode)            { should be == :speech }
-        its(:confidence)      { should be == 0.45 }
-        its(:interpretation)  { should be == '1234' }
-        its(:utterance)       { should be == 'one two three four' }
+        its(:confidence)      { should be == 0.6 }
+        its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
+        its(:utterance)       { should be == 'I want to go to Pittsburgh' }
 
-        describe "when setting options in initializer" do
+        describe "when creating from an NLSML document" do
           subject do
-            Input::Complete::Success.new :mode            => :dtmf,
-                                         :confidence      => 1,
-                                         :utterance       => '123',
-                                         :interpretation  => 'dtmf-1 dtmf-2 dtmf-3'
+            Input::Complete::Match.new :nlsml => expected_nlsml
           end
 
-
-          its(:mode)            { should be == :dtmf }
-          its(:confidence)      { should be == 1 }
-          its(:utterance)       { should be == '123' }
-          its(:interpretation)  { should be == 'dtmf-1 dtmf-2 dtmf-3' }
+          its(:nlsml)           { should be == expected_nlsml }
+          its(:mode)            { should be == :speech }
+          its(:confidence)      { should be == 0.6 }
+          its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
+          its(:utterance)       { should be == 'I want to go to Pittsburgh' }
         end
       end
 

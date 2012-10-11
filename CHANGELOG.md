@@ -1,5 +1,10 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.5.1](https://github.com/adhearsion/punchblock/compare/v1.5.0...v1.5.1) - [2012-10-11](https://rubygems.org/gems/punchblock/versions/1.5.1)
+  * Update: Bump Celluloid dependency
+  * Bugfix: Input grammars referenced by URL now no longer specify a content type
+  * Bugfix: FreeSWITCH `Dial#from` values now parsed more flexibly
+
 # [v1.5.0](https://github.com/adhearsion/punchblock/compare/v1.4.1...v1.5.0) - [2012-10-01](https://rubygems.org/gems/punchblock/versions/1.5.0)
   * Feature: Input component now supports grammar URLs
   * Bugfix: Hanging up Asterisk calls now correctly specifies normal clearing cause

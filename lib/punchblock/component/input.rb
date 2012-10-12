@@ -267,7 +267,7 @@ module Punchblock
           register :match, :input_complete
 
           def nlsml
-            @nlsml ||= RubySpeech.parse at_xpath('ns:result', 'ns' => self.class.registered_ns).to_xml
+            @nlsml ||= RubySpeech.parse result_node.to_xml
           end
 
           def nlsml=(other)
@@ -288,6 +288,12 @@ module Punchblock
 
           def interpretation
             nlsml.best_interpretation[:instance]
+          end
+
+          private
+
+          def result_node
+            at_xpath 'ns:result', 'ns' => 'http://www.w3c.org/2000/11/nlsml' or raise "Couldn't find the NLSML node"
           end
         end
 

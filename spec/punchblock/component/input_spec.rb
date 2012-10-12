@@ -179,7 +179,7 @@ module Punchblock
       describe Input::Complete::Match do
         let :nlsml_string do
           '''
-<result xmlns:myApp="foo" xmlns:xf="http://www.w3.org/2000/xforms" grammar="http://flight">
+<result xmlns="http://www.w3c.org/2000/11/nlsml" xmlns:myApp="foo" xmlns:xf="http://www.w3.org/2000/xforms" grammar="http://flight">
   <interpretation confidence="60">
     <input mode="speech">I want to go to Pittsburgh</input>
     <xf:model>

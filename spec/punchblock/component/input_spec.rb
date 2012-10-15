@@ -80,7 +80,7 @@ module Punchblock
       describe Input::Grammar do
         describe "when not passing a content type" do
           subject { Input::Grammar.new :value => grxml_doc }
-          its(:content_type) { should be == 'application/grammar+grxml' }
+          its(:content_type) { should be == 'application/srgs+xml' }
         end
 
         describe 'with a simple grammar' do
@@ -94,9 +94,9 @@ module Punchblock
         end
 
         describe 'with a GRXML grammar' do
-          subject { Input::Grammar.new :value => grxml_doc, :content_type => 'application/grammar+grxml' }
+          subject { Input::Grammar.new :value => grxml_doc, :content_type => 'application/srgs+xml' }
 
-          its(:content_type) { should be == 'application/grammar+grxml' }
+          its(:content_type) { should be == 'application/srgs+xml' }
 
           let(:expected_message) { "<![CDATA[ #{grxml_doc} ]]>" }
 

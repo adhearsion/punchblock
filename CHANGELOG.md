@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Use correct GRXML content type
 
 # [v1.5.1](https://github.com/adhearsion/punchblock/compare/v1.5.0...v1.5.1) - [2012-10-11](https://rubygems.org/gems/punchblock/versions/1.5.1)
   * Update: Bump Celluloid dependency

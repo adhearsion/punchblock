@@ -229,6 +229,14 @@ module Punchblock
         class Success < Event::Complete::Reason
           register :success, :record_complete
         end
+
+        class IniTimeout < Event::Complete::Reason
+          register :ini_timeout, :record_complete
+        end
+
+        class Timeout < Event::Complete::Reason
+          register :timeout, :record_complete
+        end
       end
     end # Record
   end # Command

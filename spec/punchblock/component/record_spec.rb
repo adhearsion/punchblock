@@ -237,6 +237,62 @@ module Punchblock
         end
       end
 
+      describe Record::Complete::IniTimeout do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+<ini_timeout xmlns='urn:xmpp:rayo:record:complete:1'/>
+<recording xmlns='urn:xmpp:rayo:record:complete:1' uri="file:/tmp/rayo7451601434771683422.mp3" duration="34000" size="23450"/>
+</complete>
+          MESSAGE
+        end
+
+        describe "#reason" do
+          subject { RayoNode.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Record::Complete::IniTimeout }
+
+          its(:name) { should be == :ini_timeout }
+        end
+
+        describe "#recording" do
+          subject { RayoNode.import(parse_stanza(stanza).root).recording }
+
+          it { should be_instance_of Record::Recording }
+          its(:uri)       { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+          its(:duration)  { should be == 34000 }
+          its(:size)      { should be == 23450 }
+        end
+      end
+
+      describe Record::Complete::Timeout do
+        let :stanza do
+          <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+<timeout xmlns='urn:xmpp:rayo:record:complete:1'/>
+<recording xmlns='urn:xmpp:rayo:record:complete:1' uri="file:/tmp/rayo7451601434771683422.mp3" duration="34000" size="23450"/>
+</complete>
+          MESSAGE
+        end
+
+        describe "#reason" do
+          subject { RayoNode.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Record::Complete::Timeout }
+
+          its(:name) { should be == :timeout }
+        end
+
+        describe "#recording" do
+          subject { RayoNode.import(parse_stanza(stanza).root).recording }
+
+          it { should be_instance_of Record::Recording }
+          its(:uri)       { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+          its(:duration)  { should be == 34000 }
+          its(:size)      { should be == 23450 }
+        end
+      end
+
       describe Event::Complete::Stop do
         let :stanza do
           <<-MESSAGE

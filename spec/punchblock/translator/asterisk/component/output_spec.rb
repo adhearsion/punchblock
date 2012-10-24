@@ -141,6 +141,7 @@ module Punchblock
                 RubySpeech::SSML.draw do
                   audio :src => audio_filename
                   say_as(:interpret_as => :cardinal) { 'FOO' }
+                  string "this, here, is a test"
                 end
               end
 
@@ -159,6 +160,14 @@ module Punchblock
 
               it "should execute MRCPSynth" do
                 mock_call.expects(:send_agi_action!).once.with 'EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, ''
+                subject.execute
+              end
+
+              it 'should escape TTS strings containing a comma' do
+                mock_call.expects(:send_agi_action!).once.with do |*args|
+                  args[0].should be == 'EXEC MRCPSynth'
+                  args[1].should match /this\\, here\\, is a test/
+                end
                 subject.execute
               end
 

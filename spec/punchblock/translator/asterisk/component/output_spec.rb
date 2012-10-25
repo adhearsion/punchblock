@@ -141,7 +141,6 @@ module Punchblock
                 RubySpeech::SSML.draw do
                   audio :src => audio_filename
                   say_as(:interpret_as => :cardinal) { 'FOO' }
-                  string "this, here, is a test"
                 end
               end
 
@@ -163,12 +162,20 @@ module Punchblock
                 subject.execute
               end
 
-              it 'should escape TTS strings containing a comma' do
-                mock_call.expects(:send_agi_action!).once.with do |*args|
-                  args[0].should be == 'EXEC MRCPSynth'
-                  args[1].should match(/this\\, here\\, is a test/)
+              context "when the SSML document contains commas" do
+                let :ssml_doc do
+                  RubySpeech::SSML.draw do
+                    string "this, here, is a test"
+                  end
                 end
-                subject.execute
+
+                it 'should escape TTS strings containing a comma' do
+                  mock_call.expects(:send_agi_action!).once.with do |*args|
+                    args[0].should be == 'EXEC MRCPSynth'
+                    args[1].should match(/this\\, here\\, is a test/)
+                  end
+                  subject.execute
+                end
               end
 
               it 'should send a complete event when MRCPSynth completes' do

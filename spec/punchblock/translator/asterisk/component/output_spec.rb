@@ -166,7 +166,7 @@ module Punchblock
               it 'should escape TTS strings containing a comma' do
                 mock_call.expects(:send_agi_action!).once.with do |*args|
                   args[0].should be == 'EXEC MRCPSynth'
-                  args[1].should match /this\\, here\\, is a test/
+                  args[1].should match(/this\\, here\\, is a test/)
                 end
                 subject.execute
               end

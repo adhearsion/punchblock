@@ -101,7 +101,6 @@ module Punchblock
             text.gsub(/,/, '\\,')
           end
 
-
           def mrcpsynth_options
             [].tap do |opts|
               opts << 'i=any' if [:any, :dtmf].include? @component_node.interrupt_on

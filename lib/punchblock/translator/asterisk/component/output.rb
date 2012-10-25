@@ -98,7 +98,7 @@ module Punchblock
           end
 
           def escape_commas(text)
-            text.gsub /,/, '\\,'
+            text.gsub(/,/, '\\,')
           end
 
 

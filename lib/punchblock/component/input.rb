@@ -254,7 +254,7 @@ module Punchblock
         private
 
         def grxml_content_type
-          'application/grammar+grxml'
+          'application/srgs+xml'
         end
 
         def grxml?

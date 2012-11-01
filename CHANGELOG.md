@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Doc: Add link to docs for unrenderable doc error
 
 # [v1.5.2](https://github.com/adhearsion/punchblock/compare/v1.5.1...v1.5.2) - [2012-10-25](https://rubygems.org/gems/punchblock/versions/1.5.2)
   * Bugfix: Use correct GRXML content type

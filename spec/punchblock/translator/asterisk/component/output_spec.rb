@@ -469,7 +469,7 @@ module Punchblock
 
                   it "should return an unrenderable document error" do
                     subject.execute
-                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
+                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -521,7 +521,7 @@ module Punchblock
 
                   it "should return an unrenderable document error" do
                     subject.execute
-                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
+                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
                     original_command.response(0.1).should be == error
                   end
                 end

@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.5.3](https://github.com/adhearsion/punchblock/compare/v1.5.2...v1.5.3) - [2012-11-01](https://rubygems.org/gems/punchblock/versions/1.5.3)
+  * Doc: Add link to docs for unrenderable doc error
+
 # [v1.5.2](https://github.com/adhearsion/punchblock/compare/v1.5.1...v1.5.2) - [2012-10-25](https://rubygems.org/gems/punchblock/versions/1.5.2)
   * Bugfix: Use correct GRXML content type
   * Bugfix: Fix UniMRCP for documents containing commas

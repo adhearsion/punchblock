@@ -83,7 +83,7 @@ module Punchblock
               end
             end.compact
           rescue
-            raise UnrenderableDocError, 'The provided document could not be rendered.'
+            raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end
 
           def playback(path)
@@ -100,7 +100,6 @@ module Punchblock
           def escape_commas(text)
             text.gsub(/,/, '\\,')
           end
-
 
           def mrcpsynth_options
             [].tap do |opts|

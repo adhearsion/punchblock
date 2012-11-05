@@ -62,6 +62,10 @@ module Punchblock
         RubySpeech::SSML.import node if node
       end
 
+      def clear_text
+        children.first.to_s
+      end
+
       ##
       # @param [String] ssml the SSML document to render TTS
       #

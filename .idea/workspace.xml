@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d9568fad-1c95-45b0-bfaa-bb0f8857b1c0" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lib/punchblock/component/output.rb" afterPath="$PROJECT_DIR$/lib/punchblock/component/output.rb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb" afterPath="$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb" />
     </list>
     <ignored path="punchblock.iws" />
@@ -29,7 +28,7 @@
       <file leaf-file-name="output.rb" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="65" column="58" selection-start="2374" selection-end="2374" vertical-scroll-proportion="0.43333334">
+            <state line="65" column="79" selection-start="2395" selection-end="2395" vertical-scroll-proportion="0.23333333">
               <folding />
             </state>
           </provider>
@@ -329,7 +328,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="65" column="58" selection-start="2374" selection-end="2374" vertical-scroll-proportion="0.43333334">
+        <state line="65" column="79" selection-start="2395" selection-end="2395" vertical-scroll-proportion="0.23333333">
           <folding />
         </state>
       </provider>

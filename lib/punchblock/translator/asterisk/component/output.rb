@@ -63,7 +63,7 @@ module Punchblock
               end
             when :festival
               send_ref
-              @call.send_agi_action! 'EXEC Festival', clear_text do |complete_event|
+              @call.send_agi_action! 'EXEC Festival', ssml do |complete_event|
                 output_component.send_complete_event! success_reason
               end
             end

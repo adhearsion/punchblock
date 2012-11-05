@@ -28,7 +28,7 @@
       <file leaf-file-name="output.rb" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="71" column="17" selection-start="2717" selection-end="2717" vertical-scroll-proportion="0.92287916">
+            <state line="62" column="54" selection-start="2265" selection-end="2265" vertical-scroll-proportion="0.73007715">
               <folding />
             </state>
           </provider>
@@ -311,7 +311,7 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="71" column="17" selection-start="2717" selection-end="2717" vertical-scroll-proportion="0.92287916">
+        <state line="62" column="54" selection-start="2265" selection-end="2265" vertical-scroll-proportion="0.73007715">
           <folding />
         </state>
       </provider>

@@ -62,12 +62,8 @@ module Punchblock
                 output_component.send_complete_event! success_reason
               end
             when :festival
-              #send_ref
-              #@call.send_agi_action! 'EXEC Festival', escape_commas(escaped_doc), mrcpsynth_options do |complete_event|
-              #  output_component.send_complete_event! success_reason
-              #end
               send_ref
-              @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
+              @call.send_agi_action! 'EXEC Festival', escape_commas(escaped_doc), mrcpsynth_options do |complete_event|
                 output_component.send_complete_event! success_reason
               end
             end

@@ -215,6 +215,27 @@ module Punchblock
             end
           end
 
+          context 'with headers specified' do
+            let :dial_command_options do
+              { :headers => {'X-foo' => 'bar', 'X-doo' => 'dah'} }
+            end
+
+            it 'includes the headers in the Originate AMI action' do
+              expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
+                                                                                 :params => {
+                                                                                   :async       => true,
+                                                                                   :application => 'AGI',
+                                                                                   :data        => 'agi:async',
+                                                                                   :channel     => 'SIP/1234',
+                                                                                   :callerid    => 'sip:foo@bar.com',
+                                                                                   :variable    => "punchblock_call_id=#{subject.id},SIPADDHEADER51=\"X-foo: bar\",SIPADDHEADER52=\"X-doo: dah\""
+                                                                                 }).tap { |a| a.request! }
+
+              translator.expects(:execute_global_command!).once.with expected_action
+              subject.dial dial_command
+            end
+          end
+
           it 'sends the call ID as a response to the Dial' do
             subject.dial dial_command
             dial_command.response

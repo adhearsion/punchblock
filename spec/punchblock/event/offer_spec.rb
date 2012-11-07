@@ -16,8 +16,8 @@ module Punchblock
     to='tel:+18003211212'
     from='tel:+13058881212'>
   <!-- Signaling (e.g. SIP) Headers -->
-  <header name="x-skill" value="agent" />
-  <header name="x-customer-id" value="8877" />
+  <header name="X-skill" value="agent" />
+  <header name="X-customer-id" value="8877" />
 </offer>
           MESSAGE
         end
@@ -40,7 +40,7 @@ module Punchblock
                     :headers  => { :x_skill => "agent", :x_customer_id => "8877" }
         end
 
-        it_should_behave_like 'event_headers'
+        it_should_behave_like 'command_headers'
 
         its(:to)    { should be == 'tel:+18003211212' }
         its(:from)  { should be == 'tel:+13058881212' }

@@ -290,6 +290,17 @@ module Punchblock
             end
           end
 
+          context 'with headers specified' do
+            let :dial_command_options do
+              { :headers => {'X-foo' => 'bar', 'X-doo' => 'dah'} }
+            end
+
+            it 'includes the headers in the originate command' do
+              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}',sip_h_X-foo='bar',sip_h_X-doo='dah'}#{to} &park()"
+              subject.dial dial_command
+            end
+          end
+
           it 'sends the call ID as a response to the Dial' do
             subject.dial dial_command
             dial_command.response

@@ -61,9 +61,13 @@ module Punchblock
                      :application => 'AGI',
                      :data        => 'agi:async',
                      :channel     => channel,
-                     :callerid    => dial_command.from,
-                     :variable    => "punchblock_call_id=#{id}"
+                     :callerid    => dial_command.from
                    }
+          variables = { :punchblock_call_id => id }
+          variables.merge! dial_command.headers_hash
+          params[:variable] = variables.inject([]) do |a, (k, v)|
+            a << "#{k}=#{v}"
+          end.join(',')
           params[:timeout] = dial_command.timeout unless dial_command.timeout.nil?
 
           originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',

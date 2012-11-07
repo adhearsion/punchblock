@@ -15,8 +15,8 @@ module Punchblock
 <end xmlns="urn:xmpp:rayo:1">
   <timeout />
   <!-- Signaling (e.g. SIP) Headers -->
-  <header name="x-skill" value="agent" />
-  <header name="x-customer-id" value="8877" />
+  <header name="X-skill" value="agent" />
+  <header name="X-customer-id" value="8877" />
 </end>
           MESSAGE
         end
@@ -39,7 +39,7 @@ module Punchblock
         end
 
         its(:reason) { should be == :hangup }
-        it_should_behave_like 'event_headers'
+        it_should_behave_like 'command_headers'
       end
     end
   end

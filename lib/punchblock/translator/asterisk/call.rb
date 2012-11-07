@@ -63,11 +63,7 @@ module Punchblock
                      :channel     => channel,
                      :callerid    => dial_command.from
                    }
-          variables = { :punchblock_call_id => id }
-          variables.merge! dial_command.headers_hash
-          params[:variable] = variables.inject([]) do |a, (k, v)|
-            a << "#{k}=#{v}"
-          end.join(',')
+          params[:variable] = variable_for_headers dial_command.headers
           params[:timeout] = dial_command.timeout unless dial_command.timeout.nil?
 
           originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
@@ -300,6 +296,18 @@ module Punchblock
             accumulator[('x_' + element[0].to_s).to_sym] = element[1] || ''
             accumulator
           end
+        end
+
+        def variable_for_headers(headers)
+          variables = { :punchblock_call_id => id }
+          header_counter = 51
+          headers.each do |header|
+            variables["SIPADDHEADER#{header_counter}"] = "\"#{header.name}: #{header.value}\""
+            header_counter += 1
+          end
+          variables.inject([]) do |a, (k, v)|
+            a << "#{k}=#{v}"
+          end.join(',')
         end
       end
     end

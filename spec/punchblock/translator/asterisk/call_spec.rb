@@ -217,7 +217,7 @@ module Punchblock
 
           context 'with headers specified' do
             let :dial_command_options do
-              { :headers => {:foo => 'bar'} }
+              { :headers => {'X-foo' => 'bar', 'X-doo' => 'dah'} }
             end
 
             it 'includes the headers in the Originate AMI action' do
@@ -228,7 +228,7 @@ module Punchblock
                                                                                    :data        => 'agi:async',
                                                                                    :channel     => 'SIP/1234',
                                                                                    :callerid    => 'sip:foo@bar.com',
-                                                                                   :variable    => "punchblock_call_id=#{subject.id},foo=bar"
+                                                                                   :variable    => "punchblock_call_id=#{subject.id},SIPADDHEADER51=\"X-foo: bar\",SIPADDHEADER52=\"X-doo: dah\""
                                                                                  }).tap { |a| a.request! }
 
               translator.expects(:execute_global_command!).once.with expected_action

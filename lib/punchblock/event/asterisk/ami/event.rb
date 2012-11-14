@@ -28,7 +28,7 @@ module Punchblock
           #
           def attributes_hash
             attributes.inject({}) do |hash, attribute|
-              hash[attribute.name] = attribute.value
+              hash[attribute.name.downcase.gsub('-', '_').to_sym] = attribute.value
               hash
             end
           end

@@ -53,7 +53,7 @@ module Punchblock
               playback opts
             when :unimrcp
               send_ref
-              @call.send_agi_action! 'EXEC MRCPSynth', escaped_doc, mrcpsynth_options do |complete_event|
+              @call.send_agi_action! 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options do |complete_event|
                 output_component.send_complete_event! success_reason
               end
             when :swift
@@ -83,7 +83,7 @@ module Punchblock
               end
             end.compact
           rescue
-            raise UnrenderableDocError, 'The provided document could not be rendered.'
+            raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end
 
           def playback(path)
@@ -95,6 +95,10 @@ module Punchblock
 
           def escaped_doc
             @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+          end
+
+          def escape_commas(text)
+            text.gsub(/,/, '\\,')
           end
 
           def mrcpsynth_options

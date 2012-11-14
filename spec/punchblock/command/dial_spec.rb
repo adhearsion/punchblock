@@ -28,8 +28,8 @@ module Punchblock
           <<-MESSAGE
 <dial to='tel:+14155551212' from='tel:+13035551212' timeout='30000' xmlns='urn:xmpp:rayo:1'>
   <join call-id="abc123" />
-  <header name="x-skill" value="agent" />
-  <header name="x-customer-id" value="8877" />
+  <header name="X-skill" value="agent" />
+  <header name="X-customer-id" value="8877" />
 </dial>
           MESSAGE
         end
@@ -37,6 +37,8 @@ module Punchblock
         subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
 
         it { should be_instance_of Dial }
+
+        it_should_behave_like 'event_headers'
 
         its(:to)      { should be == 'tel:+14155551212' }
         its(:from)    { should be == 'tel:+13035551212' }

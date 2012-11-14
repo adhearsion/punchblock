@@ -98,7 +98,7 @@ module Punchblock
       # @param [Integer] other Indicates some offset through which the output should be skipped before rendering begins.
       #
       def start_offset=(other)
-        write_attr :'start-offset', other
+        write_attr :'start-offset', other.to_i
       end
 
       ##
@@ -126,7 +126,7 @@ module Punchblock
       # @param [Integer] other Indicates the duration of silence that should space repeats of the rendered document.
       #
       def repeat_interval=(other)
-        write_attr :'repeat-interval', other
+        write_attr :'repeat-interval', other.to_i
       end
 
       ##
@@ -140,7 +140,7 @@ module Punchblock
       # @param [Integer] other Indicates the number of times the output should be played.
       #
       def repeat_times=(other)
-        write_attr :'repeat-times', other
+        write_attr :'repeat-times', other.to_i
       end
 
       ##
@@ -154,7 +154,7 @@ module Punchblock
       # @param [Integer] other Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
       #
       def max_time=(other)
-        write_attr :'max-time', other
+        write_attr :'max-time', other.to_i
       end
 
       def inspect_attributes

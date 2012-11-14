@@ -41,7 +41,7 @@ module Punchblock
       # @param [Integer] timeout Controls the length of a period of silence after callers have spoken to conclude they finished.
       #
       def final_timeout=(timeout)
-        write_attr :'final-timeout', timeout
+        write_attr :'final-timeout', timeout.to_i
       end
 
       ##
@@ -69,7 +69,7 @@ module Punchblock
       # @param [Integer] timeout Controls how long the recognizer should wait after the end of the prompt for the caller to speak before sending a Recorder event.
       #
       def initial_timeout=(timeout)
-        write_attr :'initial-timeout', timeout
+        write_attr :'initial-timeout', timeout.to_i
       end
 
       ##
@@ -83,7 +83,7 @@ module Punchblock
       # @param [Integer] other Indicates the maximum duration for the recording.
       #
       def max_duration=(other)
-        write_attr :'max-duration', other
+        write_attr :'max-duration', other.to_i
       end
 
       ##

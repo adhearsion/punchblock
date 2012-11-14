@@ -162,6 +162,22 @@ module Punchblock
                 subject.execute
               end
 
+              context "when the SSML document contains commas" do
+                let :ssml_doc do
+                  RubySpeech::SSML.draw do
+                    string "this, here, is a test"
+                  end
+                end
+
+                it 'should escape TTS strings containing a comma' do
+                  mock_call.expects(:send_agi_action!).once.with do |*args|
+                    args[0].should be == 'EXEC MRCPSynth'
+                    args[1].should match(/this\\, here\\, is a test/)
+                  end
+                  subject.execute
+                end
+              end
+
               it 'should send a complete event when MRCPSynth completes' do
                 def mock_call.send_agi_action!(*args, &block)
                   block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
@@ -453,7 +469,7 @@ module Punchblock
 
                   it "should return an unrenderable document error" do
                     subject.execute
-                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
+                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -505,7 +521,7 @@ module Punchblock
 
                   it "should return an unrenderable document error" do
                     subject.execute
-                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered.'
+                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
                     original_command.response(0.1).should be == error
                   end
                 end

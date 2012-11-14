@@ -34,14 +34,14 @@ module Punchblock
             it_should_behave_like 'event'
 
             its(:name)    { should be == 'Originate' }
-            its(:params)  { should be == [Action::Param.new(:channel, 'SIP/101test'),
-                                      Action::Param.new(:context, 'default'),
-                                      Action::Param.new(:exten, '8135551212'),
-                                      Action::Param.new(:priority, '1'),
-                                      Action::Param.new(:callerid, '3125551212'),
-                                      Action::Param.new(:timeout, '30000'),
-                                      Action::Param.new(:variable, 'var1=23|var2=24|var3=25'),
-                                      Action::Param.new(:async, '1')
+            its(:params)  { should be == [Action::Param.new('Channel', 'SIP/101test'),
+                                      Action::Param.new('Context', 'default'),
+                                      Action::Param.new('Exten', '8135551212'),
+                                      Action::Param.new('Priority', '1'),
+                                      Action::Param.new('Callerid', '3125551212'),
+                                      Action::Param.new('Timeout', '30000'),
+                                      Action::Param.new('Variable', 'var1=23|var2=24|var3=25'),
+                                      Action::Param.new('Async', '1')
                                      ]}
 
             its(:params_hash) { should be == {:channel   => 'SIP/101test',
@@ -112,7 +112,7 @@ module Punchblock
 
                 its(:name)            { should be == :success }
                 its(:message)         { should be == "Originate successfully queued" }
-                its(:attributes)      { should be == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
+                its(:attributes)      { should be == [Attribute.new('Channel', 'SIP/101-3f3f'), Attribute.new('State', 'Ring')]}
                 its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
 
                 describe "when setting options in initializer" do

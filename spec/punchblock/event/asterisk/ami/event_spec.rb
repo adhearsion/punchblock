@@ -30,7 +30,7 @@ module Punchblock
             it_should_behave_like 'event'
 
             its(:name)            { should be == 'Newchannel' }
-            its(:attributes)      { should be == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
+            its(:attributes)      { should be == [Event::Attribute.new('Channel', 'SIP/101-3f3f'), Event::Attribute.new('State', 'Ring'), Event::Attribute.new('Callerid', '101'), Event::Attribute.new('Uniqueid', '1094154427.10')]}
             its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
           end
 

@@ -14,8 +14,8 @@ module Punchblock
           <<-MESSAGE
 <answered xmlns='urn:xmpp:rayo:1'>
   <!-- Signaling (e.g. SIP) Headers -->
-  <header name="x-skill" value="agent" />
-  <header name="x-customer-id" value="8877" />
+  <header name="X-skill" value="agent" />
+  <header name="X-customer-id" value="8877" />
 </answered>
           MESSAGE
         end
@@ -35,7 +35,7 @@ module Punchblock
           Answered.new :headers => { :x_skill => "agent", :x_customer_id => "8877" }
         end
 
-        it_should_behave_like 'event_headers'
+        it_should_behave_like 'command_headers'
       end
     end
   end

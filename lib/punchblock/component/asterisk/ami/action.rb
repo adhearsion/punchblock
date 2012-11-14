@@ -28,7 +28,7 @@ module Punchblock
           #
           def params_hash
             params.inject({}) do |hash, param|
-              hash[param.name] = param.value
+              hash[param.name.downcase.gsub('-', '_').to_sym] = param.value
               hash
             end
           end
@@ -104,7 +104,7 @@ module Punchblock
               #
               def attributes_hash
                 attributes.inject({}) do |hash, attribute|
-                  hash[attribute.name] = attribute.value
+                  hash[attribute.name.downcase.gsub('-', '_').to_sym] = attribute.value
                   hash
                 end
               end

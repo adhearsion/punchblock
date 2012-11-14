@@ -1,5 +1,18 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.6.0](https://github.com/adhearsion/punchblock/compare/v1.5.3...v1.6.0) - [2012-11-14](https://rubygems.org/gems/punchblock/versions/1.6.0)
+  * Feature: Set dial headers on FreeSWITCH originate command (SIP only)
+  * Feature: Set dial headers on Asterisk originate command (SIP only)
+  * Bugfix: Headers were being re-written downcased and with underscores
+  * Bugfix: Ensure all numeric component attributes are written as the correct type
+
+# [v1.5.3](https://github.com/adhearsion/punchblock/compare/v1.5.2...v1.5.3) - [2012-11-01](https://rubygems.org/gems/punchblock/versions/1.5.3)
+  * Doc: Add link to docs for unrenderable doc error
+
+# [v1.5.2](https://github.com/adhearsion/punchblock/compare/v1.5.1...v1.5.2) - [2012-10-25](https://rubygems.org/gems/punchblock/versions/1.5.2)
   * Bugfix: Use correct GRXML content type
+  * Bugfix: Fix UniMRCP for documents containing commas
+  * Bugfix: Bump Celluloid dependency to avoid issues with serialising AMI
 
 # [v1.5.1](https://github.com/adhearsion/punchblock/compare/v1.5.0...v1.5.1) - [2012-10-11](https://rubygems.org/gems/punchblock/versions/1.5.1)
   * Update: Bump Celluloid dependency

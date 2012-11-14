@@ -16,7 +16,6 @@ module KeyValuePairNode
             new_node.name = name
             new_node.value = value
           end
-          new_node.name = new_node.name.downcase
         end
       end
     end
@@ -25,13 +24,13 @@ module KeyValuePairNode
   # The Header's name
   # @return [Symbol]
   def name
-    read_attr(:name).gsub('-', '_').to_sym
+    read_attr :name
   end
 
   # Set the Header's name
   # @param [Symbol] name the new name for the param
   def name=(name)
-    write_attr :name, name.to_s.gsub('_', '-')
+    write_attr :name, name
   end
 
   # The Header's value

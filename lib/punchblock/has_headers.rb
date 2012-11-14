@@ -7,7 +7,7 @@ module Punchblock
     #
     def headers_hash
       headers.inject({}) do |hash, header|
-        hash[header.name] = header.value
+        hash[header.name.downcase.gsub('-', '_').to_sym] = header.value
         hash
       end
     end

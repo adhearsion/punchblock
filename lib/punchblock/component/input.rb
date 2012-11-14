@@ -48,7 +48,7 @@ module Punchblock
       # @param [Integer] other the amount of time in milliseconds that an input command will wait until considered that a silence becomes a NO-MATCH
       #
       def max_silence=(other)
-        write_attr :'max-silence', other.to_i
+        write_attr :'max-silence', other, :to_i
       end
 
       ##
@@ -62,7 +62,7 @@ module Punchblock
       # @param [Float] min_confidence with which to consider a response acceptable
       #
       def min_confidence=(min_confidence)
-        write_attr 'min-confidence', min_confidence.to_f
+        write_attr 'min-confidence', min_confidence, :to_f
       end
 
       ##
@@ -118,7 +118,7 @@ module Punchblock
       # @param [Float] other Indicates how sensitive the interpreter should be to loud versus quiet input. Higher values represent greater sensitivity.
       #
       def sensitivity=(other)
-        write_attr :sensitivity, other.to_f
+        write_attr :sensitivity, other, :to_f
       end
 
       ##
@@ -132,7 +132,7 @@ module Punchblock
       # @param [Integer] timeout Indicates the amount of time preceding input which may expire before a timeout is triggered.
       #
       def initial_timeout=(other)
-        write_attr :'initial-timeout', other.to_f
+        write_attr :'initial-timeout', other, :to_f
       end
 
       ##
@@ -146,7 +146,7 @@ module Punchblock
       # @param [Integer] timeout Indicates (in the case of DTMF input) the amount of time between input digits which may expire before a timeout is triggered.
       #
       def inter_digit_timeout=(other)
-        write_attr :'inter-digit-timeout', other.to_i
+        write_attr :'inter-digit-timeout', other, :to_i
       end
 
       ##

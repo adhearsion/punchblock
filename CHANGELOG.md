@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.6.1](https://github.com/adhearsion/punchblock/compare/v1.6.0...v1.6.1) - [2012-11-14](https://rubygems.org/gems/punchblock/versions/1.6.1)
   * Bugfix: Safer component attribute writer conversion
 
 # [v1.6.0](https://github.com/adhearsion/punchblock/compare/v1.5.3...v1.6.0) - [2012-11-14](https://rubygems.org/gems/punchblock/versions/1.6.0)

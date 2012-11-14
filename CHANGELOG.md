@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.6.0](https://github.com/adhearsion/punchblock/compare/v1.5.3...v1.6.0) - [2012-11-14](https://rubygems.org/gems/punchblock/versions/1.6.0)
   * Feature: Set dial headers on FreeSWITCH originate command (SIP only)
   * Feature: Set dial headers on Asterisk originate command (SIP only)
   * Bugfix: Headers were being re-written downcased and with underscores

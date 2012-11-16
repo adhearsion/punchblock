@@ -63,7 +63,7 @@ module Punchblock
       end
 
       def clear_text
-        children.first.to_s
+        children.first.to_s.gsub(%r{</?[^>]+?>}, '')
       end
 
       ##

@@ -27,7 +27,7 @@
       <file leaf-file-name="output.rb" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="65" column="0" selection-start="2316" selection-end="2316" vertical-scroll-proportion="0.2857143">
+            <state line="65" column="80" selection-start="2396" selection-end="2396" vertical-scroll-proportion="0.13605443">
               <folding />
             </state>
           </provider>
@@ -45,7 +45,7 @@
       <file leaf-file-name="output.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/punchblock/component/output.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="65" column="27" selection-start="2393" selection-end="2393" vertical-scroll-proportion="0.0">
+            <state line="59" column="10" selection-start="2254" selection-end="2254" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -70,7 +70,7 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="-2076" />
+    <option name="y" value="-1026" />
     <option name="width" value="1680" />
     <option name="height" value="1026" />
   </component>
@@ -249,7 +249,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="-2076" width="1680" height="1026" extended-state="6" />
+    <frame x="0" y="-1026" width="1680" height="1026" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -332,11 +332,6 @@
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/punchblock/component/output.rb">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="65" column="27" selection-start="2393" selection-end="2393" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/punchblock/translator/asterisk/component.rb">
       <provider selected="true" editor-type-id="text-editor">
         <state line="41" column="89" selection-start="1204" selection-end="1204" vertical-scroll-proportion="0.12849163">
@@ -344,9 +339,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/lib/punchblock/component/output.rb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="59" column="10" selection-start="2254" selection-end="2254" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/lib/punchblock/translator/asterisk/component/output.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="65" column="0" selection-start="2316" selection-end="2316" vertical-scroll-proportion="0.2857143">
+        <state line="65" column="80" selection-start="2396" selection-end="2396" vertical-scroll-proportion="0.13605443">
           <folding />
         </state>
       </provider>

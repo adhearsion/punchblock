@@ -63,7 +63,6 @@ module Punchblock
               end
             when :festival
               send_ref
-              binding.pry
               @call.send_agi_action! 'EXEC Festival', swift_doc do |complete_event|
                 output_component.send_complete_event! success_reason
               end

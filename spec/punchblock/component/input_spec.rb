@@ -98,7 +98,7 @@ module Punchblock
 
           its(:content_type) { should be == 'application/srgs+xml' }
 
-          let(:expected_message) { "<![CDATA[ #{grxml_doc} ]]>" }
+          let(:expected_message) { "<![CDATA[ #{grxml_doc.document.to_xml} ]]>" }
 
           it "should wrap GRXML in CDATA" do
             subject.child.to_xml.should be == expected_message.strip

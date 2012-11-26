@@ -225,8 +225,11 @@ module Punchblock
         def value=(value)
           return unless value
           self.content_type = grxml_content_type unless self.content_type
-          if grxml? && !value.is_a?(RubySpeech::GRXML::Element)
-            value = RubySpeech::GRXML.import(value).document.to_xml
+          if grxml?
+            unless value.is_a?(RubySpeech::GRXML::Element)
+              value = RubySpeech::GRXML.import(value)
+            end
+            value = value.document.to_xml
           end
           Nokogiri::XML::Builder.with(self) do |xml|
             xml.cdata " #{value} "

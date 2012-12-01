@@ -49,6 +49,7 @@ module Punchblock
 
       def complete_event=(other)
         return if @complete_event_resource.set_yet?
+        client.delete_component_registration self if client
         @complete_event_resource.resource = other
         complete!
       end

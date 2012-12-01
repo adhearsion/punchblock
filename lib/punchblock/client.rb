@@ -51,6 +51,10 @@ module Punchblock
       component_registry.find_by_id component_id
     end
 
+    def delete_component_registration(component)
+      component_registry.delete component
+    end
+
     def execute_command(command, options = {})
       async = options.has_key?(:async) ? options.delete(:async) : true
       command.client = self

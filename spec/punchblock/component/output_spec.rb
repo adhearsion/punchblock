@@ -17,6 +17,7 @@ module Punchblock
         its(:repeat_times)     { should be nil }
         its(:max_time)         { should be nil }
         its(:voice)            { should be nil }
+        its(:renderer)         { should be nil }
       end
 
       describe "when setting options in initializer" do
@@ -27,7 +28,8 @@ module Punchblock
                       :repeat_interval  => 2000,
                       :repeat_times     => 10,
                       :max_time         => 30000,
-                      :voice            => 'allison'
+                      :voice            => 'allison',
+                      :renderer         => 'swift'
         end
 
         its(:interrupt_on)     { should be == :speech }
@@ -37,6 +39,7 @@ module Punchblock
         its(:repeat_times)     { should be == 10 }
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
+        its(:renderer)         { should be == 'swift' }
       end
 
       describe "from a stanza" do
@@ -49,7 +52,8 @@ module Punchblock
         repeat-interval='2000'
         repeat-times='10'
         max-time='30000'
-        voice='allison'>Hello world</output>
+        voice='allison'
+        renderer='swift'>Hello world</output>
           MESSAGE
         end
 
@@ -64,6 +68,7 @@ module Punchblock
         its(:repeat_times)     { should be == 10 }
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
+        its(:renderer)         { should be == 'swift' }
         its(:text)             { should be == 'Hello world' }
       end
 

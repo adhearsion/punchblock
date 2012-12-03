@@ -753,6 +753,32 @@ module Punchblock
                 end
               end
             end
+
+            context "with a media renderer set on itself" do
+              let(:media_engine) { :swift }
+              let(:audio_filename) { '/foo/bar.wav' }
+              let :ssml_doc do
+                RubySpeech::SSML.draw do
+                  audio :src => audio_filename
+                end
+              end
+
+              let(:command_opts) { {:renderer => :asterisk} }
+
+              let :command_options do
+                { :ssml => ssml_doc }.merge(command_opts)
+              end
+
+              let :original_command do
+                Punchblock::Component::Output.new command_options
+              end
+
+              it "should use the media renderer set and not the platform default" do
+                expect_answered
+                mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', audio_filename
+                subject.execute
+              end
+            end
           end
 
           describe "#execute_command" do

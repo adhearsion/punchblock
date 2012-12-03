@@ -772,6 +772,7 @@ module Punchblock
               let :original_command do
                 Punchblock::Component::Output.new command_options
               end
+
               it "should use the media renderer set and not the platform default" do
                 expect_answered
                 mock_call.expects(:send_agi_action!).once.with 'EXEC Playback', audio_filename

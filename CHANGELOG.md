@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: Fixed scenario where executing the ANSWER application on FreeSWITCH on an already answered call caused FS to stop accepting commands.
+  * Feature: Support for the renderer attribute added to the Output component.
 
 # [v1.6.1](https://github.com/adhearsion/punchblock/compare/v1.6.0...v1.6.1) - [2012-11-14](https://rubygems.org/gems/punchblock/versions/1.6.1)
   * Bugfix: Safer component attribute writer conversion

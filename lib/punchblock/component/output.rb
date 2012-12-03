@@ -157,6 +157,20 @@ module Punchblock
         write_attr :'max-time', other, :to_i
       end
 
+      ##
+      # @return [String] the rendering engine requested by the component
+      #
+      def renderer
+        read_attr :renderer
+      end
+
+      ##
+      # @param [String] the rendering engine to use with this component
+      #
+      def renderer=(renderer)
+        write_attr :renderer, renderer
+      end
+
       def inspect_attributes
         super + [:voice, :ssml, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time]
       end

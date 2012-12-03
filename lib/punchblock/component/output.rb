@@ -172,7 +172,7 @@ module Punchblock
       end
 
       def inspect_attributes
-        super + [:voice, :ssml, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time]
+        super + [:voice, :ssml, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time, :renderer]
       end
 
       state_machine :state do

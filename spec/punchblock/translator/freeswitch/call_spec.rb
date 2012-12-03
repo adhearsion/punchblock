@@ -695,6 +695,18 @@ module Punchblock
               command.response(0.5).should be true
               subject.should be_answered
             end
+
+            it "should not execute the answer application twice if already answered" do
+              subject
+              Punchblock.expects(:new_uuid).once.returns 'abc123'
+              subject.wrapped_object.expects(:application).once.with('answer', "%[punchblock_command_id=abc123]")
+              subject.should_not be_answered
+              subject.execute_command command
+              subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123')
+              command.response(0.5).should be true
+              subject.should be_answered
+              subject.execute_command command
+            end
           end
 
           def expect_hangup_with_reason(reason)

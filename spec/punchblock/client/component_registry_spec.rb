@@ -12,6 +12,13 @@ module Punchblock
         subject << component
         subject.find_by_id(component_id).should be component
       end
+
+      it 'should allow deletion of components' do
+        subject << component
+        subject.find_by_id(component_id).should be component
+        subject.delete component
+        subject.find_by_id(component_id).should be_nil
+      end
     end
   end
 end

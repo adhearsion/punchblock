@@ -794,6 +794,21 @@ module Punchblock
                 subject.component_with_id('foo').should be mock_component
               end
             end
+
+            context "with a media renderer set on the component" do
+              let(:media_engine) { :cepstral }
+              let(:media_renderer) { :native }
+              let :command_with_renderer do
+                Punchblock::Component::Output.new :renderer => media_renderer
+              end
+
+              it "should use the component media engine and not the platform one if it is set" do
+                Component::Output.expects(:new_link).once.with(command_with_renderer, subject).returns mock_component
+                mock_component.expects(:execute!).once
+                subject.execute_command command_with_renderer
+                subject.component_with_id('foo').should be mock_component
+              end
+            end
           end
 
           context 'with an Input component' do

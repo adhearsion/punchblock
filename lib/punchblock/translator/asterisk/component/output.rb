@@ -27,7 +27,9 @@ module Punchblock
 
             output_component = current_actor
 
-            case @media_engine
+            rendering_engine = @component_node.renderer ? @component_node.renderer.to_sym : @media_engine
+
+            case rendering_engine
             when :asterisk, nil
               raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
               raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on

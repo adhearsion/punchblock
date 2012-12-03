@@ -17,7 +17,7 @@ module Punchblock
         its(:repeat_times)     { should be nil }
         its(:max_time)         { should be nil }
         its(:voice)            { should be nil }
-        its(:renderer)            { should be nil }
+        its(:renderer)         { should be nil }
       end
 
       describe "when setting options in initializer" do

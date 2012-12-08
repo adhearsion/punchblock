@@ -99,7 +99,6 @@ module Punchblock
             send_pb_event Event::Unjoined.new(:call_id => other_call_id)
           end
 
-
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
             if component = component_with_id(event[:scope_variable_punchblock_component_id])
               safe_from_dead_actors { component.handle_es_event event if component.alive? }

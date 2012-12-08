@@ -19,7 +19,6 @@ module Punchblock
       @event_queue = Queue.new
       @connection = options[:connection]
       @connection.event_handler = lambda { |event| self.handle_event event } if @connection
-      register_initial_handlers
       @component_registry = ComponentRegistry.new
       @write_timeout = options[:write_timeout] || 3
     end
@@ -29,18 +28,12 @@ module Punchblock
       if event.source
         event.source.add_event event
       else
-        trigger_handler :event, event
+        trigger_handler(:event, event) || event_queue.push(event)
       end
     end
 
     def register_event_handler(*guards, &block)
       register_handler :event, *guards, &block
-    end
-
-    def register_initial_handlers
-      register_handler_with_priority :event, -10 do |event|
-        event_queue.push event
-      end
     end
 
     def register_component(component)

@@ -176,15 +176,15 @@ module Punchblock
             application 'respond', '180 Ringing'
             command.response = true
           when Command::Answer
-            if @answered == false
+            if answered?
+              command.response = true
+            else
               command_id = Punchblock.new_uuid
               register_tmp_handler :es, :event_name => 'CHANNEL_ANSWER', [:[], :scope_variable_punchblock_command_id] => command_id do
                 @answered = true
                 command.response = true
               end
               application 'answer', "%[punchblock_command_id=#{command_id}]"
-            else
-              command.response = true
             end
           when Command::Hangup
             hangup

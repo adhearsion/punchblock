@@ -181,7 +181,6 @@ module Punchblock
             else
               command_id = Punchblock.new_uuid
               register_tmp_handler :es, :event_name => 'CHANNEL_ANSWER', [:[], :scope_variable_punchblock_command_id] => command_id do
-                @answered = true
                 command.response = true
               end
               application 'answer', "%[punchblock_command_id=#{command_id}]"

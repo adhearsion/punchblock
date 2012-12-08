@@ -63,6 +63,11 @@ module Punchblock
               @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
                 output_component.send_complete_event! success_reason
               end
+            when :festival
+              send_ref
+              @call.send_agi_action! 'EXEC Festival', @component_node.clear_text do |complete_event|
+                output_component.send_complete_event! success_reason
+              end
             end
           rescue UnrenderableDocError => e
             with_error 'unrenderable document error', e.message

@@ -12,3 +12,4 @@ vendor
 .rbx/
 *.rbc
 tmp
+.idea/

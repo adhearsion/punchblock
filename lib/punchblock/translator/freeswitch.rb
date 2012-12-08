@@ -65,6 +65,7 @@ module Punchblock
         register_handler :es, [:has_key?, :other_leg_unique_id] => true do |event|
           call = call_with_id event[:other_leg_unique_id]
           call.handle_es_event! event if call
+          throw :pass
         end
 
         register_handler :es, lambda { |event| es_event_known_call? event } do |event|

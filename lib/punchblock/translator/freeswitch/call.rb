@@ -68,6 +68,7 @@ module Punchblock
           register_handler :es, :event_name => 'CHANNEL_ANSWER' do
             @answered = true
             send_pb_event Event::Answered.new
+            throw :pass
           end
 
           register_handler :es, :event_name => 'CHANNEL_STATE', [:[], :channel_call_state] => 'RINGING' do

@@ -60,7 +60,6 @@ module Punchblock
           handler.expects(:call).never
           subject.register_event_handler do |event|
             handler.call event
-            throw :halt
           end
           subject.handle_event mock_event
         end
@@ -73,7 +72,6 @@ module Punchblock
             handler.expects(:call).once.with mock_event
             subject.register_event_handler do |event|
               handler.call event
-              throw :halt
             end
             subject.handle_event mock_event
             subject.event_queue.should be_empty

@@ -63,6 +63,8 @@ module Punchblock
               @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
                 output_component.send_complete_event! success_reason
               end
+            else
+              raise OptionError, 'The renderer foobar is unsupported.'
             end
           rescue UnrenderableDocError => e
             with_error 'unrenderable document error', e.message

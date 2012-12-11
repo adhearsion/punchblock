@@ -39,6 +39,16 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
+            context 'with an invalid media engine' do
+              let(:media_engine) { 'foobar' }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'The renderer foobar is unsupported.'
+                original_command.response(0.1).should be == error
+              end
+            end
+
             context 'with a media engine of :swift' do
               let(:media_engine) { 'swift' }
 

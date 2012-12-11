@@ -199,7 +199,7 @@ module Punchblock
             command.response = true
           when Punchblock::Component::Output
             media_renderer = command.renderer ? command.renderer : media_engine
-            case media_renderer.to_s
+            case media_renderer.to_sym
             when :freeswitch, :native, nil
               execute_component Component::Output, command
             when :flite

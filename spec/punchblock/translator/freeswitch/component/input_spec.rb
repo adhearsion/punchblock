@@ -71,6 +71,7 @@ module Punchblock
                 before do
                   send_dtmf 1
                   send_dtmf 2
+                  sleep 0.5
                 end
 
                 let :expected_event do

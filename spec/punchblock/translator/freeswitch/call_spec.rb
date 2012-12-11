@@ -8,7 +8,7 @@ module Punchblock
       describe Call do
         let(:id) { Punchblock.new_uuid }
         let(:stream)        { stub_everything 'RubyFS::Stream' }
-        let(:media_engine)  { :freeswitch }
+        let(:media_engine)  { 'freeswitch' }
         let(:default_voice) { :hal }
         let(:translator)    { Freeswitch.new stub_everything('Connection::Freeswitch') }
         let(:es_env) do

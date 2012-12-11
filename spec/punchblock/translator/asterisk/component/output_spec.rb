@@ -40,7 +40,7 @@ module Punchblock
             before { original_command.request! }
 
             context 'with a media engine of :swift' do
-              let(:media_engine) { :swift }
+              let(:media_engine) { 'swift' }
 
               let(:audio_filename) { 'http://foo.com/bar.mp3' }
 

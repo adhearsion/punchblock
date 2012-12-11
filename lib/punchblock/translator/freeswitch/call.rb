@@ -198,8 +198,8 @@ module Punchblock
             hangup REJECT_TO_HANGUP_REASON[command.reason]
             command.response = true
           when Punchblock::Component::Output
-            media_renderer = command.renderer ? command.renderer.to_sym : media_engine
-            case media_renderer
+            media_renderer = command.renderer ? command.renderer : media_engine
+            case media_renderer.to_s
             when :freeswitch, :native, nil
               execute_component Component::Output, command
             when :flite

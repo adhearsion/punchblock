@@ -827,7 +827,7 @@ module Punchblock
                 mock_call.should_receive(:redirect_back!)
                 subject.execute_command command
                 original_command.should_not be_complete
-                mock_call.process_ami_event! ami_event
+                mock_call.process_ami_event ami_event
                 reason.should be_a Punchblock::Event::Complete::Stop
                 original_command.should be_complete
               end

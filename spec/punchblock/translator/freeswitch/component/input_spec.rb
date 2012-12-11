@@ -7,11 +7,8 @@ module Punchblock
     class Freeswitch
       module Component
         describe Input do
-          let(:connection) do
-            mock_connection_with_event_handler do |event|
-              original_command.add_event event
-            end
-          end
+          include HasMockCallbackConnection
+
           let(:id)          { Punchblock.new_uuid }
           let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
           let(:mock_stream) { mock('RubyFS::Stream') }
@@ -90,7 +87,7 @@ module Punchblock
                 end
 
                 it "should not process further dtmf events" do
-                  subject.expects(:process_dtmf!).never
+                  subject.should_receive(:process_dtmf!).never
                   send_dtmf 3
                 end
               end
@@ -185,7 +182,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_initial_timer).never
+                  subject.wrapped_object.should_receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -194,7 +191,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_initial_timer).never
+                  subject.wrapped_object.should_receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -237,7 +234,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_inter_digit_timer).never
+                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end
@@ -246,7 +243,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_inter_digit_timer).never
+                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end

@@ -28,7 +28,7 @@ module Punchblock
           end
 
           it "should call #complete!" do
-            subject.expects(:complete!).once
+            subject.should_receive(:complete!).once
             add_event
           end
         end
@@ -55,7 +55,7 @@ module Punchblock
           let(:handler) { mock 'Response' }
 
           before do
-            handler.expects(:call).once.with(event)
+            handler.should_receive(:call).once.with(event)
             subject.register_event_handler { |event| handler.call event }
           end
 

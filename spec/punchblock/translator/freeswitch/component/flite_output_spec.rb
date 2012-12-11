@@ -7,11 +7,8 @@ module Punchblock
     class Freeswitch
       module Component
         describe FliteOutput do
-          let(:connection) do
-            mock_connection_with_event_handler do |event|
-              original_command.add_event event
-            end
-          end
+          include HasMockCallbackConnection
+
           let(:media_engine)  { :flite }
           let(:default_voice) { nil }
           let(:translator)    { Punchblock::Translator::Freeswitch.new connection }
@@ -40,7 +37,7 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(voice = :kal)
-              subject.wrapped_object.expects(:application).once.with :speak, "#{media_engine}|#{voice}|FOO"
+              subject.wrapped_object.should_receive(:application).once.with :speak, "#{media_engine}|#{voice}|FOO"
             end
 
             let(:command_opts) { {} }
@@ -70,7 +67,7 @@ module Punchblock
                 end
 
                 it 'should send a complete event when the speak finishes' do
-                  expect_playback.yields true
+                  expect_playback
                   execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
@@ -252,13 +249,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                subject.wrapped_object.expects(:application)
+                subject.wrapped_object.should_receive(:application)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                subject.wrapped_object.expects(:application)
+                subject.wrapped_object.should_receive(:application)
                 original_command.should_not be_complete
                 subject.execute_command command
                 reason.should be_a Punchblock::Event::Complete::Stop
@@ -266,7 +263,7 @@ module Punchblock
               end
 
               it "breaks the current dialplan application" do
-                subject.wrapped_object.expects(:application).once.with 'break'
+                subject.wrapped_object.should_receive(:application).once.with 'break'
                 subject.execute_command command
               end
             end

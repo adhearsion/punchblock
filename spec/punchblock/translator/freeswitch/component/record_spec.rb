@@ -7,11 +7,8 @@ module Punchblock
     class Freeswitch
       module Component
         describe Record do
-          let(:connection) do
-            mock_connection_with_event_handler do |event|
-              original_command.add_event event
-            end
-          end
+          include HasMockCallbackConnection
+
           let(:id)          { Punchblock.new_uuid }
           let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
           let(:mock_stream) { mock('RubyFS::Stream') }
@@ -25,7 +22,7 @@ module Punchblock
             {}
           end
 
-          before { mock_stream.stub_everything }
+          before { mock_stream.as_null_object }
 
           subject { Record.new original_command, mock_call }
 
@@ -44,7 +41,7 @@ module Punchblock
             end
 
             it "starts a recording via uuid_record, using the component ID as the filename" do
-              mock_call.expects(:uuid_foo).once.with(:record, "start #{filename}")
+              mock_call.should_receive(:uuid_foo).once.with(:record, "start #{filename}")
               subject.execute
             end
 
@@ -65,7 +62,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :start_paused => nil } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -74,7 +71,7 @@ module Punchblock
               context "set to false" do
                 let(:command_options) { { :start_paused => false } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -83,7 +80,7 @@ module Punchblock
               context "set to true" do
                 let(:command_options) { { :start_paused => true } }
                 it "should return an error and not execute any actions" do
-                  mock_call.expects(:uuid_foo).never
+                  mock_call.should_receive(:uuid_foo).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A start-paused value of true is unsupported.'
                   original_command.response(0.1).should be == error
@@ -95,7 +92,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :initial_timeout => nil } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -104,7 +101,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :initial_timeout => -1 } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -113,7 +110,7 @@ module Punchblock
               context "set to a positive number" do
                 let(:command_options) { { :initial_timeout => 10 } }
                 it "should return an error and not execute any actions" do
-                  mock_call.expects(:uuid_foo).never
+                  mock_call.should_receive(:uuid_foo).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An initial-timeout value is unsupported.'
                   original_command.response(0.1).should be == error
@@ -125,7 +122,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :final_timeout => nil } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -134,7 +131,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :final_timeout => -1 } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -143,7 +140,7 @@ module Punchblock
               context "set to a positive number" do
                 let(:command_options) { { :final_timeout => 10 } }
                 it "should return an error and not execute any actions" do
-                  mock_call.expects(:send_agi_action!).never
+                  mock_call.should_receive(:send_agi_action!).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A final-timeout value is unsupported.'
                   original_command.response(0.1).should be == error
@@ -155,13 +152,13 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :format => nil } }
                 it "should execute as 'wav'" do
-                  mock_call.expects(:uuid_foo).once.with(:record, regexp_matches(/.wav/))
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
 
                 it "provides the correct filename in the recording" do
-                  mock_call.expects(:uuid_foo)
+                  mock_call.should_receive(:uuid_foo)
                   subject.execute
                   record_stop_event = RubyFS::Event.new nil, {
                     :event_name       => 'RECORD_STOP',
@@ -175,13 +172,13 @@ module Punchblock
               context "set to 'mp3'" do
                 let(:command_options) { { :format => 'mp3' } }
                 it "should execute as 'mp3'" do
-                  mock_call.expects(:uuid_foo).once.with(:record, regexp_matches(/.mp3/))
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.mp3/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
 
                 it "provides the correct filename in the recording" do
-                  mock_call.expects(:uuid_foo)
+                  mock_call.should_receive(:uuid_foo)
                   subject.execute
                   record_stop_event = RubyFS::Event.new nil, {
                     :event_name       => 'RECORD_STOP',
@@ -197,7 +194,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :start_beep => nil } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -206,7 +203,7 @@ module Punchblock
               context "set to false" do
                 let(:command_options) { { :start_beep => false } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -216,7 +213,7 @@ module Punchblock
                 let(:command_options) { { :start_beep => true } }
 
                 it "should return an error and not execute any actions" do
-                  mock_call.expects(:uuid_foo).never
+                  mock_call.should_receive(:uuid_foo).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A start-beep value of true is unsupported.'
                   original_command.response(0.1).should be == error
@@ -228,7 +225,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :max_duration => nil } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once.with(:record, regexp_matches(/.wav$/))
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -237,7 +234,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :max_duration => -1 } }
                 it "should execute normally" do
-                  mock_call.expects(:uuid_foo).once.with(:record, regexp_matches(/.wav$/))
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -259,7 +256,7 @@ module Punchblock
                 let(:command_options) { { :max_duration => 1000 } }
 
                 it "executes the recording with a time limit" do
-                  mock_call.expects(:uuid_foo).once.with(:record, regexp_matches(/.wav 1$/))
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav 1$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -285,7 +282,7 @@ module Punchblock
               let(:command) { Punchblock::Component::Stop.new }
 
               before do
-                mock_call.expects :uuid_foo
+                mock_call.should_receive :uuid_foo
                 command.request!
                 original_command.request!
                 subject.execute
@@ -300,19 +297,19 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.expects :uuid_foo
+                mock_call.should_receive :uuid_foo
                 subject.execute_command command
                 send_stop_event
                 command.response(0.1).should be == true
               end
 
               it "executes a uuid_record stop command" do
-                mock_call.expects(:uuid_foo).with(:record, "stop #{filename}")
+                mock_call.should_receive(:uuid_foo).with(:record, "stop #{filename}")
                 subject.execute_command command
               end
 
               it "sends the correct complete event" do
-                mock_call.expects(:uuid_foo).with(:record, "stop #{filename}")
+                mock_call.should_receive(:uuid_foo).with(:record, "stop #{filename}")
                 subject.execute_command command
                 send_stop_event
                 reason.should be_a Punchblock::Event::Complete::Stop
@@ -326,7 +323,7 @@ module Punchblock
 
               before do
                 pending
-                mock_call.expects :uuid_foo
+                mock_call.should_receive :uuid_foo
                 command.request!
                 original_command.request!
                 subject.execute
@@ -338,7 +335,7 @@ module Punchblock
               end
 
               it "pauses the recording via AMI" do
-                mock_call.expects(:uuid_foo).once.with('PauseMonitor', 'Channel' => channel)
+                mock_call.should_receive(:uuid_foo).once.with('PauseMonitor', 'Channel' => channel)
                 subject.execute_command command
               end
             end
@@ -348,7 +345,7 @@ module Punchblock
 
               before do
                 pending
-                mock_call.expects :uuid_foo
+                mock_call.should_receive :uuid_foo
                 command.request!
                 original_command.request!
                 subject.execute
@@ -360,7 +357,7 @@ module Punchblock
               end
 
               it "resumes the recording via AMI" do
-                mock_call.expects(:uuid_foo).once.with('ResumeMonitor', 'Channel' => channel)
+                mock_call.should_receive(:uuid_foo).once.with('ResumeMonitor', 'Channel' => channel)
                 subject.execute_command command
               end
             end

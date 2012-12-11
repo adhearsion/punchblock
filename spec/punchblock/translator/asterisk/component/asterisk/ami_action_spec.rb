@@ -8,18 +8,15 @@ module Punchblock
       module Component
         module Asterisk
           describe AMIAction do
-            let(:connection) do
-              mock_connection_with_event_handler do |event|
-                command.add_event event
-              end
-            end
+            include HasMockCallbackConnection
+
             let(:mock_translator) { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
 
-            let :command do
+            let :original_command do
               Punchblock::Component::Asterisk::AMI::Action.new :name => 'ExtensionStatus', :params => { :context => 'default', :exten => 'idonno' }
             end
 
-            subject { AMIAction.new command, mock_translator }
+            subject { AMIAction.new original_command, mock_translator }
 
             let :expected_action do
               RubyAMI::Action.new 'ExtensionStatus', 'Context' => 'default', 'Exten' => 'idonno'
@@ -35,16 +32,16 @@ module Punchblock
               before { stub_uuids component_id }
 
               it 'should send the appropriate RubyAMI::Action and send the component node a ref with the action ID' do
-                mock_translator.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
-                command.expects(:response=).once.with(expected_response)
+                mock_translator.should_receive(:send_ami_action).once.with(expected_action).and_return(expected_action)
+                original_command.should_receive(:response=).once.with(expected_response)
                 subject.execute
               end
             end
 
             context 'when the AMI action completes' do
               before do
-                command.request!
-                command.execute!
+                original_command.request!
+                original_command.execute!
               end
 
               let :response do
@@ -64,13 +61,13 @@ module Punchblock
 
               context 'for a non-causal action' do
                 it 'should send a complete event to the component node' do
-                  subject.wrapped_object.expects(:send_complete_event).once.with expected_complete_reason
+                  subject.wrapped_object.should_receive(:send_complete_event).once.with expected_complete_reason
                   subject.handle_response response
                 end
               end
 
               context 'for a causal action' do
-                let :command do
+                let :original_command do
                   Punchblock::Component::Asterisk::AMI::Action.new :name => 'CoreShowChannels'
                 end
 
@@ -117,7 +114,7 @@ module Punchblock
 
                 it 'should send events to the component node' do
                   event_node
-                  command.register_handler :internal, Punchblock::Event::Asterisk::AMI::Event do |event|
+                  original_command.register_handler :internal, Punchblock::Event::Asterisk::AMI::Event do |event|
                     @event = event
                   end
                   action = subject.action
@@ -131,7 +128,7 @@ module Punchblock
                   subject.action << response
                   subject.action << terminating_event
 
-                  command.complete_event(0.5).reason.should be == expected_complete_reason
+                  original_command.complete_event(0.5).reason.should be == expected_complete_reason
                 end
               end
 
@@ -145,7 +142,7 @@ module Punchblock
                 end
 
                 it 'should send a complete event to the component node' do
-                  subject.wrapped_object.expects(:send_complete_event).once.with expected_complete_reason
+                  subject.wrapped_object.should_receive(:send_complete_event).once.with expected_complete_reason
                   subject.handle_response error
                 end
               end

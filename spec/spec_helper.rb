@@ -9,7 +9,6 @@ Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
 Thread.abort_on_exception = true
 
 RSpec.configure do |config|
-  config.mock_with :mocha
   config.filter_run :focus => true
   config.run_all_when_everything_filtered = true
 
@@ -32,8 +31,8 @@ def import_stanza(xml)
 end
 
 def stub_uuids(value)
-  RubyAMI.stubs :new_uuid => value
-  Punchblock.stubs :new_uuid => value
+  RubyAMI.stub :new_uuid => value
+  Punchblock.stub :new_uuid => value
 end
 
 # FIXME: change this to rayo_event?  It can be ambigous

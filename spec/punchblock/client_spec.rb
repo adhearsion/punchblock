@@ -13,27 +13,27 @@ module Punchblock
     its(:component_registry)  { should be_a Client::ComponentRegistry }
 
     let(:call_id)         { 'abc123' }
-    let(:mock_event)      { stub_everything 'Event' }
+    let(:mock_event)      { stub('Event').as_null_object }
     let(:component_id)    { 'abc123' }
     let(:mock_component)  { stub 'Component', :component_id => component_id }
     let(:mock_command)    { stub 'Command' }
 
     describe '#run' do
       it 'should start up the connection' do
-        connection.expects(:run).once
+        connection.should_receive(:run).once
         subject.run
       end
     end
 
     describe '#stop' do
       it 'should stop the connection' do
-        connection.expects(:stop).once
+        connection.should_receive(:stop).once
         subject.stop
       end
     end
 
     it 'should handle connection events' do
-      subject.expects(:handle_event).with(mock_event).once
+      subject.should_receive(:handle_event).with(mock_event).once
       connection.event_handler.call mock_event
     end
 
@@ -46,8 +46,8 @@ module Punchblock
 
       context 'if the event can be associated with a source component' do
         before do
-          mock_event.stubs(:source).returns mock_component
-          mock_component.expects(:add_event).with mock_event
+          mock_event.stub :source => mock_component
+          mock_component.should_receive(:add_event).with mock_event
         end
 
         it 'should not queue up the event' do
@@ -57,7 +57,7 @@ module Punchblock
 
         it 'should not call event handlers' do
           handler = mock 'handler'
-          handler.expects(:call).never
+          handler.should_receive(:call).never
           subject.register_event_handler do |event|
             handler.call event
           end
@@ -66,10 +66,14 @@ module Punchblock
       end
 
       context 'if the event cannot be associated with a source component' do
+        before do
+          mock_event.stub :source => nil
+        end
+
         context 'if event handlers have been set' do
           it 'should call the event handler and not queue up the event' do
             handler = mock 'handler'
-            handler.expects(:call).once.with mock_event
+            handler.should_receive(:call).once.with mock_event
             subject.register_event_handler do |event|
               handler.call event
             end
@@ -97,7 +101,7 @@ module Punchblock
       let(:event)     { Event::Complete.new }
 
       before do
-        connection.expects(:write).once.with component, :call_id => call_id
+        connection.should_receive(:write).once.with component, :call_id => call_id
       end
 
       let :execute_command do
@@ -114,7 +118,7 @@ module Punchblock
       end
 
       it "should handle a component's events" do
-        subject.expects(:trigger_handler).with(:event, event).once
+        subject.should_receive(:trigger_handler).with(:event, event).once
         execute_command
         component.request!
         component.execute!

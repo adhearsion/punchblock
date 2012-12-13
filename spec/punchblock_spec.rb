@@ -2,11 +2,12 @@ require 'spec_helper'
 
 describe Punchblock do
   describe '#client_with_connection' do
+    let(:mock_connection) { stub('Connection').as_null_object }
+
     context 'with :XMPP' do
       it 'sets up an XMPP connection, passing options, and a client with the connection attached' do
-        mock_connection = stub_everything 'Connection'
         options = {:username => 'foo', :password => 'bar'}
-        Punchblock::Connection::XMPP.expects(:new).once.with(options).returns mock_connection
+        Punchblock::Connection::XMPP.should_receive(:new).once.with(options).and_return mock_connection
         client = Punchblock.client_with_connection :XMPP, options
         client.should be_a Punchblock::Client
         client.connection.should be mock_connection
@@ -15,9 +16,8 @@ describe Punchblock do
 
     context 'with :asterisk' do
       it 'sets up an Asterisk connection, passing options, and a client with the connection attached' do
-        mock_connection = stub_everything 'Connection'
         options = {:username => 'foo', :password => 'bar'}
-        Punchblock::Connection::Asterisk.expects(:new).once.with(options).returns mock_connection
+        Punchblock::Connection::Asterisk.should_receive(:new).once.with(options).and_return mock_connection
         client = Punchblock.client_with_connection :asterisk, options
         client.should be_a Punchblock::Client
         client.connection.should be mock_connection
@@ -26,9 +26,8 @@ describe Punchblock do
 
     context 'with :freeswitch' do
       it 'sets up an Freeswitch connection, passing options, and a client with the connection attached' do
-        mock_connection = stub_everything 'Connection'
         options = {:username => 'foo', :password => 'bar'}
-        Punchblock::Connection::Freeswitch.expects(:new).once.with(options).returns mock_connection
+        Punchblock::Connection::Freeswitch.should_receive(:new).once.with(options).and_return mock_connection
         client = Punchblock.client_with_connection :freeswitch, options
         client.should be_a Punchblock::Client
         client.connection.should be mock_connection

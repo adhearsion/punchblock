@@ -8,6 +8,7 @@ module Punchblock
     class Freeswitch
       include Celluloid
       include HasGuardedHandlers
+      include DeadActorSafety
 
       extend ActiveSupport::Autoload
 
@@ -65,6 +66,7 @@ module Punchblock
         register_handler :es, [:has_key?, :other_leg_unique_id] => true do |event|
           call = call_with_id event[:other_leg_unique_id]
           call.handle_es_event! event if call
+          throw :pass
         end
 
         register_handler :es, lambda { |event| es_event_known_call? event } do |event|
@@ -78,7 +80,11 @@ module Punchblock
       end
 
       def finalize
-        @calls.values.each(&:terminate)
+        @calls.values.each do |call|
+          safe_from_dead_actors do
+            call.terminate
+          end
+        end
       end
 
       def handle_es_event(event)

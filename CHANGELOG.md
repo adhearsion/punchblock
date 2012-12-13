@@ -1,5 +1,13 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.7.0](https://github.com/adhearsion/punchblock/compare/v1.6.1...v1.7.0) - [2012-12-13](https://rubygems.org/gems/punchblock/versions/1.7.0)
+  * Feature: Support for the renderer attribute added to the Output component.
+  * Feature: FreeSWITCH and Asterisk translators now use the :renderer attribute on Output
+  * Bugfix: Fixed scenario where executing the ANSWER application on FreeSWITCH on an already answered call caused FS to stop accepting commands.
+  * Bugfix: Plug a severe memory leak
+  * Bugfix: Raise an error immediately if trying to execute an invalid media engine on Asterisk
+  * Bugfix: Handle a wider variety of types when configuring media engines on Asterisk and FreeSWITCH, such as Strings instead of Symbols
+
 # [v1.6.1](https://github.com/adhearsion/punchblock/compare/v1.6.0...v1.6.1) - [2012-11-14](https://rubygems.org/gems/punchblock/versions/1.6.1)
   * Bugfix: Safer component attribute writer conversion
 

@@ -12,7 +12,7 @@ module Punchblock
       let(:translator)  { described_class.new connection, media_engine, default_voice }
       let(:stream)      { mock 'RubyFS::Stream' }
 
-      before { connection.expects(:stream).times(0..1).returns stream }
+      before { connection.should_receive(:stream).at_most(:once).and_return stream }
 
       subject { translator }
 
@@ -34,7 +34,7 @@ module Punchblock
           let(:call_id) { 'abc123' }
 
           it 'executes the call command' do
-            subject.wrapped_object.expects(:execute_call_command).with do |c|
+            subject.wrapped_object.should_receive(:execute_call_command).with do |c|
               c.should be command
               c.target_call_id.should be == call_id
             end
@@ -47,7 +47,7 @@ module Punchblock
           let(:component_id)  { '123abc' }
 
           it 'executes the component command' do
-            subject.wrapped_object.expects(:execute_component_command).with do |c|
+            subject.wrapped_object.should_receive(:execute_component_command).with do |c|
               c.should be command
               c.component_id.should be == component_id
             end
@@ -59,7 +59,7 @@ module Punchblock
           let(:command) { Command::Dial.new }
 
           it 'executes the command directly' do
-            subject.wrapped_object.expects(:execute_global_command).with command
+            subject.wrapped_object.should_receive(:execute_global_command).with command
             subject.execute_command command
           end
         end
@@ -112,12 +112,12 @@ module Punchblock
 
           before do
             command.request!
-            call.stubs(:id).returns call_id
+            call.stub(:id).and_return call_id
             subject.register_call call
           end
 
           it 'sends the command to the call for execution' do
-            call.expects(:execute_command!).once.with command
+            call.should_receive(:execute_command!).once.with command
             subject.execute_call_command command
           end
         end
@@ -135,7 +135,7 @@ module Punchblock
           let(:call_id) { dial_command.response.id }
 
           before do
-            stream.stub_everything
+            stream.as_null_object
             subject.execute_command dial_command
           end
 
@@ -146,7 +146,7 @@ module Punchblock
               raise 'Woops, I died'
             end
 
-            connection.expects(:handle_event).once.with end_error_event
+            connection.should_receive(:handle_event).once.with end_error_event
 
             lambda { call.oops }.should raise_error(/Woops, I died/)
             sleep 0.1
@@ -168,7 +168,7 @@ module Punchblock
           let(:call_id) { call.id }
 
           before do
-            connection.expects(:handle_event).at_least(1)
+            connection.stub :handle_event
             subject.handle_es_event es_event
             call_id
           end
@@ -178,7 +178,7 @@ module Punchblock
               raise 'Woops, I died'
             end
 
-            connection.expects(:handle_event).once.with end_error_event
+            connection.should_receive(:handle_event).once.with end_error_event
 
             lambda { call.oops }.should raise_error(/Woops, I died/)
             sleep 0.1
@@ -216,7 +216,7 @@ module Punchblock
           end
 
           it 'sends the command to the component for execution' do
-            component.expects(:execute_command!).once.with command
+            component.should_receive(:execute_command!).once.with command
             subject.execute_component_command command
           end
         end
@@ -239,9 +239,9 @@ module Punchblock
 
           before do
             id
-            Punchblock.expects(:new_uuid).once.returns id
+            Punchblock.should_receive(:new_uuid).once.and_return id
             command.request!
-            stream.stub_everything
+            stream.as_null_object
           end
 
           it 'should be able to look up the call by ID' do
@@ -255,9 +255,9 @@ module Punchblock
           end
 
           it 'should instruct the call to send a dial' do
-            mock_call = stub_everything 'Freeswitch::Call'
-            Freeswitch::Call.expects(:new_link).once.returns mock_call
-            mock_call.expects(:dial!).once.with command
+            mock_call = stub('Freeswitch::Call').as_null_object
+            Freeswitch::Call.should_receive(:new_link).once.and_return mock_call
+            mock_call.should_receive(:dial!).once.with command
             subject.execute_global_command command
           end
         end
@@ -277,13 +277,13 @@ module Punchblock
       describe '#handle_pb_event' do
         it 'should forward the event to the connection' do
           event = mock 'Punchblock::Event'
-          subject.connection.expects(:handle_event).once.with event
+          subject.connection.should_receive(:handle_event).once.with event
           subject.handle_pb_event event
         end
       end
 
       describe '#handle_es_event' do
-        before { subject.wrapped_object.stubs :handle_pb_event }
+        before { subject.wrapped_object.stub :handle_pb_event }
 
         let(:unique_id) { "3f0e1e18-c056-11e1-b099-fffeda3ce54f" }
 
@@ -514,7 +514,7 @@ module Punchblock
           let(:es_event) { RubyFS::Stream::Connected.new }
 
           it "should send a Punchblock::Connection::Connected event" do
-            subject.wrapped_object.expects(:handle_pb_event).once.with(Punchblock::Connection::Connected.new)
+            subject.wrapped_object.should_receive(:handle_pb_event).once.with(Punchblock::Connection::Connected.new)
             subject.handle_es_event es_event
           end
         end
@@ -529,10 +529,10 @@ module Punchblock
 
         describe 'with a CHANNEL_PARK event' do
           it 'should instruct the call to send an offer' do
-            mock_call = stub_everything 'Freeswitch::Call'
-            Freeswitch::Call.expects(:new).once.returns mock_call
-            subject.wrapped_object.expects(:link)
-            mock_call.expects(:send_offer!).once
+            mock_call = stub('Freeswitch::Call').as_null_object
+            Freeswitch::Call.should_receive(:new).once.and_return mock_call
+            subject.wrapped_object.should_receive(:link)
+            mock_call.should_receive(:send_offer!).once
             subject.handle_es_event es_event
           end
 
@@ -544,7 +544,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Freeswitch::Call.expects(:new).never
+              Freeswitch::Call.should_receive(:new).never
               subject.handle_es_event es_event
             end
           end
@@ -567,12 +567,12 @@ module Punchblock
           end
 
           it "is delivered to the bridging leg" do
-            call_a.expects(:handle_es_event!).once.with es_event
+            call_a.should_receive(:handle_es_event!).once.with es_event
             subject.handle_es_event es_event
           end
 
           it "is delivered to the other leg" do
-            call_b.expects(:handle_es_event!).once.with es_event
+            call_b.should_receive(:handle_es_event!).once.with es_event
             subject.handle_es_event es_event
           end
         end
@@ -587,7 +587,7 @@ module Punchblock
           end
 
           it 'sends the ES event to the call' do
-            call.expects(:handle_es_event!).once.with es_event
+            call.should_receive(:handle_es_event!).once.with es_event
             subject.handle_es_event es_event
           end
         end

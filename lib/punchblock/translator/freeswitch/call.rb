@@ -68,6 +68,7 @@ module Punchblock
           register_handler :es, :event_name => 'CHANNEL_ANSWER' do
             @answered = true
             send_pb_event Event::Answered.new
+            throw :pass
           end
 
           register_handler :es, :event_name => 'CHANNEL_STATE', [:[], :channel_call_state] => 'RINGING' do
@@ -98,7 +99,6 @@ module Punchblock
             other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
             send_pb_event Event::Unjoined.new(:call_id => other_call_id)
           end
-
 
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
             if component = component_with_id(event[:scope_variable_punchblock_component_id])
@@ -176,12 +176,15 @@ module Punchblock
             application 'respond', '180 Ringing'
             command.response = true
           when Command::Answer
-            command_id = Punchblock.new_uuid
-            register_tmp_handler :es, :event_name => 'CHANNEL_ANSWER', [:[], :scope_variable_punchblock_command_id] => command_id do
-              @answered = true
+            if answered?
               command.response = true
+            else
+              command_id = Punchblock.new_uuid
+              register_tmp_handler :es, :event_name => 'CHANNEL_ANSWER', [:[], :scope_variable_punchblock_command_id] => command_id do
+                command.response = true
+              end
+              application 'answer', "%[punchblock_command_id=#{command_id}]"
             end
-            application 'answer', "%[punchblock_command_id=#{command_id}]"
           when Command::Hangup
             hangup
             command.response = true
@@ -195,7 +198,8 @@ module Punchblock
             hangup REJECT_TO_HANGUP_REASON[command.reason]
             command.response = true
           when Punchblock::Component::Output
-            case media_engine
+            media_renderer = command.renderer ? command.renderer : media_engine
+            case media_renderer.to_sym
             when :freeswitch, :native, nil
               execute_component Component::Output, command
             when :flite

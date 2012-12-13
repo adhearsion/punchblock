@@ -45,7 +45,7 @@ module Punchblock
         end
 
         def shutdown
-          current_actor.terminate!
+          terminate
         end
 
         def to_s

@@ -8,7 +8,7 @@ module Punchblock
       let(:options)     { { :root_domain => 'rayo.net' } }
       let(:connection)  { XMPP.new({:username => '1@app.rayo.net', :password => 1}.merge(options)) }
 
-      let(:mock_event_handler) { stub_everything 'Event Handler' }
+      let(:mock_event_handler) { stub('Event Handler').as_null_object }
 
       before do
         connection.event_handler = mock_event_handler
@@ -87,9 +87,9 @@ module Punchblock
 </output>
         MSG
         output = RayoNode.import parse_stanza(output).root
-        connection.expects(:write_to_stream).once.returns true
+        connection.should_receive(:write_to_stream).once.and_return true
         iq = Blather::Stanza::Iq.new :set, '9f00061@call.rayo.net'
-        connection.expects(:create_iq).returns iq
+        connection.should_receive(:create_iq).and_return iq
 
         write_thread = Thread.new do
           connection.write offer.call_id, output
@@ -127,7 +127,7 @@ module Punchblock
 
       it 'should send a "Chat" presence when ready' do
         client = connection.send :client
-        client.expects(:write).once.with do |stanza|
+        client.should_receive(:write).once.with do |stanza|
           stanza.to.should be == 'rayo.net'
           stanza.should be_a Blather::Stanza::Presence::Status
           stanza.chat?.should be true
@@ -137,7 +137,7 @@ module Punchblock
 
       it 'should send a "Do Not Disturb" presence when not_ready' do
         client = connection.send :client
-        client.expects(:write).once.with do |stanza|
+        client.should_receive(:write).once.with do |stanza|
           stanza.to.should be == 'rayo.net'
           stanza.should be_a Blather::Stanza::Presence::Status
           stanza.dnd?.should be true
@@ -180,7 +180,7 @@ module Punchblock
             let(:handle_presence) { connection.__send__ :handle_presence, example_offer }
 
             it 'should call the event handler with the event' do
-              mock_event_handler.expects(:call).once.with do |event|
+              mock_event_handler.should_receive(:call).once.with do |event|
                 event.should be_instance_of Event::Offer
                 event.target_call_id.should be == '9f00061'
                 event.domain.should be == 'call.rayo.net'
@@ -207,7 +207,7 @@ module Punchblock
             let(:example_irrelevant_event) { import_stanza irrelevant_xml }
 
             it 'should not handle the event' do
-              mock_event_handler.expects(:call).never
+              mock_event_handler.should_receive(:call).never
               lambda { connection.__send__ :handle_presence, example_irrelevant_event }.should throw_symbol(:pass)
             end
           end
@@ -307,7 +307,7 @@ module Punchblock
       describe "receiving events from a mixer" do
         context "after joining the mixer" do
           before do
-            subject.send(:client).expects :write_with_handler
+            subject.send(:client).should_receive :write_with_handler
             subject.write Command::Join.new(:mixer_name => 'foomixer')
           end
 
@@ -322,7 +322,7 @@ module Punchblock
           let(:active_speaker_event) { import_stanza active_speaker_xml }
 
           it "should tag those events with a mixer name, rather than a call ID" do
-            mock_event_handler.expects(:call).once.with do |event|
+            mock_event_handler.should_receive(:call).once.with do |event|
               event.should be_instance_of Event::StartedSpeaking
               event.target_mixer_name.should be == 'foomixer'
               event.target_call_id.should be nil

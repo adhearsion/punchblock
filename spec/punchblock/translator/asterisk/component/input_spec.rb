@@ -7,11 +7,8 @@ module Punchblock
     class Asterisk
       module Component
         describe Input do
-          let(:connection) do
-            mock_connection_with_event_handler do |event|
-              original_command.add_event event
-            end
-          end
+          include HasMockCallbackConnection
+
           let(:media_engine)    { nil }
           let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
           let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
@@ -43,11 +40,11 @@ module Punchblock
             before { original_command.request! }
 
             it "calls send_progress on the call" do
-              call.expects(:send_progress)
+              call.should_receive(:send_progress)
               subject.execute
             end
 
-            before { call.stubs :send_progress }
+            before { call.stub :send_progress }
 
             let(:original_command_opts) { {} }
 
@@ -96,7 +93,7 @@ module Punchblock
                 end
 
                 it "should not process further dtmf events" do
-                  subject.expects(:process_dtmf!).never
+                  subject.should_receive(:process_dtmf!).never
                   send_ami_events_for_dtmf 3
                 end
               end
@@ -191,7 +188,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_initial_timer).never
+                  subject.wrapped_object.should_receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -200,7 +197,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_initial_timer).never
+                  subject.wrapped_object.should_receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -243,7 +240,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_inter_digit_timer).never
+                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end
@@ -252,7 +249,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.expects(:begin_inter_digit_timer).never
+                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end

@@ -7,10 +7,10 @@ module Punchblock
     class Freeswitch
       describe Call do
         let(:id) { Punchblock.new_uuid }
-        let(:stream)        { stub_everything 'RubyFS::Stream' }
-        let(:media_engine)  { :freeswitch }
+        let(:stream)        { stub('RubyFS::Stream').as_null_object }
+        let(:media_engine)  { 'freeswitch' }
         let(:default_voice) { :hal }
-        let(:translator)    { Freeswitch.new stub_everything('Connection::Freeswitch') }
+        let(:translator)    { Freeswitch.new stub('Connection::Freeswitch').as_null_object }
         let(:es_env) do
           {
             :variable_direction                   => "inbound",
@@ -188,7 +188,7 @@ module Punchblock
                                                           :to             => "10@127.0.0.1",
                                                           :from           => "Extension 1000 <1000@127.0.0.1>",
                                                           :headers        => headers
-            translator.expects(:handle_pb_event).with expected_offer
+            translator.should_receive(:handle_pb_event).with expected_offer
             subject.send_offer
           end
 
@@ -202,21 +202,21 @@ module Punchblock
 
         describe "#application" do
           it "should execute a FS application on the current call" do
-            stream.expects(:application).once.with(id, 'appname', 'options')
+            stream.should_receive(:application).once.with(id, 'appname', 'options')
             subject.application 'appname', 'options'
           end
         end
 
         describe "#sendmsg" do
           it "should execute a FS sendmsg on the current call" do
-            stream.expects(:sendmsg).once.with(id, 'msg', :foo => 'bar')
+            stream.should_receive(:sendmsg).once.with(id, 'msg', :foo => 'bar')
             subject.sendmsg 'msg', :foo => 'bar'
           end
         end
 
         describe "#uuid_foo" do
           it "should execute a FS uuid_* on the current call using bgapi" do
-            stream.expects(:bgapi).once.with("uuid_record #{id} blah.mp3")
+            stream.should_receive(:bgapi).once.with("uuid_record #{id} blah.mp3")
             subject.uuid_foo 'record', 'blah.mp3'
           end
         end
@@ -234,7 +234,7 @@ module Punchblock
           before { dial_command.request! }
 
           it 'sends an originate bgapi command' do
-            stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}'}#{to} &park()"
+            stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}'}#{to} &park()"
             subject.dial dial_command
           end
 
@@ -244,7 +244,7 @@ module Punchblock
             let(:from)        { "#{from_name} <#{from_number}>" }
 
             it 'sends an originate bgapi command with the cid fields set correctly' do
-              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from_number}',origination_caller_id_name='#{from_name}'}#{to} &park()"
+              stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from_number}',origination_caller_id_name='#{from_name}'}#{to} &park()"
               subject.dial dial_command
             end
           end
@@ -255,7 +255,7 @@ module Punchblock
             let(:from)        { "#{from_name} <#{from_number}>" }
 
             it 'sends an originate bgapi command with the cid fields set correctly' do
-              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_name='#{from_name}'}#{to} &park()"
+              stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_name='#{from_name}'}#{to} &park()"
               subject.dial dial_command
             end
           end
@@ -265,7 +265,7 @@ module Punchblock
             let(:from)        { "<#{from_number}>" }
 
             it 'sends an originate bgapi command with the cid fields set correctly' do
-              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from_number}'}#{to} &park()"
+              stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from_number}'}#{to} &park()"
               subject.dial dial_command
             end
           end
@@ -274,7 +274,7 @@ module Punchblock
             let(:from) { '' }
 
             it 'sends an originate bgapi command with the cid fields set correctly' do
-              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id}}#{to} &park()"
+              stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id}}#{to} &park()"
               subject.dial dial_command
             end
           end
@@ -285,7 +285,7 @@ module Punchblock
             end
 
             it 'includes the timeout in the originate command' do
-              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}',originate_timeout=10}#{to} &park()"
+              stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}',originate_timeout=10}#{to} &park()"
               subject.dial dial_command
             end
           end
@@ -296,7 +296,7 @@ module Punchblock
             end
 
             it 'includes the headers in the originate command' do
-              stream.expects(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}',sip_h_X-foo='bar',sip_h_X-doo='dah'}#{to} &park()"
+              stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id},origination_caller_id_number='#{from}',sip_h_X-foo='bar',sip_h_X-doo='dah'}#{to} &park()"
               subject.dial dial_command
             end
           end
@@ -333,15 +333,15 @@ module Punchblock
             let(:cause) { 'ORIGINATOR_CANCEL' }
 
             it "should cause the actor to be terminated" do
-              translator.expects(:handle_pb_event).once
+              translator.should_receive(:handle_pb_event).once
               subject.handle_es_event es_event
               sleep 5.5
               subject.should_not be_alive
             end
 
             it "de-registers the call from the translator" do
-              translator.stubs :handle_pb_event
-              translator.expects(:deregister_call).once.with(subject)
+              translator.stub :handle_pb_event
+              translator.should_receive(:deregister_call).once.with(subject)
               subject.handle_es_event es_event
             end
 
@@ -356,9 +356,8 @@ module Punchblock
               expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
               expected_end_event = Punchblock::Event::End.new :reason => :hangup, :target_call_id  => subject.id
 
-              end_sequence = sequence 'end events'
-              translator.expects(:handle_pb_event).with(expected_complete_event).once.in_sequence(end_sequence)
-              translator.expects(:handle_pb_event).with(expected_end_event).once.in_sequence(end_sequence)
+              translator.should_receive(:handle_pb_event).with(expected_complete_event).once.ordered
+              translator.should_receive(:handle_pb_event).with(expected_end_event).once.ordered
               subject.handle_es_event es_event
             end
 
@@ -378,7 +377,7 @@ module Punchblock
                 it 'should send an end (hangup) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason         => :hangup,
                                                                   :target_call_id => subject.id
-                  translator.expects(:handle_pb_event).with expected_end_event
+                  translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.handle_es_event es_event
                 end
               end
@@ -390,7 +389,7 @@ module Punchblock
               it 'should send an end (busy) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason         => :busy,
                                                                 :target_call_id => subject.id
-                translator.expects(:handle_pb_event).with expected_end_event
+                translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.handle_es_event es_event
               end
             end
@@ -409,7 +408,7 @@ module Punchblock
                 it 'should send an end (timeout) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason         => :timeout,
                                                                   :target_call_id => subject.id
-                  translator.expects(:handle_pb_event).with expected_end_event
+                  translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.handle_es_event es_event
                 end
               end
@@ -440,7 +439,7 @@ module Punchblock
                 it 'should send an end (reject) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason         => :reject,
                                                                   :target_call_id => subject.id
-                  translator.expects(:handle_pb_event).with expected_end_event
+                  translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.handle_es_event es_event
                 end
               end
@@ -484,7 +483,7 @@ module Punchblock
                 it 'should send an end (error) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason         => :error,
                                                                   :target_call_id => subject.id
-                  translator.expects(:handle_pb_event).with expected_end_event
+                  translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.handle_es_event es_event
                 end
               end
@@ -506,7 +505,7 @@ module Punchblock
             end
 
             it 'should send the event to the component' do
-              component.expects(:handle_es_event).once.with es_event
+              component.should_receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
           end
@@ -525,7 +524,7 @@ module Punchblock
               it 'should send a ringing event' do
                 expected_ringing = Punchblock::Event::Ringing.new
                 expected_ringing.target_call_id = subject.id
-                translator.expects(:handle_pb_event).with expected_ringing
+                translator.should_receive(:handle_pb_event).with expected_ringing
                 subject.handle_es_event es_event
               end
 
@@ -539,7 +538,7 @@ module Punchblock
               let(:channel_call_state) { 'FOO' }
 
               it 'should not send a ringing event' do
-                translator.expects(:handle_pb_event).never
+                translator.should_receive(:handle_pb_event).never
                 subject.handle_es_event es_event
               end
 
@@ -558,7 +557,7 @@ module Punchblock
             it 'should send an answered event' do
               expected_answered = Punchblock::Event::Answered.new
               expected_answered.target_call_id = subject.id
-              translator.expects(:handle_pb_event).with expected_answered
+              translator.should_receive(:handle_pb_event).with expected_answered
               subject.handle_es_event es_event
             end
 
@@ -576,7 +575,7 @@ module Punchblock
             let(:response) { mock 'Response' }
 
             it 'should execute the handler' do
-              response.expects(:call).once.with es_event
+              response.should_receive(:call).once.with es_event
               subject.register_handler :es, :event_name => 'DTMF' do |event|
                 response.call event
               end
@@ -604,7 +603,7 @@ module Punchblock
               end
 
               it "should send a joined event with the correct call ID" do
-                translator.expects(:handle_pb_event).with expected_joined
+                translator.should_receive(:handle_pb_event).with expected_joined
                 subject.handle_es_event bridge_event
               end
             end
@@ -619,7 +618,7 @@ module Punchblock
               end
 
               it "should send a joined event with the correct call ID" do
-                translator.expects(:handle_pb_event).with expected_joined
+                translator.should_receive(:handle_pb_event).with expected_joined
                 subject.handle_es_event bridge_event
               end
             end
@@ -645,7 +644,7 @@ module Punchblock
               end
 
               it "should send a unjoined event with the correct call ID" do
-                translator.expects(:handle_pb_event).with expected_unjoined
+                translator.should_receive(:handle_pb_event).with expected_unjoined
                 subject.handle_es_event unbridge_event
               end
             end
@@ -660,7 +659,7 @@ module Punchblock
               end
 
               it "should send a unjoined event with the correct call ID" do
-                translator.expects(:handle_pb_event).with expected_unjoined
+                translator.should_receive(:handle_pb_event).with expected_unjoined
                 subject.handle_es_event unbridge_event
               end
             end
@@ -676,7 +675,7 @@ module Punchblock
             let(:command) { Command::Accept.new }
 
             it "should send a respond 180 command and set the command's response" do
-              subject.wrapped_object.expects(:application).once.with('respond', '180 Ringing').yields(true)
+              subject.wrapped_object.should_receive(:application).once.with('respond', '180 Ringing')
               subject.execute_command command
               command.response(0.5).should be true
             end
@@ -687,18 +686,30 @@ module Punchblock
 
             it "should execute the answer application and set the command's response" do
               subject
-              Punchblock.expects(:new_uuid).once.returns 'abc123'
-              subject.wrapped_object.expects(:application).once.with('answer', "%[punchblock_command_id=abc123]")
+              Punchblock.should_receive(:new_uuid).once.and_return 'abc123'
+              subject.wrapped_object.should_receive(:application).once.with('answer', "%[punchblock_command_id=abc123]")
               subject.should_not be_answered
               subject.execute_command command
               subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123')
               command.response(0.5).should be true
               subject.should be_answered
             end
+
+            it "should not execute the answer application twice if already answered" do
+              subject
+              Punchblock.should_receive(:new_uuid).once.and_return 'abc123'
+              subject.wrapped_object.should_receive(:application).once.with('answer', "%[punchblock_command_id=abc123]")
+              subject.should_not be_answered
+              subject.execute_command command
+              subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123')
+              command.response(0.5).should be true
+              subject.should be_answered
+              subject.execute_command command
+            end
           end
 
           def expect_hangup_with_reason(reason)
-            subject.wrapped_object.expects(:sendmsg).once.with(:call_command => 'hangup', :hangup_cause => reason).yields(true)
+            subject.wrapped_object.should_receive(:sendmsg).once.with(:call_command => 'hangup', :hangup_cause => reason)
           end
 
           context 'with a hangup command' do
@@ -744,8 +755,8 @@ module Punchblock
             let(:mock_component) { mock 'Freeswitch::Component::Output', :id => 'foo' }
 
             it 'should create an Output component and execute it asynchronously' do
-              Component::Output.expects(:new_link).once.with(command, subject).returns mock_component
-              mock_component.expects(:execute!).once
+              Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_component
+              mock_component.should_receive(:execute!).once
               subject.execute_command command
               subject.component_with_id('foo').should be mock_component
             end
@@ -754,8 +765,8 @@ module Punchblock
               let(:media_engine) { :flite }
 
               it 'should create a FliteOutput component and execute it asynchronously using flite and the calls default voice' do
-                Component::FliteOutput.expects(:new_link).once.with(command, subject).returns mock_component
-                mock_component.expects(:execute!).once.with(media_engine, default_voice)
+                Component::FliteOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
+                mock_component.should_receive(:execute!).once.with(media_engine, default_voice)
                 subject.execute_command command
                 subject.component_with_id('foo').should be mock_component
               end
@@ -765,8 +776,8 @@ module Punchblock
               let(:media_engine) { :cepstral }
 
               it 'should create a TTSOutput component and execute it asynchronously using cepstral and the calls default voice' do
-                Component::TTSOutput.expects(:new_link).once.with(command, subject).returns mock_component
-                mock_component.expects(:execute!).once.with(media_engine, default_voice)
+                Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
+                mock_component.should_receive(:execute!).once.with(media_engine, default_voice)
                 subject.execute_command command
                 subject.component_with_id('foo').should be mock_component
               end
@@ -776,9 +787,24 @@ module Punchblock
               let(:media_engine) { :unimrcp }
 
               it 'should create a TTSOutput component and execute it asynchronously using unimrcp and the calls default voice' do
-                Component::TTSOutput.expects(:new_link).once.with(command, subject).returns mock_component
-                mock_component.expects(:execute!).once.with(media_engine, default_voice)
+                Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
+                mock_component.should_receive(:execute!).once.with(media_engine, default_voice)
                 subject.execute_command command
+                subject.component_with_id('foo').should be mock_component
+              end
+            end
+
+            context "with a media renderer set on the component" do
+              let(:media_engine) { :cepstral }
+              let(:media_renderer) { :native }
+              let :command_with_renderer do
+                Punchblock::Component::Output.new :renderer => media_renderer
+              end
+
+              it "should use the component media engine and not the platform one if it is set" do
+                Component::Output.should_receive(:new_link).once.with(command_with_renderer, subject).and_return mock_component
+                mock_component.should_receive(:execute!).once
+                subject.execute_command command_with_renderer
                 subject.component_with_id('foo').should be mock_component
               end
             end
@@ -792,8 +818,8 @@ module Punchblock
             let(:mock_component) { mock 'Freeswitch::Component::Input', :id => 'foo' }
 
             it 'should create an Input component and execute it asynchronously' do
-              Component::Input.expects(:new_link).once.with(command, subject).returns mock_component
-              mock_component.expects(:execute!).once
+              Component::Input.should_receive(:new_link).once.with(command, subject).and_return mock_component
+              mock_component.should_receive(:execute!).once
               subject.execute_command command
             end
           end
@@ -806,8 +832,8 @@ module Punchblock
             let(:mock_component) { mock 'Freeswitch::Component::Record', :id => 'foo' }
 
             it 'should create a Record component and execute it asynchronously' do
-              Component::Record.expects(:new_link).once.with(command, subject).returns mock_component
-              mock_component.expects(:execute!).once
+              Component::Record.should_receive(:new_link).once.with(command, subject).and_return mock_component
+              mock_component.should_receive(:execute!).once
               subject.execute_command command
             end
           end
@@ -827,7 +853,7 @@ module Punchblock
               before { subject.register_component mock_component }
 
               it 'should send the command to the component for execution' do
-                mock_component.expects(:execute_command).once
+                mock_component.should_receive(:execute_command).once
                 subject.execute_command command
               end
             end
@@ -861,7 +887,7 @@ module Punchblock
                   raise 'Woops, I died'
                 end
 
-                translator.expects(:handle_pb_event).once.with expected_event
+                translator.should_receive(:handle_pb_event).once.with expected_event
 
                 lambda { component.oops }.should raise_error(/Woops, I died/)
                 sleep 0.1
@@ -901,7 +927,7 @@ module Punchblock
             end
 
             it "executes the proper uuid_bridge command" do
-              subject.wrapped_object.expects(:uuid_foo).once.with :bridge, other_call_id
+              subject.wrapped_object.should_receive(:uuid_foo).once.with :bridge, other_call_id
               subject.execute_command command
               expect { command.response 1 }.to raise_exception(Timeout::Error)
             end
@@ -933,7 +959,7 @@ module Punchblock
             end
 
             it "executes the unjoin via transfer to park" do
-              subject.wrapped_object.expects(:uuid_foo).once.with :transfer, '-both park inline'
+              subject.wrapped_object.should_receive(:uuid_foo).once.with :transfer, '-both park inline'
               subject.execute_command command
               expect { command.response 1 }.to raise_exception(Timeout::Error)
             end

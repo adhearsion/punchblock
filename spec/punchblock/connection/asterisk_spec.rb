@@ -15,7 +15,7 @@ module Punchblock
         }
       end
 
-      let(:mock_event_handler) { stub_everything 'Event Handler' }
+      let(:mock_event_handler) { stub('Event Handler').as_null_object }
 
       let(:connection) { Asterisk.new options }
 
@@ -37,26 +37,26 @@ module Punchblock
 
       describe '#run' do
         it 'starts the RubyAMI::Client' do
-          subject.ami_client.expects(:start).once
+          subject.ami_client.should_receive(:start).once
           lambda { subject.run }.should raise_error DisconnectedError
         end
       end
 
       describe '#stop' do
         it 'stops the RubyAMI::Client' do
-          subject.ami_client.expects(:stop).once
+          subject.ami_client.should_receive(:stop).once
           subject.stop
         end
 
         it 'shuts down the translator' do
-          subject.translator.expects(:shutdown!).once
+          subject.translator.should_receive(:shutdown!).once
           subject.stop
         end
       end
 
       it 'sends events from RubyAMI to the translator' do
         event = mock 'RubyAMI::Event'
-        subject.translator.expects(:handle_ami_event!).once.with event
+        subject.translator.should_receive(:handle_ami_event!).once.with event
         subject.ami_client.handle_event event
       end
 
@@ -64,7 +64,7 @@ module Punchblock
         it 'sends a command to the translator' do
           command = mock 'Command'
           options = {:foo => :bar}
-          subject.translator.expects(:execute_command!).once.with command, options
+          subject.translator.should_receive(:execute_command!).once.with command, options
           subject.write command, options
         end
       end
@@ -74,7 +74,7 @@ module Punchblock
           offer = Event::Offer.new
           offer.target_call_id = '9f00061'
 
-          mock_event_handler.expects(:call).once.with offer
+          mock_event_handler.should_receive(:call).once.with offer
           subject.handle_event offer
         end
       end

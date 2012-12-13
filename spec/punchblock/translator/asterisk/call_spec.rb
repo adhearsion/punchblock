@@ -7,7 +7,7 @@ module Punchblock
     class Asterisk
       describe Call do
         let(:channel)         { 'SIP/foo' }
-        let(:translator)      { stub_everything 'Translator::Asterisk' }
+        let(:translator)      { stub('Translator::Asterisk').as_null_object }
         let(:agi_env) do
           {
             :agi_request      => 'async',
@@ -88,7 +88,7 @@ module Punchblock
                                                           :to       => '1000',
                                                           :from     => 'Jane Smith <SIP/5678>',
                                                           :headers  => sip_headers
-            translator.expects(:handle_pb_event).with expected_offer
+            translator.should_receive(:handle_pb_event).with expected_offer
             subject.send_offer
           end
 
@@ -104,15 +104,15 @@ module Punchblock
 
           context "with a call that is already answered" do
             it 'should not send the EXEC Progress command' do
-              subject.wrapped_object.expects(:'answered?').returns true
-              subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
+              subject.wrapped_object.should_receive(:'answered?').and_return true
+              subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").never
               subject.send_progress
             end
           end
 
           context "with an unanswered call" do
             before do
-              subject.wrapped_object.expects(:'answered?').returns(false).at_least_once
+              subject.wrapped_object.should_receive(:'answered?').at_least(:once).and_return(false)
             end
 
             context "with a call that is outbound" do
@@ -124,7 +124,7 @@ module Punchblock
               end
 
               it 'should not send the EXEC Progress command' do
-                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").never
+                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").never
                 subject.send_progress
               end
             end
@@ -135,12 +135,12 @@ module Punchblock
               end
 
               it 'should send the EXEC Progress command to a call that is inbound and not answered' do
-                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress")
+                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress")
                 subject.send_progress
               end
 
               it 'should send the EXEC Progress command only once if called twice' do
-                subject.wrapped_object.expects(:send_agi_action).with("EXEC Progress").once
+                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").once
                 subject.send_progress
                 subject.send_progress
               end
@@ -170,7 +170,7 @@ module Punchblock
                                                                                  :variable    => "punchblock_call_id=#{subject.id}"
                                                                                }).tap { |a| a.request! }
 
-            translator.expects(:execute_global_command!).once.with expected_action
+            translator.should_receive(:execute_global_command!).once.with expected_action
             subject.dial dial_command
           end
 
@@ -188,7 +188,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id}"
                                                                                  }).tap { |a| a.request! }
 
-              translator.expects(:execute_global_command!).once.with expected_action
+              translator.should_receive(:execute_global_command!).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -210,7 +210,7 @@ module Punchblock
                                                                                    :timeout     => 10000
                                                                                  }).tap { |a| a.request! }
 
-              translator.expects(:execute_global_command!).once.with expected_action
+              translator.should_receive(:execute_global_command!).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -231,7 +231,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id},SIPADDHEADER51=\"X-foo: bar\",SIPADDHEADER52=\"X-doo: dah\""
                                                                                  }).tap { |a| a.request! }
 
-              translator.expects(:execute_global_command!).once.with expected_action
+              translator.should_receive(:execute_global_command!).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -253,7 +253,7 @@ module Punchblock
             subject.dial dial_command
             accept_command = Command::Accept.new
             accept_command.request!
-            subject.wrapped_object.expects(:send_agi_action).never
+            subject.wrapped_object.should_receive(:send_agi_action).never
             subject.execute_command accept_command
             accept_command.response(0.5).should be true
           end
@@ -276,15 +276,15 @@ module Punchblock
             let(:cause_txt) { 'Normal Clearing' }
 
             it "should cause the actor to be terminated" do
-              translator.expects(:handle_pb_event).twice
+              translator.should_receive(:handle_pb_event).twice
               subject.process_ami_event ami_event
               sleep 5.5
               subject.should_not be_alive
             end
 
             it "de-registers the call from the translator" do
-              translator.stubs :handle_pb_event
-              translator.expects(:deregister_call).once.with(subject)
+              translator.stub :handle_pb_event
+              translator.should_receive(:deregister_call).once.with(subject)
               subject.process_ami_event ami_event
             end
 
@@ -296,9 +296,9 @@ module Punchblock
               expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id
               expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
               expected_end_event = Punchblock::Event::End.new :reason => :hangup, :target_call_id  => subject.id
-              end_sequence = sequence 'end events'
-              translator.expects(:handle_pb_event).with(expected_complete_event).once.in_sequence(end_sequence)
-              translator.expects(:handle_pb_event).with(expected_end_event).once.in_sequence(end_sequence)
+
+              translator.should_receive(:handle_pb_event).with(expected_complete_event).once.ordered
+              translator.should_receive(:handle_pb_event).with(expected_end_event).once.ordered
               subject.process_ami_event ami_event
             end
 
@@ -309,7 +309,7 @@ module Punchblock
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
                                                                 :target_call_id  => subject.id
-                translator.expects(:handle_pb_event).with expected_end_event
+                translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -321,7 +321,7 @@ module Punchblock
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
                                                                 :target_call_id  => subject.id
-                translator.expects(:handle_pb_event).with expected_end_event
+                translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -333,7 +333,7 @@ module Punchblock
               it 'should send an end (busy) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :busy,
                                                                 :target_call_id  => subject.id
-                translator.expects(:handle_pb_event).with expected_end_event
+                translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -349,7 +349,7 @@ module Punchblock
                 it 'should send an end (timeout) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :timeout,
                                                                   :target_call_id  => subject.id
-                  translator.expects(:handle_pb_event).with expected_end_event
+                  translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -367,7 +367,7 @@ module Punchblock
                 it 'should send an end (reject) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :reject,
                                                                   :target_call_id  => subject.id
-                  translator.expects(:handle_pb_event).with expected_end_event
+                  translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -419,7 +419,7 @@ module Punchblock
                 it 'should send an end (error) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :error,
                                                                   :target_call_id  => subject.id
-                  translator.expects(:handle_pb_event).with expected_end_event
+                  translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -447,7 +447,7 @@ module Punchblock
             end
 
             it 'should send the event to the component' do
-              component.expects(:handle_ami_event).once.with ami_event
+              component.should_receive(:handle_ami_event).once.with ami_event
               subject.process_ami_event ami_event
             end
           end
@@ -474,7 +474,7 @@ module Punchblock
               it 'should send a ringing event' do
                 expected_ringing = Punchblock::Event::Ringing.new
                 expected_ringing.target_call_id = subject.id
-                translator.expects(:handle_pb_event).with expected_ringing
+                translator.should_receive(:handle_pb_event).with expected_ringing
                 subject.process_ami_event ami_event
               end
 
@@ -491,7 +491,7 @@ module Punchblock
               it 'should send a ringing event' do
                 expected_answered = Punchblock::Event::Answered.new
                 expected_answered.target_call_id = subject.id
-                translator.expects(:handle_pb_event).with expected_answered
+                translator.should_receive(:handle_pb_event).with expected_answered
                 subject.process_ami_event ami_event
               end
 
@@ -523,7 +523,7 @@ module Punchblock
               let(:uniqueid)  { '<null>' }
 
               it 'should not send an end event' do
-                translator.expects(:handle_pb_event).once.with is_a(Punchblock::Event::Asterisk::AMI::Event)
+                translator.should_receive(:handle_pb_event).once.with an_instance_of(Punchblock::Event::Asterisk::AMI::Event)
                 subject.process_ami_event ami_event
               end
             end
@@ -533,7 +533,7 @@ module Punchblock
               let(:uniqueid)  { '1235' }
 
               it 'should not send an end event' do
-                translator.expects(:handle_pb_event).once.with is_a(Punchblock::Event::Asterisk::AMI::Event)
+                translator.should_receive(:handle_pb_event).once.with an_instance_of(Punchblock::Event::Asterisk::AMI::Event)
                 subject.process_ami_event ami_event
               end
             end
@@ -545,7 +545,7 @@ module Punchblock
               it 'should send an error end event' do
                 expected_end_event = Punchblock::Event::End.new :reason         => :error,
                                                                 :target_call_id => subject.id
-                translator.expects(:handle_pb_event).with expected_end_event
+                translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -565,7 +565,7 @@ module Punchblock
             let(:response) { mock 'Response' }
 
             it 'should execute the handler' do
-              response.expects(:call).once.with ami_event
+              response.should_receive(:call).once.with ami_event
               subject.register_handler :ami, :name => 'DTMF' do |event|
                 response.call event
               end
@@ -637,8 +637,8 @@ module Punchblock
 
             before do
               translator.register_call other_call
-              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
-              other_call.expects(:id).returns other_call_id
+              translator.should_receive(:call_for_channel).with(other_channel).and_return(other_call)
+              other_call.should_receive(:id).and_return other_call_id
             end
 
             context "of state 'Link'" do
@@ -652,12 +652,12 @@ module Punchblock
               end
 
               it 'sends the Joined event when the call is the first channel' do
-                translator.expects(:handle_pb_event).with expected_joined
+                translator.should_receive(:handle_pb_event).with expected_joined
                 subject.process_ami_event ami_event
               end
 
               it 'sends the Joined event when the call is the second channel' do
-                translator.expects(:handle_pb_event).with expected_joined
+                translator.should_receive(:handle_pb_event).with expected_joined
                 subject.process_ami_event switched_ami_event
               end
             end
@@ -673,12 +673,12 @@ module Punchblock
               end
 
               it 'sends the Unjoined event when the call is the first channel' do
-                translator.expects(:handle_pb_event).with expected_unjoined
+                translator.should_receive(:handle_pb_event).with expected_unjoined
                 subject.process_ami_event ami_event
               end
 
               it 'sends the Unjoined event when the call is the second channel' do
-                translator.expects(:handle_pb_event).with expected_unjoined
+                translator.should_receive(:handle_pb_event).with expected_unjoined
                 subject.process_ami_event switched_ami_event
               end
             end
@@ -717,8 +717,8 @@ module Punchblock
 
             before do
               translator.register_call other_call
-              translator.expects(:call_for_channel).with(other_channel).returns(other_call)
-              other_call.expects(:id).returns other_call_id
+              translator.should_receive(:call_for_channel).with(other_channel).and_return(other_call)
+              other_call.should_receive(:id).and_return other_call_id
             end
 
             let :expected_unjoined do
@@ -729,12 +729,12 @@ module Punchblock
             end
 
             it 'sends the Unjoined event when the call is the first channel' do
-              translator.expects(:handle_pb_event).with expected_unjoined
+              translator.should_receive(:handle_pb_event).with expected_unjoined
               subject.process_ami_event ami_event
             end
 
             it 'sends the Unjoined event when the call is the second channel' do
-              translator.expects(:handle_pb_event).with expected_unjoined
+              translator.should_receive(:handle_pb_event).with expected_unjoined
               subject.process_ami_event switched_ami_event
             end
           end
@@ -762,7 +762,7 @@ module Punchblock
           end
 
           it 'sends the AMI event to the connection as a PB event' do
-            translator.expects(:handle_pb_event).with expected_pb_event
+            translator.should_receive(:handle_pb_event).with expected_pb_event
             subject.process_ami_event ami_event
           end
 
@@ -862,9 +862,9 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
-              mock_action.expects(:internal=).never
-              Component::Asterisk::AGICommand.expects(:new_link).once.with(command, subject).returns mock_action
-              mock_action.expects(:execute!).once
+              mock_action.should_receive(:internal=).never
+              Component::Asterisk::AGICommand.should_receive(:new_link).once.with(command, subject).and_return mock_action
+              mock_action.should_receive(:execute!).once
               subject.execute_command command
             end
           end
@@ -877,9 +877,9 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
 
             it 'should create an Output component and execute it asynchronously' do
-              Component::Output.expects(:new_link).once.with(command, subject).returns mock_action
-              mock_action.expects(:internal=).never
-              mock_action.expects(:execute!).once
+              Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_action
+              mock_action.should_receive(:internal=).never
+              mock_action.should_receive(:execute!).once
               subject.execute_command command
             end
           end
@@ -892,9 +892,9 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
 
             it 'should create an Input component and execute it asynchronously' do
-              Component::Input.expects(:new_link).once.with(command, subject).returns mock_action
-              mock_action.expects(:internal=).never
-              mock_action.expects(:execute!).once
+              Component::Input.should_receive(:new_link).once.with(command, subject).and_return mock_action
+              mock_action.should_receive(:internal=).never
+              mock_action.should_receive(:execute!).once
               subject.execute_command command
             end
           end
@@ -907,9 +907,9 @@ module Punchblock
             let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
 
             it 'should create a Record component and execute it asynchronously' do
-              Component::Record.expects(:new_link).once.with(command, subject).returns mock_action
-              mock_action.expects(:internal=).never
-              mock_action.expects(:execute!).once
+              Component::Record.should_receive(:new_link).once.with(command, subject).and_return mock_action
+              mock_action.should_receive(:internal=).never
+              mock_action.should_receive(:execute!).once
               subject.execute_command command
             end
           end
@@ -929,7 +929,7 @@ module Punchblock
               before { subject.register_component mock_component }
 
               it 'should send the command to the component for execution' do
-                mock_component.expects(:execute_command).once
+                mock_component.should_receive(:execute_command).once
                 subject.execute_command command
               end
             end
@@ -963,7 +963,7 @@ module Punchblock
                   raise 'Woops, I died'
                 end
 
-                translator.expects(:handle_pb_event).once.with expected_event
+                translator.should_receive(:handle_pb_event).once.with expected_event
 
                 lambda { component.oops }.should raise_error(/Woops, I died/)
                 sleep 0.1
@@ -998,7 +998,7 @@ module Punchblock
           context "with a join command" do
             let(:other_call_id)     { "abc123" }
             let(:other_channel)     { 'SIP/bar' }
-            let(:other_translator)  { stub_everything 'Translator::Asterisk' }
+            let(:other_translator)  { stub('Translator::Asterisk').as_null_object }
 
             let :other_call do
               Call.new other_channel, other_translator
@@ -1009,7 +1009,7 @@ module Punchblock
             end
 
             it "executes the proper dialplan Bridge application" do
-              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
               subject.execute_command command
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Bridge"
@@ -1017,7 +1017,7 @@ module Punchblock
             end
 
             it "adds the join to the @pending_joins hash" do
-              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
               subject.execute_command command
               subject.pending_joins[other_channel].should be command
             end
@@ -1036,7 +1036,7 @@ module Punchblock
             end
 
             it "executes the unjoin through redirection" do
-              translator.expects(:call_with_id).with(other_call_id).returns(nil)
+              translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should be == "redirect"
@@ -1050,7 +1050,7 @@ module Punchblock
             end
 
             it "executes the unjoin through redirection, on the subject call and the other call" do
-              translator.expects(:call_with_id).with(other_call_id).returns(other_call)
+              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should be == "redirect"
@@ -1066,7 +1066,7 @@ module Punchblock
             end
 
             it "handles redirect errors" do
-              translator.expects(:call_with_id).with(other_call_id).returns(nil)
+              translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
               subject.execute_command command
               ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
               ami_action.name.should be == "redirect"
@@ -1086,7 +1086,7 @@ module Punchblock
         describe '#send_agi_action' do
           it 'should send an appropriate AsyncAGI AMI action' do
             pending
-            subject.wrapped_object.expects(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
+            subject.wrapped_object.should_receive(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
             subject.send_agi_action 'FOO'
           end
         end
@@ -1097,7 +1097,7 @@ module Punchblock
 
           it 'should send the action to the AMI client' do
             action = RubyAMI::Action.new 'foo', :foo => :bar
-            translator.expects(:send_ami_action).once.with action
+            translator.should_receive(:send_ami_action).once.with action
             subject.send_ami_action 'foo', :foo => :bar
           end
         end

@@ -47,7 +47,7 @@ module Punchblock
               c << recording if recording
             end
             send_event event
-            current_actor.terminate!
+            terminate
           end
 
           def send_event(event)

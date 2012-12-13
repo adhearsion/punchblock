@@ -58,7 +58,7 @@ module Punchblock
 
       def shutdown
         @calls.values.each(&:shutdown!)
-        current_actor.terminate!
+        terminate
       end
 
       def handle_ami_event(event)

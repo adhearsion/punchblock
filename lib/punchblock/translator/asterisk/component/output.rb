@@ -27,7 +27,9 @@ module Punchblock
 
             output_component = current_actor
 
-            case @media_engine
+            rendering_engine = @component_node.renderer ? @component_node.renderer : @media_engine
+
+            case rendering_engine.to_sym
             when :asterisk, nil
               raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
               raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on
@@ -61,6 +63,8 @@ module Punchblock
               @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
                 output_component.send_complete_event! success_reason
               end
+            else
+              raise OptionError, 'The renderer foobar is unsupported.'
             end
           rescue UnrenderableDocError => e
             with_error 'unrenderable document error', e.message

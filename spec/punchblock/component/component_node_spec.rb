@@ -28,7 +28,7 @@ module Punchblock
           end
 
           it "should call #complete!" do
-            subject.expects(:complete!).once
+            subject.should_receive(:complete!).once
             add_event
           end
         end
@@ -55,7 +55,7 @@ module Punchblock
           let(:handler) { mock 'Response' }
 
           before do
-            handler.expects(:call).once.with(event)
+            handler.should_receive(:call).once.with(event)
             subject.register_event_handler { |event| handler.call event }
           end
 
@@ -89,7 +89,9 @@ module Punchblock
       describe "#complete_event=" do
         before do
           subject.request!
-          subject.execute!
+          subject.client = Client.new
+          subject.response = Ref.new id: 'abc'
+          subject.client.find_component_by_id('abc').should be subject
         end
 
         it "should set the command to executing status" do
@@ -101,6 +103,11 @@ module Punchblock
           subject.complete_event = :foo
           lambda { subject.complete_event = :bar }.should_not raise_error
           subject.complete_event(0.5).should be == :foo
+        end
+
+        it "should remove the component from the registry" do
+          subject.complete_event = :foo
+          subject.client.find_component_by_id('abc').should be_nil
         end
       end
     end # ComponentNode

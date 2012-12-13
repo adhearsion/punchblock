@@ -8,33 +8,30 @@ module Punchblock
       module Component
         module Asterisk
           describe AGICommand do
+            include HasMockCallbackConnection
+
             let(:channel)       { 'SIP/foo' }
-            let(:connection) do
-              mock_connection_with_event_handler do |event|
-                command.add_event event
-              end
-            end
             let(:translator)    { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
             let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator }
             let(:component_id)  { Punchblock.new_uuid }
 
             before { stub_uuids component_id }
 
-            let :command do
+            let :original_command do
               Punchblock::Component::Asterisk::AGI::Command.new :name => 'EXEC ANSWER'
             end
 
-            subject { AGICommand.new command, mock_call }
+            subject { AGICommand.new original_command, mock_call }
 
             let :expected_action do
               RubyAMI::Action.new 'AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => component_id
             end
 
             context 'initial execution' do
-              before { command.request! }
+              before { original_command.request! }
 
               it 'should send the appropriate RubyAMI::Action' do
-                mock_call.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
+                mock_call.should_receive(:send_ami_action).once.with(expected_action).and_return(expected_action)
                 subject.execute
               end
 
@@ -45,12 +42,12 @@ module Punchblock
                   RubyAMI::Action.new 'AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id
                 end
 
-                let :command do
+                let :original_command do
                   Punchblock::Component::Asterisk::AGI::Command.new :name => 'WAIT FOR DIGIT', :params => params
                 end
 
                 it 'should send the appropriate RubyAMI::Action' do
-                  mock_call.expects(:send_ami_action).once.with(expected_action).returns(expected_action)
+                  mock_call.should_receive(:send_ami_action).once.with(expected_action).and_return(expected_action)
                   subject.execute
                 end
               end
@@ -58,8 +55,8 @@ module Punchblock
 
             context 'when the AMI action completes' do
               before do
-                command.request!
-                command.execute!
+                original_command.request!
+                original_command.execute!
               end
 
               let :expected_response do
@@ -69,12 +66,12 @@ module Punchblock
               let :response do
                 RubyAMI::Response.new.tap do |r|
                   r['ActionID'] = "552a9d9f-46d7-45d8-a257-06fe95f48d99"
-                  r['Message']  = 'Added AGI command to queue'
+                  r['Message']  = 'Added AGI original_command to queue'
                 end
               end
 
               it 'should send the component node a ref with the action ID' do
-                command.expects(:response=).once.with(expected_response)
+                original_command.should_receive(:response=).once.with(expected_response)
                 subject.action << response
               end
 
@@ -84,7 +81,7 @@ module Punchblock
                 end
 
                 it 'should send the component node false' do
-                  command.expects(:response=).once.with false
+                  original_command.should_receive(:response=).once.with false
                   subject.action << error
                 end
               end
@@ -92,8 +89,8 @@ module Punchblock
 
             describe 'when receiving an AsyncAGI event' do
               before do
-                command.request!
-                command.execute!
+                original_command.request!
+                original_command.execute!
               end
 
               context 'of type start'
@@ -118,9 +115,9 @@ module Punchblock
                 it 'should send a complete event' do
                   subject.handle_ami_event ami_event
 
-                  complete_event = command.complete_event 0.5
+                  complete_event = original_command.complete_event 0.5
 
-                  command.should be_complete
+                  original_command.should be_complete
 
                   complete_event.component_id.should be == component_id.to_s
                   complete_event.reason.should be == expected_complete_reason

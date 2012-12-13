@@ -70,12 +70,12 @@ module Punchblock
 
       describe "#response=" do
         it "should set the command to executing status" do
-          subject.expects(:execute!).once
+          subject.should_receive(:execute!).once
           subject.response = :foo
         end
 
         it "should be a no-op if the response has already been set" do
-          subject.expects(:execute!).once
+          subject.should_receive(:execute!).once
           subject.response = :foo
           lambda { subject.response = :bar }.should_not raise_error
         end

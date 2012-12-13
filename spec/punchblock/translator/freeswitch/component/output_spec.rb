@@ -7,11 +7,8 @@ module Punchblock
     class Freeswitch
       module Component
         describe Output do
-          let(:connection) do
-            mock_connection_with_event_handler do |event|
-              original_command.add_event event
-            end
-          end
+          include HasMockCallbackConnection
+
           let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
           let(:mock_call)   { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
 
@@ -34,7 +31,7 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(filename = audio_filename)
-              subject.wrapped_object.expects(:application).once.with 'playback', "file_string://#{filename}"
+              subject.wrapped_object.should_receive(:application).once.with 'playback', "file_string://#{filename}"
             end
 
             let(:audio_filename) { 'http://foo.com/bar.mp3' }
@@ -105,7 +102,7 @@ module Punchblock
                 end
 
                 it 'should send a complete event when the file finishes playback' do
-                  expect_playback.yields true
+                  expect_playback
                   subject.execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE", :application_response => 'FILE PLAYED')
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
@@ -116,7 +113,7 @@ module Punchblock
                   let(:complete_reason) { original_command.complete_event(0.1).reason }
 
                   it "sends a complete event with an error reason" do
-                    expect_playback.yields true
+                    expect_playback
                     subject.execute
                     subject.handle_es_event fs_event
                     complete_reason.should be_a Punchblock::Event::Complete::Error
@@ -143,7 +140,7 @@ module Punchblock
                 end
 
                 it 'should send a complete event when the files finish playback' do
-                  expect_playback([audio_filename1, audio_filename2].join('!')).yields true
+                  expect_playback([audio_filename1, audio_filename2].join('!'))
                   subject.execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE", :application_response => "FILE PLAYED")
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
@@ -342,13 +339,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                subject.wrapped_object.expects(:application)
+                subject.wrapped_object.should_receive(:application)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                subject.wrapped_object.expects(:application)
+                subject.wrapped_object.should_receive(:application)
                 original_command.should_not be_complete
                 subject.execute_command command
                 reason.should be_a Punchblock::Event::Complete::Stop
@@ -356,7 +353,7 @@ module Punchblock
               end
 
               it "breaks the current dialplan application" do
-                subject.wrapped_object.expects(:application).once.with 'break'
+                subject.wrapped_object.should_receive(:application).once.with 'break'
                 subject.execute_command command
               end
             end

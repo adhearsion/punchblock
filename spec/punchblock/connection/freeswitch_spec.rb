@@ -17,7 +17,7 @@ module Punchblock
         }
       end
 
-      let(:mock_event_handler) { stub_everything 'Event Handler' }
+      let(:mock_event_handler) { stub('Event Handler').as_null_object }
 
       let(:connection) { described_class.new options }
 
@@ -43,27 +43,27 @@ module Punchblock
 
       describe '#run' do
         it 'starts a RubyFS stream' do
-          # subject.expects(:new_fs_stream).once.with('127.0.0.1', 8021, 'test').returns mock_stream
-          subject.stream.expects(:run).once
+          # subject.should_receive(:new_fs_stream).once.with('127.0.0.1', 8021, 'test').and_return mock_stream
+          subject.stream.should_receive(:run).once
           lambda { subject.run }.should raise_error(DisconnectedError)
         end
       end
 
       describe '#stop' do
         it 'stops the RubyFS::Stream' do
-          subject.stream.expects(:shutdown).once
+          subject.stream.should_receive(:shutdown).once
           subject.stop
         end
 
         it 'shuts down the translator' do
-          subject.translator.expects(:terminate).once
+          subject.translator.should_receive(:terminate).once
           subject.stop
         end
       end
 
       it 'sends events from RubyFS to the translator' do
         event = mock 'RubyFS::Event'
-        subject.translator.expects(:handle_es_event!).once.with event
+        subject.translator.should_receive(:handle_es_event!).once.with event
         subject.stream.fire_event event
       end
 
@@ -71,7 +71,7 @@ module Punchblock
         it 'sends a command to the translator' do
           command = mock 'Command'
           options = {:foo => :bar}
-          subject.translator.expects(:execute_command!).once.with command, options
+          subject.translator.should_receive(:execute_command!).once.with command, options
           subject.write command, options
         end
       end
@@ -81,7 +81,7 @@ module Punchblock
           offer = Event::Offer.new
           offer.target_call_id = '9f00061'
 
-          mock_event_handler.expects(:call).once.with offer
+          mock_event_handler.should_receive(:call).once.with offer
           subject.handle_event offer
         end
       end

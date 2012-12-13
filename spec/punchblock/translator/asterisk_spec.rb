@@ -32,7 +32,7 @@ module Punchblock
       describe '#shutdown' do
         it "instructs all calls to shutdown" do
           call = Asterisk::Call.new 'foo', subject
-          call.expects(:shutdown!).once
+          call.should_receive(:shutdown!).once
           subject.register_call call
           subject.shutdown
         end
@@ -50,7 +50,7 @@ module Punchblock
           let(:call_id) { 'abc123' }
 
           it 'executes the call command' do
-            subject.wrapped_object.expects(:execute_call_command).with do |c|
+            subject.wrapped_object.should_receive(:execute_call_command).with do |c|
               c.should be command
               c.target_call_id.should be == call_id
             end
@@ -63,7 +63,7 @@ module Punchblock
           let(:component_id)  { '123abc' }
 
           it 'executes the component command' do
-            subject.wrapped_object.expects(:execute_component_command).with do |c|
+            subject.wrapped_object.should_receive(:execute_component_command).with do |c|
               c.should be command
               c.component_id.should be == component_id
             end
@@ -75,7 +75,7 @@ module Punchblock
           let(:command) { Command::Dial.new }
 
           it 'executes the command directly' do
-            subject.wrapped_object.expects(:execute_global_command).with command
+            subject.wrapped_object.should_receive(:execute_global_command).with command
             subject.execute_command command
           end
         end
@@ -87,7 +87,7 @@ module Punchblock
         let(:call)    { Translator::Asterisk::Call.new channel, subject }
 
         before do
-          call.stubs(:id).returns call_id
+          call.stub(:id).and_return call_id
           subject.register_call call
         end
 
@@ -106,7 +106,7 @@ module Punchblock
         let(:call)    { Translator::Asterisk::Call.new channel, subject }
 
         before do
-          call.stubs(:id).returns call_id
+          call.stub(:id).and_return call_id
           subject.register_call call
         end
 
@@ -142,12 +142,12 @@ module Punchblock
 
           before do
             command.request!
-            call.stubs(:id).returns call_id
+            call.stub(:id).and_return call_id
             subject.register_call call
           end
 
           it 'sends the command to the call for execution' do
-            call.expects(:execute_command!).once.with command
+            call.should_receive(:execute_command!).once.with command
             subject.execute_call_command command
           end
         end
@@ -166,7 +166,7 @@ module Punchblock
 
           before do
             subject.execute_command dial_command
-            ami_client.stub_everything
+            ami_client.as_null_object
           end
 
           it 'sends an error in response to the command' do
@@ -176,7 +176,7 @@ module Punchblock
               raise 'Woops, I died'
             end
 
-            connection.expects(:handle_event).once.with end_error_event
+            connection.should_receive(:handle_event).once.with end_error_event
 
             lambda { call.oops }.should raise_error(/Woops, I died/)
             sleep 0.1
@@ -202,7 +202,7 @@ module Punchblock
           let(:call_id) { call.id }
 
           before do
-            connection.expects(:handle_event).at_least(1)
+            connection.stub :handle_event
             subject.handle_ami_event ami_event
             call_id
           end
@@ -212,7 +212,7 @@ module Punchblock
               raise 'Woops, I died'
             end
 
-            connection.expects(:handle_event).once.with end_error_event
+            connection.should_receive(:handle_event).once.with end_error_event
 
             lambda { call.oops }.should raise_error(/Woops, I died/)
             sleep 0.1
@@ -250,7 +250,7 @@ module Punchblock
           end
 
           it 'sends the command to the component for execution' do
-            component.expects(:execute_command!).once.with command
+            component.should_receive(:execute_command!).once.with command
             subject.execute_component_command command
           end
         end
@@ -271,7 +271,7 @@ module Punchblock
 
           before do
             command.request!
-            ami_client.stub_everything
+            ami_client.as_null_object
           end
 
           it 'should be able to look up the call by channel ID' do
@@ -281,9 +281,9 @@ module Punchblock
           end
 
           it 'should instruct the call to send a dial' do
-            mock_call = stub_everything 'Asterisk::Call'
-            Asterisk::Call.expects(:new_link).once.returns mock_call
-            mock_call.expects(:dial!).once.with command
+            mock_call = stub('Asterisk::Call').as_null_object
+            Asterisk::Call.should_receive(:new_link).once.and_return mock_call
+            mock_call.should_receive(:dial!).once.with command
             subject.execute_global_command command
           end
         end
@@ -293,17 +293,17 @@ module Punchblock
             Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
           end
 
-          let(:mock_action) { stub_everything 'Asterisk::Component::Asterisk::AMIAction' }
+          let(:mock_action) { stub('Asterisk::Component::Asterisk::AMIAction').as_null_object }
 
           it 'should create a component actor and execute it asynchronously' do
-            Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
-            mock_action.expects(:execute!).once
+            Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject).and_return mock_action
+            mock_action.should_receive(:execute!).once
             subject.execute_global_command command
           end
 
           it 'registers the component' do
-            Asterisk::Component::Asterisk::AMIAction.expects(:new).once.with(command, subject).returns mock_action
-            subject.wrapped_object.expects(:register_component).with mock_action
+            Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject).and_return mock_action
+            subject.wrapped_object.should_receive(:register_component).with mock_action
             subject.execute_global_command command
           end
         end
@@ -323,7 +323,7 @@ module Punchblock
       describe '#handle_pb_event' do
         it 'should forward the event to the connection' do
           event = mock 'Punchblock::Event'
-          subject.connection.expects(:handle_event).once.with event
+          subject.connection.should_receive(:handle_event).once.with event
           subject.handle_pb_event event
         end
       end
@@ -347,13 +347,13 @@ module Punchblock
         end
 
         it 'should create a Punchblock AMI event object and pass it to the connection' do
-          subject.connection.expects(:handle_event).once.with expected_pb_event
+          subject.connection.should_receive(:handle_event).once.with expected_pb_event
           subject.handle_ami_event ami_event
         end
 
         context 'with something that is not a RubyAMI::Event' do
           it 'does not send anything to the connection' do
-            subject.connection.expects(:handle_event).never
+            subject.connection.should_receive(:handle_event).never
             subject.handle_ami_event :foo
           end
         end
@@ -363,15 +363,15 @@ module Punchblock
 
           context 'once' do
             it 'does not send anything to the connection' do
-              subject.connection.expects(:handle_event).never
+              subject.connection.should_receive(:handle_event).never
               subject.handle_ami_event ami_event
             end
           end
 
           context 'twice' do
             it 'sends a connected event to the event handler' do
-              subject.connection.expects(:handle_event).once.with Connection::Connected.new
-              subject.wrapped_object.expects(:run_at_fully_booted).once
+              subject.connection.should_receive(:handle_event).once.with Connection::Connected.new
+              subject.wrapped_object.should_receive(:run_at_fully_booted).once
               subject.handle_ami_event ami_event
               subject.handle_ami_event ami_event
             end
@@ -387,7 +387,7 @@ module Punchblock
             end
           end
 
-          before { subject.wrapped_object.stubs :handle_pb_event }
+          before { subject.wrapped_object.stub :handle_pb_event }
 
           it 'should be able to look up the call by channel ID' do
             subject.handle_ami_event ami_event
@@ -419,10 +419,10 @@ module Punchblock
           end
 
           it 'should instruct the call to send an offer' do
-            mock_call = stub_everything 'Asterisk::Call'
-            Asterisk::Call.expects(:new).once.returns mock_call
-            subject.wrapped_object.expects(:link)
-            mock_call.expects(:send_offer!).once
+            mock_call = stub('Asterisk::Call').as_null_object
+            Asterisk::Call.should_receive(:new).once.and_return mock_call
+            subject.wrapped_object.should_receive(:link)
+            mock_call.should_receive(:send_offer!).once
             subject.handle_ami_event ami_event
           end
 
@@ -434,7 +434,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Asterisk::Call.expects(:new).never
+              Asterisk::Call.should_receive(:new).never
               subject.handle_ami_event ami_event
             end
           end
@@ -449,7 +449,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Asterisk::Call.expects(:new).never
+              Asterisk::Call.should_receive(:new).never
               subject.handle_ami_event ami_event
             end
 
@@ -469,7 +469,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Asterisk::Call.expects(:new).never
+              Asterisk::Call.should_receive(:new).never
               subject.handle_ami_event ami_event
             end
 
@@ -492,8 +492,8 @@ module Punchblock
           end
 
           before do
-            ami_client.stub_everything
-            subject.wrapped_object.stubs :handle_pb_event
+            ami_client.as_null_object
+            subject.wrapped_object.stub :handle_pb_event
           end
 
           context "matching a call that was created by a Dial command" do
@@ -554,7 +554,7 @@ module Punchblock
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event' do
-            call.expects(:process_ami_event!).once.with ami_event
+            call.should_receive(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end
 
@@ -576,8 +576,8 @@ module Punchblock
               before { subject.register_call call2 }
 
               it 'should send the event to both calls and to the connection once as a PB event' do
-                call.expects(:process_ami_event!).once.with ami_event
-                call2.expects(:process_ami_event!).once.with ami_event
+                call.should_receive(:process_ami_event!).once.with ami_event
+                call2.should_receive(:process_ami_event!).once.with ami_event
                 subject.handle_ami_event ami_event
               end
             end
@@ -612,12 +612,12 @@ module Punchblock
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event if it is an allowed event' do
-            call.expects(:process_ami_event!).once.with ami_event
+            call.should_receive(:process_ami_event!).once.with ami_event
             subject.handle_ami_event ami_event
           end
 
           it 'does not send the AMI event to a bridged channel if it is not allowed' do
-            call.expects(:process_ami_event!).never.with ami_event2
+            call.should_receive(:process_ami_event!).never.with ami_event2
             subject.handle_ami_event ami_event2
           end
 
@@ -626,7 +626,7 @@ module Punchblock
 
       describe '#send_ami_action' do
         it 'should send the action to the AMI client' do
-          ami_client.expects(:send_action).once.with 'foo', :foo => :bar
+          ami_client.should_receive(:send_action).once.with 'foo', :foo => :bar
           subject.send_ami_action 'foo', :foo => :bar
         end
       end
@@ -641,31 +641,31 @@ module Punchblock
         end
 
         it 'should send the redirect extension Command to the AMI client' do
-          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
+          ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
           subject.run_at_fully_booted
         end
 
         it 'should check the context for existence and do nothing if it is there' do
-          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").yields(passed_show)
+          ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_yield(passed_show)
           subject.run_at_fully_booted
         end
 
         it 'should check the context for existence and log an error if it is not there' do
-          ami_client.expects(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.expects(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").yields(failed_show)
-          Punchblock.logger.expects(:error).once.with("Punchblock failed to add the #{Asterisk::REDIRECT_EXTENSION} extension to the #{Asterisk::REDIRECT_CONTEXT} context. Please add a [#{Asterisk::REDIRECT_CONTEXT}] entry to your dialplan.")
+          ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_yield(failed_show)
+          Punchblock.logger.should_receive(:error).once.with("Punchblock failed to add the #{Asterisk::REDIRECT_EXTENSION} extension to the #{Asterisk::REDIRECT_CONTEXT} context. Please add a [#{Asterisk::REDIRECT_CONTEXT}] entry to your dialplan.")
           subject.run_at_fully_booted
         end
       end
-      
+
       describe '#check_recording_directory' do
         let(:broken_path) { "/this/is/not/a/valid/path" }
         before do
           @new_constant = broken_path
-          @old_constant = Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH  
-          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH') 
+          @old_constant = Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH
+          Punchblock::Translator::Asterisk::Component::Record.__send__(:remove_const,'RECORDING_BASE_PATH')
           Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @new_constant)
         end
         after do
@@ -673,7 +673,7 @@ module Punchblock
           Punchblock::Translator::Asterisk::Component::Record.const_set('RECORDING_BASE_PATH', @old_constant)
         end
         it 'logs a warning if the recording directory does not exist' do
-          Punchblock.logger.expects(:warning).once.with("Recordings directory #{broken_path} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording")
+          Punchblock.logger.should_receive(:warning).once.with("Recordings directory #{broken_path} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording")
           subject.check_recording_directory
         end
       end

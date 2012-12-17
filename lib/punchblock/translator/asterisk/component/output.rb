@@ -27,7 +27,7 @@ module Punchblock
 
             output_component = current_actor
 
-            rendering_engine = @component_node.renderer ? @component_node.renderer : @media_engine || :asterisk
+            rendering_engine = @component_node.renderer || @media_engine || :asterisk
 
             case rendering_engine.to_sym
             when :asterisk

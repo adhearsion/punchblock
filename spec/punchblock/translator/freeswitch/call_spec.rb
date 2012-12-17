@@ -754,11 +754,17 @@ module Punchblock
 
             let(:mock_component) { mock 'Freeswitch::Component::Output', :id => 'foo' }
 
-            it 'should create an Output component and execute it asynchronously' do
-              Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_component
-              mock_component.should_receive(:execute!).once
-              subject.execute_command command
-              subject.component_with_id('foo').should be mock_component
+            ['freeswitch', nil].each do |media_engine|
+              let(:media_engine) { media_engine }
+
+              context "with a media engine of #{media_engine}" do
+                it 'should create an Output component and execute it asynchronously' do
+                  Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_component
+                  mock_component.should_receive(:execute!).once
+                  subject.execute_command command
+                  subject.component_with_id('foo').should be mock_component
+                end
+              end
             end
 
             context 'with the media engine of :flite' do

@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.7.1](https://github.com/adhearsion/punchblock/compare/v1.7.0...v1.7.1) - [2012-12-17](https://rubygems.org/gems/punchblock/versions/1.7.1)
+  * Bugfix: Deal with nil media engines on FS/* properly
+
 # [v1.7.0](https://github.com/adhearsion/punchblock/compare/v1.6.1...v1.7.0) - [2012-12-13](https://rubygems.org/gems/punchblock/versions/1.7.0)
   * Feature: Support for the renderer attribute added to the Output component.
   * Feature: FreeSWITCH and Asterisk translators now use the :renderer attribute on Output

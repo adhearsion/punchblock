@@ -39,6 +39,28 @@ module Punchblock
         its(:direction)   { should be == :duplex }
         its(:media)       { should be == :bridge }
       end
+
+      describe "with a direction" do
+        [nil, :duplex, :send, :recv].each do |direction|
+          describe direction do
+            subject { Join.new :direction => direction }
+
+            its(:direction) { should be == direction }
+          end
+        end
+
+        describe "no direction" do
+          subject { Join.new }
+
+          its(:direction) { should be_nil }
+        end
+
+        describe "blahblahblah" do
+          it "should raise an error" do
+            expect { Join.new(:direction => :blahblahblah) }.to raise_error ArgumentError
+          end
+        end
+      end
     end
   end
 end # Punchblock

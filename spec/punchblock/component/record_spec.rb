@@ -16,7 +16,8 @@ module Punchblock
                      :start_paused    => false,
                      :max_duration    => 500000,
                      :initial_timeout => 10000,
-                     :final_timeout   => 30000
+                     :final_timeout   => 30000,
+                     :direction       => :duplex
         end
 
         its(:format)          { should be == 'WAV' }
@@ -25,6 +26,7 @@ module Punchblock
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }
         its(:final_timeout)   { should be == 30000 }
+        its(:direction)       { should be == :duplex }
       end
 
       describe "from a stanza" do
@@ -36,6 +38,7 @@ module Punchblock
         start-paused="false"
         max-duration="500000"
         initial-timeout="10000"
+        direction="duplex"
         final-timeout="30000"/>
           MESSAGE
         end
@@ -50,6 +53,29 @@ module Punchblock
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }
         its(:final_timeout)   { should be == 30000 }
+        its(:direction)       { should be == :duplex }
+      end
+
+      describe "with a direction" do
+        [nil, :duplex, :send, :recv].each do |direction|
+          describe direction do
+            subject { Record.new :direction => direction }
+
+            its(:direction) { should be == direction }
+          end
+        end
+
+        describe "no direction" do
+          subject { Record.new }
+
+          its(:direction) { should be_nil }
+        end
+
+        describe "blahblahblah" do
+          it "should raise an error" do
+            expect { Record.new(:direction => :blahblahblah) }.to raise_error ArgumentError
+          end
+        end
       end
 
       describe "actions" do

@@ -262,6 +262,15 @@ module Punchblock
                 end
               end
             end
+
+            describe 'direction' do
+              let(:command_options) { { :direction => :duplex } }
+              it "should execute the record_session application with duplex options" do
+                mock_stream.should_receive(:bgapi).with("record_session #{filename}")
+                subject.execute
+                original_command.response(0.1).should be_a Ref
+              end
+            end
           end
 
           describe "#execute_command" do
@@ -282,7 +291,6 @@ module Punchblock
               let(:command) { Punchblock::Component::Stop.new }
 
               before do
-                mock_call.should_receive :uuid_foo
                 command.request!
                 original_command.request!
                 subject.execute
@@ -315,6 +323,21 @@ module Punchblock
                 reason.should be_a Punchblock::Event::Complete::Stop
                 recording.uri.should be == "file://#{filename}"
                 original_command.should be_complete
+              end
+              context 'specifying a direction' do
+                let(:command_options) { { :direction => :duplex } }
+                it "should execute the stop_record_session application" do
+                  mock_stream.should_receive(:bgapi).once.with("stop_record_session #{filename}")
+                  subject.execute_command command
+                end
+                it "sends the correct complete event" do
+                  mock_stream.should_receive(:bgapi).once.with("stop_record_session #{filename}")
+                  subject.execute_command command
+                  send_stop_event
+                  reason.should be_a Punchblock::Event::Complete::Stop
+                  recording.uri.should be == "file://#{filename}"
+                  original_command.should be_complete
+                end
               end
             end
 

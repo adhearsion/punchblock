@@ -1,6 +1,7 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Join command now enforces a list of valid direction attribute values.
   * Feature: added support for media direction to the Record component
+  * Feature: Record direction support on FS
 
 # [v1.7.1](https://github.com/adhearsion/punchblock/compare/v1.7.0...v1.7.1) - [2012-12-17](https://rubygems.org/gems/punchblock/versions/1.7.1)
   * Bugfix: Deal with nil media engines on FS/* properly

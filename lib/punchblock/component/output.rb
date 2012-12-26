@@ -59,7 +59,7 @@ module Punchblock
       #
       def ssml
         node = children.first
-        RubySpeech::SSML.import node if node
+        RubySpeech::SSML.import node.to_xml if node
       end
 
       ##

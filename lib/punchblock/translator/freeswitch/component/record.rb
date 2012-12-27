@@ -29,11 +29,16 @@ module Punchblock
 
             record_args = ['start', filename]
             record_args << max_duration/1000 unless max_duration == -1
-            if @component_node.direction == :duplex
-              call.stream.bgapi "record_session #{filename}"
+            case @component_node.direction
+            when :send
+              call.uuid_foo :setvar, "RECORD_WRITE_ONLY true"
+            when :recv
+              call.uuid_foo :setvar, "RECORD_READ_ONLY true"
             else
-              call.uuid_foo :record, record_args.join(' ')
+              call.uuid_foo :setvar, "RECORD_STEREO true"
             end
+            call.uuid_foo :record, record_args.join(' ')
+
             send_ref
           rescue OptionError => e
             with_error 'option error', e.message
@@ -42,11 +47,7 @@ module Punchblock
           def execute_command(command)
             case command
             when Punchblock::Component::Stop
-              if @component_node.direction == :duplex
-                call.stream.bgapi "stop_record_session #{filename}"
-              else
-                call.uuid_foo :record, "stop #{filename}"
-              end
+              call.uuid_foo :record, "stop #{filename}"
               @complete_reason = stop_reason
               command.response = true
             else

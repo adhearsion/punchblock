@@ -22,7 +22,10 @@ module Punchblock
             {}
           end
 
-          before { mock_stream.as_null_object }
+          before do
+            mock_stream.as_null_object
+            mock_call.stub(:uuid_foo)
+          end
 
           subject { Record.new original_command, mock_call }
 
@@ -62,7 +65,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :start_paused => nil } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -71,7 +74,7 @@ module Punchblock
               context "set to false" do
                 let(:command_options) { { :start_paused => false } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -92,7 +95,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :initial_timeout => nil } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -101,7 +104,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :initial_timeout => -1 } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -122,7 +125,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :final_timeout => nil } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -131,7 +134,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :final_timeout => -1 } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -194,7 +197,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :start_beep => nil } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -203,7 +206,7 @@ module Punchblock
               context "set to false" do
                 let(:command_options) { { :start_beep => false } }
                 it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -264,11 +267,41 @@ module Punchblock
             end
 
             describe 'direction' do
-              let(:command_options) { { :direction => :duplex } }
-              it "should execute the record_session application with duplex options" do
-                mock_stream.should_receive(:bgapi).with("record_session #{filename}")
-                subject.execute
-                original_command.response(0.1).should be_a Ref
+              context "with nil" do
+                let(:command_options) { { :direction => nil } }
+                it "should execute the setvar application with duplex options before recording" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_STEREO true").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+              context "with :duplex" do
+                let(:command_options) { { :direction => :duplex } }
+                it "should execute the setvar application with duplex options before recording" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_STEREO true").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+              context "with :send" do
+                let(:command_options) { { :direction => :send } }
+                it "should execute the setvar application with send options before recording" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_WRITE_ONLY true").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
+              end
+              context "with :recv" do
+                let(:command_options) { { :direction => :recv } }
+                it "should execute the setvar application with recv options before recording" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_READ_ONLY true").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
               end
             end
           end
@@ -323,21 +356,6 @@ module Punchblock
                 reason.should be_a Punchblock::Event::Complete::Stop
                 recording.uri.should be == "file://#{filename}"
                 original_command.should be_complete
-              end
-              context 'specifying a direction' do
-                let(:command_options) { { :direction => :duplex } }
-                it "should execute the stop_record_session application" do
-                  mock_stream.should_receive(:bgapi).once.with("stop_record_session #{filename}")
-                  subject.execute_command command
-                end
-                it "sends the correct complete event" do
-                  mock_stream.should_receive(:bgapi).once.with("stop_record_session #{filename}")
-                  subject.execute_command command
-                  send_stop_event
-                  reason.should be_a Punchblock::Event::Complete::Stop
-                  recording.uri.should be == "file://#{filename}"
-                  original_command.should be_complete
-                end
               end
             end
 

@@ -29,6 +29,14 @@ module Punchblock
 
             record_args = ['start', filename]
             record_args << max_duration/1000 unless max_duration == -1
+            case @component_node.direction
+            when :send
+              call.uuid_foo :setvar, "RECORD_WRITE_ONLY true"
+            when :recv
+              call.uuid_foo :setvar, "RECORD_READ_ONLY true"
+            else
+              call.uuid_foo :setvar, "RECORD_STEREO true"
+            end
             call.uuid_foo :record, record_args.join(' ')
 
             send_ref

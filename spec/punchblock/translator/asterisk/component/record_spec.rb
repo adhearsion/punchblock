@@ -65,6 +65,21 @@ module Punchblock
               original_command.should be_complete
             end
 
+            it "can be called multiple times on the same call" do 
+              mock_call.should_receive(:send_ami_action!).twice
+              subject.execute
+
+              monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
+                e['Channel'] = channel
+              end
+
+              mock_call.process_ami_event monitor_stop_event 
+
+              (Record.new original_command, mock_call).execute
+              (Punchblock::Component::Record.new command_options).request!
+              mock_call.process_ami_event monitor_stop_event
+            end
+
             describe 'start_paused' do
               context "set to nil" do
                 let(:command_options) { { :start_paused => nil } }

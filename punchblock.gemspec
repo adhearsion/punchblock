@@ -41,6 +41,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<i18n>, [">= 0"]
   s.add_development_dependency %q<countdownlatch>, [">= 0"]
   s.add_development_dependency %q<guard-rspec>
-  s.add_development_dependency %q<ruby_gntp>
   s.add_development_dependency %q<rb-fsevent>, ['~> 0.9']
 end

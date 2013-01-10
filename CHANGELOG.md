@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Add support for Rayo Prompt component (model only, no support on * or FS)
   * Bugfix: Asterisk translator now properly checks for existence of the recordings directory
   * Bugfix: XMPP specs were mistakenly resetting the logger object for other tests.
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command

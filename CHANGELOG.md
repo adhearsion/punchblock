@@ -1,8 +1,11 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Feature: Join command now enforces a list of valid direction attribute values.
-  * Feature: added support for media direction to the Record component
+
+# [v1.8.0](https://github.com/adhearsion/punchblock/compare/v1.7.1...v1.8.0) - [2013-01-10](https://rubygems.org/gems/punchblock/versions/1.8.0)
+  * Feature: Join command now enforces a list of valid direction attribute values
+  * Feature: Added support for media direction to the Record component
   * Feature: Record direction support on FS
   * Bugfix: Fixed answering during early media on FS
+  * Bugfix: Doing multiple recordings on Asterisk during the lifetime of a call was crashing Punchblock
 
 # [v1.7.1](https://github.com/adhearsion/punchblock/compare/v1.7.0...v1.7.1) - [2012-12-17](https://rubygems.org/gems/punchblock/versions/1.7.1)
   * Bugfix: Deal with nil media engines on FS/* properly

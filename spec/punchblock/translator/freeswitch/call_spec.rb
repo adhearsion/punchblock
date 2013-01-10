@@ -706,6 +706,19 @@ module Punchblock
               subject.should be_answered
               subject.execute_command command
             end
+
+            context "when a component has previously been executed" do
+              it "should set the answer command's response correctly" do
+                subject
+                Punchblock.should_receive(:new_uuid).once.and_return 'abc123'
+                subject.wrapped_object.should_receive(:application).once.with('answer', "%[punchblock_command_id=abc123]")
+                subject.should_not be_answered
+                subject.execute_command command
+                subject.handle_es_event RubyFS::Event.new(nil, :event_name => 'CHANNEL_ANSWER', :scope_variable_punchblock_command_id => 'abc123', :scope_variable_punchblock_component_id => 'dj182989j')
+                command.response(0.5).should be true
+                subject.should be_answered
+              end
+            end
           end
 
           def expect_hangup_with_reason(reason)

@@ -5,6 +5,8 @@ module Punchblock
     class Join < CommandNode
       register :join, :core
 
+      VALID_DIRECTIONS = [:duplex, :send, :recv].freeze
+
       ##
       # Create a join command
       #
@@ -59,8 +61,11 @@ module Punchblock
 
       ##
       # @param [String] other the direction in which media should flow. Can be :duplex, :recv or :send
-      def direction=(other)
-        write_attr :direction, other
+      def direction=(direction)
+        if direction && !VALID_DIRECTIONS.include?(direction.to_sym)
+          raise ArgumentError, "Invalid Direction (#{direction}), use: #{VALID_DIRECTIONS*' '}"
+        end
+        write_attr :direction, direction 
       end
 
       ##

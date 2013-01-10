@@ -104,6 +104,7 @@ module Punchblock
             if component = component_with_id(event[:scope_variable_punchblock_component_id])
               safe_from_dead_actors { component.handle_es_event event if component.alive? }
             end
+            throw :pass
           end
         end
 

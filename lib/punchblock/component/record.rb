@@ -5,6 +5,8 @@ module Punchblock
     class Record < ComponentNode
       register :record, :record
 
+      VALID_DIRECTIONS = [:duplex, :send, :recv].freeze
+
       ##
       # Creates an Rayo Record command
       #
@@ -114,8 +116,23 @@ module Punchblock
         write_attr :'start-paused', other
       end
 
+      ##
+      # @return [Symbol] the direction of media to be recorded.
+      def direction
+        read_attr :direction, :to_sym
+      end
+
+      ##
+      # @param [#to_s] otherthe direction of media to be recorded. Can be :duplex, :recv or :send
+      def direction=(direction)
+        if direction && !VALID_DIRECTIONS.include?(direction.to_sym)
+          raise ArgumentError, "Invalid Direction (#{direction}), use: #{VALID_DIRECTIONS*' '}"
+        end
+        write_attr :direction, direction
+      end
+
       def inspect_attributes # :nodoc:
-        [:final_timeout, :format, :initial_timeout, :max_duration, :start_beep, :start_paused] + super
+        [:final_timeout, :format, :initial_timeout, :max_duration, :start_beep, :start_paused, :direction] + super
       end
 
       state_machine :state do

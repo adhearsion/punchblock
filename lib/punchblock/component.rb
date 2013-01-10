@@ -10,7 +10,6 @@ module Punchblock
     autoload :Output
     autoload :Record
     autoload :Stop
-    autoload :Tropo
 
     InvalidActionError = Class.new StandardError
   end # Component

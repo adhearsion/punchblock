@@ -17,8 +17,8 @@ module Punchblock
 
           def register_dtmf_event_handler
             component = current_actor
-            call.register_handler :ami, :name => 'DTMF' do |event|
-              component.process_dtmf! event['Digit'] if event['End'] == 'Yes'
+            call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
+              component.process_dtmf! event['Digit']
             end
           end
 

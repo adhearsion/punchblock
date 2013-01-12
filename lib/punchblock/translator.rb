@@ -9,6 +9,7 @@ module Punchblock
     autoload :Asterisk
     autoload :Freeswitch
 
+    autoload :DTMFRecognizer
     autoload :InputComponent
   end
 end

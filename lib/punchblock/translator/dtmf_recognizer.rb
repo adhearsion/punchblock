@@ -44,12 +44,12 @@ module Punchblock
       end
 
       def initial_timeout=(other)
-        raise OptionError, 'An initial timeout value that is negative (and not -1) is invalid.' unless other >= -1
+        raise OptionError, 'An initial timeout value that is negative (and not -1) is invalid.' if other < -1
         @initial_timeout = other
       end
 
       def inter_digit_timeout=(other)
-        raise OptionError, 'An inter-digit timeout value that is negative (and not -1) is invalid.' unless other >= -1
+        raise OptionError, 'An inter-digit timeout value that is negative (and not -1) is invalid.' if other < -1
         @inter_digit_timeout = other
       end
 

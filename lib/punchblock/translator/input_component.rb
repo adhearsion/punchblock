@@ -7,10 +7,10 @@ module Punchblock
         validate
 
         component = current_actor
-        @recognizer = DTMFRecognizer.new_link current_actor,
-                                              @component_node.grammar.value,
-                                              (@component_node.initial_timeout || -1),
-                                              (@component_node.inter_digit_timeout || -1)
+        @recognizer = DTMFRecognizer.new current_actor,
+                                         @component_node.grammar.value,
+                                         (@component_node.initial_timeout || -1),
+                                         (@component_node.inter_digit_timeout || -1)
 
         send_ref
 

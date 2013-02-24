@@ -928,6 +928,11 @@ module Punchblock
             context "for a known component ID" do
               before { subject.register_component mock_component }
 
+              it 'should use #safe_from_dead_actors' do
+                subject.wrapped_object.should_receive(:safe_from_dead_actors)
+                subject.execute_command command
+              end
+
               it 'should send the command to the component for execution' do
                 mock_component.should_receive(:execute_command).once
                 subject.execute_command command

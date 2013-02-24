@@ -1,6 +1,7 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: Asterisk translator now properly checks for existence of the recordings directory
   * Bugfix: XMPP specs were mistakenly resetting the logger object for other tests.
+  * Bugfix: Asterisk translator or calls do not crash if hangup occurs during an Input prompt.
 
 # [v1.8.0](https://github.com/adhearsion/punchblock/compare/v1.7.1...v1.8.0) - [2013-01-10](https://rubygems.org/gems/punchblock/versions/1.8.0)
   * Feature: Join command now enforces a list of valid direction attribute values

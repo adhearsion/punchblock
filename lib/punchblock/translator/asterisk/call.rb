@@ -156,7 +156,9 @@ module Punchblock
         def execute_command(command)
           if command.component_id
             if component = component_with_id(command.component_id)
-              component.execute_command command
+              safe_from_dead_actors do
+                component.execute_command command
+              end
             else
               command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
             end

@@ -217,6 +217,8 @@ module Punchblock
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        rescue Celluloid::DeadActorError
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end
 
         def send_agi_action(command, *params, &block)

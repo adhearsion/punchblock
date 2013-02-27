@@ -974,6 +974,18 @@ module Punchblock
                 subject.execute_command subsequent_command
                 subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
               end
+
+              context "when we dispatch the command to it" do
+                it 'sends an error in response to the command' do
+                  component = subject.component_with_id comp_id
+
+                  component.should_receive(:execute_command).and_raise(Celluloid::DeadActorError)
+
+                  subsequent_command.request!
+                  subject.execute_command subsequent_command
+                  subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+                end
+              end
             end
 
             context "for an unknown component ID" do

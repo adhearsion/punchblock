@@ -29,6 +29,7 @@ module Punchblock
           @answered = false
           @pending_joins = {}
           @progress_sent = false
+          @process_commands = true
         end
 
         def register_component(component)
@@ -100,6 +101,7 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
+            @block_commands = true
             @components.dup.each_pair do |id, component|
               safe_from_dead_actors do
                 component.call_ended if component.alive?
@@ -154,6 +156,10 @@ module Punchblock
         end
 
         def execute_command(command)
+          if @block_commands
+            command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
+            return
+          end
           if command.component_id
             if component = component_with_id(command.component_id)
               component.execute_command command

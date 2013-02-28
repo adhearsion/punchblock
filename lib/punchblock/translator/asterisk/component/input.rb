@@ -23,7 +23,7 @@ module Punchblock
           end
 
           def unregister_dtmf_event_handler
-            call.unregister_handler :ami, @dtmf_handler_id if instance_variable_defined?(:@dtmf_handler_id)
+            call.unregister_handler! :ami, @dtmf_handler_id if instance_variable_defined?(:@dtmf_handler_id)
           end
         end
       end

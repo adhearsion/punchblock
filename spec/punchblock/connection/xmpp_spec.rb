@@ -240,10 +240,21 @@ module Punchblock
 
         subject { cmd.response }
 
-        its(:call_id)       { should be == call_id }
-        its(:component_id)  { should be == component_id }
-        its(:name)          { should be == :item_not_found }
-        its(:text)          { should be == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
+        it "should have the correct call ID" do
+          subject.call_id.should be == call_id
+        end
+
+        it "should have the correct component ID" do
+          subject.component_id.should be == component_id
+        end
+
+        it "should have the correct name" do
+          subject.name.should be == :item_not_found
+        end
+
+        it "should have the correct text" do
+          subject.text.should be == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]'
+        end
       end
 
       describe "#prep_command_for_execution" do

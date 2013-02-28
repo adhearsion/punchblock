@@ -29,7 +29,7 @@ module Punchblock
           @answered = false
           @pending_joins = {}
           @progress_sent = false
-          @process_commands = true
+          @block_commands = false
         end
 
         def register_component(component)

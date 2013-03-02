@@ -21,7 +21,7 @@ module Punchblock
         cancel_initial_timer
         case (match = @grammar.match @buffer.dup)
         when RubySpeech::GRXML::Match
-          @responder.match match.mode, match.confidence, match.utterance, match.interpretation
+          @responder.match match
         when RubySpeech::GRXML::NoMatch
           @responder.nomatch
         when RubySpeech::GRXML::PotentialMatch

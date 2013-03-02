@@ -74,11 +74,16 @@ module Punchblock
                   sleep 0.5
                 end
 
+                let :expected_nlsml do
+                  RubySpeech::NLSML.draw do
+                    interpretation confidence: 1 do
+                      input "12", mode: :dtmf
+                    end
+                  end
+                end
+
                 let :expected_event do
-                  Punchblock::Component::Input::Complete::Success.new :mode => :dtmf,
-                    :confidence => 1,
-                    :utterance => '12',
-                    :interpretation => 'dtmf-1 dtmf-2',
+                  Punchblock::Component::Input::Complete::Match.new :nlsml => expected_nlsml,
                     :component_id => subject.id,
                     :target_call_id => call.id
                 end
@@ -167,7 +172,7 @@ module Punchblock
                   send_dtmf 1
                   sleep 1.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Success
+                  reason.should be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoInput complete event to be sent after the timeout" do
@@ -218,7 +223,7 @@ module Punchblock
                   send_dtmf 1
                   sleep 0.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Success
+                  reason.should be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoMatch complete event to be sent after the timeout" do

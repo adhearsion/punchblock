@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<celluloid>, ["~> 0.12", ">= 0.12.4"]
   s.add_runtime_dependency %q<ruby_ami>, ["~> 1.2", ">= 1.2.1"]
   s.add_runtime_dependency %q<ruby_fs>, ["~> 1.0"]
-  s.add_runtime_dependency %q<ruby_speech>, ["~> 1.0"]
+  s.add_runtime_dependency %q<ruby_speech>, ["~> 1.1"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]
   s.add_development_dependency %q<rspec>, ["~> 2.7"]

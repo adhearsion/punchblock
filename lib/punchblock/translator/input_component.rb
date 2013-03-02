@@ -33,8 +33,8 @@ module Punchblock
         end
       end
 
-      def match(mode, confidence, utterance, interpretation)
-        complete Punchblock::Component::Input::Complete::Success.new(:mode => mode, :confidence => confidence, :utterance => utterance, :interpretation => interpretation)
+      def match(match)
+        complete success_reason(match)
       end
 
       def nomatch
@@ -50,6 +50,15 @@ module Punchblock
       def validate
         raise OptionError, 'A grammar document is required.' unless @component_node.grammar
         raise OptionError, 'A mode value other than DTMF is unsupported.' unless @component_node.mode == :dtmf
+      end
+
+      def success_reason(match)
+        nlsml = RubySpeech::NLSML.draw do
+          interpretation confidence: match.confidence do
+            input match.utterance, mode: match.mode
+          end
+        end
+        Punchblock::Component::Input::Complete::Match.new :nlsml => nlsml
       end
 
       def complete(reason)

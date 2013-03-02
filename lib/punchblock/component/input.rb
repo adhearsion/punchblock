@@ -263,75 +263,37 @@ module Punchblock
       end # Choices
 
       class Complete
-        class Success < Event::Complete::Reason
-          register :success, :input_complete
+        class Match < Event::Complete::Reason
+          register :match, :input_complete
 
-          ##
-          # @return [Symbol] the mode by which the question was answered. May be :speech or :dtmf
-          #
+          def nlsml
+            @nlsml ||= RubySpeech.parse result_node.to_xml
+          end
+
+          def nlsml=(other)
+            self << other.root.to_xml
+          end
+
           def mode
-            read_attr :mode, :to_sym
+            nlsml.best_interpretation[:input][:mode]
           end
 
-          def mode=(other)
-            write_attr :mode, other
-          end
-
-          ##
-          # @return [Float] A measure of the confidence of the result, between 0-1
-          #
           def confidence
-            read_attr :confidence, :to_f
+            nlsml.best_interpretation[:confidence]
           end
 
-          def confidence=(other)
-            write_attr :confidence, other
-          end
-
-          ##
-          # @return [String] An intelligent interpretation of the meaning of the response.
-          #
-          def interpretation
-            interpretation_node.text
-          end
-
-          def interpretation=(other)
-            interpretation_node.content = other
-          end
-
-          ##
-          # @return [String] The exact response gained
-          #
           def utterance
-            utterance_node.text
+            nlsml.best_interpretation[:input][:content]
           end
 
-          def utterance=(other)
-            utterance_node.content = other
-          end
-
-          def inspect_attributes # :nodoc:
-            [:mode, :confidence, :interpretation, :utterance] + super
+          def interpretation
+            nlsml.best_interpretation[:instance]
           end
 
           private
 
-          def interpretation_node
-            child_node_with_name 'interpretation'
-          end
-
-          def utterance_node
-            child_node_with_name 'utterance'
-          end
-
-          def child_node_with_name(name)
-            node = find_first "ns:#{name}", :ns => self.class.registered_ns
-
-            unless node
-              self << (node = RayoNode.new(name, self.document))
-              node.namespace = self.class.registered_ns
-            end
-            node
+          def result_node
+            at_xpath 'ns:result', 'ns' => 'http://www.w3c.org/2000/11/nlsml' or raise "Couldn't find the NLSML node"
           end
         end
 

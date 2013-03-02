@@ -18,6 +18,13 @@ module Punchblock
         its(:max_time)         { should be nil }
         its(:voice)            { should be nil }
         its(:renderer)         { should be nil }
+        its(:render_document)  { should be nil }
+      end
+
+      def ssml_doc(mode = :ordinal)
+        RubySpeech::SSML.draw do
+          say_as(:interpret_as => mode) { string '100' }
+        end
       end
 
       describe "when setting options in initializer" do
@@ -29,7 +36,8 @@ module Punchblock
                       :repeat_times     => 10,
                       :max_time         => 30000,
                       :voice            => 'allison',
-                      :renderer         => 'swift'
+                      :renderer         => 'swift',
+                      :render_document  => {:value => ssml_doc}
         end
 
         its(:interrupt_on)     { should be == :speech }
@@ -40,6 +48,7 @@ module Punchblock
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
+        its(:render_document)  { should be == Output::Document.new(:value => ssml_doc) }
       end
 
       describe "from a stanza" do
@@ -53,7 +62,17 @@ module Punchblock
         repeat-times='10'
         max-time='30000'
         voice='allison'
-        renderer='swift'>Hello world</output>
+        renderer='swift'>
+  <document content-type="application/ssml+xml">
+    <![CDATA[
+      <speak version="1.0"
+            xmlns="http://www.w3.org/2001/10/synthesis"
+            xml:lang="en-US">
+        <say-as interpret-as="ordinal">100</say-as>
+      </speak>
+    ]]>
+  </document>
+</output>
           MESSAGE
         end
 
@@ -69,73 +88,62 @@ module Punchblock
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
-        its(:text)             { should be == 'Hello world' }
+        its(:render_document)  { should be == Output::Document.new(:value => ssml_doc) }
+      end
 
-        context "with SSML" do
-          let :stanza do
-            <<-MESSAGE
-<output xmlns='urn:xmpp:rayo:output:1'
-        interrupt-on='speech'
-        start-offset='2000'
-        start-paused='false'
-        repeat-interval='2000'
-        repeat-times='10'
-        max-time='30000'
-        voice='allison'
-        renderer='swift'>
-  <speak version="1.0"
-        xmlns="http://www.w3.org/2001/10/synthesis"
-        xml:lang="en-US">
-    <say-as interpret-as="ordinal">100</say-as>
-  </speak>
-</output>
-            MESSAGE
+      describe Output::Document do
+        describe "when not passing a content type" do
+          subject { Output::Document.new :value => ssml_doc }
+          its(:content_type) { should be == 'application/ssml+xml' }
+        end
+
+        describe 'with an SSML document' do
+          subject { Output::Document.new :value => ssml_doc, :content_type => 'application/ssml+xml' }
+
+          its(:content_type) { should be == 'application/ssml+xml' }
+
+          let(:expected_message) { "<![CDATA[ #{ssml_doc} ]]>" }
+
+          it "should wrap SSML in CDATA" do
+            subject.child.to_xml.should be == expected_message.strip
           end
 
-          def ssml_doc(mode = :ordinal)
-            RubySpeech::SSML.draw do
-              say_as(:interpret_as => mode) { string '100' }
+          its(:value) { should be == ssml_doc }
+
+          describe "comparison" do
+            let(:document2) { Output::Document.new :value => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>' }
+            let(:document3) { Output::Document.new :value => ssml_doc }
+            let(:document4) { Output::Document.new :value => ssml_doc(:normal) }
+
+            it { should be == document2 }
+            it { should be == document3 }
+            it { should_not be == document4 }
+          end
+        end
+
+        describe 'with a grammar reference by URL' do
+          let(:url) { 'http://foo.com/bar.grxml' }
+
+          subject { Input::Grammar.new :url => url }
+
+          its(:url)           { should be == url }
+          its(:content_type)  { should be nil}
+
+          describe "comparison" do
+            it "should be the same with the same url" do
+              Input::Grammar.new(:url => url).should be == Input::Grammar.new(:url => url)
+            end
+
+            it "should be different with a different url" do
+              Input::Grammar.new(:url => url).should_not be == Input::Grammar.new(:url => 'http://doo.com/dah')
             end
           end
-
-          its(:ssml) { should be == ssml_doc }
-        end
-      end
-
-      describe "for text" do
-        subject { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
-
-        its(:voice) { should be == 'kate' }
-        its(:text) { should be == 'Once upon a time there was a message...' }
-      end
-
-      describe "for SSML" do
-        def ssml_doc(mode = :ordinal)
-          RubySpeech::SSML.draw do
-            say_as(:interpret_as => mode) { string '100' }
-          end
-        end
-
-        subject { Output.new :ssml => ssml_doc, :voice => 'kate' }
-
-        its(:voice) { should be == 'kate' }
-
-        its(:ssml) { should be == ssml_doc }
-
-        describe "comparison" do
-          let(:output2) { Output.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>', :voice => 'kate'  }
-          let(:output3) { Output.new :ssml => ssml_doc, :voice => 'kate'  }
-          let(:output4) { Output.new :ssml => ssml_doc(:normal), :voice => 'kate'  }
-
-          it { should be == output2 }
-          it { should be == output3 }
-          it { should_not be == output4 }
         end
       end
 
       describe "actions" do
         let(:mock_client) { mock 'Client' }
-        let(:command) { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
+        let(:command) { Output.new :render_document => {:value => ssml_doc}, :voice => 'kate' }
 
         before do
           command.component_id = 'abc123'

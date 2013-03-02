@@ -35,7 +35,7 @@ module Punchblock
           end
 
           def validate
-            raise OptionError, 'An SSML document is required.' unless @component_node.ssml
+            raise OptionError, 'An SSML document is required.' unless @component_node.render_document.value
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
               raise OptionError, "A #{opt} value is unsupported." if @component_node.send opt

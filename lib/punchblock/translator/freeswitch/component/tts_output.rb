@@ -17,7 +17,7 @@ module Punchblock
           end
 
           def document
-            @component_node.ssml.to_s
+            @component_node.render_document.value.to_s
           end
         end
       end

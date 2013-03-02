@@ -23,7 +23,7 @@ module Punchblock
           end
 
           let :command_options do
-            { :ssml => ssml_doc }
+            { :render_document => {:value => ssml_doc} }
           end
 
           subject { Output.new original_command, mock_call }
@@ -45,7 +45,7 @@ module Punchblock
             let(:command_opts) { {} }
 
             let :command_options do
-              { :ssml => ssml_doc }.merge(command_opts)
+              { :render_document => {:value => ssml_doc} }.merge(command_opts)
             end
 
             let :original_command do
@@ -54,7 +54,8 @@ module Punchblock
 
             describe 'ssml' do
               context 'unset' do
-                let(:command_opts) { { :ssml => nil } }
+                let(:ssml_doc) { nil }
+
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
@@ -62,38 +63,10 @@ module Punchblock
                 end
               end
 
-              context 'with a string (not SSML)' do
-                let :command_options do
-                  { :text => 'Foo Bar' }
-                end
-
-                it "should return an unrenderable document error" do
-                  subject.execute
-                  error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
-                  original_command.response(0.1).should be == error
-                end
-
-                context 'with a single text node without spaces' do
-                  let(:audio_filename) { 'http://foo.com/bar.mp3' }
-                  let :command_options do
-                    {
-                      :ssml => RubySpeech::SSML.draw { string audio_filename }
-                    }
-                  end
-
-                  it 'should playback the audio file using the playback application' do
-                    expect_playback
-                    subject.execute
-                  end
-                end
-              end
-
               context 'with a single audio SSML node' do
                 let(:audio_filename) { 'http://foo.com/bar.mp3' }
-                let :command_options do
-                  {
-                    :ssml => RubySpeech::SSML.draw { audio :src => audio_filename }
-                  }
+                let :ssml_doc do
+                  RubySpeech::SSML.draw { audio :src => audio_filename }
                 end
 
                 it 'should playback the audio file using the playback application' do
@@ -125,13 +98,11 @@ module Punchblock
               context 'with multiple audio SSML nodes' do
                 let(:audio_filename1) { 'http://foo.com/bar.mp3' }
                 let(:audio_filename2) { 'http://foo.com/baz.mp3' }
-                let :command_options do
-                  {
-                    :ssml => RubySpeech::SSML.draw do
-                      audio :src => audio_filename1
-                      audio :src => audio_filename2
-                    end
-                  }
+                let :ssml_doc do
+                  RubySpeech::SSML.draw do
+                    audio :src => audio_filename1
+                    audio :src => audio_filename2
+                  end
                 end
 
                 it 'should playback all audio files using playback' do
@@ -148,12 +119,10 @@ module Punchblock
               end
 
               context "with an SSML document containing elements other than <audio/>" do
-                let :command_options do
-                  {
-                    :ssml => RubySpeech::SSML.draw do
-                      string "Foo Bar"
-                    end
-                  }
+                let :ssml_doc do
+                  RubySpeech::SSML.draw do
+                    string "Foo Bar"
+                  end
                 end
 
                 it "should return an unrenderable document error" do

@@ -347,7 +347,7 @@ module Punchblock
 
             it "should cause all components to send complete events before sending end event" do
               ssml_doc = RubySpeech::SSML.draw { audio { 'foo.wav' } }
-              comp_command = Punchblock::Component::Output.new :ssml => ssml_doc
+              comp_command = Punchblock::Component::Output.new :render_document => {:value => ssml_doc}
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
@@ -879,7 +879,7 @@ module Punchblock
 
             context "for a component which began executing but crashed" do
               let :component_command do
-                Punchblock::Component::Output.new :ssml => RubySpeech::SSML.draw
+                Punchblock::Component::Output.new :render_document => {:value => RubySpeech::SSML.draw}
               end
 
               let(:comp_id) { component_command.response.id }

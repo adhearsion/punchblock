@@ -16,7 +16,7 @@ module Punchblock
           end
 
           def execute
-            raise OptionError, 'An SSML document is required.' unless @component_node.ssml
+            raise OptionError, 'An SSML document is required.' unless @component_node.render_document.value
             raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
@@ -75,7 +75,7 @@ module Punchblock
           private
 
           def filenames
-            @filenames ||= @component_node.ssml.children.map do |node|
+            @filenames ||= @component_node.render_document.value.children.map do |node|
               case node
               when RubySpeech::SSML::Audio
                 node.src
@@ -98,7 +98,7 @@ module Punchblock
           end
 
           def escaped_doc
-            @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
+            @component_node.render_document.value.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
           end
 
           def escape_commas(text)

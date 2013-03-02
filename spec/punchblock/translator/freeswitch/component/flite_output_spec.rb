@@ -25,7 +25,7 @@ module Punchblock
           end
 
           let :command_options do
-            { :ssml => ssml_doc }
+            { :render_document => {:value => ssml_doc} }
           end
 
           def execute
@@ -43,7 +43,7 @@ module Punchblock
             let(:command_opts) { {} }
 
             let :command_options do
-              { :ssml => ssml_doc }.merge(command_opts)
+              { :render_document => {:value => ssml_doc} }.merge(command_opts)
             end
 
             let :original_command do
@@ -52,7 +52,7 @@ module Punchblock
 
             describe 'ssml' do
               context 'unset' do
-                let(:command_opts) { { :ssml => nil } }
+                let(:ssml_doc) { nil }
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'An SSML document is required.'

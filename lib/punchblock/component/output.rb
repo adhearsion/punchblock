@@ -10,8 +10,7 @@ module Punchblock
       #
       # @param [Hash] options
       # @option options [String, Optional] :text to speak back
-      # @option options [String, Optional] :voice with which to render TTS
-      # @option options [String, Optional] :ssml document to render TTS
+      # @option options [Document] :render_document document to render TTS
       # @option options [Symbol] :interrupt_on input type on which to interrupt output. May be :speech, :dtmf or :any
       # @option options [Integer] :start_offset Indicates some offset through which the output should be skipped before rendering begins.
       # @option options [true, false] :start_paused Indicates wether or not the component should be started in a paused state to be resumed at a later time.
@@ -22,7 +21,7 @@ module Punchblock
       # @return [Command::Output] an Rayo "output" command
       #
       # @example
-      #   output :text => 'Hello brown cow.'
+      #   output :render_document => {:content => RubySpeech::SSML.draw }
       #
       #   returns:
       #     <output xmlns="urn:xmpp:rayo:output:1">Hello brown cow.</output>
@@ -31,8 +30,6 @@ module Punchblock
         super().tap do |new_node|
           case options
           when Hash
-            new_node.ssml = options.delete(:ssml) if options[:ssml]
-            new_node << options.delete(:text) if options[:text]
             options.each_pair { |k,v| new_node.send :"#{k}=", v }
           when Nokogiri::XML::Element
             new_node.inherit options
@@ -52,25 +49,6 @@ module Punchblock
       #
       def voice=(voice)
         write_attr :voice, voice
-      end
-
-      ##
-      # @return [String] the SSML document to render TTS
-      #
-      def ssml
-        node = children.first
-        RubySpeech::SSML.import node if node
-      end
-
-      ##
-      # @param [String] ssml the SSML document to render TTS
-      #
-      def ssml=(ssml)
-        return unless ssml
-        unless ssml.is_a?(RubySpeech::SSML::Element)
-          ssml = RubySpeech::SSML.import ssml
-        end
-        self << ssml
       end
 
       ##
@@ -172,7 +150,116 @@ module Punchblock
       end
 
       def inspect_attributes
-        super + [:voice, :ssml, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time, :renderer]
+        super + [:voice, :render_document, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time, :renderer]
+      end
+
+      ##
+      # @return [Document] the document to render
+      #
+      def render_document
+        node = find_first 'ns:document', :ns => self.class.registered_ns
+        Document.new node if node
+      end
+
+      ##
+      # @param [Hash] other
+      # @option other [String] :content_type the document content type
+      # @option other [String] :value the output doucment
+      # @option other [String] :url the url from which to fetch the document
+      #
+      def render_document=(other)
+        return unless other
+        remove_children :document
+        document = Document.new(other) unless other.is_a?(Document)
+        self << document
+      end
+
+      class Document < RayoNode
+        ##
+        # @param [Hash] options
+        # @option options [String] :content_type the document content type
+        # @option options [String] :value the output document
+        # @option options [String] :url the url from which to fetch the document
+        #
+        def self.new(options = {})
+          super(:document).tap do |new_node|
+            case options
+            when Nokogiri::XML::Node
+              new_node.inherit options
+            when Hash
+              new_node.content_type = options[:content_type]
+              new_node.value = options[:value]
+              new_node.url = options[:url]
+            end
+          end
+        end
+
+        ##
+        # @return [String] the URL from which the fetch the grammar
+        #
+        def url
+          read_attr 'url'
+        end
+
+        ##
+        # @param [String] other the URL from which the fetch the grammar
+        #
+        def url=(other)
+          write_attr 'url', other
+        end
+
+        ##
+        # @return [String] the document content type
+        #
+        def content_type
+          read_attr 'content-type'
+        end
+
+        ##
+        # @param [String] content_type Defaults to SSML
+        #
+        def content_type=(content_type)
+          return unless content_type
+          write_attr 'content-type', content_type
+        end
+
+        ##
+        # @return [String, RubySpeech::SSML::Speak] the document
+        def value
+          return nil unless content.present?
+          if ssml?
+            RubySpeech::SSML.import content
+          else
+            content
+          end
+        end
+
+        ##
+        # @param [String, RubySpeech::SSML::Speak] value the document
+        def value=(value)
+          return unless value
+          self.content_type = ssml_content_type unless self.content_type
+          if ssml? && !value.is_a?(RubySpeech::SSML::Element)
+            value = RubySpeech::SSML.import value
+          end
+          Nokogiri::XML::Builder.with(self) do |xml|
+            xml.cdata " #{value} "
+          end
+        end
+
+        def inspect_attributes # :nodoc:
+          [:url, :content_type, :value] + super
+        end
+
+        private
+
+        def ssml_content_type
+          'application/ssml+xml'
+        end
+
+        def ssml?
+          content_type == ssml_content_type
+        end
       end
 
       state_machine :state do

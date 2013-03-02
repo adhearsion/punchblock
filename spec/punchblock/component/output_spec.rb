@@ -70,6 +70,36 @@ module Punchblock
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
         its(:text)             { should be == 'Hello world' }
+
+        context "with SSML" do
+          let :stanza do
+            <<-MESSAGE
+<output xmlns='urn:xmpp:rayo:output:1'
+        interrupt-on='speech'
+        start-offset='2000'
+        start-paused='false'
+        repeat-interval='2000'
+        repeat-times='10'
+        max-time='30000'
+        voice='allison'
+        renderer='swift'>
+  <speak version="1.0"
+        xmlns="http://www.w3.org/2001/10/synthesis"
+        xml:lang="en-US">
+    <say-as interpret-as="ordinal">100</say-as>
+  </speak>
+</output>
+            MESSAGE
+          end
+
+          def ssml_doc(mode = :ordinal)
+            RubySpeech::SSML.draw do
+              say_as(:interpret_as => mode) { string '100' }
+            end
+          end
+
+          its(:ssml) { should be == ssml_doc }
+        end
       end
 
       describe "for text" do

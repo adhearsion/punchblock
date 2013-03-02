@@ -82,7 +82,7 @@ module Punchblock
       describe "for SSML" do
         def ssml_doc(mode = :ordinal)
           RubySpeech::SSML.draw do
-            say_as(:interpret_as => mode) { 100 }
+            say_as(:interpret_as => mode) { string '100' }
           end
         end
 
@@ -93,7 +93,7 @@ module Punchblock
         its(:ssml) { should be == ssml_doc }
 
         describe "comparison" do
-          let(:output2) { Output.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal"/></speak>', :voice => 'kate'  }
+          let(:output2) { Output.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>', :voice => 'kate'  }
           let(:output3) { Output.new :ssml => ssml_doc, :voice => 'kate'  }
           let(:output4) { Output.new :ssml => ssml_doc(:normal), :voice => 'kate'  }
 

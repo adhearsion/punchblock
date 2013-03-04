@@ -128,9 +128,11 @@ module Punchblock
           @direction = :outbound
 
           cid_number, cid_name = dial_command.from, nil
-          dial_command.from.match(/(?<cid_name>.*)<(?<cid_number>.*)>/) do |m|
-            cid_name = m[:cid_name].strip
-            cid_number = m[:cid_number]
+          if dial_command.from
+            dial_command.from.match(/(?<cid_name>.*)<(?<cid_number>.*)>/) do |m|
+              cid_name = m[:cid_name].strip
+              cid_number = m[:cid_number]
+            end
           end
 
           options = {

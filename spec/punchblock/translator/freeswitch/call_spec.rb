@@ -279,6 +279,15 @@ module Punchblock
             end
           end
 
+          context 'with no from attribute' do
+            let(:from) { nil }
+
+            it 'sends an originate bgapi command with the cid fields set correctly' do
+              stream.should_receive(:bgapi).once.with "originate {return_ring_ready=true,origination_uuid=#{subject.id}}#{to} &park()"
+              subject.dial dial_command
+            end
+          end
+
           context 'with a timeout specified' do
             let :dial_command_options do
               { :timeout => 10000 }

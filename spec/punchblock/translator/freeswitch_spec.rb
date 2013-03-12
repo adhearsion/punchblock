@@ -550,7 +550,67 @@ module Punchblock
           end
         end
 
-        describe 'with an event with an Other-Leg-Unique-ID value' do
+        describe "with a CHANNEL_BRIDGE event" do
+          describe 'with an Other-Leg-Unique-ID value' do
+            let(:call_a) { Freeswitch::Call.new Punchblock.new_uuid, subject }
+            let(:call_b) { Freeswitch::Call.new Punchblock.new_uuid, subject }
+
+            before do
+              subject.register_call call_a
+              subject.register_call call_b
+            end
+
+            let :es_event do
+              RubyFS::Event.new nil, {
+                :event_name           => 'CHANNEL_BRIDGE',
+                :unique_id            => call_a.id,
+                :other_leg_unique_id  => call_b.id
+              }
+            end
+
+            it "is delivered to the bridging leg" do
+              call_a.should_receive(:handle_es_event!).once.with es_event
+              subject.handle_es_event es_event
+            end
+
+            it "is delivered to the other leg" do
+              call_b.should_receive(:handle_es_event!).once.with es_event
+              subject.handle_es_event es_event
+            end
+          end
+        end
+
+        describe "with a CHANNEL_UNBRIDGE event" do
+          describe 'with an Other-Leg-Unique-ID value' do
+            let(:call_a) { Freeswitch::Call.new Punchblock.new_uuid, subject }
+            let(:call_b) { Freeswitch::Call.new Punchblock.new_uuid, subject }
+
+            before do
+              subject.register_call call_a
+              subject.register_call call_b
+            end
+
+            let :es_event do
+              RubyFS::Event.new nil, {
+                :event_name           => 'CHANNEL_UNBRIDGE',
+                :unique_id            => call_a.id,
+                :other_leg_unique_id  => call_b.id
+              }
+            end
+
+            it "is delivered to the bridging leg" do
+              call_a.should_receive(:handle_es_event!).once.with es_event
+              subject.handle_es_event es_event
+            end
+
+            it "is delivered to the other leg" do
+              call_b.should_receive(:handle_es_event!).once.with es_event
+              subject.handle_es_event es_event
+            end
+          end
+        end
+
+        describe 'with an Other-Leg-Unique-ID value' do
           let(:call_a) { Freeswitch::Call.new Punchblock.new_uuid, subject }
           let(:call_b) { Freeswitch::Call.new Punchblock.new_uuid, subject }
 
@@ -566,13 +626,9 @@ module Punchblock
             }
           end
 
-          it "is delivered to the bridging leg" do
+          it "is delivered only to the primary leg" do
             call_a.should_receive(:handle_es_event!).once.with es_event
-            subject.handle_es_event es_event
-          end
-
-          it "is delivered to the other leg" do
-            call_b.should_receive(:handle_es_event!).once.with es_event
+            call_b.should_receive(:handle_es_event!).never
             subject.handle_es_event es_event
           end
         end

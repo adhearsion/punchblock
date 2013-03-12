@@ -3,6 +3,7 @@
   * Bugfix: XMPP specs were mistakenly resetting the logger object for other tests.
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command
   * Bugfix: Stop command should be in Rayo ext namespace
+  * Bugfix: On FreeSWITCH, only events relating to bridge start/end should be delivered to bridged calls
 
 # [v1.8.0](https://github.com/adhearsion/punchblock/compare/v1.7.1...v1.8.0) - [2013-01-10](https://rubygems.org/gems/punchblock/versions/1.8.0)
   * Feature: Join command now enforces a list of valid direction attribute values

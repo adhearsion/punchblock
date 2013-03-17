@@ -9,7 +9,6 @@ module Punchblock
 
           def validate
             super
-            raise OptionError, "A voice value is unsupported." if @component_node.voice
             filenames
           end
 

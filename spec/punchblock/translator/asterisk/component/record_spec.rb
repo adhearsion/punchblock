@@ -52,7 +52,7 @@ module Punchblock
               subject.execute
             end
 
-            it "sends a success complete event when the recording ends" do
+            it "sends a max duration complete event when the recording ends" do
               full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
               mock_call.should_receive(:send_ami_action!)
               subject.execute
@@ -60,12 +60,12 @@ module Punchblock
                 e['Channel'] = channel
               end
               mock_call.process_ami_event monitor_stop_event
-              reason.should be_a Punchblock::Component::Record::Complete::Success
+              reason.should be_a Punchblock::Component::Record::Complete::MaxDuration
               recording.uri.should be == full_filename
               original_command.should be_complete
             end
 
-            it "can be called multiple times on the same call" do 
+            it "can be called multiple times on the same call" do
               mock_call.should_receive(:send_ami_action!).twice
               subject.execute
 
@@ -73,7 +73,7 @@ module Punchblock
                 e['Channel'] = channel
               end
 
-              mock_call.process_ami_event monitor_stop_event 
+              mock_call.process_ami_event monitor_stop_event
 
               (Record.new original_command, mock_call).execute
               (Punchblock::Component::Record.new command_options).request!
@@ -307,7 +307,7 @@ module Punchblock
                   end
                   mock_call.process_ami_event monitor_stop_event
 
-                  reason.should be_a Punchblock::Component::Record::Complete::Success
+                  reason.should be_a Punchblock::Component::Record::Complete::MaxDuration
                   recording.uri.should be == full_filename
                   original_command.should be_complete
                 end

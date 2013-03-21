@@ -48,7 +48,7 @@ module Punchblock
               subject.execute
             end
 
-            it "sends a success complete event when the recording ends" do
+            it "sends a maxduration complete event when the recording ends" do
               full_filename = "file://#{filename}"
               subject.execute
               record_stop_event = RubyFS::Event.new nil, {
@@ -56,7 +56,7 @@ module Punchblock
                 :record_file_path => filename
               }
               mock_call.handle_es_event record_stop_event
-              reason.should be_a Punchblock::Component::Record::Complete::Success
+              reason.should be_a Punchblock::Component::Record::Complete::MaxDuration
               recording.uri.should be == full_filename
               original_command.should be_complete
             end

@@ -583,8 +583,12 @@ module Punchblock
       end
 
       class Complete
-        class Success < Event::Complete::Reason
-          register :success, :output_complete
+        class Finish < Event::Complete::Reason
+          register :finish, :output_complete
+        end
+
+        class MaxTime < Event::Complete::Reason
+          register :'max-time', :output_complete
         end
       end
     end # Output

@@ -47,8 +47,8 @@ module Punchblock
             end
           end
 
-          def success_reason
-            Punchblock::Component::Output::Complete::Success.new
+          def finish_reason
+            Punchblock::Component::Output::Complete::Finish.new
           end
         end
       end

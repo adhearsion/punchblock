@@ -79,7 +79,7 @@ module Punchblock
                   block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                 end
                 subject.execute
-                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
               end
 
               describe 'interrupt_on' do
@@ -190,7 +190,7 @@ module Punchblock
                   block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                 end
                 subject.execute
-                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
               end
 
               describe 'ssml' do
@@ -413,7 +413,7 @@ module Punchblock
                         block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                       end
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                     end
                   end
 
@@ -435,7 +435,7 @@ module Punchblock
                         block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                       end
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context "with early media playback" do
@@ -492,7 +492,7 @@ module Punchblock
                       end
                       latch = CountDownLatch.new 1
                       original_command.should_receive(:add_event).once.with do |e|
-                        e.reason.should be_a Punchblock::Component::Output::Complete::Success
+                        e.reason.should be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
                       end
                       subject.execute
@@ -689,7 +689,7 @@ module Punchblock
                         mock_call.process_ami_event! ami_event
                         sleep 0.2
                         original_command.should be_complete
-                        reason.should be_a Punchblock::Component::Output::Complete::Success
+                        reason.should be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do
@@ -719,7 +719,7 @@ module Punchblock
                         mock_call.process_ami_event! ami_event
                         sleep 0.2
                         original_command.should be_complete
-                        reason.should be_a Punchblock::Component::Output::Complete::Success
+                        reason.should be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do

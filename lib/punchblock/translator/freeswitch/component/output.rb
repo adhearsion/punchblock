@@ -43,7 +43,7 @@ module Punchblock
           def complete_reason_for_event(event)
             case event[:application_response]
             when 'FILE PLAYED'
-              success_reason
+              finish_reason
             else
               Punchblock::Event::Complete::Error.new(:details => "Engine error: #{event[:application_response]}")
             end

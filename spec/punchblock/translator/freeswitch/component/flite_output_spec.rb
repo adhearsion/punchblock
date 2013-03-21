@@ -70,7 +70,7 @@ module Punchblock
                   expect_playback
                   execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
-                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                 end
               end
             end

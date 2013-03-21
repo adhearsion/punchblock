@@ -47,7 +47,7 @@ module Punchblock
 
               if interrupt
                 call.register_handler :ami, :name => 'DTMF' do |event|
-                  output_component.stop_by_redirect Punchblock::Component::Output::Complete::Success.new if event['End'] == 'Yes'
+                  output_component.stop_by_redirect finish_reason if event['End'] == 'Yes'
                 end
               end
 
@@ -56,12 +56,12 @@ module Punchblock
             when :unimrcp
               send_ref
               @call.send_agi_action! 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options do |complete_event|
-                output_component.send_complete_event! success_reason
+                output_component.send_complete_event! finish_reason
               end
             when :swift
               send_ref
               @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
-                output_component.send_complete_event! success_reason
+                output_component.send_complete_event! finish_reason
               end
             else
               raise OptionError, 'The renderer foobar is unsupported.'
@@ -93,7 +93,7 @@ module Punchblock
           def playback(path)
             op = current_actor
             @call.send_agi_action! 'EXEC Playback', path do |complete_event|
-              op.send_complete_event! success_reason
+              op.send_complete_event! finish_reason
             end
           end
 
@@ -119,8 +119,8 @@ module Punchblock
             doc
           end
 
-          def success_reason
-            Punchblock::Component::Output::Complete::Success.new
+          def finish_reason
+            Punchblock::Component::Output::Complete::Finish.new
           end
         end
       end

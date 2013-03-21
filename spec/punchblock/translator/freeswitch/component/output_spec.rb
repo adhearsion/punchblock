@@ -78,7 +78,7 @@ module Punchblock
                   expect_playback
                   subject.execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE", :application_response => 'FILE PLAYED')
-                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                 end
 
                 context "when playback returns an error" do
@@ -114,7 +114,7 @@ module Punchblock
                   expect_playback([audio_filename1, audio_filename2].join('!'))
                   subject.execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE", :application_response => "FILE PLAYED")
-                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                 end
               end
 

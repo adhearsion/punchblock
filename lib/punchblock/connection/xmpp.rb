@@ -175,7 +175,7 @@ module Punchblock
       end
 
       def ping_rayo
-        client.write_with_handler Blather::Stanza::Iq::Ping.new(:set, root_domain) do |response|
+        client.write_with_handler Blather::Stanza::Iq::Ping.new(:get, root_domain) do |response|
           begin
             handle_error response if response.is_a? Blather::BlatherError
           rescue ProtocolError => e

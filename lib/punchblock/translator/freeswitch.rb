@@ -63,7 +63,7 @@ module Punchblock
           call.send_offer!
         end
 
-        register_handler :es, [:has_key?, :other_leg_unique_id] => true do |event|
+        register_handler :es, :event_name => ['CHANNEL_BRIDGE', 'CHANNEL_UNBRIDGE'], [:has_key?, :other_leg_unique_id] => true do |event|
           call = call_with_id event[:other_leg_unique_id]
           call.handle_es_event! event if call
           throw :pass

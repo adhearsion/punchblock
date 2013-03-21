@@ -239,10 +239,9 @@ module Punchblock
 
               context 'set' do
                 let(:command_opts) { { :voice => 'alison' } }
-                it "should return an error and not execute any actions" do
+                it "should ignore the voice option" do
+                  expect_playback
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A voice value is unsupported.'
-                  original_command.response(0.1).should be == error
                 end
               end
             end

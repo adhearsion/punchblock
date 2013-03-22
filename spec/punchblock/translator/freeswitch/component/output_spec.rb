@@ -52,7 +52,7 @@ module Punchblock
               Punchblock::Component::Output.new command_options
             end
 
-            describe 'ssml' do
+            describe 'document' do
               context 'unset' do
                 let(:ssml_doc) { nil }
 
@@ -128,6 +128,15 @@ module Punchblock
                 it "should return an unrenderable document error" do
                   subject.execute
                   error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+
+              context 'with multiple documents' do
+                let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
+                it "should return an error and not execute any actions" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'Only a single document is supported.'
                   original_command.response(0.1).should be == error
                 end
               end

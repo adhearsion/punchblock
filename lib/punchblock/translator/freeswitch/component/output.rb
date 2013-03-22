@@ -17,7 +17,7 @@ module Punchblock
           end
 
           def filenames
-            @filenames ||= @component_node.render_document.value.children.map do |node|
+            @filenames ||= @component_node.render_documents.first.value.children.map do |node|
               case node
               when RubySpeech::SSML::Audio
                 node.src

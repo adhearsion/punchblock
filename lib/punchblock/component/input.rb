@@ -169,7 +169,7 @@ module Punchblock
 
       ##
       # @param[Array<Hash>] others
-      # @see #grammar for hash format
+      # @see #grammar= for hash format
       #
       def grammars=(others)
         remove_children :grammar

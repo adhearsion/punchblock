@@ -50,7 +50,7 @@ module Punchblock
               Punchblock::Component::Output.new command_options
             end
 
-            describe 'ssml' do
+            describe 'document' do
               context 'unset' do
                 let(:ssml_doc) { nil }
                 it "should return an error and not execute any actions" do
@@ -71,6 +71,15 @@ module Punchblock
                   execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
                   original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                end
+              end
+
+              context 'with multiple documents' do
+                let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
+                it "should return an error and not execute any actions" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'Only a single document is supported.'
+                  original_command.response(0.1).should be == error
                 end
               end
             end

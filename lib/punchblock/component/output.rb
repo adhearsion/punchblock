@@ -150,15 +150,15 @@ module Punchblock
       end
 
       def inspect_attributes
-        super + [:voice, :render_document, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time, :renderer]
+        super + [:voice, :render_documents, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time, :renderer]
       end
 
       ##
       # @return [Document] the document to render
       #
-      def render_document
-        node = find_first 'ns:document', :ns => self.class.registered_ns
-        Document.new node if node
+      def render_documents
+        nodes = find 'ns:document', :ns => self.class.registered_ns
+        nodes.map { |node| Document.new node }
       end
 
       ##
@@ -168,10 +168,19 @@ module Punchblock
       # @option other [String] :url the url from which to fetch the document
       #
       def render_document=(other)
-        return unless other
+        self.render_documents = [other].compact
+      end
+
+      ##
+      # @param[Array<Hash>] others
+      # @see #render_document= for hash format
+      #
+      def render_documents=(others)
         remove_children :document
-        document = Document.new(other) unless other.is_a?(Document)
-        self << document
+        others.each do |other|
+          document = Document.new(other) unless other.is_a?(Document)
+          self << document
+        end
       end
 
       def ssml=(other)

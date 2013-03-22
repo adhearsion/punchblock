@@ -18,7 +18,7 @@ module Punchblock
         its(:max_time)         { should be nil }
         its(:voice)            { should be nil }
         its(:renderer)         { should be nil }
-        its(:render_document)  { should be nil }
+        its(:render_documents) { should be == [] }
       end
 
       def ssml_doc(mode = :ordinal)
@@ -48,14 +48,41 @@ module Punchblock
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
-        its(:render_document)  { should be == Output::Document.new(:value => ssml_doc) }
+        its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc)] }
 
         context "using #ssml=" do
           subject do
             Output.new :ssml => ssml_doc
           end
 
-          its(:render_document) { should be == Output::Document.new(:value => ssml_doc) }
+          its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc)] }
+        end
+
+        context "with multiple documents" do
+          subject do
+            Output.new :render_documents => [
+              {:value => ssml_doc},
+              {:value => ssml_doc(:cardinal)}
+            ]
+          end
+
+          its(:render_documents) { should be == [
+            Output::Document.new(:value => ssml_doc),
+            Output::Document.new(:value => ssml_doc(:cardinal))
+          ]}
+        end
+
+        context "with a nil document" do
+          it "removes all documents" do
+            subject.render_document = nil
+            subject.render_documents.should == []
+          end
+        end
+
+        context "without any documents" do
+          subject { described_class.new }
+
+          its(:render_documents) { should == [] }
         end
       end
 
@@ -71,6 +98,15 @@ module Punchblock
         max-time='30000'
         voice='allison'
         renderer='swift'>
+  <document content-type="application/ssml+xml">
+    <![CDATA[
+      <speak version="1.0"
+            xmlns="http://www.w3.org/2001/10/synthesis"
+            xml:lang="en-US">
+        <say-as interpret-as="ordinal">100</say-as>
+      </speak>
+    ]]>
+  </document>
   <document content-type="application/ssml+xml">
     <![CDATA[
       <speak version="1.0"
@@ -96,7 +132,7 @@ module Punchblock
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
-        its(:render_document)  { should be == Output::Document.new(:value => ssml_doc) }
+        its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc), Output::Document.new(:value => ssml_doc)] }
       end
 
       describe Output::Document do

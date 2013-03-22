@@ -174,6 +174,10 @@ module Punchblock
         self << document
       end
 
+      def ssml=(other)
+        self.render_document = {:value => other}
+      end
+
       class Document < RayoNode
         ##
         # @param [Hash] options

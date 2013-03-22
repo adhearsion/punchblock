@@ -49,6 +49,14 @@ module Punchblock
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
         its(:render_document)  { should be == Output::Document.new(:value => ssml_doc) }
+
+        context "using #ssml=" do
+          subject do
+            Output.new :ssml => ssml_doc
+          end
+
+          its(:render_document) { should be == Output::Document.new(:value => ssml_doc) }
+        end
       end
 
       describe "from a stanza" do

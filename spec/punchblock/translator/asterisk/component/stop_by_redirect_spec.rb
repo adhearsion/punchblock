@@ -15,7 +15,7 @@ module Punchblock
             end
           end
 
-          let(:mock_call) { mock 'Call', :id => 'foo' }
+          let(:mock_call) { Call.new 'SIP/foo', mock('Translator') }
           subject { MockComponent.new Hash.new, mock_call }
 
           describe "#execute_command" do
@@ -37,7 +37,7 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.should_receive(:redirect_back!)
+                mock_call.async.should_receive(:redirect_back)
                 mock_call.should_receive(:register_handler).with do |type, *guards|
                   type.should be == :ami
                   guards.should have(2).guards

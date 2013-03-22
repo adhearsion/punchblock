@@ -42,7 +42,7 @@ module Punchblock
               end
               component = current_actor
               RubyAMI::Action.new @component_node.name, headers do |response|
-                component.handle_response! response
+                component.async.handle_response response
               end
             end
 

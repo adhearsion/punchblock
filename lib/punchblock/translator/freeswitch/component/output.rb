@@ -35,7 +35,7 @@ module Punchblock
           def playback(path)
             op = current_actor
             register_handler :es, :event_name => 'CHANNEL_EXECUTE_COMPLETE' do |event|
-              op.send_complete_event! complete_reason_for_event(event)
+              op.async.send_complete_event complete_reason_for_event(event)
             end
             application 'playback', path
           end

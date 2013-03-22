@@ -70,12 +70,13 @@ module Punchblock
               end
 
               it "should execute Swift" do
-                mock_call.should_receive(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
+                mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options
                 subject.execute
               end
 
               it 'should send a complete event when Swift completes' do
-                def mock_call.send_agi_action!(*args, &block)
+                async_proxy = mock_call.async
+                def async_proxy.send_agi_action(*args, &block)
                   block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                 end
                 subject.execute
@@ -86,7 +87,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
                   it "should not add interrupt arguments" do
-                    mock_call.should_receive(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
+                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options
                     subject.execute
                   end
                 end
@@ -95,7 +96,7 @@ module Punchblock
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should add the interrupt options to the argument" do
                     expect_answered
-                    mock_call.should_receive(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
+                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
                 end
@@ -104,7 +105,7 @@ module Punchblock
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should add the interrupt options to the argument" do
                     expect_answered
-                    mock_call.should_receive(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
+                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
                     subject.execute
                   end
                 end
@@ -123,7 +124,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :voice => nil } }
                   it "should not add a voice at the beginning of the argument" do
-                    mock_call.should_receive(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options
+                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options
                     subject.execute
                   end
                 end
@@ -131,7 +132,7 @@ module Punchblock
                 context "set to Leonard" do
                   let(:command_opts) { { :voice => "Leonard" } }
                   it "should add a voice at the beginning of the argument" do
-                    mock_call.should_receive(:send_agi_action!).once.with 'EXEC Swift', ssml_with_options('Leonard^', '')
+                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options('Leonard^', '')
                     subject.execute
                   end
                 end
@@ -158,14 +159,14 @@ module Punchblock
               end
 
               def expect_mrcpsynth_with_options(options)
-                mock_call.should_receive(:send_agi_action!).once.with do |*args|
+                mock_call.async.should_receive(:send_agi_action).once.with do |*args|
                   args[0].should be == 'EXEC MRCPSynth'
                   args[2].should match options
                 end
               end
 
               it "should execute MRCPSynth" do
-                mock_call.should_receive(:send_agi_action!).once.with 'EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, ''
+                mock_call.async.should_receive(:send_agi_action).once.with 'EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, ''
                 subject.execute
               end
 
@@ -177,7 +178,7 @@ module Punchblock
                 end
 
                 it 'should escape TTS strings containing a comma' do
-                  mock_call.should_receive(:send_agi_action!).once.with do |*args|
+                  mock_call.async.should_receive(:send_agi_action).once.with do |*args|
                     args[0].should be == 'EXEC MRCPSynth'
                     args[1].should match(/this\\, here\\, is a test/)
                   end
@@ -186,7 +187,8 @@ module Punchblock
               end
 
               it 'should send a complete event when MRCPSynth completes' do
-                def mock_call.send_agi_action!(*args, &block)
+                async_proxy = mock_call.async
+                def async_proxy.send_agi_action(*args, &block)
                   block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                 end
                 subject.execute
@@ -358,11 +360,11 @@ module Punchblock
             [:asterisk, nil].each do |media_engine|
               context "with a media engine of #{media_engine.inspect}" do
                 def expect_playback(filename = audio_filename)
-                  mock_call.should_receive(:send_agi_action!).once.with 'EXEC Playback', filename
+                  mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Playback', filename
                 end
 
                 def expect_playback_noanswer
-                  mock_call.should_receive(:send_agi_action!).once.with 'EXEC Playback', audio_filename + ',noanswer'
+                  mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Playback', audio_filename + ',noanswer'
                 end
 
                 let(:audio_filename) { 'http://foo.com/bar.mp3' }
@@ -411,7 +413,8 @@ module Punchblock
                       def mock_call.answered?
                         true
                       end
-                      def mock_call.send_agi_action!(*args, &block)
+                      async_proxy = mock_call.async
+                      def async_proxy.send_agi_action(*args, &block)
                         block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                       end
                       subject.execute
@@ -435,7 +438,8 @@ module Punchblock
 
                     it 'should send a complete event when the file finishes playback' do
                       expect_answered
-                      def mock_call.send_agi_action!(*args, &block)
+                      async_proxy = mock_call.async
+                      def async_proxy.send_agi_action(*args, &block)
                         block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                       end
                       subject.execute
@@ -503,7 +507,8 @@ module Punchblock
 
                     it 'should send a complete event after the final file has finished playback' do
                       expect_answered
-                      def mock_call.send_agi_action!(*args, &block)
+                      async_proxy = mock_call.async
+                      def async_proxy.send_agi_action(*args, &block)
                         block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
                       end
                       latch = CountDownLatch.new 1
@@ -682,7 +687,7 @@ module Punchblock
                     it "does not redirect the call" do
                       expect_answered
                       expect_playback
-                      mock_call.should_receive(:redirect_back!).never
+                      mock_call.async.should_receive(:redirect_back).never
                       subject.execute
                       original_command.response(0.1).should be_a Ref
                       send_ami_events_for_dtmf 1
@@ -699,19 +704,19 @@ module Punchblock
 
                     context "when a DTMF digit is received" do
                       it "sends the correct complete event" do
-                        mock_call.should_receive :redirect_back!
+                        mock_call.async.should_receive :redirect_back
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         original_command.should_not be_complete
                         send_ami_events_for_dtmf 1
-                        mock_call.process_ami_event! ami_event
+                        mock_call.async.process_ami_event ami_event
                         sleep 0.2
                         original_command.should be_complete
                         reason.should be_a Punchblock::Component::Output::Complete::Success
                       end
 
                       it "redirects the call back to async AGI" do
-                        mock_call.should_receive(:redirect_back!).once
+                        mock_call.async.should_receive(:redirect_back).once
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         send_ami_events_for_dtmf 1
@@ -729,19 +734,19 @@ module Punchblock
 
                     context "when a DTMF digit is received" do
                       it "sends the correct complete event" do
-                        mock_call.should_receive :redirect_back!
+                        mock_call.async.should_receive :redirect_back
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         original_command.should_not be_complete
                         send_ami_events_for_dtmf 1
-                        mock_call.process_ami_event! ami_event
+                        mock_call.async.process_ami_event ami_event
                         sleep 0.2
                         original_command.should be_complete
                         reason.should be_a Punchblock::Component::Output::Complete::Success
                       end
 
                       it "redirects the call back to async AGI" do
-                        mock_call.should_receive(:redirect_back!).once
+                        mock_call.async.should_receive(:redirect_back).once
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         send_ami_events_for_dtmf 1
@@ -782,7 +787,7 @@ module Punchblock
 
               it "should use the media renderer set and not the platform default" do
                 expect_answered
-                mock_call.should_receive(:send_agi_action!).once.with 'EXEC Playback', audio_filename
+                mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Playback', audio_filename
                 subject.execute
               end
             end
@@ -818,13 +823,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.should_receive(:redirect_back!)
+                mock_call.async.should_receive(:redirect_back)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                mock_call.should_receive(:redirect_back!)
+                mock_call.async.should_receive(:redirect_back)
                 subject.execute_command command
                 original_command.should_not be_complete
                 mock_call.process_ami_event ami_event
@@ -833,7 +838,7 @@ module Punchblock
               end
 
               it "redirects the call by unjoining it" do
-                mock_call.should_receive(:redirect_back!)
+                mock_call.async.should_receive(:redirect_back)
                 subject.execute_command command
               end
             end

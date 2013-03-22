@@ -22,7 +22,7 @@ module Punchblock
                     :min_confidence       => 0.5
         end
 
-        its(:grammar)             { should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
+        its(:grammars)            { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom')] }
         its(:mode)                { should be == :speech }
         its(:terminator)          { should be == '#' }
         its(:max_silence)         { should be == 1000 }
@@ -31,6 +31,33 @@ module Punchblock
         its(:inter_digit_timeout) { should be == 2000 }
         its(:sensitivity)         { should be == 0.5 }
         its(:min_confidence)      { should be == 0.5 }
+
+        context "with multiple grammars" do
+          subject do
+            Input.new :grammars => [
+              {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'},
+              {:value => '[10 DIGITS]', :content_type => 'application/grammar+custom'}
+            ]
+          end
+
+          its(:grammars) { should be == [
+            Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'),
+            Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')
+          ]}
+        end
+
+        context "with a nil grammar" do
+          it "removes all grammars" do
+            subject.grammar = nil
+            subject.grammars.should == []
+          end
+        end
+
+        context "without any grammars" do
+          subject { Input.new }
+
+          its(:grammars) { should == [] }
+        end
       end
 
       describe "from a stanza" do
@@ -48,6 +75,9 @@ module Punchblock
   <grammar content-type="application/grammar+custom">
     <![CDATA[ [5 DIGITS] ]]>
   </grammar>
+  <grammar content-type="application/grammar+custom">
+    <![CDATA[ [10 DIGITS] ]]>
+  </grammar>
 </input>
           MESSAGE
         end
@@ -56,7 +86,7 @@ module Punchblock
 
         it { should be_instance_of Input }
 
-        its(:grammar)             { should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
+        its(:grammars)            { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'), Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')] }
         its(:mode)                { should be == :speech }
         its(:terminator)          { should be == '#' }
         its(:max_silence)         { should be == 1000 }
@@ -65,6 +95,11 @@ module Punchblock
         its(:inter_digit_timeout) { should be == 2000 }
         its(:sensitivity)         { should be == 0.5 }
         its(:min_confidence)      { should be == 0.5 }
+
+        context "without any grammars" do
+          let(:stanza) { '<input xmlns="urn:xmpp:rayo:input:1"/>' }
+          its(:grammars) { should be == [] }
+        end
       end
 
       def grxml_doc(mode = :dtmf)

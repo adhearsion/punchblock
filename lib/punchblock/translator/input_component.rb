@@ -8,7 +8,7 @@ module Punchblock
 
         component = current_actor
         @recognizer = DTMFRecognizer.new current_actor,
-                                         @component_node.grammar.value,
+                                         @component_node.grammars.first.value,
                                          (@component_node.initial_timeout || -1),
                                          (@component_node.inter_digit_timeout || -1)
 
@@ -48,7 +48,8 @@ module Punchblock
       private
 
       def validate
-        raise OptionError, 'A grammar document is required.' unless @component_node.grammar
+        raise OptionError, 'A grammar document is required.' unless @component_node.grammars.first
+        raise OptionError, 'Only a single grammar is supported.' unless @component_node.grammars.size == 1
         raise OptionError, 'A mode value other than DTMF is unsupported.' unless @component_node.mode == :dtmf
       end
 

@@ -150,11 +150,11 @@ module Punchblock
       end
 
       ##
-      # @return [Grammar] the grammar to activate
+      # @return [Array<Grammar>] the grammars to activate
       #
-      def grammar
-        node = find_first 'ns:grammar', :ns => self.class.registered_ns
-        Grammar.new node if node
+      def grammars
+        nodes = find 'ns:grammar', :ns => self.class.registered_ns
+        nodes.map { |node| Grammar.new node }
       end
 
       ##
@@ -164,14 +164,23 @@ module Punchblock
       # @option other [String] :url the url from which to fetch the grammar
       #
       def grammar=(other)
-        return unless other
+        self.grammars = [other].compact
+      end
+
+      ##
+      # @param[Array<Hash>] others
+      # @see #grammar for hash format
+      #
+      def grammars=(others)
         remove_children :grammar
-        grammar = Grammar.new(other) unless other.is_a?(Grammar)
-        self << grammar
+        others.each do |other|
+          grammar = Grammar.new(other) unless other.is_a?(Grammar)
+          self << grammar
+        end
       end
 
       def inspect_attributes # :nodoc:
-        [:mode, :terminator, :recognizer, :initial_timeout, :inter_digit_timeout, :sensitivity, :min_confidence, :grammar] + super
+        [:mode, :terminator, :recognizer, :initial_timeout, :inter_digit_timeout, :sensitivity, :min_confidence, :grammars] + super
       end
 
       class Grammar < RayoNode

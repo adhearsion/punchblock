@@ -124,6 +124,15 @@ module Punchblock
                   original_command.response(0.1).should be == error
                 end
               end
+
+              context 'with multiple grammars' do
+                let(:original_command_opts) { { :grammars => [{:value => grammar}, {:value => grammar}] } }
+                it "should return an error and not execute any actions" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'Only a single grammar is supported.'
+                  original_command.response(0.1).should be == error
+                end
+              end
             end
 
             describe 'mode' do

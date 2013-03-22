@@ -189,7 +189,7 @@ module Punchblock
                   sleep 1.5
                   send_dtmf 1
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::NoInput
+                  reason.should be_a Punchblock::Component::Input::Complete::InitialTimeout
                 end
               end
 
@@ -235,13 +235,13 @@ module Punchblock
                   reason.should be_a Punchblock::Component::Input::Complete::Match
                 end
 
-                it "should cause a NoMatch complete event to be sent after the timeout" do
+                it "should cause a InterDigitTimeout complete event to be sent after the timeout" do
                   subject.execute
                   sleep 1.5
                   send_dtmf 1
                   sleep 1.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::NoMatch
+                  reason.should be_a Punchblock::Component::Input::Complete::InterDigitTimeout
                 end
               end
 

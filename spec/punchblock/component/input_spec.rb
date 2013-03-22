@@ -287,7 +287,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-<nomatch xmlns='urn:xmpp:rayo:input:complete:1' />
+  <nomatch xmlns='urn:xmpp:rayo:input:complete:1' />
 </complete>
           MESSAGE
         end
@@ -299,20 +299,28 @@ module Punchblock
         its(:name) { should be == :nomatch }
       end
 
-      describe Input::Complete::NoInput do
-        let :stanza do
-          <<-MESSAGE
+      {
+        Input::Complete::InitialTimeout => :'initial-timeout',
+        Input::Complete::InterDigitTimeout => :'inter-digit-timeout',
+        Input::Complete::MaxSilence => :'max-silence',
+        Input::Complete::MinConfidence => :'min-confidence',
+      }.each do |klass, element_name|
+        describe klass do
+          let :stanza do
+            <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-<noinput xmlns='urn:xmpp:rayo:input:complete:1' />
+  <#{element_name} xmlns='urn:xmpp:rayo:input:complete:1' />
 </complete>
-          MESSAGE
+            MESSAGE
+          end
+
+          subject { RayoNode.import(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of klass }
+          it { should be_a Input::Complete::NoInput }
+
+          its(:name) { should be == element_name }
         end
-
-        subject { RayoNode.import(parse_stanza(stanza).root).reason }
-
-        it { should be_instance_of Input::Complete::NoInput }
-
-        its(:name) { should be == :noinput }
       end
     end
   end

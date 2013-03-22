@@ -612,36 +612,25 @@ module Punchblock
       end
     end
 
-    describe Output::Complete::Finish do
-      let :stanza do
-        <<-MESSAGE
+    {
+      Output::Complete::Finish => :finish,
+      Output::Complete::MaxTime => :'max-time',
+    }.each do |klass, element_name|
+      describe klass do
+        let :stanza do
+          <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-<finish xmlns='urn:xmpp:rayo:output:complete:1' />
+<#{element_name} xmlns='urn:xmpp:rayo:output:complete:1' />
 </complete>
-        MESSAGE
+          MESSAGE
+        end
+
+        subject { RayoNode.import(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of klass }
+
+        its(:name) { should be == element_name }
       end
-
-      subject { RayoNode.import(parse_stanza(stanza).root).reason }
-
-      it { should be_instance_of Output::Complete::Finish }
-
-      its(:name) { should be == :finish }
-    end
-
-    describe Output::Complete::MaxTime do
-      let :stanza do
-        <<-MESSAGE
-<complete xmlns='urn:xmpp:rayo:ext:1'>
-<max-time xmlns='urn:xmpp:rayo:output:complete:1' />
-</complete>
-        MESSAGE
-      end
-
-      subject { RayoNode.import(parse_stanza(stanza).root).reason }
-
-      it { should be_instance_of Output::Complete::MaxTime }
-
-      its(:name) { should be == :'max-time' }
     end
   end
 end # Punchblock

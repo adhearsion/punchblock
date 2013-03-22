@@ -55,7 +55,7 @@ module Punchblock
 
       def begin_initial_timer(timeout)
         @initial_timer = after timeout do
-          @responder.noinput
+          @responder.initial_timeout
         end
       end
 
@@ -69,7 +69,7 @@ module Punchblock
         return if @inter_digit_timeout == -1
         @inter_digit_timer ||= begin
           after @inter_digit_timeout/1000 do
-            @responder.nomatch
+            @responder.inter_digit_timeout
           end
         end
         @inter_digit_timer.reset

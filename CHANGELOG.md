@@ -7,6 +7,7 @@
   * Bugfix: On FreeSWITCH, a voice value on an audio-only output component should not prevent execution
   * Bugfix: XMPP Ping should be an IQ get, not set
   * CS: Avoid Celluloid deprecation warnings
+  * Bugfix: Components should transition state before unblocking
 
 # [v1.8.0](https://github.com/adhearsion/punchblock/compare/v1.7.1...v1.8.0) - [2013-01-10](https://rubygems.org/gems/punchblock/versions/1.8.0)
   * Feature: Join command now enforces a list of valid direction attribute values

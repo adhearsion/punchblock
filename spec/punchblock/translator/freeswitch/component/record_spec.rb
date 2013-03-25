@@ -143,7 +143,7 @@ module Punchblock
               context "set to a positive number" do
                 let(:command_options) { { :final_timeout => 10 } }
                 it "should return an error and not execute any actions" do
-                  mock_call.should_receive(:send_agi_action!).never
+                  mock_call.should_receive(:uuid_foo).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A final-timeout value is unsupported.'
                   original_command.response(0.1).should be == error

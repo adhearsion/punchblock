@@ -7,7 +7,7 @@ module Punchblock
     describe Freeswitch do
       let(:connection)    { mock 'Connection::Freeswitch' }
       let(:media_engine)  { :flite }
-      let(:default_voice)  { :hal }
+      let(:default_voice) { :hal }
 
       let(:translator)  { described_class.new connection, media_engine, default_voice }
       let(:stream)      { mock 'RubyFS::Stream' }
@@ -117,7 +117,7 @@ module Punchblock
           end
 
           it 'sends the command to the call for execution' do
-            call.should_receive(:execute_command!).once.with command
+            call.async.should_receive(:execute_command).once.with command
             subject.execute_call_command command
           end
         end
@@ -201,10 +201,11 @@ module Punchblock
       end
 
       describe '#execute_component_command' do
-        let(:component_id)  { '123abc' }
-        let(:component)     { mock 'Translator::Freeswitch::Component', :id => component_id }
+        let(:call)            { Translator::Freeswitch::Call.new 'SIP/foo', subject }
+        let(:component_node)  { Component::Output.new }
+        let(:component)       { Translator::Freeswitch::Component::Output.new(component_node, call) }
 
-        let(:command) { Component::Stop.new.tap { |c| c.component_id = component_id } }
+        let(:command) { Component::Stop.new.tap { |c| c.component_id = component.id } }
 
         before do
           command.request!
@@ -216,7 +217,7 @@ module Punchblock
           end
 
           it 'sends the command to the component for execution' do
-            component.should_receive(:execute_command!).once.with command
+            component.async.should_receive(:execute_command).once.with command
             subject.execute_component_command command
           end
         end
@@ -224,7 +225,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id}", nil, component_id)
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component.id}", nil, component.id)
           end
         end
       end
@@ -257,7 +258,7 @@ module Punchblock
           it 'should instruct the call to send a dial' do
             mock_call = stub('Freeswitch::Call').as_null_object
             Freeswitch::Call.should_receive(:new_link).once.and_return mock_call
-            mock_call.should_receive(:dial!).once.with command
+            mock_call.async.should_receive(:dial).once.with command
             subject.execute_global_command command
           end
         end
@@ -532,7 +533,7 @@ module Punchblock
             mock_call = stub('Freeswitch::Call').as_null_object
             Freeswitch::Call.should_receive(:new).once.and_return mock_call
             subject.wrapped_object.should_receive(:link)
-            mock_call.should_receive(:send_offer!).once
+            mock_call.async.should_receive(:send_offer).once
             subject.handle_es_event es_event
           end
 
@@ -569,12 +570,12 @@ module Punchblock
             end
 
             it "is delivered to the bridging leg" do
-              call_a.should_receive(:handle_es_event!).once.with es_event
+              call_a.async.should_receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
 
             it "is delivered to the other leg" do
-              call_b.should_receive(:handle_es_event!).once.with es_event
+              call_b.async.should_receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
           end
@@ -599,12 +600,12 @@ module Punchblock
             end
 
             it "is delivered to the bridging leg" do
-              call_a.should_receive(:handle_es_event!).once.with es_event
+              call_a.async.should_receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
 
             it "is delivered to the other leg" do
-              call_b.should_receive(:handle_es_event!).once.with es_event
+              call_b.async.should_receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
           end
@@ -627,8 +628,8 @@ module Punchblock
           end
 
           it "is delivered only to the primary leg" do
-            call_a.should_receive(:handle_es_event!).once.with es_event
-            call_b.should_receive(:handle_es_event!).never
+            call_a.async.should_receive(:handle_es_event).once.with es_event
+            call_b.async.should_receive(:handle_es_event).never
             subject.handle_es_event es_event
           end
         end
@@ -643,7 +644,7 @@ module Punchblock
           end
 
           it 'sends the ES event to the call' do
-            call.should_receive(:handle_es_event!).once.with es_event
+            call.async.should_receive(:handle_es_event).once.with es_event
             subject.handle_es_event es_event
           end
         end

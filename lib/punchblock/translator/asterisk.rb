@@ -57,7 +57,7 @@ module Punchblock
       end
 
       def shutdown
-        @calls.values.each(&:shutdown!)
+        @calls.values.each { |call| call.async.shutdown }
         terminate
       end
 
@@ -105,7 +105,7 @@ module Punchblock
 
       def execute_call_command(command)
         if call = call_with_id(command.target_call_id)
-          call.execute_command! command
+          call.async.execute_command command
         else
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{command.target_call_id}", command.target_call_id
         end
@@ -113,7 +113,7 @@ module Punchblock
 
       def execute_component_command(command)
         if (component = component_with_id(command.component_id))
-          component.execute_command! command
+          component.async.execute_command command
         else
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
         end
@@ -124,11 +124,11 @@ module Punchblock
         when Punchblock::Component::Asterisk::AMI::Action
           component = Component::Asterisk::AMIAction.new command, current_actor
           register_component component
-          component.execute!
+          component.async.execute
         when Punchblock::Command::Dial
           call = Call.new_link command.to, current_actor
           register_call call
-          call.dial! command
+          call.async.dial command
         else
           command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command"
         end
@@ -182,9 +182,9 @@ module Punchblock
             call = call_for_channel channel
             if call
               if channel_is_bridged?(channel)
-                call.process_ami_event! event if EVENTS_ALLOWED_BRIDGED.include?(event.name.downcase)
+                call.async.process_ami_event event if EVENTS_ALLOWED_BRIDGED.include?(event.name.downcase)
               else
-                call.process_ami_event! event
+                call.async.process_ami_event event
               end
             end
           end
@@ -216,7 +216,7 @@ module Punchblock
         call = Call.new event['Channel'], current_actor, env
         link call
         register_call call
-        call.send_offer!
+        call.async.send_offer
       end
     end
   end

@@ -70,7 +70,7 @@ module Punchblock
           originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
                                                                               :params => params
           originate_action.request!
-          translator.execute_global_command! originate_action
+          translator.async.execute_global_command originate_action
           dial_command.response = Ref.new :id => id
         end
 
@@ -284,7 +284,7 @@ module Punchblock
           type.new_link(command, current_actor).tap do |component|
             register_component component
             component.internal = true if options[:internal]
-            component.execute!
+            component.async.execute
           end
         end
 

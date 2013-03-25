@@ -27,7 +27,7 @@ module Punchblock
       end
 
       def write(command, options)
-        translator.execute_command! command, options
+        translator.async.execute_command command, options
       end
 
       def handle_event(event)
@@ -37,7 +37,7 @@ module Punchblock
       private
 
       def new_fs_stream
-        RubyFS::Stream.new(*@stream_options, lambda { |e| translator.handle_es_event! e })
+        RubyFS::Stream.new(*@stream_options, lambda { |e| translator.async.handle_es_event e })
       end
 
       def start_stream

@@ -32,7 +32,7 @@ module Punchblock
       describe '#shutdown' do
         it "instructs all calls to shutdown" do
           call = Asterisk::Call.new 'foo', subject
-          call.should_receive(:shutdown!).once
+          call.async.should_receive(:shutdown).once
           subject.register_call call
           subject.shutdown
         end
@@ -147,7 +147,7 @@ module Punchblock
           end
 
           it 'sends the command to the call for execution' do
-            call.should_receive(:execute_command!).once.with command
+            call.async.should_receive(:execute_command).once.with command
             subject.execute_call_command command
           end
         end
@@ -235,10 +235,11 @@ module Punchblock
       end
 
       describe '#execute_component_command' do
-        let(:component_id)  { '123abc' }
-        let(:component)     { mock 'Translator::Asterisk::Component', :id => component_id }
+        let(:call)            { Translator::Asterisk::Call.new 'SIP/foo', subject }
+        let(:component_node)  { Component::Output.new }
+        let(:component)       { Translator::Asterisk::Component::Output.new(component_node, call) }
 
-        let(:command) { Component::Stop.new.tap { |c| c.component_id = component_id } }
+        let(:command) { Component::Stop.new.tap { |c| c.component_id = component.id } }
 
         before do
           command.request!
@@ -250,7 +251,7 @@ module Punchblock
           end
 
           it 'sends the command to the component for execution' do
-            component.should_receive(:execute_command!).once.with command
+            component.async.should_receive(:execute_command).once.with command
             subject.execute_component_command command
           end
         end
@@ -258,7 +259,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id}", nil, component_id)
+            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component.id}", nil, component.id)
           end
         end
       end
@@ -283,7 +284,7 @@ module Punchblock
           it 'should instruct the call to send a dial' do
             mock_call = stub('Asterisk::Call').as_null_object
             Asterisk::Call.should_receive(:new_link).once.and_return mock_call
-            mock_call.should_receive(:dial!).once.with command
+            mock_call.async.should_receive(:dial).once.with command
             subject.execute_global_command command
           end
         end
@@ -297,7 +298,7 @@ module Punchblock
 
           it 'should create a component actor and execute it asynchronously' do
             Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject).and_return mock_action
-            mock_action.should_receive(:execute!).once
+            mock_action.async.should_receive(:execute).once
             subject.execute_global_command command
           end
 
@@ -422,7 +423,7 @@ module Punchblock
             mock_call = stub('Asterisk::Call').as_null_object
             Asterisk::Call.should_receive(:new).once.and_return mock_call
             subject.wrapped_object.should_receive(:link)
-            mock_call.should_receive(:send_offer!).once
+            mock_call.async.should_receive(:send_offer).once
             subject.handle_ami_event ami_event
           end
 
@@ -554,7 +555,7 @@ module Punchblock
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event' do
-            call.should_receive(:process_ami_event!).once.with ami_event
+            call.async.should_receive(:process_ami_event).once.with ami_event
             subject.handle_ami_event ami_event
           end
 
@@ -576,8 +577,8 @@ module Punchblock
               before { subject.register_call call2 }
 
               it 'should send the event to both calls and to the connection once as a PB event' do
-                call.should_receive(:process_ami_event!).once.with ami_event
-                call2.should_receive(:process_ami_event!).once.with ami_event
+                call.async.should_receive(:process_ami_event).once.with ami_event
+                call2.async.should_receive(:process_ami_event).once.with ami_event
                 subject.handle_ami_event ami_event
               end
             end
@@ -612,12 +613,12 @@ module Punchblock
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event if it is an allowed event' do
-            call.should_receive(:process_ami_event!).once.with ami_event
+            call.async.should_receive(:process_ami_event).once.with ami_event
             subject.handle_ami_event ami_event
           end
 
           it 'does not send the AMI event to a bridged channel if it is not allowed' do
-            call.should_receive(:process_ami_event!).never.with ami_event2
+            call.async.should_receive(:process_ami_event).never.with ami_event2
             subject.handle_ami_event ami_event2
           end
 

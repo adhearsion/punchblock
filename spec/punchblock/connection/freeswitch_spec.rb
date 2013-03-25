@@ -63,7 +63,8 @@ module Punchblock
 
       it 'sends events from RubyFS to the translator' do
         event = mock 'RubyFS::Event'
-        subject.translator.should_receive(:handle_es_event!).once.with event
+        subject.translator.async.should_receive(:handle_es_event).once.with event
+        subject.translator.async.should_receive(:handle_es_event).once.with RubyFS::Stream::Disconnected.new
         subject.stream.fire_event event
       end
 
@@ -71,7 +72,7 @@ module Punchblock
         it 'sends a command to the translator' do
           command = mock 'Command'
           options = {:foo => :bar}
-          subject.translator.should_receive(:execute_command!).once.with command, options
+          subject.translator.async.should_receive(:execute_command).once.with command, options
           subject.write command, options
         end
       end

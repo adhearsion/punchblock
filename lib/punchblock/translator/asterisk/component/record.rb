@@ -31,16 +31,16 @@ module Punchblock
             send_ref
 
             if @component_node.start_beep
-              @call.send_agi_action! 'STREAM FILE', 'beep', '""' do
-                component.signal! :beep_finished
+              @call.async.send_agi_action 'STREAM FILE', 'beep', '""' do
+                component.async.signal :beep_finished
               end
               wait :beep_finished
             end
 
-            call.send_ami_action! 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
+            call.async.send_ami_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
             unless max_duration == -1
               after max_duration/1000 do
-                call.send_ami_action! 'StopMonitor', 'Channel' => call.channel
+                call.async.send_ami_action 'StopMonitor', 'Channel' => call.channel
               end
             end
           rescue OptionError => e
@@ -52,17 +52,17 @@ module Punchblock
             when Punchblock::Component::Stop
               command.response = true
               a = current_actor
-              call.send_ami_action! 'StopMonitor', 'Channel' => call.channel do |complete_event|
+              call.async.send_ami_action 'StopMonitor', 'Channel' => call.channel do |complete_event|
                 @complete_reason = stop_reason
               end
             when Punchblock::Component::Record::Pause
               a = current_actor
-              call.send_ami_action! 'PauseMonitor', 'Channel' => call.channel do |complete_event|
+              call.async.send_ami_action 'PauseMonitor', 'Channel' => call.channel do |complete_event|
                 command.response = true
               end
             when Punchblock::Component::Record::Resume
               a = current_actor
-              call.send_ami_action! 'ResumeMonitor', 'Channel' => call.channel do |complete_event|
+              call.async.send_ami_action 'ResumeMonitor', 'Channel' => call.channel do |complete_event|
                 command.response = true
               end
             else

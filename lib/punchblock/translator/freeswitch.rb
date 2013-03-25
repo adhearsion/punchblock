@@ -19,6 +19,8 @@ module Punchblock
 
       trap_exit :actor_died
 
+      finalizer :finalize
+
       def initialize(connection, media_engine = nil, default_voice = nil)
         @connection, @media_engine, @default_voice = connection, media_engine, default_voice
         @calls, @components = {}, {}
@@ -60,18 +62,18 @@ module Punchblock
           call = Call.new event[:unique_id], current_actor, event.content.select { |k,v| k.to_s =~ /variable/ }, stream, @media_engine, @default_voice
           link call
           register_call call
-          call.send_offer!
+          call.async.send_offer
         end
 
         register_handler :es, :event_name => ['CHANNEL_BRIDGE', 'CHANNEL_UNBRIDGE'], [:has_key?, :other_leg_unique_id] => true do |event|
           call = call_with_id event[:other_leg_unique_id]
-          call.handle_es_event! event if call
+          call.async.handle_es_event event if call
           throw :pass
         end
 
         register_handler :es, lambda { |event| es_event_known_call? event } do |event|
           call = call_with_id event[:unique_id]
-          call.handle_es_event! event
+          call.async.handle_es_event event
         end
       end
 
@@ -113,7 +115,7 @@ module Punchblock
 
       def execute_call_command(command)
         if call = call_with_id(command.target_call_id)
-          call.execute_command! command
+          call.async.execute_command command
         else
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{command.target_call_id}", command.target_call_id
         end
@@ -121,7 +123,7 @@ module Punchblock
 
       def execute_component_command(command)
         if (component = component_with_id(command.component_id))
-          component.execute_command! command
+          component.async.execute_command command
         else
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id}", command.target_call_id, command.component_id
         end
@@ -132,7 +134,7 @@ module Punchblock
         when Punchblock::Command::Dial
           call = Call.new_link Punchblock.new_uuid, current_actor, nil, stream, @media_engine, @default_voice
           register_call call
-          call.dial! command
+          call.async.dial command
         else
           command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command"
         end

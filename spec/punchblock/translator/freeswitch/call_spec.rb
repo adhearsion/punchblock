@@ -774,7 +774,7 @@ module Punchblock
               Punchblock::Component::Output.new
             end
 
-            let(:mock_component) { mock 'Freeswitch::Component::Output', :id => 'foo' }
+            let(:mock_component) { Translator::Freeswitch::Component::Output.new(command, subject) }
 
             ['freeswitch', nil].each do |media_engine|
               let(:media_engine) { media_engine }
@@ -782,9 +782,9 @@ module Punchblock
               context "with a media engine of #{media_engine}" do
                 it 'should create an Output component and execute it asynchronously' do
                   Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                  mock_component.should_receive(:execute!).once
+                  mock_component.async.should_receive(:execute).once
                   subject.execute_command command
-                  subject.component_with_id('foo').should be mock_component
+                  subject.component_with_id(mock_component.id).should be mock_component
                 end
               end
             end
@@ -794,9 +794,9 @@ module Punchblock
 
               it 'should create a FliteOutput component and execute it asynchronously using flite and the calls default voice' do
                 Component::FliteOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute!).once.with(media_engine, default_voice)
+                mock_component.async.should_receive(:execute).once.with(media_engine, default_voice)
                 subject.execute_command command
-                subject.component_with_id('foo').should be mock_component
+                subject.component_with_id(mock_component.id).should be mock_component
               end
             end
 
@@ -805,9 +805,9 @@ module Punchblock
 
               it 'should create a TTSOutput component and execute it asynchronously using cepstral and the calls default voice' do
                 Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute!).once.with(media_engine, default_voice)
+                mock_component.async.should_receive(:execute).once.with(media_engine, default_voice)
                 subject.execute_command command
-                subject.component_with_id('foo').should be mock_component
+                subject.component_with_id(mock_component.id).should be mock_component
               end
             end
 
@@ -816,9 +816,9 @@ module Punchblock
 
               it 'should create a TTSOutput component and execute it asynchronously using unimrcp and the calls default voice' do
                 Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute!).once.with(media_engine, default_voice)
+                mock_component.async.should_receive(:execute).once.with(media_engine, default_voice)
                 subject.execute_command command
-                subject.component_with_id('foo').should be mock_component
+                subject.component_with_id(mock_component.id).should be mock_component
               end
             end
 
@@ -831,9 +831,9 @@ module Punchblock
 
               it "should use the component media engine and not the platform one if it is set" do
                 Component::Output.should_receive(:new_link).once.with(command_with_renderer, subject).and_return mock_component
-                mock_component.should_receive(:execute!).once
+                mock_component.async.should_receive(:execute).once
                 subject.execute_command command_with_renderer
-                subject.component_with_id('foo').should be mock_component
+                subject.component_with_id(mock_component.id).should be mock_component
               end
             end
           end
@@ -843,11 +843,11 @@ module Punchblock
               Punchblock::Component::Input.new
             end
 
-            let(:mock_component) { mock 'Freeswitch::Component::Input', :id => 'foo' }
+            let(:mock_component) { Translator::Freeswitch::Component::Input.new(command, subject) }
 
             it 'should create an Input component and execute it asynchronously' do
               Component::Input.should_receive(:new_link).once.with(command, subject).and_return mock_component
-              mock_component.should_receive(:execute!).once
+              mock_component.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -857,11 +857,11 @@ module Punchblock
               Punchblock::Component::Record.new
             end
 
-            let(:mock_component) { mock 'Freeswitch::Component::Record', :id => 'foo' }
+            let(:mock_component) { Translator::Freeswitch::Component::Record.new(command, subject) }
 
             it 'should create a Record component and execute it asynchronously' do
               Component::Record.should_receive(:new_link).once.with(command, subject).and_return mock_component
-              mock_component.should_receive(:execute!).once
+              mock_component.async.should_receive(:execute).once
               subject.execute_command command
             end
           end

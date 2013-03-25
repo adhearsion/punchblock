@@ -233,7 +233,7 @@ module Punchblock
         let(:example_error) { import_stanza error_xml }
         let(:cmd) { Component::Output.new }
 
-        before(:all) do
+        before do
           cmd.request!
           connection.__send__ :handle_error, example_error, cmd
         end

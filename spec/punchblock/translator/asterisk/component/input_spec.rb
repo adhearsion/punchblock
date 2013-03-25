@@ -98,7 +98,7 @@ module Punchblock
                 end
 
                 it "should not process further dtmf events" do
-                  subject.should_receive(:process_dtmf!).never
+                  subject.async.should_receive(:process_dtmf).never
                   send_ami_events_for_dtmf 3
                 end
               end

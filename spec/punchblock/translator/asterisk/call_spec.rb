@@ -170,7 +170,7 @@ module Punchblock
                                                                                  :variable    => "punchblock_call_id=#{subject.id}"
                                                                                }).tap { |a| a.request! }
 
-            translator.should_receive(:execute_global_command!).once.with expected_action
+            translator.async.should_receive(:execute_global_command).once.with expected_action
             subject.dial dial_command
           end
 
@@ -188,7 +188,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id}"
                                                                                  }).tap { |a| a.request! }
 
-              translator.should_receive(:execute_global_command!).once.with expected_action
+              translator.async.should_receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -210,7 +210,7 @@ module Punchblock
                                                                                    :timeout     => 10000
                                                                                  }).tap { |a| a.request! }
 
-              translator.should_receive(:execute_global_command!).once.with expected_action
+              translator.async.should_receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -231,7 +231,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id},SIPADDHEADER51=\"X-foo: bar\",SIPADDHEADER52=\"X-doo: dah\""
                                                                                  }).tap { |a| a.request! }
 
-              translator.should_receive(:execute_global_command!).once.with expected_action
+              translator.async.should_receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -308,7 +308,7 @@ module Punchblock
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
 
-              subject.process_ami_event! ami_event
+              subject.async.process_ami_event ami_event
 
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
@@ -873,12 +873,12 @@ module Punchblock
               Punchblock::Component::Asterisk::AGI::Command.new :name => 'Answer'
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Asterisk::AGICommand.new(command, subject) }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               mock_action.should_receive(:internal=).never
               Component::Asterisk::AGICommand.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -888,12 +888,12 @@ module Punchblock
               Punchblock::Component::Output.new
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Output.new(command, subject) }
 
             it 'should create an Output component and execute it asynchronously' do
               Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.should_receive(:internal=).never
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -903,12 +903,12 @@ module Punchblock
               Punchblock::Component::Input.new
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Input.new(command, subject) }
 
             it 'should create an Input component and execute it asynchronously' do
               Component::Input.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.should_receive(:internal=).never
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -918,12 +918,12 @@ module Punchblock
               Punchblock::Component::Record.new
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Record.new(command, subject) }
 
             it 'should create a Record component and execute it asynchronously' do
               Component::Record.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.should_receive(:internal=).never
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end

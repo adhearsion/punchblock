@@ -5,6 +5,8 @@ module Punchblock
     class DTMFRecognizer
       include Celluloid
 
+      finalizer :finalize
+
       def initialize(responder, grammar, initial_timeout = nil, inter_digit_timeout = nil)
         @responder = responder
         self.grammar = grammar

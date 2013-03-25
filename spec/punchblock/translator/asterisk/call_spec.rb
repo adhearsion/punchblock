@@ -7,7 +7,7 @@ module Punchblock
     class Asterisk
       describe Call do
         let(:channel)         { 'SIP/foo' }
-        let(:translator)      { stub('Translator::Asterisk').as_null_object }
+        let(:translator)      { Asterisk.new stub('AMI Client').as_null_object, stub('connection').as_null_object }
         let(:agi_env) do
           {
             :agi_request      => 'async',
@@ -64,6 +64,8 @@ module Punchblock
         its(:channel)     { should be == channel }
         its(:translator)  { should be translator }
         its(:agi_env)     { should be == agi_env }
+
+        before { translator.stub :handle_pb_event }
 
         describe '#shutdown' do
           it 'should terminate the actor' do
@@ -170,7 +172,7 @@ module Punchblock
                                                                                  :variable    => "punchblock_call_id=#{subject.id}"
                                                                                }).tap { |a| a.request! }
 
-            translator.should_receive(:execute_global_command!).once.with expected_action
+            translator.async.should_receive(:execute_global_command).once.with expected_action
             subject.dial dial_command
           end
 
@@ -188,7 +190,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id}"
                                                                                  }).tap { |a| a.request! }
 
-              translator.should_receive(:execute_global_command!).once.with expected_action
+              translator.async.should_receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -210,7 +212,7 @@ module Punchblock
                                                                                    :timeout     => 10000
                                                                                  }).tap { |a| a.request! }
 
-              translator.should_receive(:execute_global_command!).once.with expected_action
+              translator.async.should_receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -231,7 +233,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id},SIPADDHEADER51=\"X-foo: bar\",SIPADDHEADER52=\"X-doo: dah\""
                                                                                  }).tap { |a| a.request! }
 
-              translator.should_receive(:execute_global_command!).once.with expected_action
+              translator.async.should_receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -300,6 +302,20 @@ module Punchblock
               translator.should_receive(:handle_pb_event).with(expected_complete_event).once.ordered
               translator.should_receive(:handle_pb_event).with(expected_end_event).once.ordered
               subject.process_ami_event ami_event
+            end
+
+            it "should not allow commands to be executed while components are shutting down" do
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command.request!
+              component = subject.execute_command comp_command
+              comp_command.response(0.1).should be_a Ref
+
+              subject.async.process_ami_event ami_event
+
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command.request!
+              subject.execute_command comp_command
+              comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
             end
 
             context "with an undefined cause" do
@@ -429,7 +445,7 @@ module Punchblock
           context 'with an event for a known AGI command component' do
             let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER', :params_array => [] }
             let :component do
-              Component::Asterisk::AGICommand.new mock_component_node, subject.translator
+              Component::Asterisk::AGICommand.new mock_component_node, subject
             end
 
             let(:ami_event) do
@@ -579,24 +595,54 @@ module Punchblock
                 e['Privilege'] = "call,all"
                 e['Response'] = "Success"
                 e['Channel1']  = "SIP/foo"
-                e['Channel2']  = "SIP/5678-00000000"
+                e['Channel2']  = other_channel
               end
             end
 
             let(:other_channel) { 'SIP/5678-00000000' }
-            let(:other_call_id) { 'def567' }
-            let :command do
-              Punchblock::Command::Join.new :call_id => other_call_id
+
+            context "when a join has been executed against another call" do
+              let :other_call do
+                Call.new other_channel, translator
+              end
+
+              let(:other_call_id) { other_call.id }
+              let :command do
+                Punchblock::Command::Join.new :call_id => other_call_id
+              end
+
+              before do
+                translator.register_call other_call
+                command.request!
+                subject.execute_command command
+              end
+
+              it 'retrieves and sets success on the correct Join' do
+                subject.process_ami_event ami_event
+                command.response(0.5).should be == true
+              end
+
+              context "with the channel names reversed" do
+                let :ami_event do
+                  RubyAMI::Event.new('BridgeExec').tap do |e|
+                    e['Privilege'] = "call,all"
+                    e['Response'] = "Success"
+                    e['Channel1']  = other_channel
+                    e['Channel2']  = "SIP/foo"
+                  end
+                end
+
+                it 'retrieves and sets success on the correct Join' do
+                  subject.process_ami_event ami_event
+                  command.response(0.5).should be == true
+                end
+              end
             end
 
-            before do
-              subject.pending_joins[other_channel] = command
-              command.request!
-            end
-
-            it 'retrieves and sets success on the correct Join' do
-              subject.process_ami_event ami_event
-              command.response(0.5).should be == true
+            context "with no matching join command" do
+              it "should do nothing" do
+                expect { subject.process_ami_event ami_event }.not_to raise_error
+              end
             end
           end
 
@@ -859,12 +905,12 @@ module Punchblock
               Punchblock::Component::Asterisk::AGI::Command.new :name => 'Answer'
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::AGI::Command', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Asterisk::AGICommand.new(command, subject) }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               mock_action.should_receive(:internal=).never
               Component::Asterisk::AGICommand.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -874,12 +920,12 @@ module Punchblock
               Punchblock::Component::Output.new
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::Output', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Output.new(command, subject) }
 
             it 'should create an Output component and execute it asynchronously' do
               Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.should_receive(:internal=).never
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -889,12 +935,12 @@ module Punchblock
               Punchblock::Component::Input.new
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::Input', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Input.new(command, subject) }
 
             it 'should create an Input component and execute it asynchronously' do
               Component::Input.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.should_receive(:internal=).never
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -904,12 +950,12 @@ module Punchblock
               Punchblock::Component::Record.new
             end
 
-            let(:mock_action) { mock 'Component::Asterisk::Record', :id => 'foo' }
+            let(:mock_action) { Translator::Asterisk::Component::Record.new(command, subject) }
 
             it 'should create a Record component and execute it asynchronously' do
               Component::Record.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.should_receive(:internal=).never
-              mock_action.should_receive(:execute!).once
+              mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
           end
@@ -974,6 +1020,18 @@ module Punchblock
                 subject.execute_command subsequent_command
                 subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
               end
+
+              context "when we dispatch the command to it" do
+                it 'sends an error in response to the command' do
+                  component = subject.component_with_id comp_id
+
+                  component.should_receive(:execute_command).and_raise(Celluloid::DeadActorError)
+
+                  subsequent_command.request!
+                  subject.execute_command subsequent_command
+                  subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+                end
+              end
             end
 
             context "for an unknown component ID" do
@@ -1014,12 +1072,6 @@ module Punchblock
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Bridge"
               agi_command.params_array.should be == [other_channel]
-            end
-
-            it "adds the join to the @pending_joins hash" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
-              subject.execute_command command
-              subject.pending_joins[other_channel].should be command
             end
           end
 

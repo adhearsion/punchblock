@@ -64,10 +64,11 @@ module Punchblock
       end
 
       it 'should properly set the Blather logger' do
+        old_logger = Punchblock.logger
         Punchblock.logger = :foo
         XMPP.new :username => '1@call.rayo.net', :password => 1
         Blather.logger.should be :foo
-        Punchblock.reset_logger
+        Punchblock.logger = old_logger
       end
 
       it "looking up original command by command ID" do
@@ -232,17 +233,28 @@ module Punchblock
         let(:example_error) { import_stanza error_xml }
         let(:cmd) { Component::Output.new }
 
-        before(:all) do
+        before do
           cmd.request!
           connection.__send__ :handle_error, example_error, cmd
         end
 
         subject { cmd.response }
 
-        its(:call_id)       { should be == call_id }
-        its(:component_id)  { should be == component_id }
-        its(:name)          { should be == :item_not_found }
-        its(:text)          { should be == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]' }
+        it "should have the correct call ID" do
+          subject.call_id.should be == call_id
+        end
+
+        it "should have the correct component ID" do
+          subject.component_id.should be == component_id
+        end
+
+        it "should have the correct name" do
+          subject.name.should be == :item_not_found
+        end
+
+        it "should have the correct text" do
+          subject.text.should be == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]'
+        end
       end
 
       describe "#prep_command_for_execution" do

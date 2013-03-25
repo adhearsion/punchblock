@@ -1,5 +1,17 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.8.1](https://github.com/adhearsion/punchblock/compare/v1.8.0...v1.8.1) - [2013-03-25](https://rubygems.org/gems/punchblock/versions/1.8.1)
+  * Bugfix: FreeSWITCH was requiring a from attribute on a dial command
+  * Bugfix: Asterisk translator now properly checks for existence of the recordings directory
+  * Bugfix: Components should transition state before unblocking
+  * Bugfix: Asterisk joins are now more robustly responded to when the join begins
+  * Bugfix: On FreeSWITCH, only events relating to bridge start/end should be delivered to bridged calls
+  * Bugfix: On FreeSWITCH, a voice value on an audio-only output component should not prevent execution
+  * Bugfix: XMPP Ping should be an IQ get, not set
+  * Bugfix: Stop command should be in Rayo ext namespace
+  * Bugfix: XMPP specs were mistakenly resetting the logger object for other tests.
+  * CS: Avoid Celluloid deprecation warnings
+
 # [v1.8.0](https://github.com/adhearsion/punchblock/compare/v1.7.1...v1.8.0) - [2013-01-10](https://rubygems.org/gems/punchblock/versions/1.8.0)
   * Feature: Join command now enforces a list of valid direction attribute values
   * Feature: Added support for media direction to the Record component

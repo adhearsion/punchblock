@@ -128,9 +128,11 @@ module Punchblock
           @direction = :outbound
 
           cid_number, cid_name = dial_command.from, nil
-          dial_command.from.match(/(?<cid_name>.*)<(?<cid_number>.*)>/) do |m|
-            cid_name = m[:cid_name].strip
-            cid_number = m[:cid_number]
+          if dial_command.from
+            dial_command.from.match(/(?<cid_name>.*)<(?<cid_number>.*)>/) do |m|
+              cid_name = m[:cid_name].strip
+              cid_number = m[:cid_number]
+            end
           end
 
           options = {
@@ -246,7 +248,7 @@ module Punchblock
         def execute_component(type, command, *execute_args)
           type.new_link(command, current_actor).tap do |component|
             register_component component
-            component.execute!(*execute_args)
+            component.async.execute(*execute_args)
           end
         end
 

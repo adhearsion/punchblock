@@ -8,7 +8,7 @@ module Punchblock
         include Celluloid
         include DeadActorSafety
 
-        attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
+        attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[0] = :hangup
@@ -29,6 +29,7 @@ module Punchblock
           @answered = false
           @pending_joins = {}
           @progress_sent = false
+          @block_commands = false
         end
 
         def register_component(component)
@@ -69,7 +70,7 @@ module Punchblock
           originate_action = Punchblock::Component::Asterisk::AMI::Action.new :name => 'Originate',
                                                                               :params => params
           originate_action.request!
-          translator.execute_global_command! originate_action
+          translator.async.execute_global_command originate_action
           dial_command.response = Ref.new :id => id
         end
 
@@ -100,6 +101,7 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
+            @block_commands = true
             @components.dup.each_pair do |id, component|
               safe_from_dead_actors do
                 component.call_ended if component.alive?
@@ -123,9 +125,9 @@ module Punchblock
               send_end_event :error
             end
           when 'BridgeExec'
-            if join_command = pending_joins[ami_event['Channel2']]
-              join_command.response = true
-            end
+            join_command   = @pending_joins.delete ami_event['Channel1']
+            join_command ||= @pending_joins.delete ami_event['Channel2']
+            join_command.response = true if join_command
           when 'Bridge'
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
@@ -154,6 +156,10 @@ module Punchblock
         end
 
         def execute_command(command)
+          if @block_commands
+            command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
+            return
+          end
           if command.component_id
             if component = component_with_id(command.component_id)
               component.execute_command command
@@ -180,7 +186,7 @@ module Punchblock
             end
           when Command::Join
             other_call = translator.call_with_id command.call_id
-            pending_joins[other_call.channel] = command
+            @pending_joins[other_call.channel] = command
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
@@ -217,6 +223,8 @@ module Punchblock
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        rescue Celluloid::DeadActorError
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end
 
         def send_agi_action(command, *params, &block)
@@ -276,7 +284,7 @@ module Punchblock
           type.new_link(command, current_actor).tap do |component|
             register_component component
             component.internal = true if options[:internal]
-            component.execute!
+            component.async.execute
           end
         end
 

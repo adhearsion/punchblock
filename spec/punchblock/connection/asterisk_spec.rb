@@ -49,14 +49,14 @@ module Punchblock
         end
 
         it 'shuts down the translator' do
-          subject.translator.should_receive(:shutdown!).once
+          subject.translator.async.should_receive(:shutdown).once
           subject.stop
         end
       end
 
       it 'sends events from RubyAMI to the translator' do
         event = mock 'RubyAMI::Event'
-        subject.translator.should_receive(:handle_ami_event!).once.with event
+        subject.translator.async.should_receive(:handle_ami_event).once.with event
         subject.ami_client.handle_event event
       end
 
@@ -64,7 +64,7 @@ module Punchblock
         it 'sends a command to the translator' do
           command = mock 'Command'
           options = {:foo => :bar}
-          subject.translator.should_receive(:execute_command!).once.with command, options
+          subject.translator.async.should_receive(:execute_command).once.with command, options
           subject.write command, options
         end
       end

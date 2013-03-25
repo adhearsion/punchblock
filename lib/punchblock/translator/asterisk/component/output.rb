@@ -55,13 +55,13 @@ module Punchblock
               playback opts
             when :unimrcp
               send_ref
-              @call.send_agi_action! 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options do |complete_event|
-                output_component.send_complete_event! success_reason
+              @call.async.send_agi_action 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options do |complete_event|
+                output_component.async.send_complete_event success_reason
               end
             when :swift
               send_ref
-              @call.send_agi_action! 'EXEC Swift', swift_doc do |complete_event|
-                output_component.send_complete_event! success_reason
+              @call.async.send_agi_action 'EXEC Swift', swift_doc do |complete_event|
+                output_component.async.send_complete_event success_reason
               end
             else
               raise OptionError, 'The renderer foobar is unsupported.'
@@ -92,8 +92,8 @@ module Punchblock
 
           def playback(path)
             op = current_actor
-            @call.send_agi_action! 'EXEC Playback', path do |complete_event|
-              op.send_complete_event! success_reason
+            @call.async.send_agi_action 'EXEC Playback', path do |complete_event|
+              op.async.send_complete_event success_reason
             end
           end
 

@@ -7,7 +7,7 @@ module Punchblock
     class Asterisk
       describe Call do
         let(:channel)         { 'SIP/foo' }
-        let(:translator)      { stub('Translator::Asterisk').as_null_object }
+        let(:translator)      { Asterisk.new stub('AMI Client').as_null_object, stub('connection').as_null_object }
         let(:agi_env) do
           {
             :agi_request      => 'async',
@@ -64,6 +64,8 @@ module Punchblock
         its(:channel)     { should be == channel }
         its(:translator)  { should be translator }
         its(:agi_env)     { should be == agi_env }
+
+        before { translator.stub :handle_pb_event }
 
         describe '#shutdown' do
           it 'should terminate the actor' do
@@ -443,7 +445,7 @@ module Punchblock
           context 'with an event for a known AGI command component' do
             let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER', :params_array => [] }
             let :component do
-              Component::Asterisk::AGICommand.new mock_component_node, subject.translator
+              Component::Asterisk::AGICommand.new mock_component_node, subject
             end
 
             let(:ami_event) do
@@ -604,14 +606,13 @@ module Punchblock
                 Call.new other_channel, translator
               end
 
-              let(:other_call_id) { 'def567' }
+              let(:other_call_id) { other_call.id }
               let :command do
                 Punchblock::Command::Join.new :call_id => other_call_id
               end
 
               before do
                 translator.register_call other_call
-                translator.expects(:call_with_id).with(other_call_id).returns(other_call)
                 command.request!
                 subject.execute_command command
               end

@@ -368,7 +368,7 @@ module Punchblock
                   end
 
                   def send_ami_action(*args, &block)
-                    block.call Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new if block
+                    block.call ::Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new if block
                   end
                 end
 

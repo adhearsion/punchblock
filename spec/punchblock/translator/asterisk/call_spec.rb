@@ -7,7 +7,7 @@ module Punchblock
     class Asterisk
       describe Call do
         let(:channel)         { 'SIP/foo' }
-        let(:translator)      { stub('Translator::Asterisk').as_null_object }
+        let(:translator)      { Asterisk.new stub('AMI Client').as_null_object, stub('connection').as_null_object }
         let(:agi_env) do
           {
             :agi_request      => 'async',
@@ -64,6 +64,8 @@ module Punchblock
         its(:channel)     { should be == channel }
         its(:translator)  { should be translator }
         its(:agi_env)     { should be == agi_env }
+
+        before { translator.stub :handle_pb_event }
 
         describe '#shutdown' do
           it 'should terminate the actor' do
@@ -443,7 +445,7 @@ module Punchblock
           context 'with an event for a known AGI command component' do
             let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER', :params_array => [] }
             let :component do
-              Component::Asterisk::AGICommand.new mock_component_node, subject.translator
+              Component::Asterisk::AGICommand.new mock_component_node, subject
             end
 
             let(:ami_event) do
@@ -593,24 +595,54 @@ module Punchblock
                 e['Privilege'] = "call,all"
                 e['Response'] = "Success"
                 e['Channel1']  = "SIP/foo"
-                e['Channel2']  = "SIP/5678-00000000"
+                e['Channel2']  = other_channel
               end
             end
 
             let(:other_channel) { 'SIP/5678-00000000' }
-            let(:other_call_id) { 'def567' }
-            let :command do
-              Punchblock::Command::Join.new :call_id => other_call_id
+
+            context "when a join has been executed against another call" do
+              let :other_call do
+                Call.new other_channel, translator
+              end
+
+              let(:other_call_id) { other_call.id }
+              let :command do
+                Punchblock::Command::Join.new :call_id => other_call_id
+              end
+
+              before do
+                translator.register_call other_call
+                command.request!
+                subject.execute_command command
+              end
+
+              it 'retrieves and sets success on the correct Join' do
+                subject.process_ami_event ami_event
+                command.response(0.5).should be == true
+              end
+
+              context "with the channel names reversed" do
+                let :ami_event do
+                  RubyAMI::Event.new('BridgeExec').tap do |e|
+                    e['Privilege'] = "call,all"
+                    e['Response'] = "Success"
+                    e['Channel1']  = other_channel
+                    e['Channel2']  = "SIP/foo"
+                  end
+                end
+
+                it 'retrieves and sets success on the correct Join' do
+                  subject.process_ami_event ami_event
+                  command.response(0.5).should be == true
+                end
+              end
             end
 
-            before do
-              subject.pending_joins[other_channel] = command
-              command.request!
-            end
-
-            it 'retrieves and sets success on the correct Join' do
-              subject.process_ami_event ami_event
-              command.response(0.5).should be == true
+            context "with no matching join command" do
+              it "should do nothing" do
+                expect { subject.process_ami_event ami_event }.not_to raise_error
+              end
             end
           end
 
@@ -1040,12 +1072,6 @@ module Punchblock
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Bridge"
               agi_command.params_array.should be == [other_channel]
-            end
-
-            it "adds the join to the @pending_joins hash" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
-              subject.execute_command command
-              subject.pending_joins[other_channel].should be command
             end
           end
 

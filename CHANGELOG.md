@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.8.1](https://github.com/adhearsion/punchblock/compare/v1.8.0...v1.8.1) - [2013-03-25](https://rubygems.org/gems/punchblock/versions/1.8.1)
   * Bugfix: Asterisk translator now properly checks for existence of the recordings directory
   * Bugfix: XMPP specs were mistakenly resetting the logger object for other tests.
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command

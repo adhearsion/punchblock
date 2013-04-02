@@ -13,11 +13,11 @@ module Punchblock
 
           def execute
             max_duration = @component_node.max_duration || -1
+            initial_timeout = @component_node.initial_timeout || -1
+            final_timeout = @component_node.final_timeout || -1
 
             raise OptionError, 'A start-beep value of true is unsupported.' if @component_node.start_beep
             raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
-            raise OptionError, 'An initial-timeout value is unsupported.' if @component_node.initial_timeout && @component_node.initial_timeout != -1
-            raise OptionError, 'A final-timeout value is unsupported.' if @component_node.final_timeout && @component_node.final_timeout != -1
             raise OptionError, 'A max-duration value that is negative (and not -1) is invalid.' unless max_duration >= -1
 
             @format = @component_node.format || 'wav'
@@ -37,8 +37,20 @@ module Punchblock
             else
               call.uuid_foo :setvar, "RECORD_STEREO true"
             end
-            call.uuid_foo :record, record_args.join(' ')
 
+            if initial_timeout > -1
+              call.uuid_foo :setvar, "RECORD_INITIAL_TIMEOUT_MS #{initial_timeout}"
+            else
+              call.uuid_foo :setvar, "RECORD_INITIAL_TIMEOUT_MS 0"
+            end
+
+            if final_timeout > -1
+              call.uuid_foo :setvar, "RECORD_FINAL_TIMEOUT_MS #{final_timeout}"
+            else
+              call.uuid_foo :setvar, "RECORD_FINAL_TIMEOUT_MS 0"
+            end
+
+            call.uuid_foo :record, record_args.join(' ')
             send_ref
           rescue OptionError => e
             with_error 'option error', e.message

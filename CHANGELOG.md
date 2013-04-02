@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Added FS translator support for initial timeout and final timeout on Record.
 
 # [v1.8.1](https://github.com/adhearsion/punchblock/compare/v1.8.0...v1.8.1) - [2013-03-25](https://rubygems.org/gems/punchblock/versions/1.8.1)
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command

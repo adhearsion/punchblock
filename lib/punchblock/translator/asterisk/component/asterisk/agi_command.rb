@@ -23,6 +23,9 @@ module Punchblock
               if event.name == 'AsyncAGI'
                 if event['SubEvent'] == 'Exec'
                   send_complete_event success_reason(event)
+                  if @component_node.name == 'ASYNCAGI BREAK'
+                    @call.async.handle_hangup_event
+                  end
                 end
               end
             end

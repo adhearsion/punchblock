@@ -56,7 +56,6 @@ module Punchblock
             context 'when the AMI action completes' do
               before do
                 original_command.request!
-                original_command.execute!
               end
 
               let :expected_response do
@@ -121,6 +120,21 @@ module Punchblock
 
                   complete_event.component_id.should be == component_id.to_s
                   complete_event.reason.should be == expected_complete_reason
+                end
+
+                context "when the command was ASYNCAGI BREAK" do
+                  let :original_command do
+                    Punchblock::Component::Asterisk::AGI::Command.new :name => 'ASYNCAGI BREAK'
+                  end
+
+                  it 'should send an end (hangup) event to the translator' do
+                    expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                                                                    target_call_id: mock_call.id
+
+                    translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
+                    translator.should_receive(:handle_pb_event).once.with expected_end_event
+                    subject.handle_ami_event ami_event
+                  end
                 end
               end
             end

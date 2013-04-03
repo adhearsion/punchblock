@@ -101,13 +101,7 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
-            @block_commands = true
-            @components.dup.each_pair do |id, component|
-              safe_from_dead_actors do
-                component.call_ended if component.alive?
-              end
-            end
-            send_end_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
+            handle_hangup_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
           when 'AsyncAGI'
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
@@ -261,6 +255,16 @@ module Punchblock
             'ExtraContext'   => Asterisk::REDIRECT_CONTEXT
           }) if other_call
           send_ami_action 'Redirect', redirect_options, &block
+        end
+
+        def handle_hangup_event(reason = :hangup)
+          @block_commands = true
+          @components.dup.each_pair do |id, component|
+            safe_from_dead_actors do
+              component.call_ended if component.alive?
+            end
+          end
+          send_end_event reason
         end
 
         def actor_died(actor, reason)

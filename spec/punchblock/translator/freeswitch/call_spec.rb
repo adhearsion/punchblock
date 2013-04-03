@@ -344,7 +344,7 @@ module Punchblock
             it "should cause the actor to be terminated" do
               translator.should_receive(:handle_pb_event).once
               subject.handle_es_event es_event
-              sleep 5.5
+              sleep 0.25
               subject.should_not be_alive
             end
 

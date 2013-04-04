@@ -202,8 +202,8 @@ module Punchblock
 
       describe '#execute_component_command' do
         let(:call)            { Translator::Freeswitch::Call.new 'SIP/foo', subject }
-        let(:component_node)  { Component::Output.new }
-        let(:component)       { Translator::Freeswitch::Component::Output.new(component_node, call) }
+        let(:component_node)  { Punchblock::Component::Input.new mode: :dtmf, grammar: { value: RubySpeech::GRXML.draw } }
+        let(:component)       { Translator::Freeswitch::Component::Input.new(component_node, call) }
 
         let(:command) { Component::Stop.new.tap { |c| c.component_id = component.id } }
 

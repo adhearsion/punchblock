@@ -4,7 +4,7 @@ module Punchblock
   module Translator
     class Freeswitch
       module Component
-        class AbstractOutput < Component
+        class AbstractOutput < InlineComponent
           UnrenderableDocError = Class.new OptionError
 
           def execute(*args)

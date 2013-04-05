@@ -79,8 +79,7 @@ module Punchblock
               case node
               when RubySpeech::SSML::Audio
                 node.src
-              when String
-                raise if node.include?(' ')
+              when String, -> { !node.include?(' ') }
                 node
               else
                 raise

@@ -31,7 +31,7 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(filename = audio_filename)
-              subject.wrapped_object.should_receive(:application).once.with 'playback', "file_string://#{filename}"
+              subject.should_receive(:application).once.with 'playback', "file_string://#{filename}"
             end
 
             let(:audio_filename) { 'http://foo.com/bar.mp3' }
@@ -338,13 +338,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                subject.wrapped_object.should_receive(:application)
+                subject.should_receive(:application)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                subject.wrapped_object.should_receive(:application)
+                subject.should_receive(:application)
                 original_command.should_not be_complete
                 subject.execute_command command
                 reason.should be_a Punchblock::Event::Complete::Stop
@@ -352,7 +352,7 @@ module Punchblock
               end
 
               it "breaks the current dialplan application" do
-                subject.wrapped_object.should_receive(:application).once.with 'break'
+                subject.should_receive(:application).once.with 'break'
                 subject.execute_command command
               end
             end

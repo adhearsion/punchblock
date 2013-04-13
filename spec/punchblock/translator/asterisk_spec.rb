@@ -362,20 +362,10 @@ module Punchblock
         describe 'with a FullyBooted event' do
           let(:ami_event) { RubyAMI::Event.new 'FullyBooted' }
 
-          context 'once' do
-            it 'does not send anything to the connection' do
-              subject.connection.should_receive(:handle_event).never
-              subject.handle_ami_event ami_event
-            end
-          end
-
-          context 'twice' do
-            it 'sends a connected event to the event handler' do
-              subject.connection.should_receive(:handle_event).once.with Connection::Connected.new
-              subject.wrapped_object.should_receive(:run_at_fully_booted).once
-              subject.handle_ami_event ami_event
-              subject.handle_ami_event ami_event
-            end
+          it 'sends a connected event to the event handler' do
+            subject.connection.should_receive(:handle_event).once.with Connection::Connected.new
+            subject.wrapped_object.should_receive(:run_at_fully_booted).once
+            subject.handle_ami_event ami_event
           end
         end
 
@@ -636,28 +626,28 @@ module Punchblock
         let(:broken_path) { "/this/is/not/a/valid/path" }
 
         let(:passed_show) do
-          OpenStruct.new({:text_body => "[ Context 'adhearsion-redirect' created by 'pbx_config' ]\n '1' => 1. AGI(agi:async)[pbx_config]\n\n-= 1 extension (1 priority) in 1 context. =-"})
+          OpenStruct.new text_body: "[ Context 'adhearsion-redirect' created by 'pbx_config' ]\n '1' => 1. AGI(agi:async)[pbx_config]\n\n-= 1 extension (1 priority) in 1 context. =-"
         end
 
         let(:failed_show) do
-          OpenStruct.new({:text_body => "There is no existence of 'adhearsion-redirect' context\nCommand 'dialplan show adhearsion-redirect' failed."})
+          OpenStruct.new text_body: "There is no existence of 'adhearsion-redirect' context\nCommand 'dialplan show adhearsion-redirect' failed."
         end
 
         it 'should send the redirect extension Command to the AMI client' do
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(passed_show)
           subject.run_at_fully_booted
         end
 
         it 'should check the context for existence and do nothing if it is there' do
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_yield(passed_show)
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(passed_show)
           subject.run_at_fully_booted
         end
 
         it 'should check the context for existence and log an error if it is not there' do
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_yield(failed_show)
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(failed_show)
           Punchblock.logger.should_receive(:error).once.with("Punchblock failed to add the #{Asterisk::REDIRECT_EXTENSION} extension to the #{Asterisk::REDIRECT_CONTEXT} context. Please add a [#{Asterisk::REDIRECT_CONTEXT}] entry to your dialplan.")
           subject.run_at_fully_booted
         end
@@ -665,7 +655,7 @@ module Punchblock
         it 'should check the recording directory for existence' do
           stub_const('Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH', broken_path)
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(passed_show)
           Punchblock.logger.should_receive(:warn).once.with("Recordings directory #{broken_path} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording")
           subject.run_at_fully_booted
         end

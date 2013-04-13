@@ -65,12 +65,8 @@ module Punchblock
         return unless event.is_a? RubyAMI::Event
 
         if event.name.downcase == "fullybooted"
-          @fully_booted_count += 1
-          if @fully_booted_count >= 2
-            handle_pb_event Connection::Connected.new
-            @fully_booted_count = 0
-            run_at_fully_booted
-          end
+          handle_pb_event Connection::Connected.new
+          run_at_fully_booted
           return
         end
 
@@ -134,21 +130,18 @@ module Punchblock
         end
       end
 
-      def send_ami_action(name, headers = {}, &block)
-        ami_client.send_action name, headers, &block
+      def send_ami_action(name, headers = {})
+        ami_client.send_action name, headers
       end
 
       def run_at_fully_booted
-        send_ami_action('Command', {
-          'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
-        })
-        send_ami_action('Command', {
-          'Command' => "dialplan show #{REDIRECT_CONTEXT}"
-        }) do |result|
-          if result.text_body =~ /failed/
-            pb_logger.error "Punchblock failed to add the #{REDIRECT_EXTENSION} extension to the #{REDIRECT_CONTEXT} context. Please add a [#{REDIRECT_CONTEXT}] entry to your dialplan."
-          end
+        send_ami_action 'Command', 'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
+
+        result = send_ami_action 'Command', 'Command' => "dialplan show #{REDIRECT_CONTEXT}"
+        if result.text_body =~ /failed/
+          pb_logger.error "Punchblock failed to add the #{REDIRECT_EXTENSION} extension to the #{REDIRECT_CONTEXT} context. Please add a [#{REDIRECT_CONTEXT}] entry to your dialplan."
         end
+
         check_recording_directory
       end
 

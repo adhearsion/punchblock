@@ -181,23 +181,16 @@ module Punchblock
               command.response = true
             end
           when Command::Hangup
-            send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16 do |response|
-              command.response = true
-            end
+            send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
+            command.response = true
           when Command::Join
             other_call = translator.call_with_id command.call_id
             @pending_joins[other_call.channel] = command
             send_agi_action 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
-            redirect_back other_call do |response|
-              case response
-              when RubyAMI::Error
-                command.response = ProtocolError.new.setup 'error', response.message
-              else
-                command.response = true
-              end
-            end
+            redirect_back other_call
+            command.response = true
           when Command::Reject
             rejection = case command.reason
             when :busy
@@ -223,6 +216,8 @@ module Punchblock
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        rescue RubyAMI::Error => e
+          command.response = ProtocolError.new.setup 'error', e.message
         rescue Celluloid::DeadActorError
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end
@@ -236,18 +231,15 @@ module Punchblock
           execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
         end
 
-        def send_ami_action(name, headers = {}, &block)
-          (name.is_a?(RubyAMI::Action) ? name : RubyAMI::Action.new(name, headers, &block)).tap do |action|
-            @current_ami_action = action
-            translator.send_ami_action action
-          end
+        def send_ami_action(name, headers = {})
+          translator.send_ami_action name, headers
         end
 
         def logger_id
           "#{self.class}: #{id}"
         end
 
-        def redirect_back(other_call = nil, &block)
+        def redirect_back(other_call = nil)
           redirect_options = {
             'Channel'   => channel,
             'Exten'     => Asterisk::REDIRECT_EXTENSION,
@@ -260,7 +252,7 @@ module Punchblock
             'ExtraPriority'  => Asterisk::REDIRECT_PRIORITY,
             'ExtraContext'   => Asterisk::REDIRECT_CONTEXT
           }) if other_call
-          send_ami_action 'Redirect', redirect_options, &block
+          send_ami_action 'Redirect', redirect_options
         end
 
         def actor_died(actor, reason)

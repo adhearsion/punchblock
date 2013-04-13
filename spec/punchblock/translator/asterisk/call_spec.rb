@@ -833,6 +833,7 @@ module Punchblock
             it "should send an EXEC RINGING AGI command and set the command's response" do
               component = subject.execute_command command
               component.internal.should be_true
+              sleep 0.5
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC RINGING"
               agi_command.add_event expected_agi_complete_event
@@ -847,6 +848,7 @@ module Punchblock
               command.reason = :busy
               component = subject.execute_command command
               component.internal.should be_true
+              sleep 0.5
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Busy"
               agi_command.add_event expected_agi_complete_event
@@ -857,6 +859,7 @@ module Punchblock
               command.reason = :decline
               component = subject.execute_command command
               component.internal.should be_true
+              sleep 0.5
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Busy"
               agi_command.add_event expected_agi_complete_event
@@ -867,6 +870,7 @@ module Punchblock
               command.reason = :error
               component = subject.execute_command command
               component.internal.should be_true
+              sleep 0.5
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "EXEC Congestion"
               agi_command.add_event expected_agi_complete_event
@@ -880,6 +884,7 @@ module Punchblock
             it "should send an ANSWER AGI command and set the command's response" do
               component = subject.execute_command command
               component.internal.should be_true
+              sleep 0.5
               agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
               agi_command.name.should be == "ANSWER"
               agi_command.add_event expected_agi_complete_event
@@ -891,11 +896,8 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a Hangup AMI command and set the command's response" do
+              translator.should_receive(:send_ami_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
               subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "hangup"
-              ami_action.headers['Cause'].should be == 16
-              ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
             end
           end
@@ -1089,45 +1091,50 @@ module Punchblock
 
             it "executes the unjoin through redirection" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
-              subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
 
-              ami_action << RubyAMI::Response.new
+              translator.should_receive(:send_ami_action).once.with("Redirect",
+                'Channel'   => channel,
+                'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              ).and_return RubyAMI::Response.new
+
+              subject.execute_command command
+
               command.response(1).should be_true
             end
 
             it "executes the unjoin through redirection, on the subject call and the other call" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
-              subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
 
-              ami_action.headers['ExtraChannel'].should be == other_channel
-              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+
+              translator.should_receive(:send_ami_action).once.with("Redirect",
+                'Channel'       => channel,
+                'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'       => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+                'ExtraChannel'  => other_channel,
+                'ExtraExten'    => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'ExtraPriority' => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'ExtraContext'  => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ).and_return RubyAMI::Response.new
+
+              subject.execute_command command
             end
 
             it "handles redirect errors" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
-              subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
 
-              ami_action << RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+              error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+
+              translator.should_receive(:send_ami_action).once.with("Redirect",
+                'Channel'   => channel,
+                'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              ).and_raise error
+
+              subject.execute_command command
               response = command.response(1)
               response.should be_a ProtocolError
               response.text.should == 'FooBar'
@@ -1144,45 +1151,40 @@ module Punchblock
         end
 
         describe '#send_ami_action' do
-          let(:component_id) { Punchblock.new_uuid }
-          before { stub_uuids component_id }
-
           it 'should send the action to the AMI client' do
-            action = RubyAMI::Action.new 'foo', :foo => :bar
-            translator.should_receive(:send_ami_action).once.with action
-            subject.send_ami_action 'foo', :foo => :bar
+            translator.should_receive(:send_ami_action).once.with 'foo', foo: :bar
+            subject.send_ami_action 'foo', foo: :bar
           end
         end
 
         describe '#redirect_back' do
-            let(:other_channel)         { 'SIP/bar' }
-            let :other_call do
-              Call.new other_channel, translator
-            end
+          let(:other_channel) { 'SIP/bar' }
 
-            it "executes the proper AMI action with only the subject call" do
-              subject.redirect_back
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
-            end
+          let :other_call do
+            Call.new other_channel, translator
+          end
 
-            it "executes the proper AMI action with another call specified" do
-              subject.redirect_back other_call
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
-              ami_action.headers['ExtraChannel'].should be == other_channel
-              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
-            end
+          it "executes the proper AMI action with only the subject call" do
+            translator.should_receive(:send_ami_action).once.with 'Redirect',
+              'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+              'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+              'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              'Channel'   => channel
+            subject.redirect_back
+          end
+
+          it "executes the proper AMI action with another call specified" do
+            translator.should_receive(:send_ami_action).once.with 'Redirect',
+              'Channel'       => channel,
+              'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+              'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+              'Context'       => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              'ExtraChannel'  => other_channel,
+              'ExtraExten'    => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+              'ExtraPriority' => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+              'ExtraContext'  => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            subject.redirect_back other_call
+          end
         end
       end
     end

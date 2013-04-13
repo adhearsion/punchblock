@@ -8,42 +8,25 @@ module Punchblock
       module Component
         module Asterisk
           class AGICommand < Component
-            attr_reader :action
-
-            def setup
-              @action = create_action
-            end
+            ARG_QUOTER = /["\\]/.freeze
 
             def execute
+              response = @call.send_ami_action 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id
+              raise response if response.is_a?(RubyAMI::Error)
+              # THIS NEEDS DEALING WITH. THE RUBYAMI STREAM WILL RAISE AND
+              # KILL TRANSLATOR/CALL. NEED TO INVOKE DIRECTLY ON THE STREAM
               send_ref
-              @call.send_ami_action @action
+            rescue RubyAMI::Error
+              set_node_response false
             end
 
             def handle_ami_event(event)
-              if event.name == 'AsyncAGI'
-                if event['SubEvent'] == 'Exec'
-                  send_complete_event success_reason(event)
-                end
-              end
-            end
-
-            def handle_response(response)
-              case response
-              when RubyAMI::Error
-                set_node_response false
-              when RubyAMI::Response
-                send_ref
+              if event.name == 'AsyncAGI' && event['SubEvent'] == 'Exec'
+                send_complete_event success_reason(event)
               end
             end
 
             private
-
-            def create_action
-              command = current_actor
-              RubyAMI::Action.new 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id do |response|
-                command.handle_response response
-              end
-            end
 
             def agi_command
               "#{@component_node.name} #{@component_node.params_array.map { |arg| quote_arg(arg) }.join(' ')}".squish
@@ -52,7 +35,7 @@ module Punchblock
             # Arguments surrounded by quotes; quotes backslash-escaped.
             # See parse_args in asterisk/res/res_agi.c (Asterisk 1.4.21.1)
             def quote_arg(arg)
-              '"' + arg.to_s.gsub(/["\\]/) { |m| "\\#{m}" } + '"'
+              '"' + arg.to_s.gsub(ARG_QUOTER) { |m| "\\#{m}" } + '"'
             end
 
             def success_reason(event)

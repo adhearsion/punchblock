@@ -22,7 +22,6 @@ module Punchblock
 
             @format = @component_node.format || 'wav'
 
-
             component = current_actor
             call.register_tmp_handler :ami, :name => 'MonitorStop' do |event|
               component.finished

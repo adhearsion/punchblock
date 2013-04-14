@@ -1109,7 +1109,6 @@ module Punchblock
             it "executes the unjoin through redirection, on the subject call and the other call" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
 
-
               ami_client.should_receive(:send_ami_action).once.with("Redirect",
                 'Channel'       => channel,
                 'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,

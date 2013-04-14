@@ -70,7 +70,7 @@ module Punchblock
           end
 
           def ami_client
-            call.ami_client
+            translator.ami_client
           end
 
           def set_node_response(value)

@@ -30,10 +30,7 @@ module Punchblock
             send_ref
 
             if @component_node.start_beep
-              @call.async.send_agi_action 'STREAM FILE', 'beep', '""' do
-                component.async.signal :beep_finished
-              end
-              wait :beep_finished
+              @call.execute_agi_command 'STREAM FILE', 'beep', '""'
             end
 
             ami_client.send_ami_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true

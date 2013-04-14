@@ -105,11 +105,10 @@ module Punchblock
         end
 
         describe '#send_progress' do
-
           context "with a call that is already answered" do
             it 'should not send the EXEC Progress command' do
               subject.wrapped_object.should_receive(:'answered?').and_return true
-              subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").never
+              subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").never
               subject.send_progress
             end
           end
@@ -128,7 +127,7 @@ module Punchblock
               end
 
               it 'should not send the EXEC Progress command' do
-                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").never
+                subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").never
                 subject.send_progress
               end
             end
@@ -139,12 +138,12 @@ module Punchblock
               end
 
               it 'should send the EXEC Progress command to a call that is inbound and not answered' do
-                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress")
+                subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").and_return code: 200, result: 0
                 subject.send_progress
               end
 
               it 'should send the EXEC Progress command only once if called twice' do
-                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").once
+                subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").once.and_return code: 200, result: 0
                 subject.send_progress
                 subject.send_progress
               end
@@ -257,7 +256,7 @@ module Punchblock
             subject.dial dial_command
             accept_command = Command::Accept.new
             accept_command.request!
-            subject.wrapped_object.should_receive(:send_agi_action).never
+            subject.wrapped_object.should_receive(:execute_agi_command).never
             subject.execute_command accept_command
             accept_command.response(0.5).should be true
           end
@@ -292,6 +291,7 @@ module Punchblock
             end
 
             it "should cause all components to send complete events before sending end event" do
+              subject.stub :send_progress
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
@@ -306,6 +306,7 @@ module Punchblock
             end
 
             it "should not allow commands to be executed while components are shutting down" do
+              subject.stub :send_progress
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
@@ -610,6 +611,7 @@ module Punchblock
               before do
                 translator.register_call other_call
                 command.request!
+                subject.wrapped_object.should_receive(:execute_agi_command).and_return code: 200
                 subject.execute_command command
               end
 
@@ -805,14 +807,6 @@ module Punchblock
         end
 
         describe '#execute_command' do
-          let :expected_agi_complete_event do
-            Punchblock::Event::Complete.new.tap do |c|
-              c.reason = Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code    => 200,
-                                                                                              :result  => 'Success',
-                                                                                              :data    => 'FOO'
-            end
-          end
-
           before do
             command.request!
           end
@@ -821,12 +815,8 @@ module Punchblock
             let(:command) { Command::Accept.new }
 
             it "should send an EXEC RINGING AGI command and set the command's response" do
-              component = subject.execute_command command
-              component.internal.should be_true
-              sleep 0.5
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC RINGING"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC RINGING').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
           end
@@ -836,34 +826,22 @@ module Punchblock
 
             it "with a :busy reason should send an EXEC Busy AGI command and set the command's response" do
               command.reason = :busy
-              component = subject.execute_command command
-              component.internal.should be_true
-              sleep 0.5
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Busy"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Busy').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
 
             it "with a :decline reason should send an EXEC Busy AGI command and set the command's response" do
               command.reason = :decline
-              component = subject.execute_command command
-              component.internal.should be_true
-              sleep 0.5
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Busy"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Busy').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
 
             it "with an :error reason should send an EXEC Congestion AGI command and set the command's response" do
               command.reason = :error
-              component = subject.execute_command command
-              component.internal.should be_true
-              sleep 0.5
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Congestion"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Congestion').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
           end
@@ -872,12 +850,8 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should send an ANSWER AGI command and set the command's response" do
-              component = subject.execute_command command
-              component.internal.should be_true
-              sleep 0.5
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "ANSWER"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('ANSWER').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
           end
@@ -900,7 +874,6 @@ module Punchblock
             let(:mock_action) { Translator::Asterisk::Component::Asterisk::AGICommand.new(command, subject) }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
-              mock_action.should_receive(:internal=).never
               Component::Asterisk::AGICommand.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
@@ -916,7 +889,6 @@ module Punchblock
 
             it 'should create an Output component and execute it asynchronously' do
               Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:internal=).never
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
@@ -931,7 +903,6 @@ module Punchblock
 
             it 'should create an Input component and execute it asynchronously' do
               Component::Input.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:internal=).never
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
@@ -946,7 +917,6 @@ module Punchblock
 
             it 'should create a Record component and execute it asynchronously' do
               Component::Record.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:internal=).never
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
@@ -1059,11 +1029,9 @@ module Punchblock
             end
 
             it "executes the proper dialplan Bridge application" do
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Bridge', other_channel).and_return code: 200
               translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
               subject.execute_command command
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Bridge"
-              agi_command.params_array.should be == [other_channel]
             end
           end
 
@@ -1131,11 +1099,60 @@ module Punchblock
           end
         end#execute_command
 
-        describe '#send_agi_action' do
+        describe '#execute_agi_command' do
+          before { stub_uuids Punchblock.new_uuid }
+
+          let :response do
+            RubyAMI::Response.new 'ActionID' => "552a9d9f-46d7-45d8-a257-06fe95f48d99",
+              'Message' => 'Added AGI original_command to queue'
+          end
+
           it 'should send an appropriate AsyncAGI AMI action' do
-            pending
-            subject.wrapped_object.should_receive(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
-            subject.send_agi_action 'FOO'
+            Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
+            ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => Punchblock.new_uuid).and_return(response)
+            subject.execute_agi_command 'EXEC ANSWER'
+          end
+
+          context 'with some parameters' do
+            let(:params) { [1000, 'foo'] }
+
+            it 'should send the appropriate action' do
+              Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
+              ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => Punchblock.new_uuid).and_return(response)
+              subject.execute_agi_command 'WAIT FOR DIGIT', *params
+            end
+          end
+
+          context 'with an error' do
+            let :error do
+              RubyAMI::Error.new.tap { |e| e.message = 'Action failed' }
+            end
+
+            it 'should raise the error' do
+              ami_client.should_receive(:send_ami_action).once.and_raise error
+              expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(RubyAMI::Error, 'Action failed')
+            end
+          end
+
+          describe 'when receiving an AsyncAGI event' do
+            context 'of type Exec' do
+              let(:ami_event) do
+                RubyAMI::Event.new 'AsyncAGI',
+                  "SubEvent"   => "Exec",
+                  "Channel"    => channel,
+                  "CommandId"  => Punchblock.new_uuid,
+                  "Command"    => "EXEC ANSWER",
+                  "Result"     => "200%20result=123%20(timeout)%0A"
+              end
+
+              it 'should return the result' do
+                fut = subject.future.execute_agi_command 'EXEC ANSWER'
+
+                subject.process_ami_event ami_event
+
+                fut.value.should == {code: 200, result: 123, data: 'timeout'}
+              end
+            end
           end
         end
 

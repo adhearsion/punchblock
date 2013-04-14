@@ -10,6 +10,7 @@ module Punchblock
 
       extend ActiveSupport::Autoload
 
+      autoload :AGICommand
       autoload :Call
       autoload :Component
 

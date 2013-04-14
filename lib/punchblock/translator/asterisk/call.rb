@@ -89,7 +89,7 @@ module Punchblock
         def send_progress
           return if answered? || outbound? || @progress_sent
           @progress_sent = true
-          send_agi_action "EXEC Progress"
+          execute_agi_command "EXEC Progress"
         end
 
         def channel=(other)
@@ -172,21 +172,19 @@ module Punchblock
             if outbound?
               command.response = true
             else
-              send_agi_action 'EXEC RINGING' do |response|
-                command.response = true
-              end
-            end
-          when Command::Answer
-            send_agi_action 'ANSWER' do |response|
+              execute_agi_command 'EXEC RINGING'
               command.response = true
             end
+          when Command::Answer
+            execute_agi_command 'ANSWER'
+            command.response = true
           when Command::Hangup
             send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
             command.response = true
           when Command::Join
             other_call = translator.call_with_id command.call_id
             @pending_joins[other_call.channel] = command
-            send_agi_action 'EXEC Bridge', other_call.channel
+            execute_agi_command 'EXEC Bridge', other_call.channel
           when Command::Unjoin
             other_call = translator.call_with_id command.call_id
             redirect_back other_call
@@ -202,9 +200,8 @@ module Punchblock
             else
               'EXEC Congestion'
             end
-            send_agi_action rejection do |response|
-              command.response = true
-            end
+            execute_agi_command rejection
+            command.response = true
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output
@@ -222,13 +219,18 @@ module Punchblock
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end
 
-        def send_agi_action(command, *params, &block)
-          @current_agi_command = Punchblock::Component::Asterisk::AGI::Command.new :name => command, :params => params, :target_call_id => id
-          @current_agi_command.request!
-          @current_agi_command.register_handler :internal, Punchblock::Event::Complete do |e|
-            block.call e if block
+        def execute_agi_command(command, *params)
+          agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
+          condition = Celluloid::Condition.new
+          register_tmp_handler :ami, name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec', [:[], 'CommandId'] => agi.id do |event|
+            condition.signal event
           end
-          execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
+          agi.execute @ami_client
+          event = condition.wait
+          return unless event
+          agi.parse_result event
+        rescue RubyAMI::Error => e
+          abort e
         end
 
         def logger_id
@@ -275,7 +277,6 @@ module Punchblock
         def execute_component(type, command, options = {})
           type.new_link(command, current_actor).tap do |component|
             register_component component
-            component.internal = true if options[:internal]
             component.async.execute
           end
         end

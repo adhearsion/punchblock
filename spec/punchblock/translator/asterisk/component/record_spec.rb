@@ -99,7 +99,7 @@ module Punchblock
               context "set to true" do
                 let(:command_options) { { :start_paused => true } }
                 it "should return an error and not execute any actions" do
-                  mock_call.async.should_receive(:send_agi_action).never
+                  mock_call.should_receive(:execute_agi_command).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A start-paused value of true is unsupported.'
                   original_command.response(0.1).should be == error
@@ -129,7 +129,7 @@ module Punchblock
               context "set to a positive number" do
                 let(:command_options) { { :initial_timeout => 10 } }
                 it "should return an error and not execute any actions" do
-                  mock_call.async.should_receive(:send_agi_action).never
+                  mock_call.should_receive(:execute_agi_command).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An initial-timeout value is unsupported.'
                   original_command.response(0.1).should be == error
@@ -159,7 +159,7 @@ module Punchblock
               context "set to a positive number" do
                 let(:command_options) { { :final_timeout => 10 } }
                 it "should return an error and not execute any actions" do
-                  mock_call.async.should_receive(:send_agi_action).never
+                  mock_call.should_receive(:execute_agi_command).never
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A final-timeout value is unsupported.'
                   original_command.response(0.1).should be == error
@@ -207,7 +207,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :start_beep => nil } }
                 it "should execute normally" do
-                  mock_call.async.should_receive(:send_agi_action).never.with('STREAM FILE', 'beep', '""')
+                  mock_call.should_receive(:execute_agi_command).never.with('STREAM FILE', 'beep', '""')
                   ami_client.should_receive(:send_ami_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
@@ -217,7 +217,7 @@ module Punchblock
               context "set to false" do
                 let(:command_options) { { :start_beep => false } }
                 it "should execute normally" do
-                  mock_call.async.should_receive(:send_agi_action).never.with('STREAM FILE', 'beep', '""')
+                  mock_call.should_receive(:execute_agi_command).never.with('STREAM FILE', 'beep', '""')
                   ami_client.should_receive(:send_ami_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
@@ -228,19 +228,8 @@ module Punchblock
                 let(:command_options) { { :start_beep => true } }
 
                 it "should play a beep before recording" do
-                  subject.wrapped_object.should_receive(:wait).once
-                  mock_call.async.should_receive(:send_agi_action).once.with('STREAM FILE', 'beep', '""').ordered
+                  mock_call.should_receive(:execute_agi_command).once.with('STREAM FILE', 'beep', '""').ordered.and_return code: 200
                   ami_client.should_receive(:send_ami_action).once.ordered
-                  subject.execute
-                  original_command.response(0.1).should be_a Ref
-                end
-
-                it "should wait for the beep to finish before starting recording" do
-                  async_proxy = mock_call.async
-                  def async_proxy.send_agi_action(*args)
-                    yield
-                  end
-                  ami_client.should_receive(:send_ami_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end

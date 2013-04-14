@@ -57,9 +57,7 @@ module Punchblock
               full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
               ami_client.should_receive(:send_ami_action)
               subject.execute
-              monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
-                e['Channel'] = channel
-              end
+              monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
               mock_call.process_ami_event monitor_stop_event
               reason.should be_a Punchblock::Component::Record::Complete::Success
               recording.uri.should be == full_filename
@@ -70,9 +68,7 @@ module Punchblock
               ami_client.should_receive(:send_ami_action).twice
               subject.execute
 
-              monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
-                e['Channel'] = channel
-              end
+              monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
 
               mock_call.process_ami_event monitor_stop_event
 
@@ -183,9 +179,7 @@ module Punchblock
                 it "provides the correct filename in the recording" do
                   ami_client.should_receive(:send_ami_action)
                   subject.execute
-                  monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
-                    e['Channel'] = channel
-                  end
+                  monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
                   mock_call.process_ami_event monitor_stop_event
                   recording.uri.should match(/.*\.wav$/)
                 end
@@ -202,9 +196,7 @@ module Punchblock
                 it "provides the correct filename in the recording" do
                   ami_client.should_receive(:send_ami_action)
                   subject.execute
-                  monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
-                    e['Channel'] = channel
-                  end
+                  monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
                   mock_call.process_ami_event monitor_stop_event
                   recording.uri.should match(/.*\.mp3$/)
                 end
@@ -301,9 +293,7 @@ module Punchblock
                   subject.execute
                   sleep 1.2
 
-                  monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
-                    e['Channel'] = channel
-                  end
+                  monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
                   mock_call.process_ami_event monitor_stop_event
 
                   reason.should be_a Punchblock::Component::Record::Complete::Success
@@ -340,9 +330,7 @@ module Punchblock
               end
 
               let :send_stop_event do
-                monitor_stop_event = RubyAMI::Event.new('MonitorStop').tap do |e|
-                  e['Channel'] = channel
-                end
+                monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
                 mock_call.process_ami_event monitor_stop_event
               end
 

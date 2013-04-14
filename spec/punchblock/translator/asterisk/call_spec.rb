@@ -266,14 +266,13 @@ module Punchblock
         describe '#process_ami_event' do
           context 'with a Hangup event' do
             let :ami_event do
-              RubyAMI::Event.new('Hangup').tap do |e|
-                e['Uniqueid']     = "1320842458.8"
-                e['Calleridnum']  = "5678"
-                e['Calleridname'] = "Jane Smith"
-                e['Cause']        = cause
-                e['Cause-txt']    = cause_txt
-                e['Channel']      = "SIP/1234-00000000"
-              end
+              RubyAMI::Event.new 'Hangup',
+                'Uniqueid'      => "1320842458.8",
+                'Calleridnum'   => "5678",
+                'Calleridname'  => "Jane Smith",
+                'Cause'         => cause,
+                'Cause-txt'     => cause_txt,
+                'Channel'       => "SIP/1234-00000000"
             end
 
             let(:cause)     { '16' }
@@ -451,13 +450,12 @@ module Punchblock
             end
 
             let(:ami_event) do
-              RubyAMI::Event.new("AsyncAGI").tap do |e|
-                e["SubEvent"]   = "End"
-                e["Channel"]    = "SIP/1234-00000000"
-                e["CommandID"]  = component.id
-                e["Command"]    = "EXEC ANSWER"
-                e["Result"]     = "200%20result=123%20(timeout)%0A"
-              end
+              RubyAMI::Event.new "AsyncAGI",
+                "SubEvent"  => "End",
+                "Channel"   => "SIP/1234-00000000",
+                "CommandID" => component.id,
+                "Command"   => "EXEC ANSWER",
+                "Result"    => "200%20result=123%20(timeout)%0A"
             end
 
             before do
@@ -472,17 +470,16 @@ module Punchblock
 
           context 'with a Newstate event' do
             let :ami_event do
-              RubyAMI::Event.new('Newstate').tap do |e|
-                e['Privilege']          = 'call,all'
-                e['Channel']            = 'SIP/1234-00000000'
-                e['ChannelState']       = channel_state
-                e['ChannelStateDesc']   = channel_state_desc
-                e['CallerIDNum']        = ''
-                e['CallerIDName']       = ''
-                e['ConnectedLineNum']   = ''
-                e['ConnectedLineName']  = ''
-                e['Uniqueid']           = '1326194671.0'
-              end
+              RubyAMI::Event.new 'Newstate',
+                'Privilege'         => 'call,all',
+                'Channel'           => 'SIP/1234-00000000',
+                'ChannelState'      => channel_state,
+                'ChannelStateDesc'  => channel_state_desc,
+                'CallerIDNum'       => '',
+                'CallerIDName'      => '',
+                'ConnectedLineNum'  => '',
+                'ConnectedLineName' => '',
+                'Uniqueid'          => '1326194671.0'
             end
 
             context 'ringing' do
@@ -522,18 +519,17 @@ module Punchblock
 
           context 'with an OriginateResponse event' do
             let :ami_event do
-              RubyAMI::Event.new('OriginateResponse').tap do |e|
-                e['Privilege']    = 'call,all'
-                e['ActionID']     = '9d0c1aa4-5e3b-4cae-8aef-76a6119e2909'
-                e['Response']     = response
-                e['Channel']      = 'SIP/15557654321'
-                e['Context']      = ''
-                e['Exten']        = ''
-                e['Reason']       = '0'
-                e['Uniqueid']     = uniqueid
-                e['CallerIDNum']  = 'sip:5551234567'
-                e['CallerIDName'] = 'Bryan 100'
-              end
+              RubyAMI::Event.new 'OriginateResponse',
+                'Privilege'     => 'call,all',
+                'ActionID'      => '9d0c1aa4-5e3b-4cae-8aef-76a6119e2909',
+                'Response'      => response,
+                'Channel'       => 'SIP/15557654321',
+                'Context'       => '',
+                'Exten'         => '',
+                'Reason'        => '0',
+                'Uniqueid'      => uniqueid,
+                'CallerIDNum'   => 'sip:5551234567',
+                'CallerIDName'  => 'Bryan 100'
             end
 
             context 'sucessful' do
@@ -571,13 +567,12 @@ module Punchblock
 
           context 'with a handler registered for a matching event' do
             let :ami_event do
-              RubyAMI::Event.new('DTMF').tap do |e|
-                e['Digit']    = '4'
-                e['Start']    = 'Yes'
-                e['End']      = 'No'
-                e['Uniqueid'] = "1320842458.8"
-                e['Channel']  = "SIP/1234-00000000"
-              end
+              RubyAMI::Event.new 'DTMF',
+                'Digit'     => '4',
+                'Start'     => 'Yes',
+                'End'       => 'No',
+                'Uniqueid'  => "1320842458.8",
+                'Channel'   => "SIP/1234-00000000"
             end
 
             let(:response) { mock 'Response' }
@@ -593,12 +588,11 @@ module Punchblock
 
           context 'with a BridgeExec event' do
             let :ami_event do
-              RubyAMI::Event.new('BridgeExec').tap do |e|
-                e['Privilege'] = "call,all"
-                e['Response'] = "Success"
-                e['Channel1']  = "SIP/foo"
-                e['Channel2']  = other_channel
-              end
+              RubyAMI::Event.new 'BridgeExec',
+                'Privilege' => "call,all",
+                'Response'  => "Success",
+                'Channel1'  => "SIP/foo",
+                'Channel2'  => other_channel
             end
 
             let(:other_channel) { 'SIP/5678-00000000' }
@@ -626,12 +620,11 @@ module Punchblock
 
               context "with the channel names reversed" do
                 let :ami_event do
-                  RubyAMI::Event.new('BridgeExec').tap do |e|
-                    e['Privilege'] = "call,all"
-                    e['Response'] = "Success"
-                    e['Channel1']  = other_channel
-                    e['Channel2']  = "SIP/foo"
-                  end
+                  RubyAMI::Event.new 'BridgeExec',
+                    'Privilege' => "call,all",
+                    'Response'  => "Success",
+                    'Channel1'  => other_channel,
+                    'Channel2'  => "SIP/foo"
                 end
 
                 it 'retrieves and sets success on the correct Join' do
@@ -656,31 +649,29 @@ module Punchblock
             end
 
             let :ami_event do
-              RubyAMI::Event.new('Bridge').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Bridgestate']  = state
-                e['Bridgetype']   = "core"
-                e['Channel1']     = channel
-                e['Channel2']     = other_channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Bridge',
+                'Privilege'   => "call,all",
+                'Bridgestate' => state,
+                'Bridgetype'  => "core",
+                'Channel1'    => channel,
+                'Channel2'    => other_channel,
+                'Uniqueid1'   => "1319717537.11",
+                'Uniqueid2'   => "1319717537.10",
+                'CallerID1'   => "1234",
+                'CallerID2'   => "5678"
             end
 
             let :switched_ami_event do
-              RubyAMI::Event.new('Bridge').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Bridgestate']  = state
-                e['Bridgetype']   = "core"
-                e['Channel1']     = other_channel
-                e['Channel2']     = channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Bridge',
+                'Privilege'   => "call,all",
+                'Bridgestate' => state,
+                'Bridgetype'  => "core",
+                'Channel1'    => other_channel,
+                'Channel2'    => channel,
+                'Uniqueid1'   => "1319717537.11",
+                'Uniqueid2'   => "1319717537.10",
+                'CallerID1'   => "1234",
+                'CallerID2'   => "5678"
             end
 
             before do
@@ -740,27 +731,25 @@ module Punchblock
             end
 
             let :ami_event do
-              RubyAMI::Event.new('Unlink').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Channel1']     = channel
-                e['Channel2']     = other_channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Unlink',
+                'Privilege' => "call,all",
+                'Channel1'  => channel,
+                'Channel2'  => other_channel,
+                'Uniqueid1' => "1319717537.11",
+                'Uniqueid2' => "1319717537.10",
+                'CallerID1' => "1234",
+                'CallerID2' => "5678"
             end
 
             let :switched_ami_event do
-              RubyAMI::Event.new('Unlink').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Channel1']     = other_channel
-                e['Channel2']     = channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Unlink',
+                'Privilege' => "call,all",
+                'Channel1'  => other_channel,
+                'Channel2'  => channel,
+                'Uniqueid1' => "1319717537.11",
+                'Uniqueid2' => "1319717537.10",
+                'CallerID1' => "1234",
+                'CallerID2' => "5678"
             end
 
             before do
@@ -788,14 +777,13 @@ module Punchblock
           end
 
           let :ami_event do
-            RubyAMI::Event.new('Foo').tap do |e|
-              e['Uniqueid']     = "1320842458.8"
-              e['Calleridnum']  = "5678"
-              e['Calleridname'] = "Jane Smith"
-              e['Cause']        = "0"
-              e['Cause-txt']    = "Unknown"
-              e['Channel']      = channel
-            end
+            RubyAMI::Event.new 'Foo',
+              'Uniqueid'      => "1320842458.8",
+              'Calleridnum'   => "5678",
+              'Calleridname'  => "Jane Smith",
+              'Cause'         => "0",
+              'Cause-txt'     => "Unknown",
+              'Channel'       => channel
           end
 
           let :expected_pb_event do

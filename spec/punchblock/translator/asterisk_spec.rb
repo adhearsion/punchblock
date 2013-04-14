@@ -191,11 +191,10 @@ module Punchblock
 
         context "for an incoming call which began executing but crashed" do
           let :ami_event do
-            RubyAMI::Event.new('AsyncAGI').tap do |e|
-              e['SubEvent'] = "Start"
-              e['Channel']  = "SIP/1234-00000000"
-              e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-            end
+            RubyAMI::Event.new 'AsyncAGI',
+              'SubEvent' => "Start",
+              'Channel'  => "SIP/1234-00000000",
+              'Env'      => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
           end
 
           let(:call)    { subject.call_for_channel('SIP/1234-00000000') }
@@ -331,12 +330,11 @@ module Punchblock
 
       describe '#handle_ami_event' do
         let :ami_event do
-          RubyAMI::Event.new('Newchannel').tap do |e|
-            e['Channel']  = "SIP/101-3f3f"
-            e['State']    = "Ring"
-            e['Callerid'] = "101"
-            e['Uniqueid'] = "1094154427.10"
-          end
+          RubyAMI::Event.new 'Newchannel',
+            'Channel'  => "SIP/101-3f3f",
+            'State'    => "Ring",
+            'Callerid' => "101",
+            'Uniqueid' => "1094154427.10"
         end
 
         let :expected_pb_event do
@@ -371,11 +369,10 @@ module Punchblock
 
         describe 'with an AsyncAGI Start event' do
           let :ami_event do
-            RubyAMI::Event.new('AsyncAGI').tap do |e|
-              e['SubEvent'] = "Start"
-              e['Channel']  = "SIP/1234-00000000"
-              e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-            end
+            RubyAMI::Event.new 'AsyncAGI',
+              'SubEvent' => "Start",
+              'Channel'  => "SIP/1234-00000000",
+              'Env'      => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
           end
 
           before { subject.wrapped_object.stub :handle_pb_event }
@@ -432,11 +429,10 @@ module Punchblock
 
           context "for a 'h' extension" do
             let :ami_event do
-              RubyAMI::Event.new('AsyncAGI').tap do |e|
-                e['SubEvent'] = "Start"
-                e['Channel']  = "SIP/1234-00000000"
-                e['Env']      = "agi_extension%3A%20h%0A%0A"
-              end
+              RubyAMI::Event.new 'AsyncAGI',
+                'SubEvent' => "Start",
+                'Channel'  => "SIP/1234-00000000",
+                'Env'      => "agi_extension%3A%20h%0A%0A"
             end
 
             it "should not create a new call" do
@@ -452,11 +448,10 @@ module Punchblock
 
           context "for a 'Kill' type" do
             let :ami_event do
-              RubyAMI::Event.new('AsyncAGI').tap do |e|
-                e['SubEvent'] = "Start"
-                e['Channel']  = "SIP/1234-00000000"
-                e['Env']      = "agi_type%3A%20Kill%0A%0A"
-              end
+              RubyAMI::Event.new 'AsyncAGI',
+                'SubEvent' => "Start",
+                'Channel'  => "SIP/1234-00000000",
+                'Env'      => "agi_type%3A%20Kill%0A%0A"
             end
 
             it "should not create a new call" do
@@ -473,13 +468,12 @@ module Punchblock
 
         describe 'with a VarSet event including a punchblock_call_id' do
           let :ami_event do
-            RubyAMI::Event.new('VarSet').tap do |e|
-              e["Privilege"]  = "dialplan,all"
-              e["Channel"]    = "SIP/1234-00000000"
-              e["Variable"]   = "punchblock_call_id"
-              e["Value"]      = call_id
-              e["Uniqueid"]   = "1326210224.0"
-            end
+            RubyAMI::Event.new 'VarSet',
+              "Privilege" => "dialplan,all",
+              "Channel"   => "SIP/1234-00000000",
+              "Variable"  => "punchblock_call_id",
+              "Value"     => call_id,
+              "Uniqueid"  => "1326210224.0"
           end
 
           before do
@@ -526,14 +520,13 @@ module Punchblock
 
         describe 'with an AMI event for a known channel' do
           let :ami_event do
-            RubyAMI::Event.new('Hangup').tap do |e|
-              e['Uniqueid']     = "1320842458.8"
-              e['Calleridnum']  = "5678"
-              e['Calleridname'] = "Jane Smith"
-              e['Cause']        = "0"
-              e['Cause-txt']    = "Unknown"
-              e['Channel']      = "SIP/1234-00000000"
-            end
+            RubyAMI::Event.new 'Hangup',
+              'Uniqueid'      => "1320842458.8",
+              'Calleridnum'   => "5678",
+              'Calleridname'  => "Jane Smith",
+              'Cause'         => "0",
+              'Cause-txt'     => "Unknown",
+              'Channel'       => "SIP/1234-00000000"
           end
 
           let(:call) do
@@ -551,12 +544,11 @@ module Punchblock
 
           context 'with a Channel1 and Channel2 specified on the event' do
             let :ami_event do
-              RubyAMI::Event.new('BridgeAction').tap do |e|
-                e['Privilege'] = "call,all"
-                e['Response'] = "Success"
-                e['Channel1']  = "SIP/1234-00000000"
-                e['Channel2']  = "SIP/5678-00000000"
-              end
+              RubyAMI::Event.new 'BridgeAction',
+                'Privilege' => "call,all",
+                'Response'  => "Success",
+                'Channel1'  => "SIP/1234-00000000",
+                'Channel2'  => "SIP/5678-00000000"
             end
 
             context 'with calls for those channels' do
@@ -577,21 +569,19 @@ module Punchblock
 
         describe 'with an event for a channel with Bridge and special statuses appended' do
           let :ami_event do
-            RubyAMI::Event.new('AGIExec').tap do |e|
-              e['SubEvent']    = "End"
-              e['Channel']      = "Bridge/SIP/1234-00000000<ZOMBIE>"
-            end
+            RubyAMI::Event.new 'AGIExec',
+              'SubEvent'  => "End",
+              'Channel'   => "Bridge/SIP/1234-00000000<ZOMBIE>"
           end
 
           let :ami_event2 do
-            RubyAMI::Event.new('Hangup').tap do |e|
-              e['Uniqueid']     = "1320842458.8"
-              e['Calleridnum']  = "5678"
-              e['Calleridname'] = "Jane Smith"
-              e['Cause']        = "0"
-              e['Cause-txt']    = "Unknown"
-              e['Channel']      = "Bridge/SIP/1234-00000000<ZOMBIE>"
-            end
+            RubyAMI::Event.new 'Hangup',
+              'Uniqueid'      => "1320842458.8",
+              'Calleridnum'   => "5678",
+              'Calleridname'  => "Jane Smith",
+              'Cause'         => "0",
+              'Cause-txt'     => "Unknown",
+              'Channel'       => "Bridge/SIP/1234-00000000<ZOMBIE>"
           end
 
           let(:call) do

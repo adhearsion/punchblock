@@ -54,11 +54,10 @@ module Punchblock
             end
 
             def ami_event_for_dtmf(digit, position)
-              RubyAMI::Event.new('DTMF').tap do |e|
-                e['Digit']  = digit.to_s
-                e['Start']  = position == :start ? 'Yes' : 'No'
-                e['End']    = position == :end ? 'Yes' : 'No'
-              end
+              RubyAMI::Event.new 'DTMF',
+                'Digit' => digit.to_s,
+                'Start' => position == :start ? 'Yes' : 'No',
+                'End'   => position == :end ? 'Yes' : 'No'
             end
 
             def send_ami_events_for_dtmf(digit)

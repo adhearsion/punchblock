@@ -11,13 +11,11 @@ module Punchblock
             ARG_QUOTER = /["\\]/.freeze
 
             def execute
-              response = @call.send_ami_action 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id
-              raise response if response.is_a?(RubyAMI::Error)
-              # THIS NEEDS DEALING WITH. THE RUBYAMI STREAM WILL RAISE AND
-              # KILL TRANSLATOR/CALL. NEED TO INVOKE DIRECTLY ON THE STREAM
+              ami_client.send_ami_action 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id
               send_ref
             rescue RubyAMI::Error
               set_node_response false
+              terminate
             end
 
             def handle_ami_event(event)

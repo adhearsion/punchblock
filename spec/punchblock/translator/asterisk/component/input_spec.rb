@@ -10,8 +10,9 @@ module Punchblock
           include HasMockCallbackConnection
 
           let(:media_engine)    { nil }
-          let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
-          let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
+          let(:ami_client)      { mock('AMI') }
+          let(:translator)      { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
+          let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
           let(:original_command_options) { {} }
 
           let :original_command do

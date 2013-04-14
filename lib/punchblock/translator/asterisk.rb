@@ -118,20 +118,16 @@ module Punchblock
       def execute_global_command(command)
         case command
         when Punchblock::Component::Asterisk::AMI::Action
-          component = Component::Asterisk::AMIAction.new command, current_actor
+          component = Component::Asterisk::AMIAction.new command, current_actor, ami_client
           register_component component
           component.async.execute
         when Punchblock::Command::Dial
-          call = Call.new_link command.to, current_actor
+          call = Call.new_link command.to, current_actor, ami_client, connection
           register_call call
           call.async.dial command
         else
           command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command"
         end
-      end
-
-      def send_ami_action(name, headers = {})
-        ami_client.send_action name, headers
       end
 
       def run_at_fully_booted
@@ -160,6 +156,10 @@ module Punchblock
       end
 
       private
+
+      def send_ami_action(name, headers = {})
+        ami_client.send_action name, headers
+      end
 
       def handle_varset_ami_event(event)
         return unless event.name == 'VarSet' && event['Variable'] == 'punchblock_call_id' && (call = call_with_id event['Value'])
@@ -206,7 +206,7 @@ module Punchblock
 
         return if env[:agi_extension] == 'h' || env[:agi_type] == 'Kill'
 
-        call = Call.new event['Channel'], current_actor, env
+        call = Call.new event['Channel'], current_actor, ami_client, connection, env
         link call
         register_call call
         call.async.send_offer

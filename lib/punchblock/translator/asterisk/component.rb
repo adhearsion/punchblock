@@ -66,7 +66,11 @@ module Punchblock
           private
 
           def translator
-            call.translator
+            @translator ||= call.translator
+          end
+
+          def ami_client
+            call.ami_client
           end
 
           def set_node_response(value)

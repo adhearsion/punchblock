@@ -10,7 +10,8 @@ module Punchblock
           describe AMIAction do
             include HasMockCallbackConnection
 
-            let(:mock_translator) { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
+            let(:ami_client)      { stub('AMI Client').as_null_object }
+            let(:mock_translator) { Punchblock::Translator::Asterisk.new ami_client, connection }
 
             let :original_command do
               Punchblock::Component::Asterisk::AMI::Action.new :name => 'ExtensionStatus', :params => { :context => 'default', :exten => 'idonno' }
@@ -20,7 +21,7 @@ module Punchblock
               original_command.request!
             end
 
-            subject { AMIAction.new original_command, mock_translator }
+            subject { AMIAction.new original_command, mock_translator, ami_client }
 
             context 'initial execution' do
               let(:component_id) { Punchblock.new_uuid }
@@ -32,7 +33,7 @@ module Punchblock
               before { stub_uuids component_id }
 
               it 'should send the appropriate RubyAMI::Action and send the component node a ref' do
-                mock_translator.should_receive(:send_ami_action).once.with('ExtensionStatus', 'Context' => 'default', 'Exten' => 'idonno').and_return(RubyAMI::Response.new)
+                ami_client.should_receive(:send_ami_action).once.with('ExtensionStatus', 'Context' => 'default', 'Exten' => 'idonno').and_return(RubyAMI::Response.new)
                 subject.execute
                 original_command.response(1).should == expected_response
               end
@@ -52,10 +53,9 @@ module Punchblock
                 Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => 'Channel status will follow', :attributes => {:exten => "idonno", :context => "default", :hint => "", :status => "-1"}
               end
 
-              before { mock_translator.should_receive(:send_ami_action).once.and_return response }
-
               context 'for a non-causal action' do
                 it 'should send a complete event to the component node' do
+                  ami_client.should_receive(:send_ami_action).once.and_return response
                   subject.wrapped_object.should_receive(:send_complete_event).once.with expected_complete_reason
                   subject.execute
                 end
@@ -103,6 +103,8 @@ module Punchblock
                   Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => 'Channel status will follow', :attributes => {:exten => "idonno", :context => "default", :hint => "", :status => "-1", :eventlist => 'Complete', :listitems => '3'}
                 end
 
+                before { ami_client.should_receive(:send_ami_action).once.and_return response }
+
                 it 'should send events to the component node' do
                   event_node
                   original_command.register_handler :internal, Punchblock::Event::Asterisk::AMI::Event do |event|
@@ -123,7 +125,7 @@ module Punchblock
               end
 
               context 'with an error' do
-                let :response do
+                let :error do
                   RubyAMI::Error.new.tap { |e| e.message = 'Action failed' }
                 end
 
@@ -132,6 +134,7 @@ module Punchblock
                 end
 
                 it 'should send a complete event to the component node' do
+                  ami_client.should_receive(:send_ami_action).once.and_raise error
                   expected_complete_reason
                   subject.execute
                   original_command.complete_event(0.5).reason.should be == expected_complete_reason

@@ -22,8 +22,8 @@ module Punchblock
 
         trap_exit :actor_died
 
-        def initialize(channel, translator, agi_env = nil)
-          @channel, @translator = channel, translator
+        def initialize(channel, translator, ami_client, connection, agi_env = nil)
+          @channel, @translator, @ami_client, @connection = channel, translator, ami_client, connection
           @agi_env = agi_env || {}
           @id, @components = Punchblock.new_uuid, {}
           @answered = false
@@ -231,10 +231,6 @@ module Punchblock
           execute_component Component::Asterisk::AGICommand, @current_agi_command, :internal => true
         end
 
-        def send_ami_action(name, headers = {})
-          translator.send_ami_action name, headers
-        end
-
         def logger_id
           "#{self.class}: #{id}"
         end
@@ -265,6 +261,10 @@ module Punchblock
         end
 
         private
+
+        def send_ami_action(name, headers = {})
+          @ami_client.send_ami_action name, headers
+        end
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)

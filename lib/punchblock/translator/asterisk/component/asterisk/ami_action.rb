@@ -8,30 +8,24 @@ module Punchblock
           class AMIAction < Component
             attr_reader :translator
 
-            def initialize(component_node, translator)
+            def initialize(component_node, translator, ami_client)
               super component_node, nil
-              @translator = translator
+              @translator, @ami_client = translator, ami_client
             end
 
             def execute
               send_ref
-              handle_response send_action
+              response = send_action
+              final_event = send_events response
+              send_complete_event success_reason(response, final_event)
+            rescue RubyAMI::Error => e
+              send_complete_event error_reason(e)
             end
 
             private
 
             def send_action
-              @translator.send_ami_action @component_node.name, action_headers
-            end
-
-            def handle_response(response)
-              case response
-              when RubyAMI::Error
-                send_complete_event error_reason(response)
-              when RubyAMI::Response
-                final_event = send_events response
-                send_complete_event success_reason(response, final_event)
-              end
+              @ami_client.send_ami_action @component_node.name, action_headers
             end
 
             def error_reason(response)

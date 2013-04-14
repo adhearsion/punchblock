@@ -37,10 +37,10 @@ module Punchblock
               wait :beep_finished
             end
 
-            call.async.send_ami_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
+            ami_client.send_ami_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
             unless max_duration == -1
               after max_duration/1000 do
-                call.async.send_ami_action 'StopMonitor', 'Channel' => call.channel
+                ami_client.send_ami_action 'StopMonitor', 'Channel' => call.channel
               end
             end
           rescue OptionError => e
@@ -51,20 +51,14 @@ module Punchblock
             case command
             when Punchblock::Component::Stop
               command.response = true
-              a = current_actor
-              call.async.send_ami_action 'StopMonitor', 'Channel' => call.channel do |complete_event|
-                @complete_reason = stop_reason
-              end
+              ami_client.send_ami_action 'StopMonitor', 'Channel' => call.channel
+              @complete_reason = stop_reason
             when Punchblock::Component::Record::Pause
-              a = current_actor
-              call.async.send_ami_action 'PauseMonitor', 'Channel' => call.channel do |complete_event|
-                command.response = true
-              end
+              ami_client.send_ami_action 'PauseMonitor', 'Channel' => call.channel
+              command.response = true
             when Punchblock::Component::Record::Resume
-              a = current_actor
-              call.async.send_ami_action 'ResumeMonitor', 'Channel' => call.channel do |complete_event|
-                command.response = true
-              end
+              ami_client.send_ami_action 'ResumeMonitor', 'Channel' => call.channel
+              command.response = true
             else
               super
             end

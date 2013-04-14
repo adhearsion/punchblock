@@ -11,8 +11,9 @@ module Punchblock
             include HasMockCallbackConnection
 
             let(:channel)       { 'SIP/foo' }
-            let(:translator)    { Punchblock::Translator::Asterisk.new mock('AMI'), connection }
-            let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator }
+            let(:ami_client)    { stub('AMI Client').as_null_object }
+            let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection }
+            let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator, ami_client, connection }
             let(:component_id)  { Punchblock.new_uuid }
 
             before { stub_uuids component_id }
@@ -31,7 +32,7 @@ module Punchblock
               before { original_command.request! }
 
               it 'should send the appropriate action' do
-                mock_call.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => component_id).and_return(response)
+                ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => component_id).and_return(response)
                 subject.execute
               end
 
@@ -43,7 +44,7 @@ module Punchblock
                 end
 
                 it 'should send the appropriate action' do
-                  mock_call.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id).and_return(response)
+                  ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id).and_return(response)
                   subject.execute
                 end
               end
@@ -52,7 +53,6 @@ module Punchblock
             context 'when the AMI action completes' do
               before do
                 original_command.request!
-                mock_call.should_receive(:send_ami_action).once.and_return(response)
               end
 
               let :expected_response do
@@ -65,6 +65,7 @@ module Punchblock
               end
 
               it 'should send the component node a ref with the action ID' do
+                ami_client.should_receive(:send_ami_action).once.and_return response
                 subject.execute
                 original_command.response(1).should eql(expected_response)
               end
@@ -75,8 +76,10 @@ module Punchblock
                 end
 
                 it 'should send the component node false' do
+                  ami_client.should_receive(:send_ami_action).once.and_raise response
                   subject.execute
                   original_command.response(1).should be_false
+                  subject.should_not be_alive
                 end
               end
             end

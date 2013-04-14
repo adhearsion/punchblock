@@ -13,7 +13,8 @@ module Punchblock
         describe Component do
           let(:connection)  { Punchblock::Connection::Asterisk.new }
           let(:translator)  { connection.translator }
-          let(:call)        { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
+          let(:ami_client)  { connection.ami_client }
+          let(:call)        { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
           let(:command)     { Punchblock::Component::Input.new }
 
           subject { Component.new command, call }

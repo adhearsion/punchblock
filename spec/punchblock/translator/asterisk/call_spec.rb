@@ -7,7 +7,9 @@ module Punchblock
     class Asterisk
       describe Call do
         let(:channel)         { 'SIP/foo' }
-        let(:translator)      { Asterisk.new stub('AMI Client').as_null_object, stub('connection').as_null_object }
+        let(:ami_client)      { stub('AMI Client').as_null_object }
+        let(:connection)      { stub('connection').as_null_object }
+        let(:translator)      { Asterisk.new ami_client, connection }
         let(:agi_env) do
           {
             :agi_request      => 'async',
@@ -58,7 +60,7 @@ module Punchblock
           }
         end
 
-        subject { Call.new channel, translator, agi_env }
+        subject { Call.new channel, translator, ami_client, connection, agi_env }
 
         its(:id)          { should be_a String }
         its(:channel)     { should be == channel }
@@ -603,7 +605,7 @@ module Punchblock
 
             context "when a join has been executed against another call" do
               let :other_call do
-                Call.new other_channel, translator
+                Call.new other_channel, translator, ami_client, connection
               end
 
               let(:other_call_id) { other_call.id }
@@ -650,7 +652,7 @@ module Punchblock
             let(:other_channel) { 'SIP/5678-00000000' }
             let(:other_call_id) { 'def567' }
             let :other_call do
-              Call.new other_channel, translator
+              Call.new other_channel, translator, ami_client, connection
             end
 
             let :ami_event do
@@ -734,7 +736,7 @@ module Punchblock
             let(:other_channel) { 'SIP/5678-00000000' }
             let(:other_call_id) { 'def567' }
             let :other_call do
-              Call.new other_channel, translator
+              Call.new other_channel, translator, ami_client, connection
             end
 
             let :ami_event do
@@ -896,7 +898,7 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a Hangup AMI command and set the command's response" do
-              translator.should_receive(:send_ami_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
+              ami_client.should_receive(:send_ami_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
               subject.execute_command command
               command.response(0.5).should be true
             end
@@ -1061,7 +1063,7 @@ module Punchblock
             let(:other_translator)  { stub('Translator::Asterisk').as_null_object }
 
             let :other_call do
-              Call.new other_channel, other_translator
+              Call.new other_channel, other_translator, ami_client, connection
             end
 
             let :command do
@@ -1082,7 +1084,7 @@ module Punchblock
             let(:other_channel) { 'SIP/bar' }
 
             let :other_call do
-              Call.new other_channel, translator
+              Call.new other_channel, translator, ami_client, connection
             end
 
             let :command do
@@ -1092,7 +1094,7 @@ module Punchblock
             it "executes the unjoin through redirection" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
 
-              translator.should_receive(:send_ami_action).once.with("Redirect",
+              ami_client.should_receive(:send_ami_action).once.with("Redirect",
                 'Channel'   => channel,
                 'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1108,7 +1110,7 @@ module Punchblock
               translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
 
 
-              translator.should_receive(:send_ami_action).once.with("Redirect",
+              ami_client.should_receive(:send_ami_action).once.with("Redirect",
                 'Channel'       => channel,
                 'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1127,7 +1129,7 @@ module Punchblock
 
               error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
 
-              translator.should_receive(:send_ami_action).once.with("Redirect",
+              ami_client.should_receive(:send_ami_action).once.with("Redirect",
                 'Channel'   => channel,
                 'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1150,22 +1152,15 @@ module Punchblock
           end
         end
 
-        describe '#send_ami_action' do
-          it 'should send the action to the AMI client' do
-            translator.should_receive(:send_ami_action).once.with 'foo', foo: :bar
-            subject.send_ami_action 'foo', foo: :bar
-          end
-        end
-
         describe '#redirect_back' do
           let(:other_channel) { 'SIP/bar' }
 
           let :other_call do
-            Call.new other_channel, translator
+            Call.new other_channel, translator, ami_client, connection
           end
 
           it "executes the proper AMI action with only the subject call" do
-            translator.should_receive(:send_ami_action).once.with 'Redirect',
+            ami_client.should_receive(:send_ami_action).once.with 'Redirect',
               'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
               'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
               'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
@@ -1174,7 +1169,7 @@ module Punchblock
           end
 
           it "executes the proper AMI action with another call specified" do
-            translator.should_receive(:send_ami_action).once.with 'Redirect',
+            ami_client.should_receive(:send_ami_action).once.with 'Redirect',
               'Channel'       => channel,
               'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
               'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,

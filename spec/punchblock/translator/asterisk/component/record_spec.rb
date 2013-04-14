@@ -76,8 +76,8 @@ module Punchblock
 
               mock_call.process_ami_event monitor_stop_event
 
-              (Record.new original_command, mock_call).execute
-              (Punchblock::Component::Record.new command_options).request!
+              Record.new(original_command, mock_call).execute
+              Punchblock::Component::Record.new(command_options).request!
               mock_call.process_ami_event monitor_stop_event
             end
 

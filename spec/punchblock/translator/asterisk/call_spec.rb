@@ -1140,7 +1140,7 @@ module Punchblock
                 RubyAMI::Event.new 'AsyncAGI',
                   "SubEvent"   => "Exec",
                   "Channel"    => channel,
-                  "CommandId"  => Punchblock.new_uuid,
+                  "CommandID"  => Punchblock.new_uuid,
                   "Command"    => "EXEC ANSWER",
                   "Result"     => "200%20result=123%20(timeout)%0A"
               end

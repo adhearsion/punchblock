@@ -25,7 +25,7 @@ module Punchblock
             private
 
             def send_action
-              @ami_client.send_ami_action @component_node.name, action_headers
+              @ami_client.send_action @component_node.name, action_headers
             end
 
             def error_reason(response)

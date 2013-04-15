@@ -15,7 +15,7 @@ module Punchblock
         end
 
         def execute(ami_client)
-          ami_client.send_ami_action 'AGI', 'Channel' => @channel, 'Command' => agi_command, 'CommandID' => id
+          ami_client.send_action 'AGI', 'Channel' => @channel, 'Command' => agi_command, 'CommandID' => id
         end
 
         def parse_result(event)

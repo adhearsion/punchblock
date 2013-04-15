@@ -41,7 +41,7 @@ module Punchblock
             before { mock_call.stub(:answered?).and_return(true) }
 
             it "sets command response to a reference to the component" do
-              ami_client.should_receive(:send_ami_action)
+              ami_client.should_receive(:send_action)
               subject.execute
               original_command.response(0.1).should be_a Ref
               original_command.component_id.should be == subject.id
@@ -49,13 +49,13 @@ module Punchblock
 
             it "starts a recording via AMI, using the component ID as the filename" do
               filename = "#{Record::RECORDING_BASE_PATH}/#{subject.id}"
-              ami_client.should_receive(:send_ami_action).once.with('Monitor', 'Channel' => channel, 'File' => filename, 'Format' => 'wav', 'Mix' => true)
+              ami_client.should_receive(:send_action).once.with('Monitor', 'Channel' => channel, 'File' => filename, 'Format' => 'wav', 'Mix' => true)
               subject.execute
             end
 
             it "sends a success complete event when the recording ends" do
               full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
-              ami_client.should_receive(:send_ami_action)
+              ami_client.should_receive(:send_action)
               subject.execute
               monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
               mock_call.process_ami_event monitor_stop_event
@@ -65,7 +65,7 @@ module Punchblock
             end
 
             it "can be called multiple times on the same call" do
-              ami_client.should_receive(:send_ami_action).twice
+              ami_client.should_receive(:send_action).twice
               subject.execute
 
               monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
@@ -81,7 +81,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :start_paused => nil } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -90,7 +90,7 @@ module Punchblock
               context "set to false" do
                 let(:command_options) { { :start_paused => false } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -111,7 +111,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :initial_timeout => nil } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -120,7 +120,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :initial_timeout => -1 } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -141,7 +141,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :final_timeout => nil } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -150,7 +150,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :final_timeout => -1 } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -171,13 +171,13 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :format => nil } }
                 it "should execute as 'wav'" do
-                  ami_client.should_receive(:send_ami_action).once.with('Monitor', hash_including('Format' => 'wav'))
+                  ami_client.should_receive(:send_action).once.with('Monitor', hash_including('Format' => 'wav'))
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
 
                 it "provides the correct filename in the recording" do
-                  ami_client.should_receive(:send_ami_action)
+                  ami_client.should_receive(:send_action)
                   subject.execute
                   monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
                   mock_call.process_ami_event monitor_stop_event
@@ -188,13 +188,13 @@ module Punchblock
               context "set to 'mp3'" do
                 let(:command_options) { { :format => 'mp3' } }
                 it "should execute as 'mp3'" do
-                  ami_client.should_receive(:send_ami_action).once.with('Monitor', hash_including('Format' => 'mp3'))
+                  ami_client.should_receive(:send_action).once.with('Monitor', hash_including('Format' => 'mp3'))
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
 
                 it "provides the correct filename in the recording" do
-                  ami_client.should_receive(:send_ami_action)
+                  ami_client.should_receive(:send_action)
                   subject.execute
                   monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
                   mock_call.process_ami_event monitor_stop_event
@@ -208,7 +208,7 @@ module Punchblock
                 let(:command_options) { { :start_beep => nil } }
                 it "should execute normally" do
                   mock_call.should_receive(:execute_agi_command).never.with('STREAM FILE', 'beep', '""')
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -218,7 +218,7 @@ module Punchblock
                 let(:command_options) { { :start_beep => false } }
                 it "should execute normally" do
                   mock_call.should_receive(:execute_agi_command).never.with('STREAM FILE', 'beep', '""')
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -229,7 +229,7 @@ module Punchblock
 
                 it "should play a beep before recording" do
                   mock_call.should_receive(:execute_agi_command).once.with('STREAM FILE', 'beep', '""').ordered.and_return code: 200
-                  ami_client.should_receive(:send_ami_action).once.ordered
+                  ami_client.should_receive(:send_action).once.ordered
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -240,7 +240,7 @@ module Punchblock
               context "set to nil" do
                 let(:command_options) { { :max_duration => nil } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -249,7 +249,7 @@ module Punchblock
               context "set to -1" do
                 let(:command_options) { { :max_duration => -1 } }
                 it "should execute normally" do
-                  ami_client.should_receive(:send_ami_action).once
+                  ami_client.should_receive(:send_action).once
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -271,8 +271,8 @@ module Punchblock
                 let(:command_options) { { :max_duration => 1000 } }
 
                 it "executes a StopMonitor action" do
-                  ami_client.should_receive :send_ami_action
-                  ami_client.should_receive(:send_ami_action).once.with('StopMonitor', 'Channel' => channel)
+                  ami_client.should_receive :send_action
+                  ami_client.should_receive(:send_action).once.with('StopMonitor', 'Channel' => channel)
                   subject.execute
                   sleep 1.2
                 end
@@ -311,7 +311,7 @@ module Punchblock
               let(:command) { Punchblock::Component::Stop.new }
 
               before do
-                ami_client.should_receive :send_ami_action
+                ami_client.should_receive :send_action
                 mock_call.should_receive(:answered?).and_return(true)
                 command.request!
                 original_command.request!
@@ -324,19 +324,19 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                ami_client.should_receive :send_ami_action
+                ami_client.should_receive :send_action
                 subject.execute_command command
                 send_stop_event
                 command.response(0.1).should be == true
               end
 
               it "executes a StopMonitor action" do
-                ami_client.should_receive(:send_ami_action).once.with('StopMonitor', 'Channel' => channel)
+                ami_client.should_receive(:send_action).once.with('StopMonitor', 'Channel' => channel)
                 subject.execute_command command
               end
 
               it "sends the correct complete event" do
-                ami_client.should_receive(:send_ami_action).and_return RubyAMI::Response.new
+                ami_client.should_receive(:send_action).and_return RubyAMI::Response.new
 
                 full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
                 subject.execute_command command
@@ -357,13 +357,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                ami_client.should_receive(:send_ami_action).and_return RubyAMI::Response.new
+                ami_client.should_receive(:send_action).and_return RubyAMI::Response.new
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "pauses the recording via AMI" do
-                ami_client.should_receive(:send_ami_action).once.with('PauseMonitor', 'Channel' => channel)
+                ami_client.should_receive(:send_action).once.with('PauseMonitor', 'Channel' => channel)
                 subject.execute_command command
               end
             end
@@ -378,13 +378,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                ami_client.should_receive(:send_ami_action).and_return RubyAMI::Response.new
+                ami_client.should_receive(:send_action).and_return RubyAMI::Response.new
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "resumes the recording via AMI" do
-                ami_client.should_receive(:send_ami_action).once.with('ResumeMonitor', 'Channel' => channel)
+                ami_client.should_receive(:send_action).once.with('ResumeMonitor', 'Channel' => channel)
                 subject.execute_command command
               end
             end

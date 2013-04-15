@@ -860,7 +860,7 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a Hangup AMI command and set the command's response" do
-              ami_client.should_receive(:send_ami_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
+              ami_client.should_receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
               subject.execute_command command
               command.response(0.5).should be true
             end
@@ -1050,7 +1050,7 @@ module Punchblock
             it "executes the unjoin through redirection" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
 
-              ami_client.should_receive(:send_ami_action).once.with("Redirect",
+              ami_client.should_receive(:send_action).once.with("Redirect",
                 'Channel'   => channel,
                 'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1065,7 +1065,7 @@ module Punchblock
             it "executes the unjoin through redirection, on the subject call and the other call" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
 
-              ami_client.should_receive(:send_ami_action).once.with("Redirect",
+              ami_client.should_receive(:send_action).once.with("Redirect",
                 'Channel'       => channel,
                 'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1084,7 +1084,7 @@ module Punchblock
 
               error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
 
-              ami_client.should_receive(:send_ami_action).once.with("Redirect",
+              ami_client.should_receive(:send_action).once.with("Redirect",
                 'Channel'   => channel,
                 'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1109,7 +1109,7 @@ module Punchblock
 
           it 'should send an appropriate AsyncAGI AMI action' do
             Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
-            ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => Punchblock.new_uuid).and_return(response)
+            ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => Punchblock.new_uuid).and_return(response)
             subject.execute_agi_command 'EXEC ANSWER'
           end
 
@@ -1118,7 +1118,7 @@ module Punchblock
 
             it 'should send the appropriate action' do
               Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
-              ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => Punchblock.new_uuid).and_return(response)
+              ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => Punchblock.new_uuid).and_return(response)
               subject.execute_agi_command 'WAIT FOR DIGIT', *params
             end
           end
@@ -1129,7 +1129,7 @@ module Punchblock
             end
 
             it 'should raise the error' do
-              ami_client.should_receive(:send_ami_action).once.and_raise error
+              ami_client.should_receive(:send_action).once.and_raise error
               expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(RubyAMI::Error, 'Action failed')
             end
           end
@@ -1164,7 +1164,7 @@ module Punchblock
           end
 
           it "executes the proper AMI action with only the subject call" do
-            ami_client.should_receive(:send_ami_action).once.with 'Redirect',
+            ami_client.should_receive(:send_action).once.with 'Redirect',
               'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
               'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
               'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
@@ -1173,7 +1173,7 @@ module Punchblock
           end
 
           it "executes the proper AMI action with another call specified" do
-            ami_client.should_receive(:send_ami_action).once.with 'Redirect',
+            ami_client.should_receive(:send_action).once.with 'Redirect',
               'Channel'       => channel,
               'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
               'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,

@@ -32,7 +32,7 @@ module Punchblock
               before { original_command.request! }
 
               it 'should send the appropriate action' do
-                ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => component_id).and_return(response)
+                ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => component_id).and_return(response)
                 subject.execute
               end
 
@@ -44,7 +44,7 @@ module Punchblock
                 end
 
                 it 'should send the appropriate action' do
-                  ami_client.should_receive(:send_ami_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id).and_return(response)
+                  ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id).and_return(response)
                   subject.execute
                 end
               end
@@ -65,7 +65,7 @@ module Punchblock
               end
 
               it 'should send the component node a ref with the action ID' do
-                ami_client.should_receive(:send_ami_action).once.and_return response
+                ami_client.should_receive(:send_action).once.and_return response
                 subject.execute
                 original_command.response(1).should eql(expected_response)
               end
@@ -76,7 +76,7 @@ module Punchblock
                 end
 
                 it 'should send the component node false' do
-                  ami_client.should_receive(:send_ami_action).once.and_raise response
+                  ami_client.should_receive(:send_action).once.and_raise response
                   subject.execute
                   original_command.response(1).should be_false
                   subject.should_not be_alive

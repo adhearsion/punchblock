@@ -271,7 +271,7 @@ module Punchblock
 
           before do
             command.request!
-            ami_client.stub(:send_ami_action).and_return RubyAMI::Response.new
+            ami_client.stub(:send_action).and_return RubyAMI::Response.new
           end
 
           it 'should be able to look up the call by channel ID' do

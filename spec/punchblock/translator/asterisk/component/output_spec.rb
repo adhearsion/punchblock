@@ -81,6 +81,17 @@ module Punchblock
                 original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
               end
 
+              context "when we get a RubyAMI Error" do
+                it "should send an error complete event" do
+                  error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Error
+                  complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                end
+              end
+
               describe 'interrupt_on' do
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
@@ -188,6 +199,17 @@ module Punchblock
                 mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                 subject.execute
                 original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+              end
+
+              context "when we get a RubyAMI Error" do
+                it "should send an error complete event" do
+                  error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Error
+                  complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                end
               end
 
               describe 'ssml' do
@@ -412,6 +434,18 @@ module Punchblock
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
                     end
+
+                    context "when we get a RubyAMI Error" do
+                      it "should send an error complete event" do
+                        expect_answered
+                        error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      end
+                    end
                   end
 
                   context 'with a single text node without spaces' do
@@ -433,6 +467,18 @@ module Punchblock
                       expect_playback
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                    end
+
+                    context "when we get a RubyAMI Error" do
+                      it "should send an error complete event" do
+                        expect_answered
+                        error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      end
                     end
 
                     context "with early media playback" do

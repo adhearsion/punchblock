@@ -79,6 +79,10 @@ module Punchblock
           def with_error(name, text)
             set_node_response ProtocolError.new.setup(name, text)
           end
+
+          def complete_with_error(error)
+            send_complete_event Punchblock::Event::Complete::Error.new(details: error)
+          end
         end
       end
     end

@@ -62,6 +62,8 @@ module Punchblock
               raise OptionError, 'The renderer foobar is unsupported.'
             end
             send_success
+          rescue RubyAMI::Error => e
+            complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue UnrenderableDocError => e
             with_error 'unrenderable document error', e.message
           rescue OptionError => e

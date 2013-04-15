@@ -233,6 +233,18 @@ module Punchblock
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
+
+                context "when we get a RubyAMI Error" do
+                  it "should send an error complete event" do
+                    error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                    mock_call.should_receive(:execute_agi_command).and_raise error
+                    ami_client.should_receive(:send_action).never
+                    subject.execute
+                    complete_reason = original_command.complete_event(0.1).reason
+                    complete_reason.should be_a Punchblock::Event::Complete::Error
+                    complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                  end
+                end
               end
             end
 

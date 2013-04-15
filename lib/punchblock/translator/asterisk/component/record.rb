@@ -39,6 +39,8 @@ module Punchblock
                 ami_client.send_action 'StopMonitor', 'Channel' => call.channel
               end
             end
+          rescue RubyAMI::Error => e
+            complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue OptionError => e
             with_error 'option error', e.message
           end

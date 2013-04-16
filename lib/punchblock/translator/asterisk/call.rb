@@ -51,7 +51,7 @@ module Punchblock
         end
 
         def channel_var(variable)
-          @channel_variables[variable]
+          @channel_variables[variable] || fetch_channel_var(variable)
         end
 
         def to_s
@@ -270,6 +270,11 @@ module Punchblock
         end
 
         private
+
+        def fetch_channel_var(variable)
+          result = @ami_client.send_action 'GetVar', 'Channel' => channel, 'Variable' => variable
+          result['Value'] == '(null)' ? nil : result['Value']
+        end
 
         def send_ami_action(name, headers = {})
           @ami_client.send_action name, headers

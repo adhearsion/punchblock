@@ -167,6 +167,10 @@ module Punchblock
                 { :ssml => ssml_doc }.merge(command_opts)
               end
 
+
+              let(:synthstatus) { 'OK' }
+              before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+
               def expect_mrcpsynth_with_options(options)
                 mock_call.should_receive(:execute_agi_command).once.with do |*args|
                   args[0].should be == 'EXEC MRCPSynth'
@@ -212,29 +216,15 @@ module Punchblock
                 end
               end
 
-              context "when the SYNTHSTATUS variable is set" do
-                before { mock_call.should_receive(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+              context "when the SYNTHSTATUS variable is set to 'ERROR'" do
+                let(:synthstatus) { 'ERROR' }
 
-                context "to 'ERROR'" do
-                  let(:synthstatus) { 'ERROR' }
-
-                  it "should send an error complete event" do
-                    mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
-                    subject.execute
-                    complete_reason = original_command.complete_event(0.1).reason
-                    complete_reason.should be_a Punchblock::Event::Complete::Error
-                    complete_reason.details.should == "Terminated due to UniMRCP error"
-                  end
-                end
-
-                context "to 'OK'" do
-                  let(:synthstatus) { 'OK' }
-
-                  it 'should send a complete event' do
-                    mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
-                    subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
-                  end
+                it "should send an error complete event" do
+                  mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Error
+                  complete_reason.details.should == "Terminated due to UniMRCP error"
                 end
               end
 

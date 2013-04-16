@@ -86,6 +86,22 @@ module Punchblock
           end
         end
 
+        describe "getting channel vars" do
+          it "should do a GetVar when we don't have a cached value" do
+            response = RubyAMI::Response.new 'Value' => 'thevalue'
+            ami_client.should_receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'somevariable').and_return response
+            subject.channel_var('somevariable').should == 'thevalue'
+          end
+
+          context "when the value comes back from GetVar as '(null)'" do
+            it "should return nil" do
+              response = RubyAMI::Response.new 'Value' => '(null)'
+              ami_client.should_receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'somevariable').and_return response
+              subject.channel_var('somevariable').should be_nil
+            end
+          end
+        end
+
         describe '#send_offer' do
           it 'sends an offer to the translator' do
             expected_offer = Punchblock::Event::Offer.new :target_call_id  => subject.id,

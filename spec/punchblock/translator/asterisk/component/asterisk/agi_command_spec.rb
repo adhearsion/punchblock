@@ -124,13 +124,29 @@ module Punchblock
                     Punchblock::Component::Asterisk::AGI::Command.new :name => 'ASYNCAGI BREAK'
                   end
 
-                  it 'should send an end (hangup) event to the translator' do
-                    expected_end_event = Punchblock::Event::End.new reason: :hangup,
-                                                                    target_call_id: mock_call.id
+                  let(:chan_var) { nil }
 
+                  before do
+                    mock_call.stub(:channel_var).and_return chan_var
+                  end
+
+                  it 'should not send an end (hangup) event to the translator' do
                     translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
-                    translator.should_receive(:handle_pb_event).once.with expected_end_event
+                    translator.should_receive(:handle_pb_event).never.with kind_of(Punchblock::Event::End)
                     subject.handle_ami_event ami_event
+                  end
+
+                  context "when the PUNCHBLOCK_END_ON_ASYNCAGI_BREAK channel var is set" do
+                    let(:chan_var) { 'true' }
+
+                    it 'should send an end (hangup) event to the translator' do
+                      expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                                                                      target_call_id: mock_call.id
+
+                      translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
+                      translator.should_receive(:handle_pb_event).once.with expected_end_event
+                      subject.handle_ami_event ami_event
+                    end
                   end
                 end
               end

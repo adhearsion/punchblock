@@ -25,7 +25,7 @@ module Punchblock
         subject.event_handler = mock_event_handler
       end
 
-      its(:ami_client) { should be_a RubyAMI::Client }
+      its(:ami_client) { should be_a RubyAMI::Stream }
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
@@ -36,15 +36,15 @@ module Punchblock
       end
 
       describe '#run' do
-        it 'starts the RubyAMI::Client' do
-          subject.ami_client.should_receive(:start).once
+        it 'starts the RubyAMI::Stream' do
+          subject.ami_client.should_receive(:run).once
           lambda { subject.run }.should raise_error DisconnectedError
         end
       end
 
       describe '#stop' do
-        it 'stops the RubyAMI::Client' do
-          subject.ami_client.should_receive(:stop).once
+        it 'stops the RubyAMI::Stream' do
+          subject.ami_client.should_receive(:terminate).once
           subject.stop
         end
 
@@ -55,9 +55,10 @@ module Punchblock
       end
 
       it 'sends events from RubyAMI to the translator' do
-        event = mock 'RubyAMI::Event'
+        event = RubyAMI::Event.new 'FullyBooted'
         subject.translator.async.should_receive(:handle_ami_event).once.with event
-        subject.ami_client.handle_event event
+        subject.translator.async.should_receive(:handle_ami_event).once.with RubyAMI::Stream::Disconnected.new
+        subject.ami_client.message_received event
       end
 
       describe '#write' do

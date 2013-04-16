@@ -7,7 +7,9 @@ module Punchblock
     class Asterisk
       describe Call do
         let(:channel)         { 'SIP/foo' }
-        let(:translator)      { Asterisk.new stub('AMI Client').as_null_object, stub('connection').as_null_object }
+        let(:ami_client)      { stub('AMI Client').as_null_object }
+        let(:connection)      { stub('connection').as_null_object }
+        let(:translator)      { Asterisk.new ami_client, connection }
         let(:agi_env) do
           {
             :agi_request      => 'async',
@@ -58,7 +60,7 @@ module Punchblock
           }
         end
 
-        subject { Call.new channel, translator, agi_env }
+        subject { Call.new channel, translator, ami_client, connection, agi_env }
 
         its(:id)          { should be_a String }
         its(:channel)     { should be == channel }
@@ -103,11 +105,10 @@ module Punchblock
         end
 
         describe '#send_progress' do
-
           context "with a call that is already answered" do
             it 'should not send the EXEC Progress command' do
               subject.wrapped_object.should_receive(:'answered?').and_return true
-              subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").never
+              subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").never
               subject.send_progress
             end
           end
@@ -126,7 +127,7 @@ module Punchblock
               end
 
               it 'should not send the EXEC Progress command' do
-                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").never
+                subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").never
                 subject.send_progress
               end
             end
@@ -137,12 +138,12 @@ module Punchblock
               end
 
               it 'should send the EXEC Progress command to a call that is inbound and not answered' do
-                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress")
+                subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").and_return code: 200, result: 0
                 subject.send_progress
               end
 
               it 'should send the EXEC Progress command only once if called twice' do
-                subject.wrapped_object.should_receive(:send_agi_action).with("EXEC Progress").once
+                subject.wrapped_object.should_receive(:execute_agi_command).with("EXEC Progress").once.and_return code: 200, result: 0
                 subject.send_progress
                 subject.send_progress
               end
@@ -255,7 +256,7 @@ module Punchblock
             subject.dial dial_command
             accept_command = Command::Accept.new
             accept_command.request!
-            subject.wrapped_object.should_receive(:send_agi_action).never
+            subject.wrapped_object.should_receive(:execute_agi_command).never
             subject.execute_command accept_command
             accept_command.response(0.5).should be true
           end
@@ -264,14 +265,13 @@ module Punchblock
         describe '#process_ami_event' do
           context 'with a Hangup event' do
             let :ami_event do
-              RubyAMI::Event.new('Hangup').tap do |e|
-                e['Uniqueid']     = "1320842458.8"
-                e['Calleridnum']  = "5678"
-                e['Calleridname'] = "Jane Smith"
-                e['Cause']        = cause
-                e['Cause-txt']    = cause_txt
-                e['Channel']      = "SIP/1234-00000000"
-              end
+              RubyAMI::Event.new 'Hangup',
+                'Uniqueid'      => "1320842458.8",
+                'Calleridnum'   => "5678",
+                'Calleridname'  => "Jane Smith",
+                'Cause'         => cause,
+                'Cause-txt'     => cause_txt,
+                'Channel'       => "SIP/1234-00000000"
             end
 
             let(:cause)     { '16' }
@@ -291,6 +291,7 @@ module Punchblock
             end
 
             it "should cause all components to send complete events before sending end event" do
+              subject.stub :send_progress
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
@@ -305,6 +306,7 @@ module Punchblock
             end
 
             it "should not allow commands to be executed while components are shutting down" do
+              subject.stub :send_progress
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
@@ -449,13 +451,12 @@ module Punchblock
             end
 
             let(:ami_event) do
-              RubyAMI::Event.new("AsyncAGI").tap do |e|
-                e["SubEvent"]   = "End"
-                e["Channel"]    = "SIP/1234-00000000"
-                e["CommandID"]  = component.id
-                e["Command"]    = "EXEC ANSWER"
-                e["Result"]     = "200%20result=123%20(timeout)%0A"
-              end
+              RubyAMI::Event.new "AsyncAGI",
+                "SubEvent"  => "End",
+                "Channel"   => "SIP/1234-00000000",
+                "CommandID" => component.id,
+                "Command"   => "EXEC ANSWER",
+                "Result"    => "200%20result=123%20(timeout)%0A"
             end
 
             before do
@@ -470,17 +471,16 @@ module Punchblock
 
           context 'with a Newstate event' do
             let :ami_event do
-              RubyAMI::Event.new('Newstate').tap do |e|
-                e['Privilege']          = 'call,all'
-                e['Channel']            = 'SIP/1234-00000000'
-                e['ChannelState']       = channel_state
-                e['ChannelStateDesc']   = channel_state_desc
-                e['CallerIDNum']        = ''
-                e['CallerIDName']       = ''
-                e['ConnectedLineNum']   = ''
-                e['ConnectedLineName']  = ''
-                e['Uniqueid']           = '1326194671.0'
-              end
+              RubyAMI::Event.new 'Newstate',
+                'Privilege'         => 'call,all',
+                'Channel'           => 'SIP/1234-00000000',
+                'ChannelState'      => channel_state,
+                'ChannelStateDesc'  => channel_state_desc,
+                'CallerIDNum'       => '',
+                'CallerIDName'      => '',
+                'ConnectedLineNum'  => '',
+                'ConnectedLineName' => '',
+                'Uniqueid'          => '1326194671.0'
             end
 
             context 'ringing' do
@@ -520,18 +520,17 @@ module Punchblock
 
           context 'with an OriginateResponse event' do
             let :ami_event do
-              RubyAMI::Event.new('OriginateResponse').tap do |e|
-                e['Privilege']    = 'call,all'
-                e['ActionID']     = '9d0c1aa4-5e3b-4cae-8aef-76a6119e2909'
-                e['Response']     = response
-                e['Channel']      = 'SIP/15557654321'
-                e['Context']      = ''
-                e['Exten']        = ''
-                e['Reason']       = '0'
-                e['Uniqueid']     = uniqueid
-                e['CallerIDNum']  = 'sip:5551234567'
-                e['CallerIDName'] = 'Bryan 100'
-              end
+              RubyAMI::Event.new 'OriginateResponse',
+                'Privilege'     => 'call,all',
+                'ActionID'      => '9d0c1aa4-5e3b-4cae-8aef-76a6119e2909',
+                'Response'      => response,
+                'Channel'       => 'SIP/15557654321',
+                'Context'       => '',
+                'Exten'         => '',
+                'Reason'        => '0',
+                'Uniqueid'      => uniqueid,
+                'CallerIDNum'   => 'sip:5551234567',
+                'CallerIDName'  => 'Bryan 100'
             end
 
             context 'sucessful' do
@@ -569,13 +568,12 @@ module Punchblock
 
           context 'with a handler registered for a matching event' do
             let :ami_event do
-              RubyAMI::Event.new('DTMF').tap do |e|
-                e['Digit']    = '4'
-                e['Start']    = 'Yes'
-                e['End']      = 'No'
-                e['Uniqueid'] = "1320842458.8"
-                e['Channel']  = "SIP/1234-00000000"
-              end
+              RubyAMI::Event.new 'DTMF',
+                'Digit'     => '4',
+                'Start'     => 'Yes',
+                'End'       => 'No',
+                'Uniqueid'  => "1320842458.8",
+                'Channel'   => "SIP/1234-00000000"
             end
 
             let(:response) { mock 'Response' }
@@ -591,19 +589,18 @@ module Punchblock
 
           context 'with a BridgeExec event' do
             let :ami_event do
-              RubyAMI::Event.new('BridgeExec').tap do |e|
-                e['Privilege'] = "call,all"
-                e['Response'] = "Success"
-                e['Channel1']  = "SIP/foo"
-                e['Channel2']  = other_channel
-              end
+              RubyAMI::Event.new 'BridgeExec',
+                'Privilege' => "call,all",
+                'Response'  => "Success",
+                'Channel1'  => "SIP/foo",
+                'Channel2'  => other_channel
             end
 
             let(:other_channel) { 'SIP/5678-00000000' }
 
             context "when a join has been executed against another call" do
               let :other_call do
-                Call.new other_channel, translator
+                Call.new other_channel, translator, ami_client, connection
               end
 
               let(:other_call_id) { other_call.id }
@@ -614,6 +611,7 @@ module Punchblock
               before do
                 translator.register_call other_call
                 command.request!
+                subject.wrapped_object.should_receive(:execute_agi_command).and_return code: 200
                 subject.execute_command command
               end
 
@@ -624,12 +622,11 @@ module Punchblock
 
               context "with the channel names reversed" do
                 let :ami_event do
-                  RubyAMI::Event.new('BridgeExec').tap do |e|
-                    e['Privilege'] = "call,all"
-                    e['Response'] = "Success"
-                    e['Channel1']  = other_channel
-                    e['Channel2']  = "SIP/foo"
-                  end
+                  RubyAMI::Event.new 'BridgeExec',
+                    'Privilege' => "call,all",
+                    'Response'  => "Success",
+                    'Channel1'  => other_channel,
+                    'Channel2'  => "SIP/foo"
                 end
 
                 it 'retrieves and sets success on the correct Join' do
@@ -650,35 +647,33 @@ module Punchblock
             let(:other_channel) { 'SIP/5678-00000000' }
             let(:other_call_id) { 'def567' }
             let :other_call do
-              Call.new other_channel, translator
+              Call.new other_channel, translator, ami_client, connection
             end
 
             let :ami_event do
-              RubyAMI::Event.new('Bridge').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Bridgestate']  = state
-                e['Bridgetype']   = "core"
-                e['Channel1']     = channel
-                e['Channel2']     = other_channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Bridge',
+                'Privilege'   => "call,all",
+                'Bridgestate' => state,
+                'Bridgetype'  => "core",
+                'Channel1'    => channel,
+                'Channel2'    => other_channel,
+                'Uniqueid1'   => "1319717537.11",
+                'Uniqueid2'   => "1319717537.10",
+                'CallerID1'   => "1234",
+                'CallerID2'   => "5678"
             end
 
             let :switched_ami_event do
-              RubyAMI::Event.new('Bridge').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Bridgestate']  = state
-                e['Bridgetype']   = "core"
-                e['Channel1']     = other_channel
-                e['Channel2']     = channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Bridge',
+                'Privilege'   => "call,all",
+                'Bridgestate' => state,
+                'Bridgetype'  => "core",
+                'Channel1'    => other_channel,
+                'Channel2'    => channel,
+                'Uniqueid1'   => "1319717537.11",
+                'Uniqueid2'   => "1319717537.10",
+                'CallerID1'   => "1234",
+                'CallerID2'   => "5678"
             end
 
             before do
@@ -734,31 +729,29 @@ module Punchblock
             let(:other_channel) { 'SIP/5678-00000000' }
             let(:other_call_id) { 'def567' }
             let :other_call do
-              Call.new other_channel, translator
+              Call.new other_channel, translator, ami_client, connection
             end
 
             let :ami_event do
-              RubyAMI::Event.new('Unlink').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Channel1']     = channel
-                e['Channel2']     = other_channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Unlink',
+                'Privilege' => "call,all",
+                'Channel1'  => channel,
+                'Channel2'  => other_channel,
+                'Uniqueid1' => "1319717537.11",
+                'Uniqueid2' => "1319717537.10",
+                'CallerID1' => "1234",
+                'CallerID2' => "5678"
             end
 
             let :switched_ami_event do
-              RubyAMI::Event.new('Unlink').tap do |e|
-                e['Privilege']    = "call,all"
-                e['Channel1']     = other_channel
-                e['Channel2']     = channel
-                e['Uniqueid1']    = "1319717537.11"
-                e['Uniqueid2']    = "1319717537.10"
-                e['CallerID1']    = "1234"
-                e['CallerID2']    = "5678"
-              end
+              RubyAMI::Event.new 'Unlink',
+                'Privilege' => "call,all",
+                'Channel1'  => other_channel,
+                'Channel2'  => channel,
+                'Uniqueid1' => "1319717537.11",
+                'Uniqueid2' => "1319717537.10",
+                'CallerID1' => "1234",
+                'CallerID2' => "5678"
             end
 
             before do
@@ -785,15 +778,30 @@ module Punchblock
             end
           end
 
-          let :ami_event do
-            RubyAMI::Event.new('Foo').tap do |e|
-              e['Uniqueid']     = "1320842458.8"
-              e['Calleridnum']  = "5678"
-              e['Calleridname'] = "Jane Smith"
-              e['Cause']        = "0"
-              e['Cause-txt']    = "Unknown"
-              e['Channel']      = channel
+          context 'with a VarSet event' do
+            let :ami_event do
+              RubyAMI::Event.new 'VarSet',
+                "Privilege" => "dialplan,all",
+                "Channel"   => "SIP/1234-00000000",
+                "Variable"  => "foobar",
+                "Value"     => 'abc123',
+                "Uniqueid"  => "1326210224.0"
             end
+
+            it 'makes the variable accessible on the call' do
+              subject.process_ami_event ami_event
+              subject.channel_var('foobar').should == 'abc123'
+            end
+          end
+
+          let :ami_event do
+            RubyAMI::Event.new 'Foo',
+              'Uniqueid'      => "1320842458.8",
+              'Calleridnum'   => "5678",
+              'Calleridname'  => "Jane Smith",
+              'Cause'         => "0",
+              'Cause-txt'     => "Unknown",
+              'Channel'       => channel
           end
 
           let :expected_pb_event do
@@ -815,14 +823,6 @@ module Punchblock
         end
 
         describe '#execute_command' do
-          let :expected_agi_complete_event do
-            Punchblock::Event::Complete.new.tap do |c|
-              c.reason = Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code    => 200,
-                                                                                              :result  => 'Success',
-                                                                                              :data    => 'FOO'
-            end
-          end
-
           before do
             command.request!
           end
@@ -831,11 +831,8 @@ module Punchblock
             let(:command) { Command::Accept.new }
 
             it "should send an EXEC RINGING AGI command and set the command's response" do
-              component = subject.execute_command command
-              component.internal.should be_true
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC RINGING"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC RINGING').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
           end
@@ -845,31 +842,22 @@ module Punchblock
 
             it "with a :busy reason should send an EXEC Busy AGI command and set the command's response" do
               command.reason = :busy
-              component = subject.execute_command command
-              component.internal.should be_true
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Busy"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Busy').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
 
             it "with a :decline reason should send an EXEC Busy AGI command and set the command's response" do
               command.reason = :decline
-              component = subject.execute_command command
-              component.internal.should be_true
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Busy"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Busy').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
 
             it "with an :error reason should send an EXEC Congestion AGI command and set the command's response" do
               command.reason = :error
-              component = subject.execute_command command
-              component.internal.should be_true
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Congestion"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Congestion').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
           end
@@ -878,11 +866,8 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should send an ANSWER AGI command and set the command's response" do
-              component = subject.execute_command command
-              component.internal.should be_true
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "ANSWER"
-              agi_command.add_event expected_agi_complete_event
+              subject.wrapped_object.should_receive(:execute_agi_command).with('ANSWER').and_return code: 200
+              subject.execute_command command
               command.response(0.5).should be true
             end
           end
@@ -891,11 +876,8 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a Hangup AMI command and set the command's response" do
+              ami_client.should_receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
               subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "hangup"
-              ami_action.headers['Cause'].should be == 16
-              ami_action << RubyAMI::Response.new
               command.response(0.5).should be true
             end
           end
@@ -908,7 +890,6 @@ module Punchblock
             let(:mock_action) { Translator::Asterisk::Component::Asterisk::AGICommand.new(command, subject) }
 
             it 'should create an AGI command component actor and execute it asynchronously' do
-              mock_action.should_receive(:internal=).never
               Component::Asterisk::AGICommand.should_receive(:new_link).once.with(command, subject).and_return mock_action
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
@@ -924,7 +905,6 @@ module Punchblock
 
             it 'should create an Output component and execute it asynchronously' do
               Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:internal=).never
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
@@ -939,7 +919,6 @@ module Punchblock
 
             it 'should create an Input component and execute it asynchronously' do
               Component::Input.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:internal=).never
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
@@ -954,7 +933,6 @@ module Punchblock
 
             it 'should create a Record component and execute it asynchronously' do
               Component::Record.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:internal=).never
               mock_action.async.should_receive(:execute).once
               subject.execute_command command
             end
@@ -1059,7 +1037,7 @@ module Punchblock
             let(:other_translator)  { stub('Translator::Asterisk').as_null_object }
 
             let :other_call do
-              Call.new other_channel, other_translator
+              Call.new other_channel, other_translator, ami_client, connection
             end
 
             let :command do
@@ -1067,11 +1045,9 @@ module Punchblock
             end
 
             it "executes the proper dialplan Bridge application" do
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Bridge', other_channel).and_return code: 200
               translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
               subject.execute_command command
-              agi_command = subject.wrapped_object.instance_variable_get(:'@current_agi_command')
-              agi_command.name.should be == "EXEC Bridge"
-              agi_command.params_array.should be == [other_channel]
             end
           end
 
@@ -1080,7 +1056,7 @@ module Punchblock
             let(:other_channel) { 'SIP/bar' }
 
             let :other_call do
-              Call.new other_channel, translator
+              Call.new other_channel, translator, ami_client, connection
             end
 
             let :command do
@@ -1089,45 +1065,49 @@ module Punchblock
 
             it "executes the unjoin through redirection" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
-              subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
 
-              ami_action << RubyAMI::Response.new
+              ami_client.should_receive(:send_action).once.with("Redirect",
+                'Channel'   => channel,
+                'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              ).and_return RubyAMI::Response.new
+
+              subject.execute_command command
+
               command.response(1).should be_true
             end
 
             it "executes the unjoin through redirection, on the subject call and the other call" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
-              subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
 
-              ami_action.headers['ExtraChannel'].should be == other_channel
-              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ami_client.should_receive(:send_action).once.with("Redirect",
+                'Channel'       => channel,
+                'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'       => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+                'ExtraChannel'  => other_channel,
+                'ExtraExten'    => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'ExtraPriority' => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'ExtraContext'  => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ).and_return RubyAMI::Response.new
+
+              subject.execute_command command
             end
 
             it "handles redirect errors" do
               translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
-              subject.execute_command command
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
 
-              ami_action << RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+              error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+
+              ami_client.should_receive(:send_action).once.with("Redirect",
+                'Channel'   => channel,
+                'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              ).and_raise error
+
+              subject.execute_command command
               response = command.response(1)
               response.should be_a ProtocolError
               response.text.should == 'FooBar'
@@ -1135,54 +1115,91 @@ module Punchblock
           end
         end#execute_command
 
-        describe '#send_agi_action' do
-          it 'should send an appropriate AsyncAGI AMI action' do
-            pending
-            subject.wrapped_object.should_receive(:send_ami_action).once.with('AGI', 'Command' => 'FOO', 'Channel' => subject.channel)
-            subject.send_agi_action 'FOO'
+        describe '#execute_agi_command' do
+          before { stub_uuids Punchblock.new_uuid }
+
+          let :response do
+            RubyAMI::Response.new 'ActionID' => "552a9d9f-46d7-45d8-a257-06fe95f48d99",
+              'Message' => 'Added AGI original_command to queue'
           end
-        end
 
-        describe '#send_ami_action' do
-          let(:component_id) { Punchblock.new_uuid }
-          before { stub_uuids component_id }
+          it 'should send an appropriate AsyncAGI AMI action' do
+            Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
+            ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => Punchblock.new_uuid).and_return(response)
+            subject.execute_agi_command 'EXEC ANSWER'
+          end
 
-          it 'should send the action to the AMI client' do
-            action = RubyAMI::Action.new 'foo', :foo => :bar
-            translator.should_receive(:send_ami_action).once.with action
-            subject.send_ami_action 'foo', :foo => :bar
+          context 'with some parameters' do
+            let(:params) { [1000, 'foo'] }
+
+            it 'should send the appropriate action' do
+              Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
+              ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => Punchblock.new_uuid).and_return(response)
+              subject.execute_agi_command 'WAIT FOR DIGIT', *params
+            end
+          end
+
+          context 'with an error' do
+            let :error do
+              RubyAMI::Error.new.tap { |e| e.message = 'Action failed' }
+            end
+
+            it 'should raise the error' do
+              ami_client.should_receive(:send_action).once.and_raise error
+              expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(RubyAMI::Error, 'Action failed')
+            end
+          end
+
+          describe 'when receiving an AsyncAGI event' do
+            context 'of type Exec' do
+              let(:ami_event) do
+                RubyAMI::Event.new 'AsyncAGI',
+                  "SubEvent"   => "Exec",
+                  "Channel"    => channel,
+                  "CommandID"  => Punchblock.new_uuid,
+                  "Command"    => "EXEC ANSWER",
+                  "Result"     => "200%20result=123%20(timeout)%0A"
+              end
+
+              it 'should return the result' do
+                fut = subject.future.execute_agi_command 'EXEC ANSWER'
+
+                subject.process_ami_event ami_event
+
+                fut.value.should == {code: 200, result: 123, data: 'timeout'}
+              end
+            end
           end
         end
 
         describe '#redirect_back' do
-            let(:other_channel)         { 'SIP/bar' }
-            let :other_call do
-              Call.new other_channel, translator
-            end
+          let(:other_channel) { 'SIP/bar' }
 
-            it "executes the proper AMI action with only the subject call" do
-              subject.redirect_back
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
-            end
+          let :other_call do
+            Call.new other_channel, translator, ami_client, connection
+          end
 
-            it "executes the proper AMI action with another call specified" do
-              subject.redirect_back other_call
-              ami_action = subject.wrapped_object.instance_variable_get(:'@current_ami_action')
-              ami_action.name.should be == "redirect"
-              ami_action.headers['Channel'].should be == channel
-              ami_action.headers['Exten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['Priority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['Context'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
-              ami_action.headers['ExtraChannel'].should be == other_channel
-              ami_action.headers['ExtraExten'].should be == Punchblock::Translator::Asterisk::REDIRECT_EXTENSION
-              ami_action.headers['ExtraPriority'].should be == Punchblock::Translator::Asterisk::REDIRECT_PRIORITY
-              ami_action.headers['ExtraContext'].should be == Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
-            end
+          it "executes the proper AMI action with only the subject call" do
+            ami_client.should_receive(:send_action).once.with 'Redirect',
+              'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+              'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+              'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              'Channel'   => channel
+            subject.redirect_back
+          end
+
+          it "executes the proper AMI action with another call specified" do
+            ami_client.should_receive(:send_action).once.with 'Redirect',
+              'Channel'       => channel,
+              'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+              'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+              'Context'       => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              'ExtraChannel'  => other_channel,
+              'ExtraExten'    => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+              'ExtraPriority' => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+              'ExtraContext'  => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+            subject.redirect_back other_call
+          end
         end
       end
     end

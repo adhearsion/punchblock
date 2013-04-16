@@ -13,7 +13,8 @@ module Punchblock
         describe Component do
           let(:connection)  { Punchblock::Connection::Asterisk.new }
           let(:translator)  { connection.translator }
-          let(:call)        { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
+          let(:ami_client)  { connection.ami_client }
+          let(:call)        { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
           let(:command)     { Punchblock::Component::Input.new }
 
           subject { Component.new command, call }
@@ -37,15 +38,6 @@ module Punchblock
             it "should send the event to the connection" do
               connection.should_receive(:handle_event).once.with expected_event
               subject.send_event event
-            end
-
-            context "when marked internal" do
-              before { subject.internal = true }
-
-              it "should add the event to the command" do
-                command.should_receive(:add_event).once.with expected_event
-                subject.send_event event
-              end
             end
           end
 

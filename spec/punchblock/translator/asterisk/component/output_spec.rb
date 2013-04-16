@@ -10,8 +10,9 @@ module Punchblock
           include HasMockCallbackConnection
 
           let(:media_engine)  { nil }
-          let(:translator)    { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
-          let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
+          let(:ami_client)    { mock('AMI') }
+          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
+          let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
 
           let :original_command do
             Punchblock::Component::Output.new command_options
@@ -70,24 +71,32 @@ module Punchblock
               end
 
               it "should execute Swift" do
-                mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options
+                mock_call.should_receive(:execute_agi_command).once.with 'EXEC Swift', ssml_with_options
                 subject.execute
               end
 
               it 'should send a complete event when Swift completes' do
-                async_proxy = mock_call.async
-                def async_proxy.send_agi_action(*args, &block)
-                  block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
-                end
+                mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                 subject.execute
                 original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+              end
+
+              context "when we get a RubyAMI Error" do
+                it "should send an error complete event" do
+                  error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Error
+                  complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                end
               end
 
               describe 'interrupt_on' do
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
                   it "should not add interrupt arguments" do
-                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options
+                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -96,7 +105,7 @@ module Punchblock
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should add the interrupt options to the argument" do
                     expect_answered
-                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
+                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -105,7 +114,7 @@ module Punchblock
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should add the interrupt options to the argument" do
                     expect_answered
-                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options('', '|1|1')
+                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -124,7 +133,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :voice => nil } }
                   it "should not add a voice at the beginning of the argument" do
-                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options
+                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -132,7 +141,7 @@ module Punchblock
                 context "set to Leonard" do
                   let(:command_opts) { { :voice => "Leonard" } }
                   it "should add a voice at the beginning of the argument" do
-                    mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Swift', ssml_with_options('Leonard^', '')
+                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('Leonard^', '')).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -159,14 +168,14 @@ module Punchblock
               end
 
               def expect_mrcpsynth_with_options(options)
-                mock_call.async.should_receive(:send_agi_action).once.with do |*args|
+                mock_call.should_receive(:execute_agi_command).once.with do |*args|
                   args[0].should be == 'EXEC MRCPSynth'
                   args[2].should match options
-                end
+                end.and_return code: 200, result: 1
               end
 
               it "should execute MRCPSynth" do
-                mock_call.async.should_receive(:send_agi_action).once.with 'EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, ''
+                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, '').and_return code: 200, result: 1
                 subject.execute
               end
 
@@ -178,21 +187,55 @@ module Punchblock
                 end
 
                 it 'should escape TTS strings containing a comma' do
-                  mock_call.async.should_receive(:send_agi_action).once.with do |*args|
+                  mock_call.should_receive(:execute_agi_command).once.with do |*args|
                     args[0].should be == 'EXEC MRCPSynth'
                     args[1].should match(/this\\, here\\, is a test/)
-                  end
+                  end.and_return code: 200, result: 1
                   subject.execute
                 end
               end
 
               it 'should send a complete event when MRCPSynth completes' do
-                async_proxy = mock_call.async
-                def async_proxy.send_agi_action(*args, &block)
-                  block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
-                end
+                mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                 subject.execute
                 original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+              end
+
+              context "when we get a RubyAMI Error" do
+                it "should send an error complete event" do
+                  error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Error
+                  complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                end
+              end
+
+              context "when the SYNTHSTATUS variable is set" do
+                before { mock_call.should_receive(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+
+                context "to 'ERROR'" do
+                  let(:synthstatus) { 'ERROR' }
+
+                  it "should send an error complete event" do
+                    mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                    subject.execute
+                    complete_reason = original_command.complete_event(0.1).reason
+                    complete_reason.should be_a Punchblock::Event::Complete::Error
+                    complete_reason.details.should == "Terminated due to UniMRCP error"
+                  end
+                end
+
+                context "to 'OK'" do
+                  let(:synthstatus) { 'OK' }
+
+                  it 'should send a complete event' do
+                    mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                    subject.execute
+                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  end
+                end
               end
 
               describe 'ssml' do
@@ -360,11 +403,11 @@ module Punchblock
             [:asterisk, nil].each do |media_engine|
               context "with a media engine of #{media_engine.inspect}" do
                 def expect_playback(filename = audio_filename)
-                  mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Playback', filename
+                  mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', filename).and_return code: 200
                 end
 
                 def expect_playback_noanswer
-                  mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Playback', audio_filename + ',noanswer'
+                  mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
                 end
 
                 let(:audio_filename) { 'http://foo.com/bar.mp3' }
@@ -413,12 +456,21 @@ module Punchblock
                       def mock_call.answered?
                         true
                       end
-                      async_proxy = mock_call.async
-                      def async_proxy.send_agi_action(*args, &block)
-                        block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
-                      end
+                      expect_playback
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                    end
+
+                    context "when we get a RubyAMI Error" do
+                      it "should send an error complete event" do
+                        expect_answered
+                        error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      end
                     end
                   end
 
@@ -438,12 +490,21 @@ module Punchblock
 
                     it 'should send a complete event when the file finishes playback' do
                       expect_answered
-                      async_proxy = mock_call.async
-                      def async_proxy.send_agi_action(*args, &block)
-                        block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
-                      end
+                      expect_playback
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                    end
+
+                    context "when we get a RubyAMI Error" do
+                      it "should send an error complete event" do
+                        expect_answered
+                        error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
+                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      end
                     end
 
                     context "with early media playback" do
@@ -507,10 +568,7 @@ module Punchblock
 
                     it 'should send a complete event after the final file has finished playback' do
                       expect_answered
-                      async_proxy = mock_call.async
-                      def async_proxy.send_agi_action(*args, &block)
-                        block.call Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new(:code => 200, :result => 1)
-                      end
+                      expect_playback [audio_filename1, audio_filename2].join('&')
                       latch = CountDownLatch.new 1
                       original_command.should_receive(:add_event).once.with do |e|
                         e.reason.should be_a Punchblock::Component::Output::Complete::Success
@@ -660,11 +718,10 @@ module Punchblock
 
                 describe 'interrupt_on' do
                   def ami_event_for_dtmf(digit, position)
-                    RubyAMI::Event.new('DTMF').tap do |e|
-                      e['Digit']  = digit.to_s
-                      e['Start']  = position == :start ? 'Yes' : 'No'
-                      e['End']    = position == :end ? 'Yes' : 'No'
-                    end
+                    RubyAMI::Event.new 'DTMF',
+                      'Digit' => digit.to_s,
+                      'Start' => position == :start ? 'Yes' : 'No',
+                      'End'   => position == :end ? 'Yes' : 'No'
                   end
 
                   def send_ami_events_for_dtmf(digit)
@@ -675,11 +732,10 @@ module Punchblock
                   let(:reason) { original_command.complete_event(5).reason }
                   let(:channel) { "SIP/1234-00000000" }
                   let :ami_event do
-                    RubyAMI::Event.new('AsyncAGI').tap do |e|
-                      e['SubEvent'] = "Start"
-                      e['Channel']  = channel
-                      e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-                    end
+                    RubyAMI::Event.new 'AsyncAGI',
+                      'SubEvent'  => "Start",
+                      'Channel'   => channel,
+                      'Env'       => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
                   end
 
                   context "set to nil" do
@@ -699,7 +755,8 @@ module Punchblock
 
                     before do
                       expect_answered
-                      expect_playback
+                      mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
+                      subject.wrapped_object.should_receive(:send_success).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
@@ -729,7 +786,8 @@ module Punchblock
 
                     before do
                       expect_answered
-                      expect_playback
+                      mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
+                      subject.wrapped_object.should_receive(:send_success).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
@@ -787,7 +845,7 @@ module Punchblock
 
               it "should use the media renderer set and not the platform default" do
                 expect_answered
-                mock_call.async.should_receive(:send_agi_action).once.with 'EXEC Playback', audio_filename
+                mock_call.should_receive(:execute_agi_command).once.with 'EXEC Playback', audio_filename
                 subject.execute
               end
             end
@@ -809,11 +867,10 @@ module Punchblock
               let(:reason) { original_command.complete_event(5).reason }
               let(:channel) { "SIP/1234-00000000" }
               let :ami_event do
-                RubyAMI::Event.new('AsyncAGI').tap do |e|
-                  e['SubEvent'] = "Start"
-                  e['Channel']  = channel
-                  e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-                end
+                RubyAMI::Event.new 'AsyncAGI',
+                  'SubEvent'  => "Start",
+                  'Channel'   => channel,
+                  'Env'       => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
               end
 
               before do

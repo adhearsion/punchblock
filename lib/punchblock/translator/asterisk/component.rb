@@ -17,7 +17,6 @@ module Punchblock
           include DeadActorSafety
 
           attr_reader :id, :call, :call_id
-          attr_accessor :internal
 
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
@@ -48,11 +47,7 @@ module Punchblock
           def send_event(event)
             event.component_id    = id
             event.target_call_id  = call_id
-            if internal
-              @component_node.add_event event
-            else
-              safe_from_dead_actors { translator.handle_pb_event event }
-            end
+            safe_from_dead_actors { translator.handle_pb_event event }
           end
 
           def logger_id
@@ -66,7 +61,11 @@ module Punchblock
           private
 
           def translator
-            call.translator
+            @translator ||= call.translator
+          end
+
+          def ami_client
+            translator.ami_client
           end
 
           def set_node_response(value)
@@ -79,6 +78,10 @@ module Punchblock
 
           def with_error(name, text)
             set_node_response ProtocolError.new.setup(name, text)
+          end
+
+          def complete_with_error(error)
+            send_complete_event Punchblock::Event::Complete::Error.new(details: error)
           end
         end
       end

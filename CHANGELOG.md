@@ -1,4 +1,7 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Use RubyAMI 2.0 with a single AMI connection
+  * Feature: Cache channel variables on Asterisk calls
+  * Bugfix: Detect MRCPSynth failure in output component
 
 # [v1.8.1](https://github.com/adhearsion/punchblock/compare/v1.8.0...v1.8.1) - [2013-03-25](https://rubygems.org/gems/punchblock/versions/1.8.1)
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command

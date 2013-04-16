@@ -10,8 +10,9 @@ module Punchblock
           include HasMockCallbackConnection
 
           let(:media_engine)    { nil }
-          let(:translator)      { Punchblock::Translator::Asterisk.new mock('AMI'), connection, media_engine }
-          let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator }
+          let(:ami_client)      { mock('AMI') }
+          let(:translator)      { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
+          let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
           let(:original_command_options) { {} }
 
           let :original_command do
@@ -53,11 +54,10 @@ module Punchblock
             end
 
             def ami_event_for_dtmf(digit, position)
-              RubyAMI::Event.new('DTMF').tap do |e|
-                e['Digit']  = digit.to_s
-                e['Start']  = position == :start ? 'Yes' : 'No'
-                e['End']    = position == :end ? 'Yes' : 'No'
-              end
+              RubyAMI::Event.new 'DTMF',
+                'Digit' => digit.to_s,
+                'Start' => position == :start ? 'Yes' : 'No',
+                'End'   => position == :end ? 'Yes' : 'No'
             end
 
             def send_ami_events_for_dtmf(digit)

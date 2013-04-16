@@ -1,6 +1,7 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Use RubyAMI 2.0 with a single AMI connection
   * Feature: Cache channel variables on Asterisk calls
+  * Feature: Allow optional sending of end event when breaking from AsyncAGI on Asterisk. This enables dialplan handback.
   * Bugfix: Detect MRCPSynth failure in output component
   * Bugfix: Avoid DTMF recognizer failures and race conditions by bringing DTMFRecognizer back into the Input component actor
 

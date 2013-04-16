@@ -30,6 +30,7 @@ module Punchblock
           @pending_joins = {}
           @progress_sent = false
           @block_commands = false
+          @channel_variables = {}
         end
 
         def register_component(component)
@@ -47,6 +48,10 @@ module Punchblock
 
         def shutdown
           terminate
+        end
+
+        def channel_var(variable)
+          @channel_variables[variable]
         end
 
         def to_s
@@ -151,6 +156,8 @@ module Punchblock
               end
               send_pb_event event
             end
+          when 'VarSet'
+            @channel_variables[ami_event['Variable']] = ami_event['Value']
           end
           trigger_handler :ami, ami_event
         end

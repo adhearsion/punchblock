@@ -778,6 +778,22 @@ module Punchblock
             end
           end
 
+          context 'with a VarSet event' do
+            let :ami_event do
+              RubyAMI::Event.new 'VarSet',
+                "Privilege" => "dialplan,all",
+                "Channel"   => "SIP/1234-00000000",
+                "Variable"  => "foobar",
+                "Value"     => 'abc123',
+                "Uniqueid"  => "1326210224.0"
+            end
+
+            it 'makes the variable accessible on the call' do
+              subject.process_ami_event ami_event
+              subject.channel_var('foobar').should == 'abc123'
+            end
+          end
+
           let :ami_event do
             RubyAMI::Event.new 'Foo',
               'Uniqueid'      => "1320842458.8",

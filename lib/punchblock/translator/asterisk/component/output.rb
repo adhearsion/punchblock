@@ -9,7 +9,8 @@ module Punchblock
         class Output < Component
           include StopByRedirect
 
-          UnrenderableDocError = Class.new OptionError
+          UnrenderableDocError  = Class.new OptionError
+          UniMRCPError          = Class.new Punchblock::Error
 
           def setup
             @media_engine = @call.translator.media_engine
@@ -55,13 +56,16 @@ module Punchblock
             when :unimrcp
               send_ref
               @call.execute_agi_command 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options
+              raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
             when :swift
               send_ref
               @call.execute_agi_command 'EXEC Swift', swift_doc
             else
-              raise OptionError, 'The renderer foobar is unsupported.'
+              raise OptionError, "The renderer #{rendering_engine} is unsupported."
             end
             send_success
+          rescue UniMRCPError
+            complete_with_error 'Terminated due to UniMRCP error'
           rescue RubyAMI::Error => e
             complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue UnrenderableDocError => e

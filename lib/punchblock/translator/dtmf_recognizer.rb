@@ -3,10 +3,6 @@
 module Punchblock
   module Translator
     class DTMFRecognizer
-      include Celluloid
-
-      finalizer :finalize
-
       def initialize(responder, grammar, initial_timeout = nil, inter_digit_timeout = nil)
         @responder = responder
         self.grammar = grammar
@@ -43,6 +39,10 @@ module Punchblock
         @grammar.inline!
         @grammar.tokenize!
         @grammar.normalize_whitespace
+      end
+
+      def after(*args, &block)
+        @responder.after *args, &block
       end
 
       def initial_timeout=(other)

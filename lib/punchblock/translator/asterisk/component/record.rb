@@ -22,7 +22,6 @@ module Punchblock
 
             @format = @component_node.format || 'wav'
 
-
             component = current_actor
             call.register_tmp_handler :ami, :name => 'MonitorStop' do |event|
               component.finished
@@ -31,18 +30,17 @@ module Punchblock
             send_ref
 
             if @component_node.start_beep
-              @call.async.send_agi_action 'STREAM FILE', 'beep', '""' do
-                component.async.signal :beep_finished
-              end
-              wait :beep_finished
+              @call.execute_agi_command 'STREAM FILE', 'beep', '""'
             end
 
-            call.async.send_ami_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
+            ami_client.send_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
             unless max_duration == -1
               after max_duration/1000 do
-                call.async.send_ami_action 'StopMonitor', 'Channel' => call.channel
+                ami_client.send_action 'StopMonitor', 'Channel' => call.channel
               end
             end
+          rescue RubyAMI::Error => e
+            complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue OptionError => e
             with_error 'option error', e.message
           end
@@ -51,20 +49,14 @@ module Punchblock
             case command
             when Punchblock::Component::Stop
               command.response = true
-              a = current_actor
-              call.async.send_ami_action 'StopMonitor', 'Channel' => call.channel do |complete_event|
-                @complete_reason = stop_reason
-              end
+              ami_client.send_action 'StopMonitor', 'Channel' => call.channel
+              @complete_reason = stop_reason
             when Punchblock::Component::Record::Pause
-              a = current_actor
-              call.async.send_ami_action 'PauseMonitor', 'Channel' => call.channel do |complete_event|
-                command.response = true
-              end
+              ami_client.send_action 'PauseMonitor', 'Channel' => call.channel
+              command.response = true
             when Punchblock::Component::Record::Resume
-              a = current_actor
-              call.async.send_ami_action 'ResumeMonitor', 'Channel' => call.channel do |complete_event|
-                command.response = true
-              end
+              ami_client.send_action 'ResumeMonitor', 'Channel' => call.channel
+              command.response = true
             else
               super
             end

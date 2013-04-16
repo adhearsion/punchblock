@@ -9,7 +9,8 @@ module Punchblock
         class Output < Component
           include StopByRedirect
 
-          UnrenderableDocError = Class.new OptionError
+          UnrenderableDocError  = Class.new OptionError
+          UniMRCPError          = Class.new Punchblock::Error
 
           def setup
             @media_engine = @call.translator.media_engine
@@ -25,8 +26,6 @@ module Punchblock
             end
 
             early = !@call.answered?
-
-            output_component = current_actor
 
             rendering_engine = @component_node.renderer || @media_engine || :asterisk
 
@@ -47,26 +46,29 @@ module Punchblock
               @call.send_progress if early
 
               if interrupt
-                call.register_handler :ami, :name => 'DTMF' do |event|
-                  output_component.stop_by_redirect finish_reason if event['End'] == 'Yes'
+                output_component = current_actor
+                call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
+                  output_component.stop_by_redirect finish_reason
                 end
               end
 
               opts = early ? "#{path},noanswer" : path
-              playback opts
+              @call.execute_agi_command 'EXEC Playback', opts
             when :unimrcp
               send_ref
-              @call.async.send_agi_action 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options do |complete_event|
-                output_component.async.send_complete_event finish_reason
-              end
+              @call.execute_agi_command 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options
+              raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
             when :swift
               send_ref
-              @call.async.send_agi_action 'EXEC Swift', swift_doc do |complete_event|
-                output_component.async.send_complete_event finish_reason
-              end
+              @call.execute_agi_command 'EXEC Swift', swift_doc
             else
-              raise OptionError, 'The renderer foobar is unsupported.'
+              raise OptionError, "The renderer #{rendering_engine} is unsupported."
             end
+            send_finish
+          rescue UniMRCPError
+            complete_with_error 'Terminated due to UniMRCP error'
+          rescue RubyAMI::Error => e
+            complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue UnrenderableDocError => e
             with_error 'unrenderable document error', e.message
           rescue OptionError => e
@@ -91,19 +93,12 @@ module Punchblock
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end
 
-          def playback(path)
-            op = current_actor
-            @call.async.send_agi_action 'EXEC Playback', path do |complete_event|
-              op.async.send_complete_event finish_reason
-            end
-          end
-
           def escaped_doc
             @component_node.render_documents.first.value.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
           end
 
           def escape_commas(text)
-            text.gsub(/,/, '\\,')
+            text.gsub(',', '\\,')
           end
 
           def mrcpsynth_options
@@ -118,6 +113,10 @@ module Punchblock
             doc << "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
             doc.insert 0, "#{@component_node.voice}^" if @component_node.voice
             doc
+          end
+
+          def send_finish
+            send_complete_event finish_reason
           end
 
           def finish_reason

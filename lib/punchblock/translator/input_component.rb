@@ -6,8 +6,7 @@ module Punchblock
       def execute
         validate
 
-        component = current_actor
-        @recognizer = DTMFRecognizer.new current_actor,
+        @recognizer = DTMFRecognizer.new self,
                                          @component_node.grammar.value,
                                          (@component_node.initial_timeout || -1),
                                          (@component_node.inter_digit_timeout || -1)
@@ -54,6 +53,7 @@ module Punchblock
 
       def complete(reason)
         unregister_dtmf_event_handler
+        @recognizer.finalize if @recognizer
         send_complete_event reason
       end
     end

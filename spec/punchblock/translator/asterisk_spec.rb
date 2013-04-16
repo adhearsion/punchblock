@@ -7,7 +7,7 @@ module Punchblock
   module Translator
     describe Asterisk do
       let(:ami_client)    { mock 'RubyAMI::Client' }
-      let(:connection)    { mock 'Connection::Asterisk' }
+      let(:connection)    { mock 'Connection::Asterisk', handle_event: nil }
       let(:media_engine)  { :asterisk }
 
       let(:translator) { Asterisk.new ami_client, connection, media_engine }
@@ -31,7 +31,7 @@ module Punchblock
 
       describe '#shutdown' do
         it "instructs all calls to shutdown" do
-          call = Asterisk::Call.new 'foo', subject
+          call = Asterisk::Call.new 'foo', subject, ami_client, connection
           call.async.should_receive(:shutdown).once
           subject.register_call call
           subject.shutdown
@@ -84,7 +84,7 @@ module Punchblock
       describe '#register_call' do
         let(:call_id) { 'abc123' }
         let(:channel) { 'SIP/foo' }
-        let(:call)    { Translator::Asterisk::Call.new channel, subject }
+        let(:call)    { Translator::Asterisk::Call.new channel, subject, ami_client, connection }
 
         before do
           call.stub(:id).and_return call_id
@@ -103,7 +103,7 @@ module Punchblock
       describe '#deregister_call' do
         let(:call_id) { 'abc123' }
         let(:channel) { 'SIP/foo' }
-        let(:call)    { Translator::Asterisk::Call.new channel, subject }
+        let(:call)    { Translator::Asterisk::Call.new channel, subject, ami_client, connection }
 
         before do
           call.stub(:id).and_return call_id
@@ -138,7 +138,7 @@ module Punchblock
         let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
 
         context "with a known call ID" do
-          let(:call) { Translator::Asterisk::Call.new 'SIP/foo', subject }
+          let(:call) { Translator::Asterisk::Call.new 'SIP/foo', subject, ami_client, connection }
 
           before do
             command.request!
@@ -165,8 +165,8 @@ module Punchblock
           let(:call_id) { dial_command.response.id }
 
           before do
+            subject.async.should_receive(:execute_global_command)
             subject.execute_command dial_command
-            ami_client.as_null_object
           end
 
           it 'sends an error in response to the command' do
@@ -191,11 +191,10 @@ module Punchblock
 
         context "for an incoming call which began executing but crashed" do
           let :ami_event do
-            RubyAMI::Event.new('AsyncAGI').tap do |e|
-              e['SubEvent'] = "Start"
-              e['Channel']  = "SIP/1234-00000000"
-              e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-            end
+            RubyAMI::Event.new 'AsyncAGI',
+              'SubEvent' => "Start",
+              'Channel'  => "SIP/1234-00000000",
+              'Env'      => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
           end
 
           let(:call)    { subject.call_for_channel('SIP/1234-00000000') }
@@ -235,7 +234,7 @@ module Punchblock
       end
 
       describe '#execute_component_command' do
-        let(:call)            { Translator::Asterisk::Call.new 'SIP/foo', subject }
+        let(:call)            { Translator::Asterisk::Call.new 'SIP/foo', subject, ami_client, connection }
         let(:component_node)  { Component::Output.new }
         let(:component)       { Translator::Asterisk::Component::Output.new(component_node, call) }
 
@@ -272,7 +271,7 @@ module Punchblock
 
           before do
             command.request!
-            ami_client.as_null_object
+            ami_client.stub(:send_action).and_return RubyAMI::Response.new
           end
 
           it 'should be able to look up the call by channel ID' do
@@ -297,13 +296,13 @@ module Punchblock
           let(:mock_action) { stub('Asterisk::Component::Asterisk::AMIAction').as_null_object }
 
           it 'should create a component actor and execute it asynchronously' do
-            Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject).and_return mock_action
+            Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject, ami_client).and_return mock_action
             mock_action.async.should_receive(:execute).once
             subject.execute_global_command command
           end
 
           it 'registers the component' do
-            Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject).and_return mock_action
+            Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject, ami_client).and_return mock_action
             subject.wrapped_object.should_receive(:register_component).with mock_action
             subject.execute_global_command command
           end
@@ -331,12 +330,11 @@ module Punchblock
 
       describe '#handle_ami_event' do
         let :ami_event do
-          RubyAMI::Event.new('Newchannel').tap do |e|
-            e['Channel']  = "SIP/101-3f3f"
-            e['State']    = "Ring"
-            e['Callerid'] = "101"
-            e['Uniqueid'] = "1094154427.10"
-          end
+          RubyAMI::Event.new 'Newchannel',
+            'Channel'  => "SIP/101-3f3f",
+            'State'    => "Ring",
+            'Callerid' => "101",
+            'Uniqueid' => "1094154427.10"
         end
 
         let :expected_pb_event do
@@ -362,30 +360,19 @@ module Punchblock
         describe 'with a FullyBooted event' do
           let(:ami_event) { RubyAMI::Event.new 'FullyBooted' }
 
-          context 'once' do
-            it 'does not send anything to the connection' do
-              subject.connection.should_receive(:handle_event).never
-              subject.handle_ami_event ami_event
-            end
-          end
-
-          context 'twice' do
-            it 'sends a connected event to the event handler' do
-              subject.connection.should_receive(:handle_event).once.with Connection::Connected.new
-              subject.wrapped_object.should_receive(:run_at_fully_booted).once
-              subject.handle_ami_event ami_event
-              subject.handle_ami_event ami_event
-            end
+          it 'sends a connected event to the event handler' do
+            subject.connection.should_receive(:handle_event).once.with Connection::Connected.new
+            subject.wrapped_object.should_receive(:run_at_fully_booted).once
+            subject.handle_ami_event ami_event
           end
         end
 
         describe 'with an AsyncAGI Start event' do
           let :ami_event do
-            RubyAMI::Event.new('AsyncAGI').tap do |e|
-              e['SubEvent'] = "Start"
-              e['Channel']  = "SIP/1234-00000000"
-              e['Env']      = "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-            end
+            RubyAMI::Event.new 'AsyncAGI',
+              'SubEvent' => "Start",
+              'Channel'  => "SIP/1234-00000000",
+              'Env'      => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
           end
 
           before { subject.wrapped_object.stub :handle_pb_event }
@@ -428,7 +415,7 @@ module Punchblock
           end
 
           context 'if a call already exists for a matching channel' do
-            let(:call) { Asterisk::Call.new "SIP/1234-00000000", subject }
+            let(:call) { Asterisk::Call.new "SIP/1234-00000000", subject, ami_client, connection }
 
             before do
               subject.register_call call
@@ -442,11 +429,10 @@ module Punchblock
 
           context "for a 'h' extension" do
             let :ami_event do
-              RubyAMI::Event.new('AsyncAGI').tap do |e|
-                e['SubEvent'] = "Start"
-                e['Channel']  = "SIP/1234-00000000"
-                e['Env']      = "agi_extension%3A%20h%0A%0A"
-              end
+              RubyAMI::Event.new 'AsyncAGI',
+                'SubEvent' => "Start",
+                'Channel'  => "SIP/1234-00000000",
+                'Env'      => "agi_extension%3A%20h%0A%0A"
             end
 
             it "should not create a new call" do
@@ -462,11 +448,10 @@ module Punchblock
 
           context "for a 'Kill' type" do
             let :ami_event do
-              RubyAMI::Event.new('AsyncAGI').tap do |e|
-                e['SubEvent'] = "Start"
-                e['Channel']  = "SIP/1234-00000000"
-                e['Env']      = "agi_type%3A%20Kill%0A%0A"
-              end
+              RubyAMI::Event.new 'AsyncAGI',
+                'SubEvent' => "Start",
+                'Channel'  => "SIP/1234-00000000",
+                'Env'      => "agi_type%3A%20Kill%0A%0A"
             end
 
             it "should not create a new call" do
@@ -483,13 +468,12 @@ module Punchblock
 
         describe 'with a VarSet event including a punchblock_call_id' do
           let :ami_event do
-            RubyAMI::Event.new('VarSet').tap do |e|
-              e["Privilege"]  = "dialplan,all"
-              e["Channel"]    = "SIP/1234-00000000"
-              e["Variable"]   = "punchblock_call_id"
-              e["Value"]      = call_id
-              e["Uniqueid"]   = "1326210224.0"
-            end
+            RubyAMI::Event.new 'VarSet',
+              "Privilege" => "dialplan,all",
+              "Channel"   => "SIP/1234-00000000",
+              "Variable"  => "punchblock_call_id",
+              "Value"     => call_id,
+              "Uniqueid"  => "1326210224.0"
           end
 
           before do
@@ -536,18 +520,17 @@ module Punchblock
 
         describe 'with an AMI event for a known channel' do
           let :ami_event do
-            RubyAMI::Event.new('Hangup').tap do |e|
-              e['Uniqueid']     = "1320842458.8"
-              e['Calleridnum']  = "5678"
-              e['Calleridname'] = "Jane Smith"
-              e['Cause']        = "0"
-              e['Cause-txt']    = "Unknown"
-              e['Channel']      = "SIP/1234-00000000"
-            end
+            RubyAMI::Event.new 'Hangup',
+              'Uniqueid'      => "1320842458.8",
+              'Calleridnum'   => "5678",
+              'Calleridname'  => "Jane Smith",
+              'Cause'         => "0",
+              'Cause-txt'     => "Unknown",
+              'Channel'       => "SIP/1234-00000000"
           end
 
           let(:call) do
-            Asterisk::Call.new "SIP/1234-00000000", subject, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
+            Asterisk::Call.new "SIP/1234-00000000", subject, ami_client, connection, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
           end
 
           before do
@@ -561,17 +544,16 @@ module Punchblock
 
           context 'with a Channel1 and Channel2 specified on the event' do
             let :ami_event do
-              RubyAMI::Event.new('BridgeAction').tap do |e|
-                e['Privilege'] = "call,all"
-                e['Response'] = "Success"
-                e['Channel1']  = "SIP/1234-00000000"
-                e['Channel2']  = "SIP/5678-00000000"
-              end
+              RubyAMI::Event.new 'BridgeAction',
+                'Privilege' => "call,all",
+                'Response'  => "Success",
+                'Channel1'  => "SIP/1234-00000000",
+                'Channel2'  => "SIP/5678-00000000"
             end
 
             context 'with calls for those channels' do
               let(:call2) do
-                Asterisk::Call.new "SIP/5678-00000000", subject, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
+                Asterisk::Call.new "SIP/5678-00000000", subject, ami_client, connection, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
               end
 
               before { subject.register_call call2 }
@@ -587,25 +569,23 @@ module Punchblock
 
         describe 'with an event for a channel with Bridge and special statuses appended' do
           let :ami_event do
-            RubyAMI::Event.new('AGIExec').tap do |e|
-              e['SubEvent']    = "End"
-              e['Channel']      = "Bridge/SIP/1234-00000000<ZOMBIE>"
-            end
+            RubyAMI::Event.new 'AGIExec',
+              'SubEvent'  => "End",
+              'Channel'   => "Bridge/SIP/1234-00000000<ZOMBIE>"
           end
 
           let :ami_event2 do
-            RubyAMI::Event.new('Hangup').tap do |e|
-              e['Uniqueid']     = "1320842458.8"
-              e['Calleridnum']  = "5678"
-              e['Calleridname'] = "Jane Smith"
-              e['Cause']        = "0"
-              e['Cause-txt']    = "Unknown"
-              e['Channel']      = "Bridge/SIP/1234-00000000<ZOMBIE>"
-            end
+            RubyAMI::Event.new 'Hangup',
+              'Uniqueid'      => "1320842458.8",
+              'Calleridnum'   => "5678",
+              'Calleridname'  => "Jane Smith",
+              'Cause'         => "0",
+              'Cause-txt'     => "Unknown",
+              'Channel'       => "Bridge/SIP/1234-00000000<ZOMBIE>"
           end
 
           let(:call) do
-            Asterisk::Call.new "SIP/1234-00000000", subject, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
+            Asterisk::Call.new "SIP/1234-00000000", subject, ami_client, connection, "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
           end
 
           before do
@@ -623,41 +603,34 @@ module Punchblock
           end
 
         end
-      end#handle_ami_event
-
-      describe '#send_ami_action' do
-        it 'should send the action to the AMI client' do
-          ami_client.should_receive(:send_action).once.with 'foo', :foo => :bar
-          subject.send_ami_action 'foo', :foo => :bar
-        end
       end
 
       describe '#run_at_fully_booted' do
         let(:broken_path) { "/this/is/not/a/valid/path" }
 
         let(:passed_show) do
-          OpenStruct.new({:text_body => "[ Context 'adhearsion-redirect' created by 'pbx_config' ]\n '1' => 1. AGI(agi:async)[pbx_config]\n\n-= 1 extension (1 priority) in 1 context. =-"})
+          OpenStruct.new text_body: "[ Context 'adhearsion-redirect' created by 'pbx_config' ]\n '1' => 1. AGI(agi:async)[pbx_config]\n\n-= 1 extension (1 priority) in 1 context. =-"
         end
 
         let(:failed_show) do
-          OpenStruct.new({:text_body => "There is no existence of 'adhearsion-redirect' context\nCommand 'dialplan show adhearsion-redirect' failed."})
+          OpenStruct.new text_body: "There is no existence of 'adhearsion-redirect' context\nCommand 'dialplan show adhearsion-redirect' failed."
         end
 
         it 'should send the redirect extension Command to the AMI client' do
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(passed_show)
           subject.run_at_fully_booted
         end
 
         it 'should check the context for existence and do nothing if it is there' do
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_yield(passed_show)
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(passed_show)
           subject.run_at_fully_booted
         end
 
         it 'should check the context for existence and log an error if it is not there' do
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_yield(failed_show)
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(failed_show)
           Punchblock.logger.should_receive(:error).once.with("Punchblock failed to add the #{Asterisk::REDIRECT_EXTENSION} extension to the #{Asterisk::REDIRECT_CONTEXT} context. Please add a [#{Asterisk::REDIRECT_CONTEXT}] entry to your dialplan.")
           subject.run_at_fully_booted
         end
@@ -665,7 +638,7 @@ module Punchblock
         it 'should check the recording directory for existence' do
           stub_const('Punchblock::Translator::Asterisk::Component::Record::RECORDING_BASE_PATH', broken_path)
           ami_client.should_receive(:send_action).once.with 'Command', 'Command' => "dialplan add extension #{Asterisk::REDIRECT_EXTENSION},#{Asterisk::REDIRECT_PRIORITY},AGI,agi:async into #{Asterisk::REDIRECT_CONTEXT}"
-          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}")
+          ami_client.should_receive(:send_action).once.with('Command', 'Command' => "dialplan show #{Asterisk::REDIRECT_CONTEXT}").and_return(passed_show)
           Punchblock.logger.should_receive(:warn).once.with("Recordings directory #{broken_path} does not exist. Recording might not work. This warning can be ignored if Adhearsion is running on a separate machine than Asterisk. See http://adhearsion.com/docs/call-controllers#recording")
           subject.run_at_fully_booted
         end

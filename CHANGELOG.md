@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Avoid DTMF recognizer failures and race conditions by bringing DTMFRecognizer back into the Input component actor.
 
 # [v1.8.1](https://github.com/adhearsion/punchblock/compare/v1.8.0...v1.8.1) - [2013-03-25](https://rubygems.org/gems/punchblock/versions/1.8.1)
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command

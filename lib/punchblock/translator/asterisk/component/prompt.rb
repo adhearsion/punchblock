@@ -15,6 +15,7 @@ module Punchblock
             validate
             send_ref
             execute_synthandrecog
+            complete
           rescue UniMRCPError
             complete_with_error 'Terminated due to UniMRCP error'
           rescue RubyAMI::Error => e
@@ -41,7 +42,7 @@ module Punchblock
 
           def execute_synthandrecog
             @call.execute_agi_command 'EXEC SynthAndRecog', [render_doc, grammar, synthandrecog_options].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
-            raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
+            raise UniMRCPError if @call.channel_var('RECOG_STATUS') == 'ERROR'
           end
 
           def render_doc
@@ -62,6 +63,22 @@ module Punchblock
 
           def input_node
             @component_node.input
+          end
+
+          def complete
+            case @call.channel_var('RECOG_COMPLETION_CAUSE')
+            when '000' then send_match
+            when '001'
+              send_complete_event Punchblock::Component::Input::Complete::NoMatch.new
+            when '002'
+              send_complete_event Punchblock::Component::Input::Complete::InitialTimeout.new
+            end
+          end
+
+          def send_match
+            nlsml = RubySpeech.parse @call.channel_var('RECOG_RESULT')
+            match_reason = Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
+            send_complete_event match_reason
           end
         end
       end

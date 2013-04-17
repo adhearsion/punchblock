@@ -3,6 +3,8 @@
 module Punchblock
   module Component
     class Input < ComponentNode
+      NLSML_NAMESPACE = 'http://www.ietf.org/xml/ns/mrcpv2'
+
       register :input, :input
 
       ##
@@ -306,7 +308,7 @@ module Punchblock
           private
 
           def result_node
-            at_xpath 'ns:result', 'ns' => 'http://www.w3c.org/2000/11/nlsml' or raise "Couldn't find the NLSML node"
+            at_xpath 'ns:result', 'ns' => NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
           end
         end
 

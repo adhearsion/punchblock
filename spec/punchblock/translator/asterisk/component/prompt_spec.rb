@@ -76,13 +76,21 @@ module Punchblock
             Punchblock::Component::Prompt.new output_command, input_command, command_options
           end
 
-          let(:synthstatus) { 'OK' }
+          let(:recog_status)            { 'OK' }
+          let(:recog_completion_cause)  { '000' }
+          let(:recog_result)            { '<?xml version="1.0"?><result><interpretation grammar="session:grammar-0" confidence="0.43"><input mode="speech">Hello</input><instance>Hello</instance></interpretation></result>' }
 
           subject { Prompt.new original_command, mock_call }
 
           before do
             original_command.request!
-            mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus
+            {
+              'RECOG_STATUS' => recog_status,
+              'RECOG_COMPLETION_CAUSE' => recog_completion_cause,
+              'RECOG_RESULT' => recog_result
+            }.each do |var, val|
+              mock_call.stub(:channel_var).with(var).and_return val
+            end
           end
 
           context 'with an invalid recognizer' do
@@ -143,6 +151,63 @@ module Punchblock
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                   subject.execute
                   original_command.response(0.1).should be_a Ref
+                end
+
+                context "when SynthAndRecog completes" do
+                  context "with a match" do
+                    let :expected_nlsml do
+                      RubySpeech::NLSML.draw do
+                        interpretation grammar: 'session:grammar-0', confidence: 0.43 do
+                          input 'Hello', mode: :speech
+                          instance 'Hello'
+                        end
+                      end
+                    end
+
+                    it 'should send a match complete event' do
+                      expected_complete_reason = Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml,
+                        component_id: subject.id,
+                        target_call_id: mock_call.id
+
+                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should == expected_complete_reason
+                    end
+                  end
+
+                  context "with a nomatch cause" do
+                    let(:recog_completion_cause) { '001' }
+
+                    it 'should send a nomatch complete event' do
+                      expected_complete_reason = Punchblock::Component::Input::Complete::NoMatch.new component_id: subject.id, target_call_id: mock_call.id
+                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should == expected_complete_reason
+                    end
+                  end
+
+                  context "with a noinput cause" do
+                    let(:recog_completion_cause) { '002' }
+
+                    it 'should send a nomatch complete event' do
+                      expected_complete_reason = Punchblock::Component::Input::Complete::InitialTimeout.new component_id: subject.id, target_call_id: mock_call.id
+                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should == expected_complete_reason
+                    end
+                  end
+
+                  context "when the RECOG_STATUS variable is set to 'ERROR'" do
+                    let(:recog_status) { 'ERROR' }
+
+                    it "should send an error complete event" do
+                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      subject.execute
+                      complete_reason = original_command.complete_event(0.1).reason
+                      complete_reason.should be_a Punchblock::Event::Complete::Error
+                      complete_reason.details.should == "Terminated due to UniMRCP error"
+                    end
+                  end
                 end
 
                 context "when we get a RubyAMI Error" do

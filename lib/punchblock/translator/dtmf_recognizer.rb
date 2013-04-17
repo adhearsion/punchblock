@@ -5,10 +5,10 @@ module Punchblock
     class DTMFRecognizer
       def initialize(responder, grammar, initial_timeout = nil, inter_digit_timeout = nil)
         @responder = responder
-        self.grammar = grammar
         self.initial_timeout = initial_timeout || -1
         self.inter_digit_timeout = inter_digit_timeout || -1
 
+        @matcher = RubySpeech::GRXML::Matcher.new RubySpeech::GRXML.import(grammar.to_s)
         @buffer = ""
 
         begin_initial_timer @initial_timeout/1000 unless @initial_timeout == -1
@@ -17,7 +17,7 @@ module Punchblock
       def <<(digit)
         @buffer << digit
         cancel_initial_timer
-        case (match = @grammar.match @buffer.dup)
+        case (match = @matcher.match @buffer.dup)
         when RubySpeech::GRXML::Match
           @responder.match match
         when RubySpeech::GRXML::NoMatch
@@ -33,13 +33,6 @@ module Punchblock
       end
 
       private
-
-      def grammar=(other)
-        @grammar = RubySpeech::GRXML.import other.to_s
-        @grammar.inline!
-        @grammar.tokenize!
-        @grammar.normalize_whitespace
-      end
 
       def after(*args, &block)
         @responder.after *args, &block

@@ -214,32 +214,22 @@ module Punchblock
       describe Input::Complete::Match do
         let :nlsml_string do
           '''
-<result xmlns="http://www.w3c.org/2000/11/nlsml" xmlns:myApp="foo" xmlns:xf="http://www.w3.org/2000/xforms" grammar="http://flight">
-  <interpretation confidence="60">
+<result xmlns="http://www.ietf.org/xml/ns/mrcpv2" grammar="http://flight">
+  <interpretation confidence="0.60">
     <input mode="speech">I want to go to Pittsburgh</input>
-    <xf:model>
-      <xf:group name="airline">
-        <xf:string name="to_city"/>
-      </xf:group>
-    </xf:model>
-    <xf:instance>
-      <myApp:airline>
-        <myApp:to_city>Pittsburgh</myApp:to_city>
-      </myApp:airline>
-    </xf:instance>
+    <instance>
+      <airline>
+        <to_city>Pittsburgh</to_city>
+      </airline>
+    </instance>
   </interpretation>
-  <interpretation confidence="40">
+  <interpretation confidence="0.40">
     <input>I want to go to Stockholm</input>
-    <xf:model>
-      <xf:group name="airline">
-        <xf:string name="to_city"/>
-      </xf:group>
-    </xf:model>
-    <xf:instance>
-      <myApp:airline>
-        <myApp:to_city>Stockholm</myApp:to_city>
-      </myApp:airline>
-    </xf:instance>
+    <instance>
+      <airline>
+        <to_city>Stockholm</to_city>
+      </airline>
+    </instance>
   </interpretation>
 </result>
           '''
@@ -294,7 +284,7 @@ module Punchblock
               <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
   <match xmlns="urn:xmpp:rayo:input:complete:1">
-    <result xmlns="http://www.w3c.org/2000/11/nlsml" xmlns:myApp="foo" xmlns:xf="http://www.w3.org/2000/xforms" grammar="http://flight"/>
+    <result xmlns="http://www.ietf.org/xml/ns/mrcpv2" grammar="http://flight"/>
   </match>
 </complete>
               MESSAGE

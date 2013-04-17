@@ -209,6 +209,8 @@ module Punchblock
             execute_component Component::Output, command
           when Punchblock::Component::Input
             execute_component Component::Input, command
+          when Punchblock::Component::Prompt
+            execute_component Component::Prompt, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
           else

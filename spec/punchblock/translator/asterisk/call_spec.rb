@@ -940,6 +940,20 @@ module Punchblock
             end
           end
 
+          context 'with a Prompt component' do
+            let :command do
+              Punchblock::Component::Prompt.new
+            end
+
+            let(:mock_action) { Translator::Asterisk::Component::Prompt.new(command, subject) }
+
+            it 'should create a Prompt component and execute it asynchronously' do
+              Component::Prompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+              mock_action.async.should_receive(:execute).once
+              subject.execute_command command
+            end
+          end
+
           context 'with a Record component' do
             let :command do
               Punchblock::Component::Record.new

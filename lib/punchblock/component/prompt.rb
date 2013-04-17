@@ -54,11 +54,13 @@ module Punchblock
       end
 
       def output
-        RayoNode.import at_xpath('ns:output', ns: 'urn:xmpp:rayo:output:1')
+        node = at_xpath 'ns:output', ns: 'urn:xmpp:rayo:output:1'
+        RayoNode.import node if node
       end
 
       def input
-        RayoNode.import at_xpath('ns:input', ns: 'urn:xmpp:rayo:input:1')
+        node = at_xpath 'ns:input', ns: 'urn:xmpp:rayo:input:1'
+        RayoNode.import node if node
       end
 
       def inspect_attributes # :nodoc:

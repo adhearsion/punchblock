@@ -147,7 +147,7 @@ module Punchblock
                 let(:output_command_opts) { { renderer: renderer } }
 
                 it "should return a ref and execute SynthAndRecog" do
-                  param = [ssml_doc, grammar, nil].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                  param = [ssml_doc.to_doc, grammar.to_doc, nil].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                   subject.execute
                   original_command.response(0.1).should be_a Ref

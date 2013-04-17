@@ -46,11 +46,11 @@ module Punchblock
           end
 
           def render_doc
-            output_node.render_documents.first.value
+            output_node.render_documents.first.value.to_doc
           end
 
           def grammar
-            input_node.grammars.first.value
+            input_node.grammars.first.value.to_doc
           end
 
           def synthandrecog_options

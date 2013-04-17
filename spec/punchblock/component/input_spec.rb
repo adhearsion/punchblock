@@ -281,6 +281,30 @@ module Punchblock
           its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
           its(:utterance)       { should be == 'I want to go to Pittsburgh' }
         end
+
+        describe "comparison" do
+          context "with the same nlsml" do
+            it "should be equal" do
+              subject.should == RayoNode.import(parse_stanza(stanza).root).reason
+            end
+          end
+
+          context "with different nlsml" do
+            let :other_stanza do
+              <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+  <match xmlns="urn:xmpp:rayo:input:complete:1">
+    <result xmlns="http://www.w3c.org/2000/11/nlsml" xmlns:myApp="foo" xmlns:xf="http://www.w3.org/2000/xforms" grammar="http://flight"/>
+  </match>
+</complete>
+              MESSAGE
+            end
+
+            it "should not be equal" do
+              subject.should_not == RayoNode.import(parse_stanza(other_stanza).root).reason
+            end
+          end
+        end
       end
 
       describe Input::Complete::NoMatch do

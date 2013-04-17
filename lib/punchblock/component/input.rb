@@ -299,6 +299,10 @@ module Punchblock
             nlsml.best_interpretation[:instance]
           end
 
+          def inspect_attributes # :nodoc:
+            [:name, :nlsml] + super
+          end
+
           private
 
           def result_node

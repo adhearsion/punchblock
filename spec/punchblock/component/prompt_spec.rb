@@ -69,7 +69,6 @@ module Punchblock
         let(:command) { Input.new :grammar => '[5 DIGITS]' }
 
         before do
-          pending
           command.component_id = 'abc123'
           command.target_call_id = '123abc'
           command.client = mock_client
@@ -78,7 +77,7 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:1"/>' }
+          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
           its(:component_id) { should be == 'abc123' }
           its(:target_call_id) { should be == '123abc' }
         end

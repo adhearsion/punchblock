@@ -67,7 +67,7 @@ module Punchblock
           end
 
           def synthandrecog_options
-            [].tap do |opts|
+            ['uer=1'].tap do |opts|
               opts << "b=#{@component_node.barge_in == false ? 0 : 1}"
               opts << "vn=#{output_node.voice}" if output_node.voice
               opts << "nit=#{@initial_timeout}" if @initial_timeout > -1
@@ -86,7 +86,7 @@ module Punchblock
           def complete
             send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
             when '000'
-              nlsml = RubySpeech.parse @call.channel_var('RECOG_RESULT')
+              nlsml = RubySpeech.parse URI.decode(@call.channel_var('RECOG_RESULT'))
               Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
             when '001'
               Punchblock::Component::Input::Complete::NoMatch.new

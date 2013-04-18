@@ -60,11 +60,23 @@ module Punchblock
           end
 
           def render_docs
-            output_node.render_documents.map { |d| d.value.to_doc.to_s }.join ','
+            output_node.render_documents.map do |d|
+              if d.content_type
+                d.value.to_doc.to_s
+              else
+                d.url
+              end
+            end.join ','
           end
 
           def grammars
-            input_node.grammars.map { |d| d.value.to_doc.to_s }.join ','
+            input_node.grammars.map do |d|
+              if d.content_type
+                d.value.to_doc.to_s
+              else
+                d.url
+              end
+            end.join ','
           end
 
           def synthandrecog_options

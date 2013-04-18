@@ -84,19 +84,15 @@ module Punchblock
           end
 
           def complete
-            case @call.channel_var('RECOG_COMPLETION_CAUSE')
-            when '000' then send_match
+            send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
+            when '000'
+              nlsml = RubySpeech.parse @call.channel_var('RECOG_RESULT')
+              Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
             when '001'
-              send_complete_event Punchblock::Component::Input::Complete::NoMatch.new
+              Punchblock::Component::Input::Complete::NoMatch.new
             when '002'
-              send_complete_event Punchblock::Component::Input::Complete::InitialTimeout.new
+              Punchblock::Component::Input::Complete::InitialTimeout.new
             end
-          end
-
-          def send_match
-            nlsml = RubySpeech.parse @call.channel_var('RECOG_RESULT')
-            match_reason = Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
-            send_complete_event match_reason
           end
         end
       end

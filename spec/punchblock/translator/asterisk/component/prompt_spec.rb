@@ -53,7 +53,7 @@ module Punchblock
           let(:output_command_opts) { {} }
 
           let :output_command_options do
-            { ssml: ssml_doc }.merge(output_command_opts)
+            { render_document: {value: ssml_doc} }.merge(output_command_opts)
           end
 
           let(:input_command_opts) { {} }
@@ -131,8 +131,20 @@ module Punchblock
           end
 
           describe 'Output#document' do
+            context 'with multiple documents' do
+              let(:output_command_options) { { render_documents: [{value: ssml_doc}, {value: ssml_doc}] } }
+
+              it "should return a ref and execute SynthAndRecog" do
+                param = [[ssml_doc.to_doc.to_s, ssml_doc.to_doc.to_s].join(','), grammar.to_doc, 'uer=1&b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
+                subject.execute
+                original_command.response(0.1).should be_a Ref
+              end
+            end
+
             context 'unset' do
-              let(:output_command_opts) { { ssml: nil } }
+              let(:output_command_options) { {} }
+
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
@@ -394,6 +406,29 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A interrupt_on value is unsupported on Asterisk.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Output#grammar' do
+            context 'with multiple grammars' do
+              let(:input_command_options) { { grammars: [{value: voice_grammar}, {value: dtmf_grammar}] } }
+
+              it "should return a ref and execute SynthAndRecog" do
+                param = [ssml_doc.to_doc, [voice_grammar.to_doc.to_s, dtmf_grammar.to_doc.to_s].join(','), 'uer=1&b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
+                subject.execute
+                original_command.response(0.1).should be_a Ref
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_options) { {} }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A grammar is required.'
                 original_command.response(0.1).should be == error
               end
             end

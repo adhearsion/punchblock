@@ -35,7 +35,8 @@ module Punchblock
           def validate
             raise OptionError, "The renderer #{renderer} is unsupported." unless renderer == 'unimrcp'
             raise OptionError, "The recognizer #{recognizer} is unsupported." unless recognizer == 'unimrcp'
-            raise OptionError, 'An SSML document is required.' unless output_node.render_documents.first.value
+            raise OptionError, 'An SSML document is required.' unless output_node.render_documents.count > 0
+            raise OptionError, 'A grammar is required.' unless input_node.grammars.count > 0
 
             [:interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if output_node.send opt
@@ -54,16 +55,16 @@ module Punchblock
           end
 
           def execute_synthandrecog
-            @call.execute_agi_command 'EXEC SynthAndRecog', [render_doc, grammar, synthandrecog_options].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+            @call.execute_agi_command 'EXEC SynthAndRecog', [render_docs, grammars, synthandrecog_options].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
             raise UniMRCPError if @call.channel_var('RECOG_STATUS') == 'ERROR'
           end
 
-          def render_doc
-            output_node.render_documents.first.value.to_doc
+          def render_docs
+            output_node.render_documents.map { |d| d.value.to_doc.to_s }.join ','
           end
 
-          def grammar
-            input_node.grammars.first.value.to_doc
+          def grammars
+            input_node.grammars.map { |d| d.value.to_doc.to_s }.join ','
           end
 
           def synthandrecog_options

@@ -17,6 +17,12 @@ module Punchblock
         its(:output)    { should be == output }
         its(:input)     { should be == input }
         its(:barge_in)  { should be_true }
+
+        context "with barge-in unset" do
+          subject { described_class.new output, input }
+
+          its(:barge_in) { should be_nil }
+        end
       end
 
       describe "from a stanza" do

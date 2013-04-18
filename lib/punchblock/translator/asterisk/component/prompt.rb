@@ -12,6 +12,7 @@ module Punchblock
           UniMRCPError = Class.new Punchblock::Error
 
           def execute
+            setup_defaults
             validate
             send_ref
             execute_synthandrecog
@@ -26,10 +27,22 @@ module Punchblock
 
           private
 
+          def setup_defaults
+            @initial_timeout = input_node.initial_timeout || -1
+            @inter_digit_timeout = input_node.inter_digit_timeout || -1
+          end
+
           def validate
             raise OptionError, "The renderer #{renderer} is unsupported." unless renderer == 'unimrcp'
             raise OptionError, "The recognizer #{recognizer} is unsupported." unless recognizer == 'unimrcp'
             raise OptionError, 'An SSML document is required.' unless output_node.render_documents.first.value
+
+            [:interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
+              raise OptionError, "A #{opt} value is unsupported on Asterisk." if output_node.send opt
+            end
+
+            raise OptionError, "An initial-timeout value must be -1 or a positive integer." if @initial_timeout < -1
+            raise OptionError, "An inter-digit-timeout value must be -1 or a positive integer." if @inter_digit_timeout < -1
           end
 
           def renderer
@@ -54,7 +67,12 @@ module Punchblock
           end
 
           def synthandrecog_options
-            ''
+            [].tap do |opts|
+              opts << "b=#{@component_node.barge_in == false ? 0 : 1}"
+              opts << "vn=#{output_node.voice}" if output_node.voice
+              opts << "nit=#{@initial_timeout}" if @initial_timeout > -1
+              opts << "dit=#{@inter_digit_timeout}" if @inter_digit_timeout > -1
+            end.join '&'
           end
 
           def output_node

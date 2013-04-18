@@ -126,7 +126,7 @@ module Punchblock
           def expect_app_with_options(app, options)
             mock_call.should_receive(:execute_agi_command).once.with do |*args|
               args[0].should be == "EXEC #{app}"
-              args[2].should match options
+              args[1].should match options
             end.and_return code: 200, result: 1
           end
 
@@ -147,7 +147,7 @@ module Punchblock
                 let(:output_command_opts) { { renderer: renderer } }
 
                 it "should return a ref and execute SynthAndRecog" do
-                  param = [ssml_doc.to_doc, grammar.to_doc, nil].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                  param = [ssml_doc.to_doc, grammar.to_doc, 'b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                   subject.execute
                   original_command.response(0.1).should be_a Ref
@@ -234,6 +234,279 @@ module Punchblock
                 end
               end
             end
+          end
+
+          describe 'barge_in' do
+            context 'unset' do
+              let(:command_options) { { barge_in: nil } }
+
+              it 'should pass the b=1 option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/b=1/)
+                subject.execute
+              end
+            end
+
+            context 'true' do
+              let(:command_options) { { barge_in: true } }
+
+              it 'should pass the b=1 option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/b=1/)
+                subject.execute
+              end
+            end
+
+            context 'false' do
+              let(:command_options) { { barge_in: false } }
+
+              it 'should pass the b=0 option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/b=0/)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Output#voice' do
+            context 'unset' do
+              let(:output_command_opts) { { voice: nil } }
+
+              it 'should not pass the vn option to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'set' do
+              let(:output_command_opts) { { voice: 'alison' } }
+
+              it 'should pass the vn option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/vn=alison/)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Output#start-offset' do
+            context 'unset' do
+              let(:output_command_opts) { { start_offset: nil } }
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'set' do
+              let(:output_command_opts) { { start_offset: 10 } }
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Output#start-paused' do
+            context 'false' do
+              let(:output_command_opts) { { start_paused: false } }
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'true' do
+              let(:output_command_opts) { { start_paused: true } }
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Output#repeat-interval' do
+            context 'unset' do
+              let(:output_command_opts) { { repeat_interval: nil } }
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'set' do
+              let(:output_command_opts) { { repeat_interval: 10 } }
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Output#repeat-times' do
+            context 'unset' do
+              let(:output_command_opts) { { repeat_times: nil } }
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'set' do
+              let(:output_command_opts) { { repeat_times: 2 } }
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported on Asterisk.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Output#max-time' do
+            context 'unset' do
+              let(:output_command_opts) { { max_time: nil } }
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'set' do
+              let(:output_command_opts) { { max_time: 30 } }
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Output#interrupt_on' do
+            context 'unset' do
+              let(:output_command_opts) { { interrupt_on: nil } }
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'set' do
+              let(:output_command_opts) { { interrupt_on: :dtmf } }
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A interrupt_on value is unsupported on Asterisk.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Input#initial-timeout' do
+            context 'a positive number' do
+              let(:input_command_opts) { { initial_timeout: 1000 } }
+
+              it 'should pass the nit option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/nit=1000/)
+                subject.execute
+              end
+            end
+
+            context '-1' do
+              let(:input_command_opts) { { initial_timeout: -1 } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { initial_timeout: nil } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'a negative number other than -1' do
+              let(:input_command_opts) { { initial_timeout: -1000 } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'An initial-timeout value must be -1 or a positive integer.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Input#inter-digit-timeout' do
+            context 'a positive number' do
+              let(:input_command_opts) { { inter_digit_timeout: 1000 } }
+
+              it 'should pass the dit option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/dit=1000/)
+                subject.execute
+              end
+            end
+
+            context '-1' do
+              let(:input_command_opts) { { inter_digit_timeout: -1 } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { inter_digit_timeout: nil } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+
+            context 'a negative number other than -1' do
+              let(:input_command_opts) { { inter_digit_timeout: -1000 } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'An inter-digit-timeout value must be -1 or a positive integer.'
+                original_command.response(0.1).should be == error
+              end
+            end
+          end
+
+          describe 'Input#mode' do
+            pending
+          end
+
+          describe 'Input#terminator' do
+            pending
+          end
+
+          describe 'Input#recognizer' do
+            pending
+          end
+
+          describe 'Input#sensitivity' do
+            pending
+          end
+
+          describe 'Input#min-confidence' do
+            pending
+          end
+
+          describe 'Input#max-silence' do
+            pending
+          end
+
+          describe 'Input#match-content-type' do
+            pending
+          end
+
+          describe 'Input#language' do
+            pending
           end
 
           describe "#execute_command" do

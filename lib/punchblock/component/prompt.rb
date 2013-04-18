@@ -43,7 +43,7 @@ module Punchblock
       # @return [true, false] Indicates wether or not the input should interrupt then output
       #
       def barge_in
-        read_attr(:'barge-in') == 'true'
+        read_attr(:'barge-in') && read_attr(:'barge-in') == 'true'
       end
 
       ##

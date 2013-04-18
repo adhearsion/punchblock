@@ -67,12 +67,11 @@ module Punchblock
           end
 
           def synthandrecog_options
-            ['uer=1'].tap do |opts|
-              opts << "b=#{@component_node.barge_in == false ? 0 : 1}"
-              opts << "vn=#{output_node.voice}" if output_node.voice
-              opts << "nit=#{@initial_timeout}" if @initial_timeout > -1
-              opts << "dit=#{@inter_digit_timeout}" if @inter_digit_timeout > -1
-            end.join '&'
+            {uer: 1, b: (@component_node.barge_in == false ? 0 : 1)}.tap do |opts|
+              opts[:vn] = output_node.voice if output_node.voice
+              opts[:nit] = @initial_timeout if @initial_timeout > -1
+              opts[:dit] = @inter_digit_timeout if @inter_digit_timeout > -1
+            end.map { |o| o.join '=' }.join '&'
           end
 
           def output_node

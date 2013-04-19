@@ -5,6 +5,9 @@
   * Bugfix: Detect MRCPSynth failure in output component
   * Bugfix: Avoid DTMF recognizer failures and race conditions by bringing DTMFRecognizer back into the Input component actor
 
+# [v1.8.2](https://github.com/adhearsion/punchblock/compare/v1.8.1...v1.8.2) - [2013-04-19](https://rubygems.org/gems/punchblock/versions/1.8.2)
+  * Bugfix: Input initial timeout was being set as a float rather than an integer
+
 # [v1.8.1](https://github.com/adhearsion/punchblock/compare/v1.8.0...v1.8.1) - [2013-03-25](https://rubygems.org/gems/punchblock/versions/1.8.1)
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command
   * Bugfix: Asterisk translator now properly checks for existence of the recordings directory

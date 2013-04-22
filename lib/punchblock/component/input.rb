@@ -134,7 +134,7 @@ module Punchblock
       # @param [Integer] timeout Indicates the amount of time preceding input which may expire before a timeout is triggered.
       #
       def initial_timeout=(other)
-        write_attr :'initial-timeout', other, :to_f
+        write_attr :'initial-timeout', other, :to_i
       end
 
       ##

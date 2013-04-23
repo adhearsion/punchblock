@@ -237,23 +237,28 @@ module Punchblock
         end
 
         ##
-        # @return [String, RubySpeech::SSML::Speak] the document
+        # @return [String, RubySpeech::SSML::Speak, Array] the document
         def value
           return nil unless content.present?
           if ssml?
             RubySpeech::SSML.import content
+          elsif urilist?
+            content.strip.split("\n").map(&:strip)
           else
             content
           end
         end
 
         ##
-        # @param [String, RubySpeech::SSML::Speak] value the document
+        # @param [String, RubySpeech::SSML::Speak, Array] value the document
         def value=(value)
           return unless value
           self.content_type = ssml_content_type unless self.content_type
           if ssml? && !value.is_a?(RubySpeech::SSML::Element)
             value = RubySpeech::SSML.import value
+          end
+          if urilist?
+            value = value.join("\n")
           end
           Nokogiri::XML::Builder.with(self) do |xml|
             xml.cdata " #{value} "
@@ -272,6 +277,10 @@ module Punchblock
 
         def ssml?
           content_type == ssml_content_type
+        end
+
+        def urilist?
+          content_type == 'text/uri-list'
         end
       end
 

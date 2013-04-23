@@ -72,6 +72,17 @@ module Punchblock
           ]}
         end
 
+        context "with a urilist" do
+          subject do
+            Output.new render_document: {
+              content_type: 'text/uri-list',
+              value: ['http://example.com/hello.mp3']
+            }
+          end
+
+          its(:render_documents) { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])] }
+        end
+
         context "with a nil document" do
           it "removes all documents" do
             subject.render_document = nil
@@ -133,6 +144,23 @@ module Punchblock
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
         its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc), Output::Document.new(:value => ssml_doc)] }
+
+        context "with a urilist" do
+          let :stanza do
+            <<-MESSAGE
+<output xmlns='urn:xmpp:rayo:output:1'>
+  <document content-type="text/uri-list">
+    <![CDATA[
+      http://example.com/hello.mp3
+      http://example.com/goodbye.mp3
+    ]]>
+  </document>
+</output>
+            MESSAGE
+          end
+
+          its(:render_documents) { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'])] }
+        end
       end
 
       describe Output::Document do
@@ -165,7 +193,36 @@ module Punchblock
           end
         end
 
-        describe 'with a grammar reference by URL' do
+        describe 'with a urilist' do
+          subject { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+
+          let(:expected_message) do
+            <<-CONTENT
+<![CDATA[ http://example.com/hello.mp3
+http://example.com/goodbye.mp3 ]]>
+            CONTENT
+          end
+
+          it "should wrap list in CDATA" do
+            subject.child.to_xml.should be == expected_message.strip
+          end
+
+          its(:value) { should be == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+
+          describe "comparison" do
+            let(:document2) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+            let(:document3) { Output::Document.new value: '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>' }
+            let(:document4) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'] }
+            let(:document5) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/goodbye.mp3', 'http://example.com/hello.mp3'] }
+
+            it { should be == document2 }
+            it { should_not be == document3 }
+            it { should_not be == document4 }
+            it { should_not be == document5 }
+          end
+        end
+
+        describe 'with a document reference by URL' do
           let(:url) { 'http://foo.com/bar.grxml' }
 
           subject { Input::Grammar.new :url => url }

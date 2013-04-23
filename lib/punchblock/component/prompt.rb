@@ -34,8 +34,8 @@ module Punchblock
       def self.new(output = nil, input = nil, options = {})
         super().tap do |new_node|
           options.each_pair { |k,v| new_node.send :"#{k}=", v }
-          new_node << output if output
-          new_node << input if input
+          new_node.output = output
+          new_node.input  =  input
         end
       end
 
@@ -58,9 +58,29 @@ module Punchblock
         RayoNode.import node if node
       end
 
+      def output=(other)
+        case other
+        when nil
+        when Output
+          self << other
+        else
+          self << Output.new(other)
+        end
+      end
+
       def input
         node = at_xpath 'ns:input', ns: 'urn:xmpp:rayo:input:1'
         RayoNode.import node if node
+      end
+
+      def input=(other)
+        case other
+        when nil
+        when Input
+          self << other
+        else
+          self << Input.new(other)
+        end
       end
 
       def inspect_attributes # :nodoc:

@@ -23,6 +23,13 @@ module Punchblock
 
           its(:barge_in) { should be_nil }
         end
+
+        context "with options for sub-components" do
+          subject { described_class.new({renderer: :foo}, {recognizer: :bar}) }
+
+          its(:output)  { should be == Output.new(renderer: :foo) }
+          its(:input)   { should be == Input.new(recognizer: :bar) }
+        end
       end
 
       describe "from a stanza" do

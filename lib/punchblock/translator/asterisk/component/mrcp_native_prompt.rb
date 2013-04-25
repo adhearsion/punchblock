@@ -33,7 +33,7 @@ module Punchblock
           end
 
           def execute_unimrcp_app
-            execute_app 'MRCPRecog', grammars, mrcprecog_options
+            execute_app 'MRCPRecog', grammars
           end
 
           def first_doc
@@ -44,8 +44,8 @@ module Punchblock
             first_doc.value.first
           end
 
-          def mrcprecog_options
-            unimrcp_app_options do |opts|
+          def unimrcp_app_options
+            super do |opts|
               opts[:f] = audio_filename
             end
           end

@@ -28,7 +28,7 @@ module Punchblock
           end
 
           def execute_unimrcp_app
-            execute_app 'SynthAndRecog', render_docs, grammars, synthandrecog_options
+            execute_app 'SynthAndRecog', render_docs, grammars
           end
 
           def render_docs
@@ -41,8 +41,8 @@ module Punchblock
             end.join ','
           end
 
-          def synthandrecog_options
-            unimrcp_app_options do |opts|
+          def unimrcp_app_options
+            super do |opts|
               opts[:vn] = output_node.voice if output_node.voice
             end
           end

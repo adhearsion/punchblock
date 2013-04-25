@@ -167,36 +167,19 @@ module Punchblock
                 { :render_document => {:value => ssml_doc} }.merge(command_opts)
               end
 
-
               let(:synthstatus) { 'OK' }
               before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
               def expect_mrcpsynth_with_options(options)
                 mock_call.should_receive(:execute_agi_command).once.with do |*args|
                   args[0].should be == 'EXEC MRCPSynth'
-                  args[2].should match options
+                  args[1].should match options
                 end.and_return code: 200, result: 1
               end
 
               it "should execute MRCPSynth" do
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, '').and_return code: 200, result: 1
+                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', [ssml_doc.to_s, ''].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')).and_return code: 200, result: 1
                 subject.execute
-              end
-
-              context "when the SSML document contains commas" do
-                let :ssml_doc do
-                  RubySpeech::SSML.draw do
-                    string "this, here, is a test"
-                  end
-                end
-
-                it 'should escape TTS strings containing a comma' do
-                  mock_call.should_receive(:execute_agi_command).once.with do |*args|
-                    args[0].should be == 'EXEC MRCPSynth'
-                    args[1].should match(/this\\, here\\, is a test/)
-                  end.and_return code: 200, result: 1
-                  subject.execute
-                end
               end
 
               it 'should send a complete event when MRCPSynth completes' do

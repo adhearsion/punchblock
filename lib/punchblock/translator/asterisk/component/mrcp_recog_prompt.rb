@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require 'active_support/core_ext/string/filters'
+require 'punchblock/translator/asterisk/unimrcp_app'
 
 module Punchblock
   module Translator
@@ -35,7 +35,7 @@ module Punchblock
           end
 
           def execute_app(app, *args)
-            @call.execute_agi_command "EXEC #{app}", args.map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+            UniMRCPApp.new(app, *args, unimrcp_app_options).execute @call
             raise UniMRCPError if @call.channel_var('RECOG_STATUS') == 'ERROR'
           end
 
@@ -44,7 +44,7 @@ module Punchblock
               opts[:nit] = @initial_timeout if @initial_timeout > -1
               opts[:dit] = @inter_digit_timeout if @inter_digit_timeout > -1
               yield opts
-            end.map { |o| o.join '=' }.join '&'
+            end
           end
 
           def setup_defaults

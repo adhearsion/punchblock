@@ -11,6 +11,7 @@ module Punchblock
         autoload :Output
         autoload :MRCPPrompt
         autoload :MRCPNativePrompt
+        autoload :MRCPRecogPrompt
         autoload :Record
         autoload :StopByRedirect
 

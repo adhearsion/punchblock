@@ -942,15 +942,31 @@ module Punchblock
 
           context 'with a Prompt component' do
             let :command do
-              Punchblock::Component::Prompt.new
+              Punchblock::Component::Prompt.new({renderer: renderer}, {recognizer: recognizer})
             end
 
-            let(:mock_action) { Translator::Asterisk::Component::Prompt.new(command, subject) }
+            let(:mock_action) { Translator::Asterisk::Component::MRCPPrompt.new(command, subject) }
 
-            it 'should create a Prompt component and execute it asynchronously' do
-              Component::Prompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
-              mock_action.async.should_receive(:execute).once
-              subject.execute_command command
+            context "when the recognizer is unimrcp and the renderer is unimrcp" do
+              let(:recognizer)  { :unimrcp }
+              let(:renderer)    { :unimrcp }
+
+              it 'should create an MRCPPrompt component and execute it asynchronously' do
+                Component::MRCPPrompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+                mock_action.async.should_receive(:execute).once
+                subject.execute_command command
+              end
+            end
+
+            context "when the recognizer is unimrcp and the renderer is asterisk" do
+              let(:recognizer)  { :unimrcp }
+              let(:renderer)    { :asterisk }
+
+              it 'should create an MRCPPrompt component and execute it asynchronously' do
+                Component::MRCPNativePrompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+                mock_action.async.should_receive(:execute).once
+                subject.execute_command command
+              end
             end
           end
 

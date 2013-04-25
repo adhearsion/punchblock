@@ -9,7 +9,8 @@ module Punchblock
         autoload :Asterisk
         autoload :Input
         autoload :Output
-        autoload :Prompt
+        autoload :MRCPPrompt
+        autoload :MRCPNativePrompt
         autoload :Record
         autoload :StopByRedirect
 

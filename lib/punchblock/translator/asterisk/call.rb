@@ -210,7 +210,16 @@ module Punchblock
           when Punchblock::Component::Input
             execute_component Component::Input, command
           when Punchblock::Component::Prompt
-            execute_component Component::Prompt, command
+            component_class = case command.input.recognizer
+            when 'unimrcp'
+              case command.output.renderer
+              when 'unimrcp'
+                Component::MRCPPrompt
+              when 'asterisk'
+                Component::MRCPNativePrompt
+              end
+            end
+            execute_component component_class, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
           else

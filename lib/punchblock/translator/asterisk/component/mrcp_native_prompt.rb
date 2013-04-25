@@ -6,7 +6,7 @@ module Punchblock
   module Translator
     class Asterisk
       module Component
-        class Prompt < Component
+        class MRCPNativePrompt < Component
           include StopByRedirect
 
           UniMRCPError = Class.new Punchblock::Error
@@ -15,7 +15,7 @@ module Punchblock
             setup_defaults
             validate
             send_ref
-            execute_synthandrecog
+            execute_mrcprecog
             complete
           rescue UniMRCPError
             complete_with_error 'Terminated due to UniMRCP error'
@@ -33,9 +33,14 @@ module Punchblock
           end
 
           def validate
-            raise OptionError, "The renderer #{renderer} is unsupported." unless renderer == 'unimrcp'
+            raise OptionError, "The renderer #{renderer} is unsupported." unless renderer == 'asterisk'
             raise OptionError, "The recognizer #{recognizer} is unsupported." unless recognizer == 'unimrcp'
-            raise OptionError, 'An SSML document is required.' unless output_node.render_documents.count > 0
+
+            raise OptionError, 'A document is required.' unless output_node.render_documents.count > 0
+            raise OptionError, 'Only one document is allowed.' if output_node.render_documents.count > 1
+            raise OptionError, 'Only inline documents are allowed.' if first_doc.url
+            raise OptionError, 'Only one audio file is allowed.' if first_doc.value.size > 1
+
             raise OptionError, 'A grammar is required.' unless input_node.grammars.count > 0
 
             [:interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
@@ -47,26 +52,16 @@ module Punchblock
           end
 
           def renderer
-            (output_node.renderer || :unimrcp).to_s
+            (output_node.renderer || :asterisk).to_s
           end
 
           def recognizer
             (input_node.recognizer || :unimrcp).to_s
           end
 
-          def execute_synthandrecog
-            @call.execute_agi_command 'EXEC SynthAndRecog', [render_docs, grammars, synthandrecog_options].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+          def execute_mrcprecog
+            @call.execute_agi_command 'EXEC MRCPRecog', [grammars, mrcprecog_options].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
             raise UniMRCPError if @call.channel_var('RECOG_STATUS') == 'ERROR'
-          end
-
-          def render_docs
-            output_node.render_documents.map do |d|
-              if d.content_type
-                d.value.to_doc.to_s
-              else
-                d.url
-              end
-            end.join ','
           end
 
           def grammars
@@ -79,11 +74,19 @@ module Punchblock
             end.join ','
           end
 
-          def synthandrecog_options
+          def first_doc
+            output_node.render_documents.first
+          end
+
+          def audio_filename
+            first_doc.value.first
+          end
+
+          def mrcprecog_options
             {uer: 1, b: (@component_node.barge_in == false ? 0 : 1)}.tap do |opts|
-              opts[:vn] = output_node.voice if output_node.voice
               opts[:nit] = @initial_timeout if @initial_timeout > -1
               opts[:dit] = @inter_digit_timeout if @inter_digit_timeout > -1
+              opts[:f] = audio_filename
             end.map { |o| o.join '=' }.join '&'
           end
 

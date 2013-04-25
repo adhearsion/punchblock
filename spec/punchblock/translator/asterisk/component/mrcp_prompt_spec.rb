@@ -6,7 +6,7 @@ module Punchblock
   module Translator
     class Asterisk
       module Component
-        describe Prompt do
+        describe MRCPPrompt do
           include HasMockCallbackConnection
 
           let(:media_engine)  { :unimrcp }
@@ -80,7 +80,7 @@ module Punchblock
           let(:recog_completion_cause)  { '000' }
           let(:recog_result)            { "%3C?xml%20version=%221.0%22?%3E%3Cresult%3E%0D%0A%3Cinterpretation%20grammar=%22session:grammar-0%22%20confidence=%220.43%22%3E%3Cinput%20mode=%22speech%22%3EHello%3C/input%3E%3Cinstance%3EHello%3C/instance%3E%3C/interpretation%3E%3C/result%3E" }
 
-          subject { Prompt.new original_command, mock_call }
+          subject { described_class.new original_command, mock_call }
 
           before do
             original_command.request!

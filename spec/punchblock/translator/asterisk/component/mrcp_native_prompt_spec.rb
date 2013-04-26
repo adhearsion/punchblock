@@ -176,7 +176,7 @@ module Punchblock
                 let(:output_command_opts) { { renderer: renderer } }
 
                 it "should return a ref and execute MRCPRecog" do
-                  param = [grammar.to_doc, "uer=1&b=1&f=#{audio_filename}"].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                  param = ["\"#{grammar.to_doc.to_s.squish.gsub('"', '\"')}\"", "uer=1&b=1&f=#{audio_filename}"].join(',')
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
                   subject.execute
                   original_command.response(0.1).should be_a Ref
@@ -433,7 +433,7 @@ module Punchblock
               let(:input_command_options) { { grammars: [{value: voice_grammar}, {value: dtmf_grammar}] } }
 
               it "should return a ref and execute MRCPRecog" do
-                param = [[voice_grammar.to_doc.to_s, dtmf_grammar.to_doc.to_s].join(','), "uer=1&b=1&f=#{audio_filename}"].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                param = ["\"#{[voice_grammar.to_doc.to_s, dtmf_grammar.to_doc.to_s].join(',').squish.gsub('"', '\"')}\"", "uer=1&b=1&f=#{audio_filename}"].join(',')
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
                 subject.execute
                 original_command.response(0.1).should be_a Ref
@@ -444,7 +444,7 @@ module Punchblock
               let(:input_command_options) { { grammars: [{url: 'http://example.com/grammar1.grxml'}, {url: 'http://example.com/grammar2.grxml'}] } }
 
               it "should return a ref and execute MRCPRecog" do
-                param = [['http://example.com/grammar1.grxml', 'http://example.com/grammar2.grxml'].join(','), "uer=1&b=1&f=#{audio_filename}"].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                param = ["\"#{"http://example.com/grammar1.grxml,http://example.com/grammar2.grxml".squish.gsub('"', '\"')}\"", "uer=1&b=1&f=#{audio_filename}"].join(',')
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
                 subject.execute
                 original_command.response(0.1).should be_a Ref

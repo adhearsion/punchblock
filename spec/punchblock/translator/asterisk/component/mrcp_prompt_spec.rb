@@ -135,7 +135,7 @@ module Punchblock
               let(:output_command_options) { { render_documents: [{value: ssml_doc}, {value: ssml_doc}] } }
 
               it "should return a ref and execute SynthAndRecog" do
-                param = [[ssml_doc.to_doc.to_s, ssml_doc.to_doc.to_s].join(','), grammar.to_doc, 'uer=1&b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                param = [[ssml_doc.to_doc.to_s, ssml_doc.to_doc.to_s].join(','), grammar.to_doc].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('uer=1&b=1').join(',')
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                 subject.execute
                 original_command.response(0.1).should be_a Ref
@@ -146,7 +146,7 @@ module Punchblock
               let(:output_command_options) { { render_documents: [{url: 'http://example.com/doc1.ssml'}, {url: 'http://example.com/doc2.ssml'}] } }
 
               it "should return a ref and execute SynthAndRecog" do
-                param = [['http://example.com/doc1.ssml', 'http://example.com/doc2.ssml'].join(','), grammar.to_doc, 'uer=1&b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                param = [['http://example.com/doc1.ssml', 'http://example.com/doc2.ssml'].join(','), grammar.to_doc].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('uer=1&b=1').join(',')
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                 subject.execute
                 original_command.response(0.1).should be_a Ref
@@ -170,7 +170,7 @@ module Punchblock
                 let(:output_command_opts) { { renderer: renderer } }
 
                 it "should return a ref and execute SynthAndRecog" do
-                  param = [ssml_doc.to_doc, grammar.to_doc, 'uer=1&b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                  param = [ssml_doc.to_doc, grammar.to_doc].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('uer=1&b=1').join(',')
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                   subject.execute
                   original_command.response(0.1).should be_a Ref
@@ -427,7 +427,7 @@ module Punchblock
               let(:input_command_options) { { grammars: [{value: voice_grammar}, {value: dtmf_grammar}] } }
 
               it "should return a ref and execute SynthAndRecog" do
-                param = [ssml_doc.to_doc, [voice_grammar.to_doc.to_s, dtmf_grammar.to_doc.to_s].join(','), 'uer=1&b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                param = [ssml_doc.to_doc, [voice_grammar.to_doc.to_s, dtmf_grammar.to_doc.to_s].join(',')].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('uer=1&b=1').join(',')
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                 subject.execute
                 original_command.response(0.1).should be_a Ref
@@ -438,7 +438,7 @@ module Punchblock
               let(:input_command_options) { { grammars: [{url: 'http://example.com/grammar1.grxml'}, {url: 'http://example.com/grammar2.grxml'}] } }
 
               it "should return a ref and execute SynthAndRecog" do
-                param = [ssml_doc.to_doc, ['http://example.com/grammar1.grxml', 'http://example.com/grammar2.grxml'].join(','), 'uer=1&b=1'].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')
+                param = [ssml_doc.to_doc, ['http://example.com/grammar1.grxml', 'http://example.com/grammar2.grxml'].join(',')].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('uer=1&b=1').join(',')
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
                 subject.execute
                 original_command.response(0.1).should be_a Ref

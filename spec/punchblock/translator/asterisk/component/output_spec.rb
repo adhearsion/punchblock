@@ -178,7 +178,7 @@ module Punchblock
               end
 
               it "should execute MRCPSynth" do
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', [ssml_doc.to_s, ''].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.join(',')).and_return code: 200, result: 1
+                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', ["\"#{ssml_doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
                 subject.execute
               end
 

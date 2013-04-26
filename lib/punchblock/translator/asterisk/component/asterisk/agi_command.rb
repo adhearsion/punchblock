@@ -17,6 +17,7 @@ module Punchblock
               set_node_response false
               terminate
             end
+            exclusive :execute
 
             def handle_ami_event(event)
               if event.name == 'AsyncAGI' && event['SubEvent'] == 'Exec'

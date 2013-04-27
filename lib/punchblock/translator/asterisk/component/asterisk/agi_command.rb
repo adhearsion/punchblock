@@ -21,10 +21,11 @@ module Punchblock
 
             def handle_ami_event(event)
               if event.name == 'AsyncAGI' && event['SubEvent'] == 'Exec'
-                send_complete_event success_reason(event)
+                send_complete_event success_reason(event), nil, false
                 if @component_node.name == 'ASYNCAGI BREAK' && @call.channel_var('PUNCHBLOCK_END_ON_ASYNCAGI_BREAK')
-                  @call.async.handle_hangup_event
+                  @call.handle_hangup_event
                 end
+                terminate
               end
             end
 

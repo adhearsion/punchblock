@@ -218,6 +218,8 @@ module Punchblock
               when 'asterisk'
                 Component::MRCPNativePrompt
               end
+            else
+              Component::ComposedPrompt
             end
             execute_component component_class, command
           when Punchblock::Component::Record

@@ -968,6 +968,17 @@ module Punchblock
                 subject.execute_command command
               end
             end
+
+            context "when the recognizer is something other than unimrcp" do
+              let(:recognizer)  { :asterisk }
+              let(:renderer)    { :unimrcp }
+
+              it 'should create a ComposedPrompt component and execute it asynchronously' do
+                Component::ComposedPrompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+                mock_action.async.should_receive(:execute).once
+                subject.execute_command command
+              end
+            end
           end
 
           context 'with a Record component' do

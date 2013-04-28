@@ -7,6 +7,7 @@ module Punchblock
         extend ActiveSupport::Autoload
 
         autoload :Asterisk
+        autoload :ComposedPrompt
         autoload :Input
         autoload :Output
         autoload :MRCPPrompt

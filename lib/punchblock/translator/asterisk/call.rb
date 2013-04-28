@@ -8,6 +8,8 @@ module Punchblock
         include Celluloid
         include DeadActorSafety
 
+        InvalidCommandError = Class.new Punchblock::Error
+
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
@@ -217,6 +219,8 @@ module Punchblock
                 Component::MRCPPrompt
               when 'asterisk'
                 Component::MRCPNativePrompt
+              else
+                raise InvalidCommandError, 'Invalid recognizer/renderer combination'
               end
             else
               Component::ComposedPrompt
@@ -227,6 +231,8 @@ module Punchblock
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        rescue InvalidCommandError => e
+          command.response = ProtocolError.new.setup :invalid_command, e.message, id
         rescue RubyAMI::Error => e
           command.response = ProtocolError.new.setup 'error', e.message
         rescue Celluloid::DeadActorError

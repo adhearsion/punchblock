@@ -969,6 +969,16 @@ module Punchblock
               end
             end
 
+            context "when the recognizer is unimrcp and the renderer is something we can't compose with unimrcp" do
+              let(:recognizer)  { :unimrcp }
+              let(:renderer)    { :swift }
+
+              it 'should return an error' do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup(:invalid_command, "Invalid recognizer/renderer combination", subject.id)
+              end
+            end
+
             context "when the recognizer is something other than unimrcp" do
               let(:recognizer)  { :asterisk }
               let(:renderer)    { :unimrcp }

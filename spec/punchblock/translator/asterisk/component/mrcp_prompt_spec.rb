@@ -539,7 +539,23 @@ module Punchblock
           end
 
           describe 'Input#terminator' do
-            pending
+            context 'a string' do
+              let(:input_command_opts) { { terminator: '#' } }
+
+              it 'should pass the dttc option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/dttc=#/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { terminator: nil } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
           end
 
           describe 'Input#recognizer' do

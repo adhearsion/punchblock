@@ -43,6 +43,7 @@ module Punchblock
             {uer: 1, b: (@component_node.barge_in == false ? 0 : 1)}.tap do |opts|
               opts[:nit] = @initial_timeout if @initial_timeout > -1
               opts[:dit] = @inter_digit_timeout if @inter_digit_timeout > -1
+              opts[:dttc] = input_node.terminator if input_node.terminator
               yield opts
             end
           end

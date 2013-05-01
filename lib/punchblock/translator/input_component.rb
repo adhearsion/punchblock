@@ -41,12 +41,8 @@ module Punchblock
         complete Punchblock::Component::Input::Complete::NoMatch.new
       end
 
-      def initial_timeout
-        complete Punchblock::Component::Input::Complete::InitialTimeout.new
-      end
-
-      def inter_digit_timeout
-        complete Punchblock::Component::Input::Complete::InterDigitTimeout.new
+      def noinput
+        complete Punchblock::Component::Input::Complete::NoInput.new
       end
 
       private

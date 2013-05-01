@@ -316,26 +316,8 @@ module Punchblock
           register :nomatch, :input_complete
         end
 
-        NoInput = Module.new
-
-        class InitialTimeout < Event::Complete::Reason
-          include NoInput
-          register :'initial-timeout', :input_complete
-        end
-
-        class InterDigitTimeout < Event::Complete::Reason
-          include NoInput
-          register :'inter-digit-timeout', :input_complete
-        end
-
-        class MaxSilence < Event::Complete::Reason
-          include NoInput
-          register :'max-silence', :input_complete
-        end
-
-        class MinConfidence < Event::Complete::Reason
-          include NoInput
-          register :'min-confidence', :input_complete
+        class NoInput < Event::Complete::Reason
+          register :noinput, :input_complete
         end
       end # Complete
     end # Input

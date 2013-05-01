@@ -60,7 +60,7 @@ module Punchblock
 
       def begin_initial_timer(timeout)
         @initial_timer = after timeout do
-          finalize :initial_timeout
+          finalize :noinput
         end
       end
 
@@ -78,7 +78,7 @@ module Punchblock
             when RubySpeech::GRXML::Match
               finalize :match, match
             else
-              finalize :inter_digit_timeout
+              finalize :nomatch
             end
           end
         end

@@ -3,10 +3,11 @@
 module Punchblock
   module Translator
     class DTMFRecognizer
-      def initialize(responder, grammar, initial_timeout = nil, inter_digit_timeout = nil)
+      def initialize(responder, grammar, initial_timeout = nil, inter_digit_timeout = nil, terminator = nil)
         @responder = responder
         self.initial_timeout = initial_timeout || -1
         self.inter_digit_timeout = inter_digit_timeout || -1
+        @terminator = terminator
 
         @matcher = RubySpeech::GRXML::Matcher.new RubySpeech::GRXML.import(grammar.to_s)
         @buffer = ""
@@ -15,24 +16,33 @@ module Punchblock
       end
 
       def <<(digit)
-        @buffer << digit
         cancel_initial_timer
-        case (match = @matcher.match @buffer.dup)
+        @buffer << digit unless terminating?(digit)
+        case (match = get_match)
+        when RubySpeech::GRXML::MaxMatch
+          finalize :match, match
         when RubySpeech::GRXML::Match
-          @responder.match match
+          finalize :match, match if terminating?(digit)
         when RubySpeech::GRXML::NoMatch
-          @responder.nomatch
+          finalize :nomatch
         when RubySpeech::GRXML::PotentialMatch
-          reset_inter_digit_timer
+          if terminating?(digit)
+            finalize :nomatch
+          else
+            reset_inter_digit_timer
+          end
         end
       end
 
-      def finalize
-        cancel_initial_timer
-        cancel_inter_digit_timer
+      private
+
+      def terminating?(digit)
+        digit == @terminator
       end
 
-      private
+      def get_match
+        @matcher.match @buffer.dup
+      end
 
       def after(*args, &block)
         @responder.after *args, &block
@@ -50,7 +60,7 @@ module Punchblock
 
       def begin_initial_timer(timeout)
         @initial_timer = after timeout do
-          @responder.initial_timeout
+          finalize :initial_timeout
         end
       end
 
@@ -64,7 +74,12 @@ module Punchblock
         return if @inter_digit_timeout == -1
         @inter_digit_timer ||= begin
           after @inter_digit_timeout/1000 do
-            @responder.inter_digit_timeout
+            case (match = get_match)
+            when RubySpeech::GRXML::Match
+              finalize :match, match
+            else
+              finalize :inter_digit_timeout
+            end
           end
         end
         @inter_digit_timer.reset
@@ -74,6 +89,16 @@ module Punchblock
         return unless instance_variable_defined?(:@inter_digit_timer) && @inter_digit_timer
         @inter_digit_timer.cancel
         @inter_digit_timer = nil
+      end
+
+      def finalize(match_type, match = nil)
+        cancel_initial_timer
+        cancel_inter_digit_timer
+        if match
+          @responder.send match_type, match
+        else
+          @responder.send match_type
+        end
       end
     end
   end

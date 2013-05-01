@@ -9,7 +9,8 @@ module Punchblock
         @recognizer = DTMFRecognizer.new self,
                                          @component_node.grammars.first.value,
                                          (@component_node.initial_timeout || -1),
-                                         (@component_node.inter_digit_timeout || -1)
+                                         (@component_node.inter_digit_timeout || -1),
+                                         @component_node.terminator
 
         send_ref
 
@@ -67,7 +68,6 @@ module Punchblock
 
       def complete(reason)
         unregister_dtmf_event_handler
-        @recognizer.finalize if @recognizer
         send_complete_event reason
       end
     end

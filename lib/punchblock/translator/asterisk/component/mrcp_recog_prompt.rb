@@ -87,7 +87,7 @@ module Punchblock
             when '001'
               Punchblock::Component::Input::Complete::NoMatch.new
             when '002'
-              Punchblock::Component::Input::Complete::InitialTimeout.new
+              Punchblock::Component::Input::Complete::NoInput.new
             end
           end
         end

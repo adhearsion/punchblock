@@ -189,7 +189,7 @@ module Punchblock
                   sleep 1.5
                   send_dtmf 1
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::InitialTimeout
+                  reason.should be_a Punchblock::Component::Input::Complete::NoInput
                 end
               end
 
@@ -241,7 +241,7 @@ module Punchblock
                   send_dtmf 1
                   sleep 1.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::InterDigitTimeout
+                  reason.should be_a Punchblock::Component::Input::Complete::NoMatch
                 end
               end
 

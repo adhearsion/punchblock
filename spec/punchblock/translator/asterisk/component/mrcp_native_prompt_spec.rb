@@ -219,7 +219,7 @@ module Punchblock
                     let(:recog_completion_cause) { '002' }
 
                     it 'should send a nomatch complete event' do
-                      expected_complete_reason = Punchblock::Component::Input::Complete::InitialTimeout.new component_id: subject.id, target_call_id: mock_call.id
+                      expected_complete_reason = Punchblock::Component::Input::Complete::NoInput.new component_id: subject.id, target_call_id: mock_call.id
                       mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
                       original_command.complete_event(0.1).reason.should == expected_complete_reason

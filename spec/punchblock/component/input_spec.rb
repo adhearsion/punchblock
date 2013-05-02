@@ -15,7 +15,8 @@ module Punchblock
                     :mode                 => :speech,
                     :terminator           => '#',
                     :max_silence          => 1000,
-                    :recognizer           => 'en-US',
+                    :recognizer           => 'default',
+                    :language             => 'en-US',
                     :initial_timeout      => 2000,
                     :inter_digit_timeout  => 2000,
                     :sensitivity          => 0.5,
@@ -26,7 +27,8 @@ module Punchblock
         its(:mode)                { should be == :speech }
         its(:terminator)          { should be == '#' }
         its(:max_silence)         { should be == 1000 }
-        its(:recognizer)          { should be == 'en-US' }
+        its(:recognizer)          { should be == 'default' }
+        its(:language)            { should be == 'en-US' }
         its(:initial_timeout)     { should be == 2000 }
         its(:inter_digit_timeout) { should be == 2000 }
         its(:sensitivity)         { should be == 0.5 }
@@ -67,7 +69,8 @@ module Punchblock
        mode="speech"
        terminator="#"
        max-silence="1000"
-       recognizer="en-US"
+       recognizer="default"
+       language="en-US"
        initial-timeout="2000"
        inter-digit-timeout="2000"
        sensitivity="0.5"
@@ -90,7 +93,8 @@ module Punchblock
         its(:mode)                { should be == :speech }
         its(:terminator)          { should be == '#' }
         its(:max_silence)         { should be == 1000 }
-        its(:recognizer)          { should be == 'en-US' }
+        its(:recognizer)          { should be == 'default' }
+        its(:language)            { should be == 'en-US' }
         its(:initial_timeout)     { should be == 2000 }
         its(:inter_digit_timeout) { should be == 2000 }
         its(:sensitivity)         { should be == 0.5 }

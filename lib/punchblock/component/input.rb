@@ -16,6 +16,7 @@ module Punchblock
       # @option options [Float, optional] :min_confidence with which to consider a response acceptable
       # @option options [Symbol, optional] :mode by which to accept input. Can be :speech, :dtmf or :any
       # @option options [String, optional] :recognizer to use for speech recognition
+      # @option options [String, optional] :language to use for speech recognition
       # @option options [String, optional] :terminator by which to signal the end of input
       # @option options [Float, optional] :sensitivity Indicates how sensitive the interpreter should be to loud versus quiet input. Higher values represent greater sensitivity.
       # @option options [Integer, optional] :initial_timeout Indicates the amount of time preceding input which may expire before a timeout is triggered.
@@ -24,12 +25,12 @@ module Punchblock
       # @return [Command::Input] a formatted Rayo input command
       #
       # @example
-      #    input :grammar     => {:value => '[5 DIGITS]', :content_type => 'application/grammar+voxeo'},
-      #          :mode        => :speech,
-      #          :recognizer  => 'es-es'
+      #    input :grammar   => {:value => '[5 DIGITS]', :content_type => 'application/grammar+voxeo'},
+      #          :mode      => :speech,
+      #          :language  => 'es-es'
       #
       #    returns:
-      #      <input xmlns="urn:xmpp:rayo:input:1" mode="speech" recognizer="es-es">
+      #      <input xmlns="urn:xmpp:rayo:input:1" mode="speech" language="es-es">
       #        <grammar content-type="application/grammar+voxeo">[5 DIGITS]</choices>
       #      </input>
       #
@@ -93,6 +94,20 @@ module Punchblock
       #
       def recognizer=(recognizer)
         write_attr :recognizer, recognizer
+      end
+
+      ##
+      # @return [String] language to use for speech recognition
+      #
+      def language
+        read_attr :language
+      end
+
+      ##
+      # @param [String] language to use for speech recognition
+      #
+      def language=(other)
+        write_attr :language, other
       end
 
       ##

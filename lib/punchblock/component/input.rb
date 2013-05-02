@@ -197,7 +197,7 @@ module Punchblock
       end
 
       def inspect_attributes # :nodoc:
-        [:mode, :terminator, :recognizer, :max_silence, :initial_timeout, :inter_digit_timeout, :sensitivity, :min_confidence, :grammars] + super
+        [:mode, :terminator, :recognizer, :language, :max_silence, :initial_timeout, :inter_digit_timeout, :sensitivity, :min_confidence, :grammars] + super
       end
 
       class Grammar < RayoNode

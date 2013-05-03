@@ -31,24 +31,15 @@ module Punchblock
             record_args << max_duration/1000 unless max_duration == -1
             case @component_node.direction
             when :send
-              call.uuid_foo :setvar, "RECORD_WRITE_ONLY true"
+              setvar :RECORD_WRITE_ONLY, true
             when :recv
-              call.uuid_foo :setvar, "RECORD_READ_ONLY true"
+              setvar :RECORD_READ_ONLY, true
             else
-              call.uuid_foo :setvar, "RECORD_STEREO true"
+              setvar :RECORD_STEREO, true
             end
 
-            if initial_timeout > -1
-              call.uuid_foo :setvar, "RECORD_INITIAL_TIMEOUT_MS #{initial_timeout}"
-            else
-              call.uuid_foo :setvar, "RECORD_INITIAL_TIMEOUT_MS 0"
-            end
-
-            if final_timeout > -1
-              call.uuid_foo :setvar, "RECORD_FINAL_TIMEOUT_MS #{final_timeout}"
-            else
-              call.uuid_foo :setvar, "RECORD_FINAL_TIMEOUT_MS 0"
-            end
+            setvar :RECORD_INITIAL_TIMEOUT_MS, initial_timeout > -1 ? initial_timeout : 0
+            setvar :RECORD_FINAL_TIMEOUT_MS, final_timeout > -1 ? final_timeout : 0
 
             call.uuid_foo :record, record_args.join(' ')
             send_ref
@@ -72,6 +63,10 @@ module Punchblock
           end
 
           private
+
+          def setvar(key, value)
+            call.uuid_foo :setvar, "#{key} #{value}"
+          end
 
           def filename
             File.join RECORDING_BASE_PATH, [id, @format].join('.')

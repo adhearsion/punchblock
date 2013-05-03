@@ -1,63 +1,39 @@
 # encoding: utf-8
 
-require 'active_support/core_ext/string/filters'
-
 module Punchblock
   module Translator
     class Asterisk
       module Component
         module Asterisk
           class AGICommand < Component
-            attr_reader :action
-
             def setup
-              @action = create_action
+              @agi = Punchblock::Translator::Asterisk::AGICommand.new id, @call.channel, @component_node.name, *@component_node.params_array
             end
 
             def execute
+              @agi.execute ami_client
               send_ref
-              @call.send_ami_action @action
+            rescue RubyAMI::Error
+              set_node_response false
+              terminate
             end
+            exclusive :execute
 
             def handle_ami_event(event)
-              if event.name == 'AsyncAGI'
-                if event['SubEvent'] == 'Exec'
-                  send_complete_event success_reason(event)
+              if event.name == 'AsyncAGI' && event['SubEvent'] == 'Exec'
+                send_complete_event success_reason(event), nil, false
+                if @component_node.name == 'ASYNCAGI BREAK' && @call.channel_var('PUNCHBLOCK_END_ON_ASYNCAGI_BREAK')
+                  @call.handle_hangup_event
                 end
-              end
-            end
-
-            def handle_response(response)
-              case response
-              when RubyAMI::Error
-                set_node_response false
-              when RubyAMI::Response
-                send_ref
+                terminate
               end
             end
 
             private
 
-            def create_action
-              command = current_actor
-              RubyAMI::Action.new 'AGI', 'Channel' => @call.channel, 'Command' => agi_command, 'CommandID' => id do |response|
-                command.handle_response response
-              end
-            end
-
-            def agi_command
-              "#{@component_node.name} #{@component_node.params_array.map { |arg| quote_arg(arg) }.join(' ')}".squish
-            end
-
-            # Arguments surrounded by quotes; quotes backslash-escaped.
-            # See parse_args in asterisk/res/res_agi.c (Asterisk 1.4.21.1)
-            def quote_arg(arg)
-              '"' + arg.to_s.gsub(/["\\]/) { |m| "\\#{m}" } + '"'
-            end
-
             def success_reason(event)
-              parser = RubyAMI::AGIResultParser.new event['Result']
-              Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code => parser.code, :result => parser.result, :data => parser.data
+              result = @agi.parse_result event
+              Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new result
             end
           end
         end

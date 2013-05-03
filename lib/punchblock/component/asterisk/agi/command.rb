@@ -86,17 +86,6 @@ module Punchblock
             class Success < Event::Complete::Reason
               register :success, :agi_complete
 
-              def self.new(options = {})
-                super().tap do |new_node|
-                  case options
-                  when Nokogiri::XML::Node
-                    new_node.inherit options
-                  else
-                    options.each_pair { |k,v| new_node.send :"#{k}=", v }
-                  end
-                end
-              end
-
               def node_with_name(name)
                 n = if self.class.registered_ns
                   find_first "ns:#{name}", :ns => self.class.registered_ns

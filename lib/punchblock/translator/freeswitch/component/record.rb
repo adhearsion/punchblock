@@ -29,14 +29,13 @@ module Punchblock
 
             record_args = ['start', filename]
             record_args << max_duration/1000 unless max_duration == -1
-            case @component_node.direction
-            when :send
-              setvar :RECORD_WRITE_ONLY, true
-            when :recv
-              setvar :RECORD_READ_ONLY, true
-            else
-              setvar :RECORD_STEREO, true
+
+            direction = case @component_node.direction
+            when :send then :RECORD_WRITE_ONLY
+            when :recv then :RECORD_READ_ONLY
+            else            :RECORD_STEREO
             end
+            setvar direction, true
 
             setvar :RECORD_INITIAL_TIMEOUT_MS, initial_timeout > -1 ? initial_timeout : 0
             setvar :RECORD_FINAL_TIMEOUT_MS, final_timeout > -1 ? final_timeout : 0

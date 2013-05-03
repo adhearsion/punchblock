@@ -2,7 +2,6 @@
   * Feature: Use RubyAMI 2.0 with a single AMI connection.
   * Feature: Cache channel variables on Asterisk calls.
   * Feature: Allow optional sending of end event when breaking from AsyncAGI on Asterisk. This enables dialplan handback. Only triggers if the channel variable 'PUNCHBLOCK_END_ON_ASYNCAGI_BREAK' is set.
-  * Bugfix: Detect MRCPSynth failure in output component.
   * Bugfix: Avoid DTMF recognizer failures and race conditions by bringing DTMFRecognizer back into the Input component actor.
   * Bugfix: Catch Asterisk AMI errors in all cases and fail accordingly, instead of ploughing ahead in the face of adversity.
   * Bugfix: Improve performance of Asterisk implementation by no longer spinning up a component actor for AGI command execution.

@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.9.0](https://github.com/adhearsion/punchblock/compare/v1.8.2...v1.9.0) - [2013-05-03](https://rubygems.org/gems/punchblock/versions/1.9.0)
   * Feature: Use RubyAMI 2.0 with a single AMI connection.
   * Feature: Cache channel variables on Asterisk calls.
   * Feature: Allow optional sending of end event when breaking from AsyncAGI on Asterisk. This enables dialplan handback. Only triggers if the channel variable 'PUNCHBLOCK_END_ON_ASYNCAGI_BREAK' is set.

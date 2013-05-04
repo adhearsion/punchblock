@@ -37,7 +37,7 @@ module Punchblock
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
           end
 
-          def send_complete_event(reason, recording = nil)
+          def send_complete_event(reason, recording = nil, should_terminate = true)
             return if @complete
             @complete = true
             event = Punchblock::Event::Complete.new.tap do |c|
@@ -45,7 +45,7 @@ module Punchblock
               c << recording if recording
             end
             send_event event
-            terminate
+            terminate if should_terminate
           end
 
           def send_event(event)

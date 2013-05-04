@@ -127,7 +127,8 @@ module Punchblock
                   let(:chan_var) { nil }
 
                   before do
-                    mock_call.stub(:channel_var).and_return chan_var
+                    response = RubyAMI::Response.new 'Value' => chan_var
+                    ami_client.should_receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'PUNCHBLOCK_END_ON_ASYNCAGI_BREAK').and_return response
                   end
 
                   it 'should not send an end (hangup) event to the translator' do

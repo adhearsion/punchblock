@@ -1,5 +1,13 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v1.9.0](https://github.com/adhearsion/punchblock/compare/v1.8.2...v1.9.0) - [2013-05-03](https://rubygems.org/gems/punchblock/versions/1.9.0)
+  * Feature: Use RubyAMI 2.0 with a single AMI connection.
+  * Feature: Cache channel variables on Asterisk calls.
+  * Feature: Allow optional sending of end event when breaking from AsyncAGI on Asterisk. This enables dialplan handback. Only triggers if the channel variable 'PUNCHBLOCK_END_ON_ASYNCAGI_BREAK' is set.
+  * Bugfix: Avoid DTMF recognizer failures and race conditions by bringing DTMFRecognizer back into the Input component actor.
+  * Bugfix: Catch Asterisk AMI errors in all cases and fail accordingly, instead of ploughing ahead in the face of adversity.
+  * Bugfix: Improve performance of Asterisk implementation by no longer spinning up a component actor for AGI command execution.
+
 # [v1.8.2](https://github.com/adhearsion/punchblock/compare/v1.8.1...v1.8.2) - [2013-04-19](https://rubygems.org/gems/punchblock/versions/1.8.2)
   * Bugfix: Input initial timeout was being set as a float rather than an integer
 

@@ -9,19 +9,19 @@ module Punchblock
       attr_accessor :event_handler
 
       def initialize(options = {})
-        @ami_client = RubyAMI::Client.new options.merge(:event_handler => lambda { |event| translator.async.handle_ami_event event }, :logger => pb_logger)
+        @ami_client = RubyAMI::Stream.new options[:host], options[:port], options[:username], options[:password], ->(event) { translator.async.handle_ami_event event }, pb_logger
         @translator = Translator::Asterisk.new @ami_client, self, options[:media_engine]
         super()
       end
 
       def run
-        ami_client.start
+        ami_client.run
         raise DisconnectedError
       end
 
       def stop
         translator.async.shutdown
-        ami_client.stop
+        ami_client.terminate
       end
 
       def write(command, options)

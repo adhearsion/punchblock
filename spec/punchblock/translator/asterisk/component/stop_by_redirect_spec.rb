@@ -15,7 +15,11 @@ module Punchblock
             end
           end
 
-          let(:mock_call) { Call.new 'SIP/foo', mock('Translator') }
+          let(:connection)  { stub 'Connection' }
+          let(:ami_client)  { stub('AMI Client').as_null_object }
+          let(:translator)  { Punchblock::Translator::Asterisk.new ami_client, connection }
+          let(:mock_call)   { Call.new 'SIP/foo', translator, ami_client, connection }
+
           subject { MockComponent.new Hash.new, mock_call }
 
           describe "#execute_command" do

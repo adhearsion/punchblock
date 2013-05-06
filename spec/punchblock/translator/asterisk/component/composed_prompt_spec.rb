@@ -7,12 +7,23 @@ module Punchblock
     class Asterisk
       module Component
         describe ComposedPrompt do
-          include HasMockCallbackConnection
+          class MockConnection
+            attr_reader :events
 
+            def initialize
+              @events = []
+            end
+
+            def handle_event(event)
+              @events << event
+            end
+          end
+
+          let(:connection)    { MockConnection.new }
           let(:media_engine)  { nil }
           let(:ami_client)    { mock('AMI') }
           let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
-          let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
+          let(:call)          { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
 
           let :ssml_doc do
             RubySpeech::SSML.draw do
@@ -21,16 +32,11 @@ module Punchblock
           end
 
           let :dtmf_grammar do
-            RubySpeech::GRXML.draw mode: 'dtmf', root: 'pin' do
+            RubySpeech::GRXML.draw mode: 'dtmf', root: 'digit' do
               rule id: 'digit' do
                 one_of do
-                  0.upto(9) { |d| item { d.to_s } }
-                end
-              end
-
-              rule id: 'pin', scope: 'public' do
-                item repeat: '2' do
-                  ruleref uri: '#digit'
+                  item { '1' }
+                  item { '2' }
                 end
               end
             end
@@ -41,7 +47,10 @@ module Punchblock
           end
 
           let :input_command_options do
-            { grammar: {value: dtmf_grammar} }
+            {
+              mode: :dtmf,
+              grammar: {value: dtmf_grammar}
+            }
           end
 
           let(:command_options) { {} }
@@ -58,20 +67,112 @@ module Punchblock
             Punchblock::Component::Prompt.new output_command, input_command, command_options
           end
 
-          subject { described_class.new original_command, mock_call }
+          subject { described_class.new original_command, call }
 
-          def expect_answered(value = true)
-            mock_call.should_receive(:answered?).at_least(:once).and_return(value)
+          before do
+            call.stub answered?: true, execute_agi_command: true
+            original_command.request!
+            output_command.request!
+          end
+
+          def ami_event_for_dtmf(digit, position)
+            RubyAMI::Event.new 'DTMF',
+              'Digit' => digit.to_s,
+              'Start' => position == :start ? 'Yes' : 'No',
+              'End'   => position == :end ? 'Yes' : 'No'
+          end
+
+          def send_ami_events_for_dtmf(digit)
+            call.process_ami_event ami_event_for_dtmf(digit, :start)
+            call.process_ami_event ami_event_for_dtmf(digit, :end)
           end
 
           describe '#execute' do
             context '#barge_in' do
               context 'true' do
+                it "should execute an output component on the call and return a ref" do
+                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'http://foo.com/bar.mp3')
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
 
+                context "if output fails to start" do
+                  it "should return the error returned by output"
+                end
+
+                context "receiving dtmf during output" do
+                  it "should stop the output"
+
+                  it "should contribute to the input result"
+
+                  it "should return a match complete event"
+                end
+
+                context "when not receiving any DTMF input at all" do
+                  it "should not start the initial timer until output completes"
+                end
               end
 
               context 'false' do
+                it "should execute an output component on the call" do
+                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'http://foo.com/bar.mp3')
+                  subject.execute
+                  original_command.response(0.1).should be_a Ref
+                end
 
+                context "if output fails to start" do
+                  let(:output_response) { ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.' }
+
+                  let :ssml_doc do
+                    RubySpeech::SSML.draw do
+                      string "Foo Bar"
+                    end
+                  end
+
+                  it "should return the error returned by output" do
+                    subject.execute
+                    original_command.response(0.1).should == output_response
+                  end
+                end
+
+                context "receiving dtmf during output" do
+                  it "should not stop the output"
+
+                  it "should not contribute to the input result"
+                end
+
+                context "receiving matching dtmf after output completes" do
+                  let :expected_nlsml do
+                    RubySpeech::NLSML.draw do
+                      interpretation confidence: 1 do
+                        input "1", mode: :dtmf
+                      end
+                    end
+                  end
+
+                  let :expected_event do
+                    Punchblock::Event::Complete.new reason: expected_reason,
+                      component_id: subject.id,
+                      target_call_id: call.id
+                  end
+
+                  let :expected_reason do
+                    Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
+                  end
+
+                  it "should return a match complete event" do
+                    expected_event
+                    subject.execute
+                    original_command.response(0.1).should be_a Ref
+                    send_ami_events_for_dtmf 1
+
+                    connection.events.should include(expected_event)
+                  end
+                end
+
+                context "when not receiving any DTMF input at all" do
+                  it "should not start the initial timer until output completes"
+                end
               end
             end
           end
@@ -89,7 +190,6 @@ module Punchblock
 
             context "with a Stop command" do
               let(:command) { Punchblock::Component::Stop.new }
-              let(:reason) { original_command.complete_event(5).reason }
               let(:channel) { "SIP/1234-00000000" }
               let :ami_event do
                 RubyAMI::Event.new 'AsyncAGI',
@@ -100,23 +200,29 @@ module Punchblock
 
               before do
                 command.request!
-                original_command.request!
                 original_command.execute!
               end
 
               it "sets the command response to true" do
-                mock_call.async.should_receive(:redirect_back).once
+                call.async.should_receive(:redirect_back).once
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                mock_call.async.should_receive(:redirect_back)
+                expected_reason = Punchblock::Event::Complete::Stop.new
+                expected_event = Punchblock::Event::Complete.new reason: expected_reason,
+                  component_id: subject.id,
+                  target_call_id: call.id
+
+                call.async.should_receive(:redirect_back)
                 subject.execute_command command
                 original_command.should_not be_complete
-                mock_call.process_ami_event ami_event
-                reason.should be_a Punchblock::Event::Complete::Stop
-                original_command.should be_complete
+                call.process_ami_event ami_event
+
+                sleep 0.2
+
+                connection.events.should include(expected_event)
               end
             end
           end

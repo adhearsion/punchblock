@@ -5,16 +5,9 @@ module Punchblock
     module InputComponent
       def execute
         validate
-
-        @recognizer = DTMFRecognizer.new self,
-                                         @component_node.grammars.first.value,
-                                         (@component_node.initial_timeout || -1),
-                                         (@component_node.inter_digit_timeout || -1),
-                                         @component_node.terminator
-
+        setup_dtmf_recognizer
         send_ref
-
-        @dtmf_handler_id = register_dtmf_event_handler
+        start_timers
       rescue OptionError => e
         with_error 'option error', e.message
       end
@@ -47,10 +40,26 @@ module Punchblock
 
       private
 
+      def input_node
+        @component_node
+      end
+
       def validate
-        raise OptionError, 'A grammar document is required.' unless @component_node.grammars.first
-        raise OptionError, 'Only a single grammar is supported.' unless @component_node.grammars.size == 1
-        raise OptionError, 'A mode value other than DTMF is unsupported.' unless @component_node.mode == :dtmf
+        raise OptionError, 'A grammar document is required.' unless input_node.grammars.first
+        raise OptionError, 'Only a single grammar is supported.' unless input_node.grammars.size == 1
+        raise OptionError, 'A mode value other than DTMF is unsupported.' unless input_node.mode == :dtmf
+      end
+
+      def setup_dtmf_recognizer
+        @recognizer = DTMFRecognizer.new self,
+                        input_node.grammars.first.value,
+                        (input_node.initial_timeout || -1),
+                        (input_node.inter_digit_timeout || -1),
+                        input_node.terminator
+      end
+
+      def start_timers
+        @recognizer.start_timers
       end
 
       def success_reason(match)

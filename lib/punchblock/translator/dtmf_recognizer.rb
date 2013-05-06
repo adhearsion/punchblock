@@ -11,8 +11,6 @@ module Punchblock
 
         @matcher = RubySpeech::GRXML::Matcher.new RubySpeech::GRXML.import(grammar.to_s)
         @buffer = ""
-
-        begin_initial_timer @initial_timeout/1000 unless @initial_timeout == -1
       end
 
       def <<(digit)
@@ -32,6 +30,10 @@ module Punchblock
             reset_inter_digit_timer
           end
         end
+      end
+
+      def start_timers
+        begin_initial_timer @initial_timeout/1000 unless @initial_timeout == -1
       end
 
       private

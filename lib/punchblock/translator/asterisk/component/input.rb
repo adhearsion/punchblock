@@ -11,6 +11,7 @@ module Punchblock
           def execute
             @call.send_progress
             super
+            @dtmf_handler_id = register_dtmf_event_handler
           end
 
           private

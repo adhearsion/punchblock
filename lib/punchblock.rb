@@ -10,6 +10,14 @@
   punchblock/core_ext/ruby
 }.each { |l| require l }
 
+module HasGuardedHandlers
+  module ClassMethods
+    def execute_guarded_handlers_on_receiver
+      execute_block_on_receiver :register_handler, :register_tmp_handler, :register_handler_with_priority
+    end
+  end
+end
+
 module Punchblock
   extend ActiveSupport::Autoload
 

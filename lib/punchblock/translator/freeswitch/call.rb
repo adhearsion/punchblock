@@ -8,6 +8,9 @@ module Punchblock
         include Celluloid
         include DeadActorSafety
 
+        extend HasGuardedHandlers::ClassMethods
+        execute_guarded_handlers_on_receiver
+
         HANGUP_CAUSE_TO_END_REASON = Hash.new :error
 
         HANGUP_CAUSE_TO_END_REASON['USER_BUSY'] = :busy

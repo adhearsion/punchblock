@@ -8,6 +8,9 @@ module Punchblock
         include Celluloid
         include DeadActorSafety
 
+        extend ActorHasGuardedHandlers
+        execute_guarded_handlers_on_receiver
+
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
@@ -215,7 +218,12 @@ module Punchblock
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
         rescue RubyAMI::Error => e
-          command.response = ProtocolError.new.setup 'error', e.message
+          command.response = case e.message
+          when 'No such channel'
+            ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
+          else
+            ProtocolError.new.setup 'error', e.message, id
+          end
         rescue Celluloid::DeadActorError
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end

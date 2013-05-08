@@ -18,7 +18,7 @@ module Punchblock
           include DeadActorSafety
           include HasGuardedHandlers
 
-          extend HasGuardedHandlers::ClassMethods
+          extend ActorHasGuardedHandlers
           execute_guarded_handlers_on_receiver
 
           attr_reader :id, :call, :call_id

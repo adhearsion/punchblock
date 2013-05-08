@@ -10,7 +10,7 @@ module Punchblock
       include HasGuardedHandlers
       include DeadActorSafety
 
-      extend HasGuardedHandlers::ClassMethods
+      extend ActorHasGuardedHandlers
       execute_guarded_handlers_on_receiver
 
       extend ActiveSupport::Autoload

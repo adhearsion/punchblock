@@ -851,6 +851,27 @@ module Punchblock
               subject.execute_command command
               command.response(0.5).should be true
             end
+
+            context "when the AMI commannd raises an error" do
+              let(:message) { 'Some error' }
+              let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
+
+              before { subject.wrapped_object.should_receive(:execute_agi_command).and_raise error }
+
+              it "should return an error with the message" do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              context "with message 'No such channel'" do
+                let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+            end
           end
 
           context 'with a reject command' do
@@ -876,6 +897,27 @@ module Punchblock
               subject.execute_command command
               command.response(0.5).should be true
             end
+
+            context "when the AMI commannd raises an error" do
+              let(:message) { 'Some error' }
+              let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
+
+              before { subject.wrapped_object.should_receive(:execute_agi_command).and_raise error }
+
+              it "should return an error with the message" do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              context "with message 'No such channel'" do
+                let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+            end
           end
 
           context 'with an answer command' do
@@ -886,6 +928,27 @@ module Punchblock
               subject.execute_command command
               command.response(0.5).should be true
             end
+
+            context "when the AMI commannd raises an error" do
+              let(:message) { 'Some error' }
+              let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
+
+              before { subject.wrapped_object.should_receive(:execute_agi_command).and_raise error }
+
+              it "should return an error with the message" do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              context "with message 'No such channel'" do
+                let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+            end
           end
 
           context 'with a hangup command' do
@@ -895,6 +958,27 @@ module Punchblock
               ami_client.should_receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
               subject.execute_command command
               command.response(0.5).should be true
+            end
+
+            context "when the AMI commannd raises an error" do
+              let(:message) { 'Some error' }
+              let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
+
+              before { ami_client.should_receive(:send_action).and_raise error }
+
+              it "should return an error with the message" do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              context "with message 'No such channel'" do
+                let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
             end
           end
 

@@ -13,6 +13,7 @@
 module Punchblock
   extend ActiveSupport::Autoload
 
+  autoload :ActorHasGuardedHandlers
   autoload :Client
   autoload :Command
   autoload :CommandNode

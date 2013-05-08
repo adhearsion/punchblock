@@ -1,6 +1,10 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Add support for Rayo Prompt component (model only, no support on * or FS)
 
+# [v1.9.1](https://github.com/adhearsion/punchblock/compare/v1.9.0...v1.9.1) - [2013-05-08](https://rubygems.org/gems/punchblock/versions/1.9.1)
+  * Bugfix: AMI errors indicating dead channels were not being handled correctly
+  * Bugfix: We were broken on Celluloid 0.14 due to changes in block execution semantics between actors
+
 # [v1.9.0](https://github.com/adhearsion/punchblock/compare/v1.8.2...v1.9.0) - [2013-05-03](https://rubygems.org/gems/punchblock/versions/1.9.0)
   * Feature: Use RubyAMI 2.0 with a single AMI connection.
   * Feature: Cache channel variables on Asterisk calls.

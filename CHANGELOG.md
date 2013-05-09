@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Add support for Rayo Prompt component (model only, no support on * or FS)
+  * Bugfix: We were raising an exception on connection shutdown due to waiting for the connection to end incorrectly.
 
 # [v1.9.1](https://github.com/adhearsion/punchblock/compare/v1.9.0...v1.9.1) - [2013-05-08](https://rubygems.org/gems/punchblock/versions/1.9.1)
   * Bugfix: AMI errors indicating dead channels were not being handled correctly

@@ -215,6 +215,8 @@ module Punchblock
             end
           when Punchblock::Component::Input
             execute_component Component::Input, command
+          when Punchblock::Component::Prompt
+            execute_component Component::ComposedPrompt, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
           else

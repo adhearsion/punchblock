@@ -8,6 +8,7 @@ module Punchblock
 
         autoload :AbstractOutput
         autoload :FliteOutput
+        autoload :ComposedPrompt
         autoload :Input
         autoload :Output
         autoload :Record

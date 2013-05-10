@@ -1,4 +1,7 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix/Perf: FreeSWITCH Call actors were being kept alive after hangup for no reason
+  * Bugfix/Perf: FreeSWITCH component complete events were looping out of the actor
+  * Perf: We were wasting CPU cycles listening to all ES events when we really don't need to
 
 # [v1.8.1](https://github.com/adhearsion/punchblock/compare/v1.8.0...v1.8.1) - [2013-03-25](https://rubygems.org/gems/punchblock/versions/1.8.1)
   * Bugfix: FreeSWITCH was requiring a from attribute on a dial command

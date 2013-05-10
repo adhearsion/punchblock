@@ -245,13 +245,13 @@ module Punchblock
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
           translator.deregister_call current_actor
-          after(5) { terminate }
+          terminate
         end
 
         def execute_component(type, command, *execute_args)
           type.new_link(command, current_actor).tap do |component|
             register_component component
-            component.async.execute(*execute_args)
+            component.execute(*execute_args)
           end
         end
 

@@ -37,7 +37,11 @@ module Punchblock
       private
 
       def new_fs_stream
-        RubyFS::Stream.new(*@stream_options, lambda { |e| translator.async.handle_es_event e })
+        RubyFS::Stream.new(*@stream_options, lambda { |e| translator.async.handle_es_event e }, event_mask)
+      end
+
+      def event_mask
+        %w{CHANNEL_PARK CHANNEL_ANSWER CHANNEL_STATE CHANNEL_HANGUP CHANNEL_BRIDGE CHANNEL_UNBRIDGE CHANNEL_EXECUTE_COMPLETE DTMF RECORD_STOP}
       end
 
       def start_stream

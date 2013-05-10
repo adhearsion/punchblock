@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: We were raising an exception on connection shutdown due to waiting for the connection to end incorrectly.
+  * Bugfix/Perf: FreeSWITCH Call actors were being kept alive after hangup for no reason
+  * Bugfix/Perf: FreeSWITCH component complete events were looping out of the actor
+  * Perf: We were wasting CPU cycles listening to all ES events when we really don't need to
 
 # [v1.9.1](https://github.com/adhearsion/punchblock/compare/v1.9.0...v1.9.1) - [2013-05-08](https://rubygems.org/gems/punchblock/versions/1.9.1)
   * Bugfix: AMI errors indicating dead channels were not being handled correctly

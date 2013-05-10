@@ -207,11 +207,11 @@ module Punchblock
             media_renderer = command.renderer || media_engine || :freeswitch
             case media_renderer.to_sym
             when :freeswitch, :native, nil
-              execute_component Component::Output, command
+              execute_inline_component Component::Output, command
             when :flite
-              execute_component Component::FliteOutput, command, media_engine, default_voice
+              execute_inline_component Component::FliteOutput, command, media_engine, default_voice
             else
-              execute_component Component::TTSOutput, command, media_engine, default_voice
+              execute_inline_component Component::TTSOutput, command, media_engine, default_voice
             end
           when Punchblock::Component::Input
             execute_component Component::Input, command
@@ -250,6 +250,13 @@ module Punchblock
 
         def execute_component(type, command, *execute_args)
           type.new_link(command, current_actor).tap do |component|
+            register_component component
+            component.execute(*execute_args)
+          end
+        end
+
+        def execute_inline_component(type, command, *execute_args)
+          type.new(command, self).tap do |component|
             register_component component
             component.execute(*execute_args)
           end

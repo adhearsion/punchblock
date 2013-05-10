@@ -65,6 +65,7 @@ module Punchblock
       def success_reason(match)
         nlsml = RubySpeech::NLSML.draw do
           interpretation confidence: match.confidence do
+            instance match.interpretation
             input match.utterance, mode: match.mode
           end
         end

@@ -145,6 +145,7 @@ module Punchblock
                   let :expected_nlsml do
                     RubySpeech::NLSML.draw do
                       interpretation confidence: 1 do
+                        instance "dtmf-1"
                         input "1", mode: :dtmf
                       end
                     end

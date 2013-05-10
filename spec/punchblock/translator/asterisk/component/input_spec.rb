@@ -82,6 +82,7 @@ module Punchblock
                 let :expected_nlsml do
                   RubySpeech::NLSML.draw do
                     interpretation confidence: 1 do
+                      instance "dtmf-1 dtmf-2"
                       input "12", mode: :dtmf
                     end
                   end
@@ -193,6 +194,7 @@ module Punchblock
                 let :expected_nlsml do
                   RubySpeech::NLSML.draw do
                     interpretation confidence: 1 do
+                      instance "dtmf-1 dtmf-2"
                       input "12", mode: :dtmf
                     end
                   end
@@ -355,6 +357,7 @@ module Punchblock
                     let :expected_nlsml do
                       RubySpeech::NLSML.draw do
                         interpretation confidence: 1 do
+                          instance "dtmf-1 dtmf-1"
                           input '11', mode: :dtmf
                         end
                       end

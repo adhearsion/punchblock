@@ -28,8 +28,6 @@ module Punchblock
 
             register_dtmf_event_handler
             start_timers
-          rescue => e
-            pb_logger.error e
           end
 
           def process_dtmf(digit)

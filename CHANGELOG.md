@@ -9,6 +9,7 @@
   * Change: Remove event queue
   * Bugfix: Include AMI response text_body in AMI component complete events
   * Bugfix: Avoid crashing translators (Asterisk or FreeSWITCH) by instructing them to call back to terminated Call objects
+  * Bugfix: Detect MRCPSynth failure in output component.
 
 # [v1.9.4](https://github.com/adhearsion/punchblock/compare/v1.9.3...v1.9.4) - [2013-06-08](https://rubygems.org/gems/punchblock/versions/1.9.4)
   * Bugfix: Finish more setup before sending output ref on Asterisk

@@ -8,7 +8,7 @@ module Punchblock
 
     include HasGuardedHandlers
 
-    attr_reader :connection, :event_queue, :component_registry
+    attr_reader :connection, :component_registry
 
     delegate :run, :stop, :to => :connection
 
@@ -16,7 +16,6 @@ module Punchblock
     # @option options [Connection::XMPP] :connection The Punchblock connection to use for this session
     #
     def initialize(options = {})
-      @event_queue = Queue.new
       @connection = options[:connection]
       @connection.event_handler = lambda { |event| self.handle_event event } if @connection
       @component_registry = ComponentRegistry.new
@@ -28,7 +27,7 @@ module Punchblock
       if event.source
         event.source.add_event event
       else
-        trigger_handler(:event, event) || event_queue.push(event)
+        trigger_handler :event, event
       end
     end
 

@@ -24,8 +24,13 @@ module Punchblock
             end
 
             fut.value unless @component_node.barge_in # Block until output is complete
-
             register_dtmf_event_handler
+
+            begin
+              fut.value
+            rescue Celluloid::Task::TerminatedError
+            end
+
             start_timers
           end
 

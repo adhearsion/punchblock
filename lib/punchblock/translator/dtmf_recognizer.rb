@@ -19,10 +19,14 @@ module Punchblock
         case (match = get_match)
         when RubySpeech::GRXML::MaxMatch
           finalize :match, match
-        when RubySpeech::GRXML::Match
-          finalize :match, match if terminating?(digit)
         when RubySpeech::GRXML::NoMatch
           finalize :nomatch
+        when RubySpeech::GRXML::Match
+          if terminating?(digit)
+            finalize :match, match
+          else
+            reset_inter_digit_timer
+          end
         when RubySpeech::GRXML::PotentialMatch
           if terminating?(digit)
             finalize :nomatch

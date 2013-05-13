@@ -34,10 +34,13 @@ module Punchblock
 
           def playback(path)
             op = current_actor
+            condition = Celluloid::Condition.new
             register_handler :es, :event_name => 'CHANNEL_EXECUTE_COMPLETE' do |event|
+              condition.signal
               op.async.send_complete_event complete_reason_for_event(event)
             end
             application 'playback', path
+            condition.wait
           end
 
           def complete_reason_for_event(event)

@@ -373,6 +373,29 @@ module Punchblock
                       reason.should be_a Punchblock::Component::Input::Complete::Match
                       reason.nlsml.should == expected_nlsml
                     end
+
+                    context "on the first keypress" do
+                      let :grammar do
+                        RubySpeech::GRXML.draw mode: 'dtmf', root: 'digits' do
+                          rule id: 'digits', scope: 'public' do
+                            item repeat: '1-5' do
+                              '1'
+                            end
+                          end
+                        end
+                      end
+
+                      it "should fire a match on timeout" do
+                        subject.execute
+                        sleep 1.5
+                        send_ami_events_for_dtmf 1
+                        sleep 0.5
+                        send_ami_events_for_dtmf 1
+                        sleep 1.5
+                        reason.should be_a Punchblock::Component::Input::Complete::Match
+                        reason.nlsml.should == expected_nlsml
+                      end
+                    end
                   end
                 end
               end

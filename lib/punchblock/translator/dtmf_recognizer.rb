@@ -8,6 +8,7 @@ module Punchblock
         self.initial_timeout = initial_timeout || -1
         self.inter_digit_timeout = inter_digit_timeout || -1
         @terminator = terminator
+        @finished = false
 
         @matcher = RubySpeech::GRXML::Matcher.new RubySpeech::GRXML.import(grammar.to_s)
         @buffer = ""
@@ -17,19 +18,16 @@ module Punchblock
         cancel_initial_timer
         @buffer << digit unless terminating?(digit)
         case (match = get_match)
+        when RubySpeech::GRXML::NoMatch
+          finalize :nomatch
         when RubySpeech::GRXML::MaxMatch
           finalize :match, match
         when RubySpeech::GRXML::Match
           finalize :match, match if terminating?(digit)
-        when RubySpeech::GRXML::NoMatch
-          finalize :nomatch
         when RubySpeech::GRXML::PotentialMatch
-          if terminating?(digit)
-            finalize :nomatch
-          else
-            reset_inter_digit_timer
-          end
+          finalize :nomatch if terminating?(digit)
         end
+        reset_inter_digit_timer unless @finished
       end
 
       def start_timers
@@ -101,6 +99,7 @@ module Punchblock
         else
           @responder.send match_type
         end
+        @finished = true
       end
     end
   end

@@ -67,7 +67,7 @@ module Punchblock
       # Sends a Rayo stop message for the current component
       #
       def stop!(options = {})
-        raise InvalidActionError, "Cannot stop a #{self.class.name.split("::").last} that is not executing" unless executing?
+        raise InvalidActionError, "Cannot stop a #{self.class.name.split("::").last} that is #{state}" unless executing?
         stop_action.tap { |action| write_action action }
       end
     end

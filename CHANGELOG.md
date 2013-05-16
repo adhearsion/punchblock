@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Improve error messages when trying to execute stop commands on components in an invalid state
 
 # [v1.9.2](https://github.com/adhearsion/punchblock/compare/v1.9.1...v1.9.2) - [2013-05-10](https://rubygems.org/gems/punchblock/versions/1.9.2)
   * Bugfix: We were raising an exception on connection shutdown due to waiting for the connection to end incorrectly.

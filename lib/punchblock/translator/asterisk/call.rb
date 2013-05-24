@@ -295,7 +295,7 @@ module Punchblock
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
           translator.deregister_call current_actor
-          after(5) { shutdown }
+          terminate
         end
 
         def execute_component(type, command, options = {})

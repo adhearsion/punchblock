@@ -6,7 +6,7 @@ module Punchblock
   module Component
     describe Output do
       it 'registers itself' do
-        RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should be == Output
+        RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should be == described_class
       end
 
       describe 'default values' do
@@ -21,6 +21,12 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
+        let(:ssml_doc) do
+          RubySpeech::SSML.draw do
+            audio(src: 'http://foo.com/bar.mp3')
+          end
+        end
+
         subject do
           Output.new  :interrupt_on     => :speech,
                       :start_offset     => 2000,
@@ -29,7 +35,8 @@ module Punchblock
                       :repeat_times     => 10,
                       :max_time         => 30000,
                       :voice            => 'allison',
-                      :renderer         => 'swift'
+                      :renderer         => 'swift',
+                      :ssml             => ssml_doc
         end
 
         its(:interrupt_on)     { should be == :speech }
@@ -40,40 +47,36 @@ module Punchblock
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
+        its(:ssml)             { should be == ssml_doc }
+
+        describe "exporting to Rayo" do
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
+            new_instance.should be_instance_of described_class
+            new_instance.interrupt_on.should be == :speech
+            new_instance.start_offset.should be == 2000
+            new_instance.start_paused.should be == false
+            new_instance.repeat_interval.should be == 2000
+            new_instance.repeat_times.should be == 10
+            new_instance.max_time.should be == 30000
+            new_instance.voice.should be == 'allison'
+            new_instance.renderer.should be == 'swift'
+            new_instance.ssml.should be == ssml_doc
+          end
+
+          it "should render to a parent node if supplied" do
+            doc = Nokogiri::XML::Document.new
+            parent = Nokogiri::XML::Node.new 'foo', doc
+            doc.root = parent
+            rayo_doc = subject.to_rayo(parent)
+            rayo_doc.should == parent
+          end
+        end
       end
 
       describe "from a stanza" do
         let :stanza do
           <<-MESSAGE
-<output xmlns='urn:xmpp:rayo:output:1'
-        interrupt-on='speech'
-        start-offset='2000'
-        start-paused='false'
-        repeat-interval='2000'
-        repeat-times='10'
-        max-time='30000'
-        voice='allison'
-        renderer='swift'>Hello world</output>
-          MESSAGE
-        end
-
-        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
-
-        it { should be_instance_of Output }
-
-        its(:interrupt_on)     { should be == :speech }
-        its(:start_offset)     { should be == 2000 }
-        its(:start_paused)     { should be == false }
-        its(:repeat_interval)  { should be == 2000 }
-        its(:repeat_times)     { should be == 10 }
-        its(:max_time)         { should be == 30000 }
-        its(:voice)            { should be == 'allison' }
-        its(:renderer)         { should be == 'swift' }
-        its(:text)             { should be == 'Hello world' }
-
-        context "with SSML" do
-          let :stanza do
-            <<-MESSAGE
 <output xmlns='urn:xmpp:rayo:output:1'
         interrupt-on='speech'
         start-offset='2000'
@@ -89,24 +92,28 @@ module Punchblock
     <say-as interpret-as="ordinal">100</say-as>
   </speak>
 </output>
-            MESSAGE
-          end
-
-          def ssml_doc(mode = :ordinal)
-            RubySpeech::SSML.draw do
-              say_as(:interpret_as => mode) { string '100' }
-            end
-          end
-
-          its(:ssml) { should be == ssml_doc }
+          MESSAGE
         end
-      end
 
-      describe "for text" do
-        subject { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
+        def ssml_doc(mode = :ordinal)
+          RubySpeech::SSML.draw do
+            say_as(:interpret_as => mode) { string '100' }
+          end
+        end
 
-        its(:voice) { should be == 'kate' }
-        its(:text) { should be == 'Once upon a time there was a message...' }
+        subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
+
+        it { should be_instance_of Output }
+
+        its(:interrupt_on)    { should be == :speech }
+        its(:start_offset)    { should be == 2000 }
+        its(:start_paused)    { should be == false }
+        its(:repeat_interval) { should be == 2000 }
+        its(:repeat_times)    { should be == 10 }
+        its(:max_time)        { should be == 30000 }
+        its(:voice)           { should be == 'allison' }
+        its(:renderer)        { should be == 'swift' }
+        its(:ssml)            { should be == ssml_doc }
       end
 
       describe "for SSML" do
@@ -116,16 +123,16 @@ module Punchblock
           end
         end
 
-        subject { Output.new :ssml => ssml_doc, :voice => 'kate' }
+        subject { described_class.new :ssml => ssml_doc, :voice => 'kate' }
 
         its(:voice) { should be == 'kate' }
 
         its(:ssml) { should be == ssml_doc }
 
         describe "comparison" do
-          let(:output2) { Output.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>', :voice => 'kate'  }
-          let(:output3) { Output.new :ssml => ssml_doc, :voice => 'kate'  }
-          let(:output4) { Output.new :ssml => ssml_doc(:normal), :voice => 'kate'  }
+          let(:output2) { described_class.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>', :voice => 'kate'  }
+          let(:output3) { described_class.new :ssml => ssml_doc, :voice => 'kate'  }
+          let(:output4) { described_class.new :ssml => ssml_doc(:normal), :voice => 'kate'  }
 
           it { should be == output2 }
           it { should be == output3 }
@@ -135,7 +142,7 @@ module Punchblock
 
       describe "actions" do
         let(:mock_client) { mock 'Client' }
-        let(:command) { Output.new :text => 'Once upon a time there was a message...', :voice => 'kate' }
+        let(:command) { described_class.new }
 
         before do
           command.component_id = 'abc123'
@@ -605,11 +612,11 @@ module Punchblock
         MESSAGE
       end
 
-      subject { RayoNode.import(parse_stanza(stanza).root).reason }
+      subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
       it { should be_instance_of Output::Complete::Success }
 
       its(:name) { should be == :success }
     end
   end
-end # Punchblock
+end

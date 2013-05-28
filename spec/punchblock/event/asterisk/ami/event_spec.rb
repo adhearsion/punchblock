@@ -8,7 +8,7 @@ module Punchblock
       module AMI
         describe Event do
           it 'registers itself' do
-            RayoNode.class_from_registration(:event, 'urn:xmpp:rayo:asterisk:ami:1').should be == Event
+            RayoNode.class_from_registration(:event, 'urn:xmpp:rayo:asterisk:ami:1').should be == described_class
           end
 
           describe "from a stanza" do
@@ -17,46 +17,51 @@ module Punchblock
 <event xmlns="urn:xmpp:rayo:asterisk:ami:1" name="Newchannel">
   <attribute name="Channel" value="SIP/101-3f3f"/>
   <attribute name="State" value="Ring"/>
-  <attribute name="Callerid" value="101"/>
-  <attribute name="Uniqueid" value="1094154427.10"/>
 </event>
               MESSAGE
             end
 
-            subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+            subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
             it { should be_instance_of Event }
 
             it_should_behave_like 'event'
 
-            its(:name)            { should be == 'Newchannel' }
-            its(:attributes)      { should be == [Event::Attribute.new('Channel', 'SIP/101-3f3f'), Event::Attribute.new('State', 'Ring'), Event::Attribute.new('Callerid', '101'), Event::Attribute.new('Uniqueid', '1094154427.10')]}
-            its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
+            its(:name)    { should be == 'Newchannel' }
+            its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+            its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
           end
 
           describe "when setting options in initializer" do
             subject do
-              Event.new :name => 'Newchannel',
-                        :attributes => {:channel  => 'SIP/101-3f3f',
-                                        :state    => 'Ring',
-                                        :callerid => '101',
-                                        :uniqueid => '1094154427.10'}
+              described_class.new name: 'Newchannel',
+                                  headers: {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
             end
 
-            its(:name)            { should be == 'Newchannel' }
-            its(:attributes)      { should be == [Event::Attribute.new(:channel, 'SIP/101-3f3f'), Event::Attribute.new(:state, 'Ring'), Event::Attribute.new(:callerid, '101'), Event::Attribute.new(:uniqueid, '1094154427.10')]}
-            its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring', :callerid => '101', :uniqueid => '1094154427.10'} }
-          end
+            its(:name)    { should be == 'Newchannel' }
+            its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+            its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
 
-          class Event
-            describe Attribute do
-              let(:class_name)    { Attribute }
-              let(:element_name)  { 'attribute' }
-              it_should_behave_like 'key_value_pairs'
+            describe "exporting to Rayo" do
+              it "should export to XML that can be understood by its parser" do
+                new_instance = RayoNode.from_xml subject.to_rayo
+                new_instance.should be_instance_of described_class
+                new_instance.name.should == 'Newchannel'
+                new_instance.headers.should == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
+                new_instance.attributes.should == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} # For BC
+              end
+
+              it "should render to a parent node if supplied" do
+                doc = Nokogiri::XML::Document.new
+                parent = Nokogiri::XML::Node.new 'foo', doc
+                doc.root = parent
+                rayo_doc = subject.to_rayo(parent)
+                rayo_doc.should == parent
+              end
             end
           end
         end
       end
     end
   end
-end # Punchblock
+end

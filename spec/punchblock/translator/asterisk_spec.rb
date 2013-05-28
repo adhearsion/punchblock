@@ -338,11 +338,11 @@ module Punchblock
         end
 
         let :expected_pb_event do
-          Event::Asterisk::AMI::Event.new :name => 'Newchannel',
-                                          :attributes => { :channel  => "SIP/101-3f3f",
-                                                           :state    => "Ring",
-                                                           :callerid => "101",
-                                                           :uniqueid => "1094154427.10"}
+          Event::Asterisk::AMI::Event.new name: 'Newchannel',
+                                          headers: { 'Channel'  => "SIP/101-3f3f",
+                                                     'State'    => "Ring",
+                                                     'Callerid' => "101",
+                                                     'Uniqueid' => "1094154427.10"}
         end
 
         it 'should create a Punchblock AMI event object and pass it to the connection' do

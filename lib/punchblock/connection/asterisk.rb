@@ -9,14 +9,14 @@ module Punchblock
       attr_accessor :event_handler
 
       def initialize(options = {})
-        @ami_client = RubyAMI::Stream.new options[:host], options[:port], options[:username], options[:password], ->(event) { translator.async.handle_ami_event event }, pb_logger
-        @translator = Translator::Asterisk.new @ami_client, self, options[:media_engine]
+        @stream_options = options.values_at(:host, :port, :username, :password)
+        @translator_options = options.values_at(:media_engine)
+        new_ami_components
         super()
       end
 
       def run
-        ami_client.async.run
-        Celluloid::Actor.join(ami_client)
+        start_ami_client
         raise DisconnectedError
       end
 
@@ -31,6 +31,17 @@ module Punchblock
 
       def handle_event(event)
         event_handler.call event
+      end
+
+      def new_ami_components
+        @ami_client = RubyAMI::Stream.new(*@stream_options, ->(event) { translator.async.handle_ami_event event }, pb_logger)
+        @translator = Translator::Asterisk.new @ami_client, self, *@translator_options
+      end
+
+      def start_ami_client
+        new_ami_components unless ami_client.alive?
+        ami_client.async.run
+        Celluloid::Actor.join(ami_client)
       end
     end
   end

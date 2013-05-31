@@ -42,6 +42,16 @@ module Punchblock
           end
           lambda { subject.run }.should raise_error DisconnectedError
         end
+
+        it 'rebuild the RubyAMI::Stream if dead' do
+          subject.ami_client.async.should_receive(:run).once do
+            subject.ami_client.terminate
+          end
+          lambda { subject.run }.should raise_error DisconnectedError
+          subject.ami_client.alive?.should be_false
+          subject.should_receive(:new_ami_components).once
+          lambda { subject.run }.should_not raise_error DisconnectedError
+        end
       end
 
       describe '#stop' do

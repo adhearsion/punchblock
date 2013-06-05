@@ -67,7 +67,7 @@ module Punchblock
               it 'should send the component node a ref with the action ID' do
                 ami_client.should_receive(:send_action).once.and_return response
                 subject.execute
-                original_command.response(1).should eql(expected_response)
+                original_command.response(1).should == expected_response
               end
 
               context 'with an error' do

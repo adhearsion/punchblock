@@ -67,7 +67,7 @@ module Punchblock
           @joined_mixers << command.mixer_name
         end
         create_iq(jid_for_command(command)).tap do |iq|
-          iq << command
+          command.to_rayo(iq)
         end
       end
 

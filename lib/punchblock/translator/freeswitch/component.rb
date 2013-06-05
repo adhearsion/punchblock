@@ -47,7 +47,7 @@ module Punchblock
             @complete = true
             event = Punchblock::Event::Complete.new.tap do |c|
               c.reason = reason
-              c << recording if recording
+              c.recording = recording
             end
             send_event event
             terminate

@@ -507,18 +507,6 @@ module Punchblock
                     end
                   end
 
-                  context 'with a string (not SSML)' do
-                    let :command_options do
-                      { :text => 'Foo Bar' }
-                    end
-
-                    it "should return an unrenderable document error" do
-                      subject.execute
-                      error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
-                      original_command.response(0.1).should be == error
-                    end
-                  end
-
                   context 'with multiple audio SSML nodes' do
                     let(:audio_filename1) { 'http://foo.com/bar.mp3' }
                     let(:audio_filename2) { 'http://foo.com/baz.mp3' }

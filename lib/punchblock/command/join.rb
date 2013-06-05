@@ -7,82 +7,32 @@ module Punchblock
 
       VALID_DIRECTIONS = [:duplex, :send, :recv].freeze
 
-      ##
-      # Create a join command
-      #
-      # @param [Hash] options
-      # @option options [String, Optional] :call_id the call ID to join
-      # @option options [String, Optional] :mixer_name the mixer name to join
-      # @option options [Symbol, Optional] :direction the direction in which media should flow
-      # @option options [Symbol, Optional] :media the method by which to negotiate media
-      #
-      # @return [Command::Join] a formatted Rayo join command
-      #
-      def self.new(options = {})
-        super().tap do |new_node|
-          case options
-          when Nokogiri::XML::Node
-            new_node.inherit options
-          when Hash
-            options.each_pair { |k,v| new_node.send :"#{k}=", v }
-          end
-        end
-      end
-
-      ##
       # @return [String] the call ID to join
-      def call_id
-        read_attr :'call-id'
-      end
+      attribute :call_id
 
-      ##
-      # @param [String] other the call ID to join
-      def call_id=(other)
-        write_attr :'call-id', other
-      end
-
-      ##
       # @return [String] the mixer name to join
-      def mixer_name
-        read_attr :'mixer-name'
-      end
+      attribute :mixer_name
 
-      ##
-      # @param [String] other the mixer name to join
-      def mixer_name=(other)
-        write_attr :'mixer-name', other
-      end
-
-      ##
-      # @return [String] the direction in which media should flow
-      def direction
-        read_attr :direction, :to_sym
-      end
-
-      ##
-      # @param [String] other the direction in which media should flow. Can be :duplex, :recv or :send
-      def direction=(direction)
-        if direction && !VALID_DIRECTIONS.include?(direction.to_sym)
-          raise ArgumentError, "Invalid Direction (#{direction}), use: #{VALID_DIRECTIONS*' '}"
+      # @param [#to_sym] other the direction in which media should flow. Can be :duplex, :recv or :send
+      attribute :direction, Symbol
+      def direction=(other)
+        if other && !VALID_DIRECTIONS.include?(other.to_sym)
+          raise ArgumentError, "Invalid Direction (#{other.inspect}), use: #{VALID_DIRECTIONS*' '}"
         end
-        write_attr :direction, direction 
+        super
       end
 
-      ##
-      # @return [String] the method by which to negotiate media
-      def media
-        read_attr :media, :to_sym
-      end
+      # @return [#to_sym] the method by which to negotiate media
+      attribute :media, Symbol
 
-      ##
-      # @param [String] other the method by which to negotiate media. Can be :direct or :bridge
-      def media=(other)
-        write_attr :media, other
+      def rayo_attributes
+        {
+          'call-id' => call_id,
+          'mixer-name' => mixer_name,
+          'direction' => direction,
+          'media' => media
+        }
       end
-
-      def inspect_attributes # :nodoc:
-        [:call_id, :mixer_name, :direction, :media] + super
-      end
-    end # Join
-  end # Command
-end # Punchblock
+    end
+  end
+end

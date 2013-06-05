@@ -5,174 +5,62 @@ module Punchblock
     class Output < ComponentNode
       register :output, :output
 
-      ##
-      # Creates an Rayo Output command
-      #
-      # @param [Hash] options
-      # @option options [String, Optional] :text to speak back
-      # @option options [String, Optional] :voice with which to render TTS
-      # @option options [String, Optional] :ssml document to render TTS
-      # @option options [Symbol] :interrupt_on input type on which to interrupt output. May be :speech, :dtmf or :any
-      # @option options [Integer] :start_offset Indicates some offset through which the output should be skipped before rendering begins.
-      # @option options [true, false] :start_paused Indicates wether or not the component should be started in a paused state to be resumed at a later time.
-      # @option options [Integer] :repeat_interval Indicates the duration of silence that should space repeats of the rendered document.
-      # @option options [Integer] :repeat_times Indicates the number of times the output should be played.
-      # @option options [Integer] :max_time Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
-      #
-      # @return [Command::Output] an Rayo "output" command
-      #
-      # @example
-      #   output :text => 'Hello brown cow.'
-      #
-      #   returns:
-      #     <output xmlns="urn:xmpp:rayo:output:1">Hello brown cow.</output>
-      #
-      def self.new(options = {})
-        super().tap do |new_node|
-          case options
-          when Hash
-            new_node.ssml = options.delete(:ssml) if options[:ssml]
-            new_node << options.delete(:text) if options[:text]
-            options.each_pair { |k,v| new_node.send :"#{k}=", v }
-          when Nokogiri::XML::Element
-            new_node.inherit options
-          end
-        end
+      def inherit(xml_node)
+        ssml_node = xml_node.children.first
+        self.ssml = RubySpeech::SSML.import ssml_node if ssml_node
+        super
       end
 
-      ##
-      # @return [String] the TTS voice to use
-      #
-      def voice
-        read_attr :voice
-      end
-
-      ##
-      # @param [String] voice to use when rendering TTS
-      #
-      def voice=(voice)
-        write_attr :voice, voice
-      end
-
-      ##
       # @return [String] the SSML document to render TTS
-      #
-      def ssml
-        node = children.first
-        RubySpeech::SSML.import node if node
-      end
-
-      ##
-      # @param [String] ssml the SSML document to render TTS
-      #
+      attribute :ssml
       def ssml=(ssml)
         return unless ssml
         unless ssml.is_a?(RubySpeech::SSML::Element)
           ssml = RubySpeech::SSML.import ssml
         end
-        self << ssml
+        super
       end
 
-      ##
+      # @return [String] the TTS voice to use
+      attribute :voice
+
       # @return [Symbol] input type on which to interrupt output
-      #
-      def interrupt_on
-        read_attr :'interrupt-on', :to_sym
-      end
+      attribute :interrupt_on, Symbol
 
-      ##
-      # @param [Symbol] other input type on which to interrupt output. May be :speech, :dtmf or :any
-      #
-      def interrupt_on=(other)
-        write_attr :'interrupt-on', other
-      end
-
-      ##
       # @return [Integer] Indicates some offset through which the output should be skipped before rendering begins.
-      #
-      def start_offset
-        read_attr :'start-offset', :to_i
-      end
+      attribute :start_offset, Integer
 
-      ##
-      # @param [Integer] other Indicates some offset through which the output should be skipped before rendering begins.
-      #
-      def start_offset=(other)
-        write_attr :'start-offset', other, :to_i
-      end
-
-      ##
       # @return [true, false] Indicates wether or not the component should be started in a paused state to be resumed at a later time.
-      #
-      def start_paused
-        read_attr(:'start-paused') == 'true'
-      end
+      attribute :start_paused, Boolean, default: false
 
-      ##
-      # @param [true, false] other Indicates wether or not the component should be started in a paused state to be resumed at a later time.
-      #
-      def start_paused=(other)
-        write_attr :'start-paused', other, :to_s
-      end
-
-      ##
       # @return [Integer] Indicates the duration of silence that should space repeats of the rendered document.
-      #
-      def repeat_interval
-        read_attr :'repeat-interval', :to_i
-      end
+      attribute :repeat_interval, Integer
 
-      ##
-      # @param [Integer] other Indicates the duration of silence that should space repeats of the rendered document.
-      #
-      def repeat_interval=(other)
-        write_attr :'repeat-interval', other, :to_i
-      end
-
-      ##
       # @return [Integer] Indicates the number of times the output should be played.
-      #
-      def repeat_times
-        read_attr :'repeat-times', :to_i
-      end
+      attribute :repeat_times, Integer
 
-      ##
-      # @param [Integer] other Indicates the number of times the output should be played.
-      #
-      def repeat_times=(other)
-        write_attr :'repeat-times', other, :to_i
-      end
-
-      ##
       # @return [Integer] Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
-      #
-      def max_time
-        read_attr :'max-time', :to_i
-      end
+      attribute :max_time, Integer
 
-      ##
-      # @param [Integer] other Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
-      #
-      def max_time=(other)
-        write_attr :'max-time', other, :to_i
-      end
-
-      ##
       # @return [String] the rendering engine requested by the component
-      #
-      def renderer
-        read_attr :renderer
+      attribute :renderer
+
+      def rayo_attributes
+        {
+          'voice' => voice,
+          'interrupt-on' => interrupt_on,
+          'start-offset' => start_offset,
+          'start-paused' => start_paused,
+          'repeat-interval' => repeat_interval,
+          'repeat-times' => repeat_times,
+          'max-time' => max_time,
+          'renderer' => renderer
+        }
       end
 
-      ##
-      # @param [String] the rendering engine to use with this component
-      #
-      def renderer=(renderer)
-        write_attr :renderer, renderer
-      end
-
-      def inspect_attributes
-        super + [:voice, :ssml, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time, :renderer]
+      def rayo_children(root)
+        root << ssml.to_xml if ssml
+        super
       end
 
       state_machine :state do
@@ -281,20 +169,8 @@ module Punchblock
       class Seek < CommandNode # :nodoc:
         register :seek, :output
 
-        def self.new(options = {})
-          super.tap do |new_node|
-            new_node.direction  = options[:direction]
-            new_node.amount     = options[:amount]
-          end
-        end
-
-        def direction=(other)
-          write_attr :direction, other
-        end
-
-        def amount=(other)
-          write_attr :amount, other
-        end
+        attribute :direction
+        attribute :amount
 
         def request!
           source.seeking!
@@ -304,6 +180,10 @@ module Punchblock
         def execute!
           source.stopped_seeking!
           super
+        end
+
+        def rayo_attributes
+          {'direction' => direction, 'amount' => amount}
         end
       end
 

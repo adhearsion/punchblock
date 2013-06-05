@@ -105,7 +105,7 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
-          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
+          send_pb_event Event::Asterisk::AMI::Event.new(name: ami_event.name, headers: ami_event.headers)
 
           case ami_event.name
           when 'Hangup'
@@ -326,8 +326,8 @@ module Punchblock
         def variable_for_headers(headers)
           variables = { :punchblock_call_id => id }
           header_counter = 51
-          headers.each do |header|
-            variables["SIPADDHEADER#{header_counter}"] = "\"#{header.name}: #{header.value}\""
+          headers.each do |name, value|
+            variables["SIPADDHEADER#{header_counter}"] = "\"#{name}: #{value}\""
             header_counter += 1
           end
           variables.inject([]) do |a, (k, v)|

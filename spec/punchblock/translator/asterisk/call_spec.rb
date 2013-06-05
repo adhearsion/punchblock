@@ -461,7 +461,7 @@ module Punchblock
           end
 
           context 'with an event for a known AGI command component' do
-            let(:mock_component_node) { mock 'Punchblock::Component::Asterisk::AGI::Command', :name => 'EXEC ANSWER', :params_array => [] }
+            let(:mock_component_node) { Punchblock::Component::Asterisk::AGI::Command.new name: 'EXEC ANSWER', params: [] }
             let :component do
               Component::Asterisk::AGICommand.new mock_component_node, subject
             end
@@ -821,14 +821,14 @@ module Punchblock
           end
 
           let :expected_pb_event do
-            Event::Asterisk::AMI::Event.new :name => 'Foo',
-                                            :attributes => { :channel       => channel,
-                                                             :uniqueid      => "1320842458.8",
-                                                             :calleridnum   => "5678",
-                                                             :calleridname  => "Jane Smith",
-                                                             :cause         => "0",
-                                                             :'cause-txt'   => "Unknown"},
-                                            :target_call_id => subject.id
+            Event::Asterisk::AMI::Event.new name: 'Foo',
+                                            headers: { 'Channel'      => channel,
+                                                       'Uniqueid'     => "1320842458.8",
+                                                       'Calleridnum'  => "5678",
+                                                       'Calleridname' => "Jane Smith",
+                                                       'Cause'        => "0",
+                                                       'Cause-txt'    => "Unknown"},
+                                            target_call_id: subject.id
           end
 
           it 'sends the AMI event to the connection as a PB event' do

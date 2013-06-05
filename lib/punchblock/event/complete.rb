@@ -5,51 +5,34 @@ module Punchblock
     class Complete < Event
       register :complete, :ext
 
-      def reason
-        element = find_first '*'
-        return unless element
-        RayoNode.import(element).tap do |reason|
-          reason.target_call_id = target_call_id
-          reason.component_id = component_id
-        end
-      end
+      attribute :reason
 
-      def reason=(other)
-        children.map(&:remove)
-        self << other
-      end
+      attribute :recording
 
-      def recording
-        element = find_first('//ns:recording', :ns => RAYO_NAMESPACES[:record_complete])
-        return unless element
-        RayoNode.import(element).tap do |recording|
-          recording.target_call_id = target_call_id
-          recording.component_id = component_id
-        end
-      end
-
-      def inspect_attributes # :nodoc:
-        [:reason, :recording] + super
-      end
-
-      class Reason < RayoNode
-        def self.new(options = {})
-          super().tap do |new_node|
-            case options
-            when Nokogiri::XML::Node
-              new_node.inherit options
-            when Hash
-              options.each_pair { |k,v| new_node.send :"#{k}=", v }
-            end
+      def inherit(xml_node)
+        if reason_node = xml_node.at_xpath('*')
+          self.reason = RayoNode.from_xml(reason_node).tap do |reason|
+            reason.target_call_id = target_call_id
+            reason.component_id = component_id
           end
         end
 
-        def name
-          super.to_sym
+        if recording_node = xml_node.at_xpath('//ns:recording', ns: RAYO_NAMESPACES[:record_complete])
+          self.recording = RayoNode.from_xml(recording_node).tap do |recording|
+            recording.target_call_id = target_call_id
+            recording.component_id = component_id
+          end
         end
 
-        def inspect_attributes # :nodoc:
-          [:name] + super
+        super
+      end
+
+      class Reason < RayoNode
+        attribute :name
+
+        def inherit(xml_node)
+          self.name = xml_node.name.to_sym
+          super
         end
       end
 
@@ -64,18 +47,13 @@ module Punchblock
       class Error < Reason
         register :error, :ext_complete
 
-        def details
-          text.strip
-        end
+        attribute :details
 
-        def details=(other)
-          self << other
-        end
-
-        def inspect_attributes # :nodoc:
-          [:details] + super
+        def inherit(xml_node)
+          self.details = xml_node.text.strip
+          super
         end
       end
-    end # Complete
+    end
   end
-end # Punchblock
+end

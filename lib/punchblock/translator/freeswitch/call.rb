@@ -145,8 +145,8 @@ module Punchblock
           options[:origination_caller_id_number] = "'#{cid_number}'" if cid_number.present?
           options[:origination_caller_id_name] = "'#{cid_name}'" if cid_name.present?
           options[:originate_timeout] = dial_command.timeout/1000 if dial_command.timeout
-          dial_command.headers.each do |header|
-            options["sip_h_#{header.name}"] = "'#{header.value}'"
+          dial_command.headers.each do |name, value|
+            options["sip_h_#{name}"] = "'#{value}'"
           end
           opts = options.inject([]) do |a, (k, v)|
             a << "#{k}=#{v}"

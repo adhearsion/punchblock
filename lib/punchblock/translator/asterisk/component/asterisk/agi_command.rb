@@ -7,7 +7,7 @@ module Punchblock
         module Asterisk
           class AGICommand < Component
             def setup
-              @agi = Punchblock::Translator::Asterisk::AGICommand.new id, @call.channel, @component_node.name, *@component_node.params_array
+              @agi = Punchblock::Translator::Asterisk::AGICommand.new id, @call.channel, @component_node.name, *@component_node.params
             end
 
             def execute

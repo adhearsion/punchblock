@@ -1,7 +1,4 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Change: Models are now plain ruby objects, not XML nodes, and are imported from/exported to XML when necessary for communicating over XMPP.
-  * Change: `#headers` and AMI `#attributes` now do not have their names modified. A header of `'Call-ID'` will no longer be modified to `:call_id`.
-  * Change: AMI Events/Actions now have `#headers(=)` rather than `#attributes(=)`
 
 # [v1.9.3](https://github.com/adhearsion/punchblock/compare/v1.9.2...v1.9.3) - [2013-05-16](https://rubygems.org/gems/punchblock/versions/1.9.3)
   * Bugfix: Improve error messages when trying to execute stop commands on components in an invalid state

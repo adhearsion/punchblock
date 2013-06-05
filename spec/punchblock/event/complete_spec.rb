@@ -6,11 +6,11 @@ module Punchblock
   class Event
     describe Complete do
       it 'registers itself' do
-        RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1').should be == Complete
+        RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1').should be == described_class
       end
 
       describe "setting a reason" do
-        let(:reason) { Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new }
+        let(:reason) { Complete::Stop.new }
 
         subject { described_class.new }
 
@@ -21,7 +21,7 @@ module Punchblock
 
       describe "comparing for equality" do
         subject do
-          Complete.new.tap do |c|
+          described_class.new.tap do |c|
             c.reason          = Complete::Stop.new
             c.target_call_id  = '1234'
             c.component_id    = 'abcd'
@@ -29,7 +29,7 @@ module Punchblock
         end
 
         let :other_complete do
-          Complete.new.tap do |c|
+          described_class.new.tap do |c|
             c.reason          = reason
             c.target_call_id  = call_id
             c.component_id    = component_id
@@ -81,18 +81,18 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-  <success xmlns='urn:xmpp:rayo:output:complete:1' />
+  <stop xmlns='urn:xmpp:rayo:ext:complete:1' />
 </complete>
           MESSAGE
         end
 
-        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+        subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of Complete }
+        it { should be_instance_of described_class }
 
         it_should_behave_like 'event'
 
-        its(:reason) { should be_instance_of Component::Output::Complete::Success }
+        its(:reason) { should be_instance_of Complete::Stop }
       end
     end
 
@@ -105,7 +105,7 @@ module Punchblock
         MESSAGE
       end
 
-      subject { RayoNode.import(parse_stanza(stanza).root).reason }
+      subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
       it { should be_instance_of Complete::Stop }
 
@@ -121,7 +121,7 @@ module Punchblock
         MESSAGE
       end
 
-      subject { RayoNode.import(parse_stanza(stanza).root).reason }
+      subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
       it { should be_instance_of Complete::Hangup }
 
@@ -139,7 +139,7 @@ module Punchblock
         MESSAGE
       end
 
-      subject { RayoNode.import(parse_stanza(stanza).root).reason }
+      subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
       it { should be_instance_of Complete::Error }
 

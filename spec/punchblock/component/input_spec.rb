@@ -6,12 +6,12 @@ module Punchblock
   module Component
     describe Input do
       it 'registers itself' do
-        RayoNode.class_from_registration(:input, 'urn:xmpp:rayo:input:1').should be == Input
+        RayoNode.class_from_registration(:input, 'urn:xmpp:rayo:input:1').should be == described_class
       end
 
       describe "when setting options in initializer" do
         subject do
-          Input.new :grammar              => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'},
+          described_class.new grammar: {value: '[5 DIGITS]', content_type: 'application/grammar+custom'},
                     :mode                 => :speech,
                     :terminator           => '#',
                     :max_silence          => 1000,
@@ -31,6 +31,35 @@ module Punchblock
         its(:inter_digit_timeout) { should be == 2000 }
         its(:sensitivity)         { should be == 0.5 }
         its(:min_confidence)      { should be == 0.5 }
+
+        describe "exporting to Rayo" do
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml subject.to_rayo
+            new_instance.should be_instance_of described_class
+            new_instance.grammar.should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom')
+            new_instance.mode.should be == :speech
+            new_instance.terminator.should be == '#'
+            new_instance.max_silence.should be == 1000
+            new_instance.recognizer.should be == 'en-US'
+            new_instance.initial_timeout.should be == 2000
+            new_instance.inter_digit_timeout.should be == 2000
+            new_instance.sensitivity.should be == 0.5
+            new_instance.min_confidence.should be == 0.5
+          end
+
+          it "should wrap the grammar value in CDATA" do
+            grammar_node = subject.to_rayo.at_xpath('ns:grammar', ns: described_class.registered_ns)
+            grammar_node.children.first.should be_a Nokogiri::XML::CDATA
+          end
+
+          it "should render to a parent node if supplied" do
+            doc = Nokogiri::XML::Document.new
+            parent = Nokogiri::XML::Node.new 'foo', doc
+            doc.root = parent
+            rayo_doc = subject.to_rayo(parent)
+            rayo_doc.should == parent
+          end
+        end
       end
 
       describe "from a stanza" do
@@ -52,9 +81,11 @@ module Punchblock
           MESSAGE
         end
 
-        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+        subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
         it { should be_instance_of Input }
+
+        it { p subject.grammar.value }
 
         its(:grammar)             { should be == Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom') }
         its(:mode)                { should be == :speech }
@@ -83,37 +114,19 @@ module Punchblock
           its(:content_type) { should be == 'application/srgs+xml' }
         end
 
-        describe 'with a simple grammar' do
-          subject { Input::Grammar.new :value => '[5 DIGITS]', :content_type => 'application/grammar+custom' }
-
-          let(:expected_message) { "<![CDATA[ [5 DIGITS] ]]>" }
-
-          it "should wrap grammar in CDATA" do
-            subject.child.to_xml.should be == expected_message.strip
-          end
-        end
-
         describe 'with a GRXML grammar' do
           subject { Input::Grammar.new :value => grxml_doc, :content_type => 'application/srgs+xml' }
 
           its(:content_type) { should be == 'application/srgs+xml' }
 
-          let(:expected_message) { "<![CDATA[ #{grxml_doc} ]]>" }
-
-          it "should wrap GRXML in CDATA" do
-            subject.child.to_xml.should be == expected_message.strip
-          end
-
           its(:value) { should be == grxml_doc }
 
           describe "comparison" do
-            let(:grammar2) { Input::Grammar.new :value => '<grammar xmlns="http://www.w3.org/2001/06/grammar" version="1.0" xml:lang="en-US" mode="dtmf" root="digits"><rule id="digits"><one-of><item>0</item><item>1</item></one-of></rule></grammar>' }
-            let(:grammar3) { Input::Grammar.new :value => grxml_doc }
-            let(:grammar4) { Input::Grammar.new :value => grxml_doc(:speech) }
+            let(:grammar2) { Input::Grammar.new :value => grxml_doc }
+            let(:grammar3) { Input::Grammar.new :value => grxml_doc(:speech) }
 
             it { should be == grammar2 }
-            it { should be == grammar3 }
-            it { should_not be == grammar4 }
+            it { should_not be == grammar3 }
           end
         end
 
@@ -139,7 +152,7 @@ module Punchblock
 
       describe "actions" do
         let(:mock_client) { mock 'Client' }
-        let(:command) { Input.new :grammar => '[5 DIGITS]' }
+        let(:command) { described_class.new grammar: {value: '[5 DIGITS]', content_type: 'application/grammar+custom'} }
 
         before do
           command.component_id = 'abc123'
@@ -188,7 +201,7 @@ module Punchblock
           MESSAGE
         end
 
-        subject { RayoNode.import(parse_stanza(stanza).root).reason }
+        subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
         it { should be_instance_of Input::Complete::Success }
 
@@ -223,7 +236,7 @@ module Punchblock
           MESSAGE
         end
 
-        subject { RayoNode.import(parse_stanza(stanza).root).reason }
+        subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
         it { should be_instance_of Input::Complete::NoMatch }
 
@@ -239,7 +252,7 @@ module Punchblock
           MESSAGE
         end
 
-        subject { RayoNode.import(parse_stanza(stanza).root).reason }
+        subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
         it { should be_instance_of Input::Complete::NoInput }
 

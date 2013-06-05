@@ -6,7 +6,7 @@ module Punchblock
   module Component
     describe Record do
       it 'registers itself' do
-        RayoNode.class_from_registration(:record, 'urn:xmpp:rayo:record:1').should be == Record
+        RayoNode.class_from_registration(:record, 'urn:xmpp:rayo:record:1').should be == described_class
       end
 
       describe "when setting options in initializer" do
@@ -27,6 +27,28 @@ module Punchblock
         its(:initial_timeout) { should be == 10000 }
         its(:final_timeout)   { should be == 30000 }
         its(:direction)       { should be == :duplex }
+
+        describe "exporting to Rayo" do
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml subject.to_rayo
+            new_instance.should be_instance_of described_class
+            new_instance.format.should be == 'WAV'
+            new_instance.start_beep.should be == true
+            new_instance.start_paused.should be == false
+            new_instance.max_duration.should be == 500000
+            new_instance.initial_timeout.should be == 10000
+            new_instance.final_timeout.should be == 30000
+            new_instance.direction.should be == :duplex
+          end
+
+          it "should render to a parent node if supplied" do
+            doc = Nokogiri::XML::Document.new
+            parent = Nokogiri::XML::Node.new 'foo', doc
+            doc.root = parent
+            rayo_doc = subject.to_rayo(parent)
+            rayo_doc.should == parent
+          end
+        end
       end
 
       describe "from a stanza" do
@@ -43,7 +65,7 @@ module Punchblock
           MESSAGE
         end
 
-        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+        subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
         it { should be_instance_of Record }
 
@@ -59,7 +81,7 @@ module Punchblock
       describe "with a direction" do
         [nil, :duplex, :send, :recv].each do |direction|
           describe direction do
-            subject { Record.new :direction => direction }
+            subject { described_class.new :direction => direction }
 
             its(:direction) { should be == direction }
           end
@@ -73,14 +95,14 @@ module Punchblock
 
         describe "blahblahblah" do
           it "should raise an error" do
-            expect { Record.new(:direction => :blahblahblah) }.to raise_error ArgumentError
+            expect { described_class.new(:direction => :blahblahblah) }.to raise_error ArgumentError
           end
         end
       end
 
       describe "actions" do
         let(:mock_client) { mock 'Client' }
-        let(:command) { Record.new }
+        let(:command) { described_class.new }
 
         before do
           command.component_id = 'abc123'
@@ -185,7 +207,7 @@ module Punchblock
 </complete>
           MESSAGE
             end
-            let(:event) { RayoNode.import(parse_stanza(stanza).root) }
+            let(:event) { RayoNode.from_xml(parse_stanza(stanza).root) }
 
             before do
               subject.request!
@@ -246,7 +268,7 @@ module Punchblock
         end
 
         describe "#reason" do
-          subject { RayoNode.import(parse_stanza(stanza).root).reason }
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
           it { should be_instance_of Record::Complete::Success }
 
@@ -254,7 +276,7 @@ module Punchblock
         end
 
         describe "#recording" do
-          subject { RayoNode.import(parse_stanza(stanza).root).recording }
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
           its(:uri)       { should be == "file:/tmp/rayo7451601434771683422.mp3" }
@@ -274,7 +296,7 @@ module Punchblock
         end
 
         describe "#reason" do
-          subject { RayoNode.import(parse_stanza(stanza).root).reason }
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
           it { should be_instance_of Event::Complete::Stop }
 
@@ -282,7 +304,7 @@ module Punchblock
         end
 
         describe "#recording" do
-          subject { RayoNode.import(parse_stanza(stanza).root).recording }
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
           its(:uri) { should be == "file:/tmp/rayo7451601434771683422.mp3" }
@@ -300,7 +322,7 @@ module Punchblock
         end
 
         describe "#reason" do
-          subject { RayoNode.import(parse_stanza(stanza).root).reason }
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
           it { should be_instance_of Event::Complete::Hangup }
 
@@ -308,7 +330,7 @@ module Punchblock
         end
 
         describe "#recording" do
-          subject { RayoNode.import(parse_stanza(stanza).root).recording }
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
           its(:uri) { should be == "file:/tmp/rayo7451601434771683422.mp3" }

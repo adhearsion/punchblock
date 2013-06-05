@@ -6,6 +6,6 @@ module Punchblock
       register :ringing, :core
 
       include HasHeaders
-    end # End
-  end # Event
-end # Punchblock
+    end
+  end
+end

@@ -6,6 +6,8 @@ module Punchblock
       register :output, :output
 
       class Document < RayoNode
+        register :document, :output
+
         SSML_CONTENT_TYPE = 'application/ssml+xml'
 
         # @return [String] the URL from which the fetch the grammar
@@ -36,6 +38,13 @@ module Punchblock
           }
         end
 
+        def rayo_children(root)
+          root.cdata xml_value
+          super
+        end
+
+        private
+
         def xml_value
           if ssml?
             value.to_xml
@@ -45,8 +54,6 @@ module Punchblock
             value
           end
         end
-
-        private
 
         def ssml?
           content_type == SSML_CONTENT_TYPE
@@ -102,9 +109,7 @@ module Punchblock
 
       def rayo_children(root)
         render_documents.each do |render_document|
-          root.document(render_document.rayo_attributes.delete_if { |k,v| v.nil? }) do |xml|
-            xml.cdata render_document.xml_value
-          end
+          render_document.to_rayo root.parent
         end
         super
       end

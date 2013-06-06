@@ -31,9 +31,7 @@ module Punchblock
       end
 
       def rayo_children(root)
-        if join
-          root.join(join.rayo_attributes.delete_if { |k,v| v.nil? })
-        end
+        join.to_rayo(root.parent) if join
         super
       end
 

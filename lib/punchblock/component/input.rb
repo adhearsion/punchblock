@@ -91,10 +91,10 @@ module Punchblock
         end
 
         def rayo_attributes
-          {}.tap do |atts|
-            atts['url'] = url
-            atts['content-type'] = content_type
-          end
+          {
+            'url' => url,
+            'content-type' => content_type
+          }
         end
 
         def rayo_children(root)

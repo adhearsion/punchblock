@@ -11,6 +11,8 @@ module Punchblock
         extend ActorHasGuardedHandlers
         execute_guarded_handlers_on_receiver
 
+        InvalidCommandError = Class.new Punchblock::Error
+
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
@@ -212,11 +214,28 @@ module Punchblock
             execute_component Component::Output, command
           when Punchblock::Component::Input
             execute_component Component::Input, command
+          when Punchblock::Component::Prompt
+            component_class = case command.input.recognizer
+            when 'unimrcp'
+              case command.output.renderer
+              when 'unimrcp'
+                Component::MRCPPrompt
+              when 'asterisk'
+                Component::MRCPNativePrompt
+              else
+                raise InvalidCommandError, 'Invalid recognizer/renderer combination'
+              end
+            else
+              Component::ComposedPrompt
+            end
+            execute_component component_class, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        rescue InvalidCommandError => e
+          command.response = ProtocolError.new.setup :invalid_command, e.message, id
         rescue RubyAMI::Error => e
           command.response = case e.message
           when 'No such channel'

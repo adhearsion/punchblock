@@ -3,6 +3,8 @@
 module Punchblock
   module Component
     class Input < ComponentNode
+      NLSML_NAMESPACE = 'http://www.ietf.org/xml/ns/mrcpv2'
+
       register :input, :input
 
       # @return [Integer] the amount of time in milliseconds that an input command will wait until considered that a silence becomes a NO-MATCH
@@ -12,13 +14,16 @@ module Punchblock
       attribute :min_confidence, Float
 
       # @return [Symbol] mode by which to accept input. Can be :speech, :dtmf or :any
-      attribute :mode, Symbol
+      attribute :mode, Symbol, default: :dtmf
 
       # @return [String] recognizer to use for speech recognition
-      attribute :recognizer
+      attribute :recognizer, String
+
+      # @return [String] language to use for speech recognition
+      attribute :language, String
 
       # @return [String] terminator by which to signal the end of input
-      attribute :terminator
+      attribute :terminator, String
 
       # @return [Float] Indicates how sensitive the interpreter should be to loud versus quiet input. Higher values represent greater sensitivity.
       attribute :sensitivity, Float
@@ -29,15 +34,24 @@ module Punchblock
       # @return [Integer] Indicates (in the case of DTMF input) the amount of time between input digits which may expire before a timeout is triggered.
       attribute :inter_digit_timeout, Integer
 
-      attribute :grammar
+      attribute :grammars, Array, default: []
+      def grammars=(others)
+        super others.map { |other| Grammar.new(other) }
+      end
+
+      ##
+      # @param [Hash] other
+      # @option other [String] :content_type the document content type
+      # @option other [String] :value the grammar doucment
+      # @option other [String] :url the url from which to fetch the grammar
+      #
       def grammar=(other)
-        return if other.nil?
-        super Grammar.new(other)
+        self.grammars = [other].compact
       end
 
       def inherit(xml_node)
-        grammar_node = xml_node.at_xpath('ns:grammar', ns: self.class.registered_ns)
-        self.grammar = Grammar.from_xml(grammar_node) if grammar_node
+        grammar_nodes = xml_node.xpath('ns:grammar', ns: self.class.registered_ns)
+        self.grammars = grammar_nodes.to_a.map { |grammar_node| Grammar.from_xml(grammar_node)}
         super
       end
 
@@ -47,6 +61,7 @@ module Punchblock
           'min-confidence' => min_confidence,
           'mode' => mode,
           'recognizer' => recognizer,
+          'language' => language,
           'terminator' => terminator,
           'sensitivity' => sensitivity,
           'initial-timeout' => initial_timeout,
@@ -55,10 +70,8 @@ module Punchblock
       end
 
       def rayo_children(root)
-        if grammar
-          root.grammar(grammar.rayo_attributes.delete_if { |k,v| v.nil? }) do |xml|
-            xml.cdata grammar.value
-          end
+        grammars.each do |grammar|
+          grammar.to_rayo(root)
         end
         super
       end
@@ -78,10 +91,14 @@ module Punchblock
         end
 
         def rayo_attributes
-          {}.tap do |atts|
-            atts['url'] = url
-            atts['content-type'] = content_type
-          end
+          {
+            'url' => url,
+            'content-type' => content_type
+          }
+        end
+
+        def rayo_children(root)
+          root.cdata value
         end
 
         private
@@ -92,18 +109,45 @@ module Punchblock
       end
 
       class Complete
-        class Success < Event::Complete::Reason
-          register :success, :input_complete
+        class Match < Event::Complete::Reason
+          register :match, :input_complete
 
-          attribute :mode, Symbol
-          attribute :confidence, Float
-          attribute :utterance
-          attribute :interpretation
+          attribute :nlsml
+          def nlsml=(other)
+            doc = case other
+            when Nokogiri::XML::Element, Nokogiri::XML::Document
+              RubySpeech::NLSML::Document.new(other)
+            else
+              other
+            end
+            super doc
+          end
+
+          def mode
+            nlsml.best_interpretation[:input][:mode]
+          end
+
+          def confidence
+            nlsml.best_interpretation[:confidence]
+          end
+
+          def utterance
+            nlsml.best_interpretation[:input][:content]
+          end
+
+          def interpretation
+            nlsml.best_interpretation[:instance]
+          end
 
           def inherit(xml_node)
-            self.utterance = xml_node.at_xpath('ns:utterance', ns: self.class.registered_ns).content
-            self.interpretation = xml_node.at_xpath('ns:interpretation', ns: self.class.registered_ns).content
+            self.nlsml = result_node(xml_node)
             super
+          end
+
+          private
+
+          def result_node(xml)
+            xml.at_xpath 'ns:result', 'ns' => NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
           end
         end
 

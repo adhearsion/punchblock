@@ -138,8 +138,16 @@ module Punchblock
       end
 
       class Complete
-        class Success < Event::Complete::Reason
-          register :success, :record_complete
+        class MaxDuration < Event::Complete::Reason
+          register :'max-duration', :record_complete
+        end
+
+        class InitialTimeout < Event::Complete::Reason
+          register :'initial-timeout', :record_complete
+        end
+
+        class FinalTimeout < Event::Complete::Reason
+          register :'final-timeout', :record_complete
         end
       end
     end

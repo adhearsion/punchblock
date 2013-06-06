@@ -8,6 +8,7 @@ module Punchblock
     autoload :ComponentNode
     autoload :Input
     autoload :Output
+    autoload :Prompt
     autoload :Record
     autoload :Stop
 

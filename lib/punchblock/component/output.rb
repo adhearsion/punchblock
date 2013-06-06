@@ -5,24 +5,73 @@ module Punchblock
     class Output < ComponentNode
       register :output, :output
 
-      def inherit(xml_node)
-        ssml_node = xml_node.children.first
-        self.ssml = RubySpeech::SSML.import ssml_node if ssml_node
-        super
+      class Document < RayoNode
+        register :document, :output
+
+        SSML_CONTENT_TYPE = 'application/ssml+xml'
+
+        # @return [String] the URL from which the fetch the grammar
+        attribute :url
+
+        # @return [String] the document content type
+        attribute :content_type, String, default: ->(grammar, attribute) { grammar.url ? nil : SSML_CONTENT_TYPE }
+
+        # @return [String, RubySpeech::SSML::Speak, Array] the document
+        attribute :value
+
+        def inherit(xml_node)
+          super
+          self.value = if ssml?
+            RubySpeech::SSML.import xml_node.content
+          elsif urilist?
+            xml_node.content.strip.split("\n").map(&:strip)
+          else
+            xml_node.content
+          end
+          self
+        end
+
+        def rayo_attributes
+          {
+            'url' => url,
+            'content-type' => content_type
+          }
+        end
+
+        def rayo_children(root)
+          root.cdata xml_value
+          super
+        end
+
+        private
+
+        def xml_value
+          if ssml?
+            value.to_xml
+          elsif urilist?
+            value.join("\n")
+          elsif
+            value
+          end
+        end
+
+        def ssml?
+          content_type == SSML_CONTENT_TYPE
+        end
+
+        def urilist?
+          content_type == 'text/uri-list'
+        end
       end
 
-      # @return [String] the SSML document to render TTS
-      attribute :ssml
-      def ssml=(ssml)
-        return unless ssml
-        unless ssml.is_a?(RubySpeech::SSML::Element)
-          ssml = RubySpeech::SSML.import ssml
-        end
+      def inherit(xml_node)
+        document_nodes = xml_node.xpath 'ns:document', ns: self.class.registered_ns
+        self.render_documents = document_nodes.to_a.map { |node| Document.from_xml node }
         super
       end
 
       # @return [String] the TTS voice to use
-      attribute :voice
+      attribute :voice, String
 
       # @return [Symbol] input type on which to interrupt output
       attribute :interrupt_on, Symbol
@@ -43,7 +92,7 @@ module Punchblock
       attribute :max_time, Integer
 
       # @return [String] the rendering engine requested by the component
-      attribute :renderer
+      attribute :renderer, String
 
       def rayo_attributes
         {
@@ -59,8 +108,27 @@ module Punchblock
       end
 
       def rayo_children(root)
-        root << ssml.to_xml if ssml
+        render_documents.each do |render_document|
+          render_document.to_rayo root.parent
+        end
         super
+      end
+
+      # @return [Document] the document to render
+      attribute :render_documents, Array[Document], default: []
+
+      ##
+      # @param [Hash] other
+      # @option other [String] :content_type the document content type
+      # @option other [String] :value the output doucment
+      # @option other [String] :url the url from which to fetch the document
+      #
+      def render_document=(other)
+        self.render_documents = [other].compact
+      end
+
+      def ssml=(other)
+        self.render_documents = [{:value => other}]
       end
 
       state_machine :state do
@@ -376,8 +444,12 @@ module Punchblock
       end
 
       class Complete
-        class Success < Event::Complete::Reason
-          register :success, :output_complete
+        class Finish < Event::Complete::Reason
+          register :finish, :output_complete
+        end
+
+        class MaxTime < Event::Complete::Reason
+          register :'max-time', :output_complete
         end
       end
     end # Output

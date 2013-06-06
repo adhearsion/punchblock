@@ -92,6 +92,7 @@ module Punchblock
     end
 
     def to_rayo(parent = nil)
+      parent = parent.parent if parent.is_a?(Nokogiri::XML::Builder)
       Nokogiri::XML::Builder.with(parent) do |xml|
         xml.send(registered_name,
           {xmlns: registered_ns}.merge(rayo_attributes.delete_if { |k,v| v.nil? })) do |root|

@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'active_support/core_ext/string/filters'
+require 'punchblock/translator/asterisk/unimrcp_app'
 
 module Punchblock
   module Translator
@@ -16,7 +17,8 @@ module Punchblock
           end
 
           def execute
-            raise OptionError, 'An SSML document is required.' unless @component_node.ssml
+            raise OptionError, 'An SSML document is required.' unless @component_node.render_documents.first.value
+            raise OptionError, 'Only a single document is supported.' unless @component_node.render_documents.size == 1
             raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
@@ -46,7 +48,7 @@ module Punchblock
               if interrupt
                 output_component = current_actor
                 call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
-                  output_component.stop_by_redirect Punchblock::Component::Output::Complete::Success.new
+                  output_component.stop_by_redirect finish_reason
                 end
               end
 
@@ -54,14 +56,14 @@ module Punchblock
               @call.execute_agi_command 'EXEC Playback', opts
             when :unimrcp
               send_ref
-              @call.execute_agi_command 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options
+              UniMRCPApp.new('MRCPSynth', render_doc, mrcpsynth_options).execute @call
             when :swift
               send_ref
               @call.execute_agi_command 'EXEC Swift', swift_doc
             else
               raise OptionError, "The renderer #{rendering_engine} is unsupported."
             end
-            send_success
+            send_finish
           rescue RubyAMI::Error => e
             complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue UnrenderableDocError => e
@@ -73,7 +75,7 @@ module Punchblock
           private
 
           def filenames
-            @filenames ||= @component_node.ssml.children.map do |node|
+            @filenames ||= render_doc.children.map do |node|
               case node
               when RubySpeech::SSML::Audio
                 node.src
@@ -88,34 +90,30 @@ module Punchblock
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end
 
-          def escaped_doc
-            @component_node.ssml.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
-          end
-
-          def escape_commas(text)
-            text.gsub(',', '\\,')
+          def render_doc
+            @component_node.render_documents.first.value
           end
 
           def mrcpsynth_options
-            [].tap do |opts|
-              opts << 'i=any' if [:any, :dtmf].include? @component_node.interrupt_on
-              opts << "v=#{@component_node.voice}" if @component_node.voice
-            end.join '&'
+            {}.tap do |opts|
+              opts[:i] = 'any' if [:any, :dtmf].include? @component_node.interrupt_on
+              opts[:v] = @component_node.voice if @component_node.voice
+            end
           end
 
           def swift_doc
-            doc = escaped_doc
+            doc = render_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }
             doc << "|1|1" if [:any, :dtmf].include? @component_node.interrupt_on
             doc.insert 0, "#{@component_node.voice}^" if @component_node.voice
             doc
           end
 
-          def send_success
-            send_complete_event success_reason
+          def send_finish
+            send_complete_event finish_reason
           end
 
-          def success_reason
-            Punchblock::Component::Output::Complete::Success.new
+          def finish_reason
+            Punchblock::Component::Output::Complete::Finish.new
           end
         end
       end

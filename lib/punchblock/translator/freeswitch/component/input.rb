@@ -8,6 +8,11 @@ module Punchblock
 
           include InputComponent
 
+          def execute
+            super
+            @dtmf_handler_id = register_dtmf_event_handler
+          end
+
           private
 
           def register_dtmf_event_handler

@@ -25,7 +25,7 @@ module Punchblock
           end
 
           let :command_options do
-            { :ssml => ssml_doc }
+            { :render_document => {:value => ssml_doc} }
           end
 
           def execute
@@ -49,16 +49,17 @@ module Punchblock
             let(:command_opts) { {} }
 
             let :command_options do
-              { :ssml => ssml_doc }.merge(command_opts)
+              { :render_document => {:value => ssml_doc} }.merge(command_opts)
             end
 
             let :original_command do
               Punchblock::Component::Output.new command_options
             end
 
-            describe 'ssml' do
+            describe 'document' do
               context 'unset' do
-                let(:command_opts) { { :ssml => nil } }
+                let(:ssml_doc) { nil }
+
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
@@ -76,7 +77,16 @@ module Punchblock
                   expect_playback
                   execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
-                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                end
+              end
+
+              context 'with multiple documents' do
+                let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
+                it "should return an error and not execute any actions" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'Only a single document is supported.'
+                  original_command.response(0.1).should be == error
                 end
               end
             end

@@ -7,171 +7,36 @@ module Punchblock
 
       register :input, :input
 
-      ##
-      # Create a input command
-      #
-      # @param [Hash] options
-      # @option options [Grammar, Hash] :grammar the grammar to activate
-      # @option options [Integer, optional] :max_silence the amount of time in milliseconds that an input command will wait until considered that a silence becomes a NO-MATCH
-      # @option options [Float, optional] :min_confidence with which to consider a response acceptable
-      # @option options [Symbol, optional] :mode by which to accept input. Can be :speech, :dtmf or :any
-      # @option options [String, optional] :recognizer to use for speech recognition
-      # @option options [String, optional] :language to use for speech recognition
-      # @option options [String, optional] :terminator by which to signal the end of input
-      # @option options [Float, optional] :sensitivity Indicates how sensitive the interpreter should be to loud versus quiet input. Higher values represent greater sensitivity.
-      # @option options [Integer, optional] :initial_timeout Indicates the amount of time preceding input which may expire before a timeout is triggered.
-      # @option options [Integer, optional] :inter_digit_timeout Indicates (in the case of DTMF input) the amount of time between input digits which may expire before a timeout is triggered.
-      #
-      # @return [Command::Input] a formatted Rayo input command
-      #
-      # @example
-      #    input :grammar   => {:value => '[5 DIGITS]', :content_type => 'application/grammar+voxeo'},
-      #          :mode      => :speech,
-      #          :language  => 'es-es'
-      #
-      #    returns:
-      #      <input xmlns="urn:xmpp:rayo:input:1" mode="speech" language="es-es">
-      #        <grammar content-type="application/grammar+voxeo">[5 DIGITS]</choices>
-      #      </input>
-      #
-      def self.new(options = {})
-        super().tap do |new_node|
-          options.each_pair { |k,v| new_node.send :"#{k}=", v }
-        end
-      end
-
-      ##
       # @return [Integer] the amount of time in milliseconds that an input command will wait until considered that a silence becomes a NO-MATCH
-      #
-      def max_silence
-        read_attr :'max-silence', :to_i
-      end
+      attribute :max_silence, Integer
 
-      ##
-      # @param [Integer] other the amount of time in milliseconds that an input command will wait until considered that a silence becomes a NO-MATCH
-      #
-      def max_silence=(other)
-        write_attr :'max-silence', other, :to_i
-      end
-
-      ##
       # @return [Float] Confidence with which to consider a response acceptable
-      #
-      def min_confidence
-        read_attr 'min-confidence', :to_f
-      end
+      attribute :min_confidence, Float
 
-      ##
-      # @param [Float] min_confidence with which to consider a response acceptable
-      #
-      def min_confidence=(min_confidence)
-        write_attr 'min-confidence', min_confidence, :to_f
-      end
-
-      ##
       # @return [Symbol] mode by which to accept input. Can be :speech, :dtmf or :any
-      #
-      def mode
-        read_attr :mode, :to_sym
-      end
+      attribute :mode, Symbol, default: :dtmf
 
-      ##
-      # @param [Symbol] mode by which to accept input. Can be :speech, :dtmf or :any
-      #
-      def mode=(mode)
-        write_attr :mode, mode
-      end
-
-      ##
       # @return [String] recognizer to use for speech recognition
-      #
-      def recognizer
-        read_attr :recognizer
-      end
+      attribute :recognizer, String
 
-      ##
-      # @param [String] recognizer to use for speech recognition
-      #
-      def recognizer=(recognizer)
-        write_attr :recognizer, recognizer
-      end
-
-      ##
       # @return [String] language to use for speech recognition
-      #
-      def language
-        read_attr :language
-      end
+      attribute :language, String
 
-      ##
-      # @param [String] language to use for speech recognition
-      #
-      def language=(other)
-        write_attr :language, other
-      end
-
-      ##
       # @return [String] terminator by which to signal the end of input
-      #
-      def terminator
-        read_attr :terminator
-      end
+      attribute :terminator, String
 
-      ##
-      # @param [String] terminator by which to signal the end of input
-      #
-      def terminator=(terminator)
-        write_attr :terminator, terminator
-      end
-
-      ##
       # @return [Float] Indicates how sensitive the interpreter should be to loud versus quiet input. Higher values represent greater sensitivity.
-      #
-      def sensitivity
-        read_attr :sensitivity, :to_f
-      end
+      attribute :sensitivity, Float
 
-      ##
-      # @param [Float] other Indicates how sensitive the interpreter should be to loud versus quiet input. Higher values represent greater sensitivity.
-      #
-      def sensitivity=(other)
-        write_attr :sensitivity, other, :to_f
-      end
-
-      ##
       # @return [Integer] Indicates the amount of time preceding input which may expire before a timeout is triggered.
-      #
-      def initial_timeout
-        read_attr :'initial-timeout', :to_i
-      end
+      attribute :initial_timeout, Integer
 
-      ##
-      # @param [Integer] timeout Indicates the amount of time preceding input which may expire before a timeout is triggered.
-      #
-      def initial_timeout=(other)
-        write_attr :'initial-timeout', other, :to_i
-      end
-
-      ##
       # @return [Integer] Indicates (in the case of DTMF input) the amount of time between input digits which may expire before a timeout is triggered.
-      #
-      def inter_digit_timeout
-        read_attr :'inter-digit-timeout', :to_i
-      end
+      attribute :inter_digit_timeout, Integer
 
-      ##
-      # @param [Integer] timeout Indicates (in the case of DTMF input) the amount of time between input digits which may expire before a timeout is triggered.
-      #
-      def inter_digit_timeout=(other)
-        write_attr :'inter-digit-timeout', other, :to_i
-      end
-
-      ##
-      # @return [Array<Grammar>] the grammars to activate
-      #
-      def grammars
-        nodes = find 'ns:grammar', :ns => self.class.registered_ns
-        nodes.map { |node| Grammar.new node }
+      attribute :grammars, Array, default: []
+      def grammars=(others)
+        super others.map { |other| Grammar.new(other) }
       end
 
       ##
@@ -184,120 +49,78 @@ module Punchblock
         self.grammars = [other].compact
       end
 
-      ##
-      # @param[Array<Hash>] others
-      # @see #grammar= for hash format
-      #
-      def grammars=(others)
-        remove_children :grammar
-        others.each do |other|
-          grammar = Grammar.new(other) unless other.is_a?(Grammar)
-          self << grammar
-        end
+      def inherit(xml_node)
+        grammar_nodes = xml_node.xpath('ns:grammar', ns: self.class.registered_ns)
+        self.grammars = grammar_nodes.to_a.map { |grammar_node| Grammar.from_xml(grammar_node)}
+        super
       end
 
-      def inspect_attributes # :nodoc:
-        [:mode, :terminator, :recognizer, :language, :max_silence, :initial_timeout, :inter_digit_timeout, :sensitivity, :min_confidence, :grammars] + super
+      def rayo_attributes
+        {
+          'max-silence' => max_silence,
+          'min-confidence' => min_confidence,
+          'mode' => mode,
+          'recognizer' => recognizer,
+          'language' => language,
+          'terminator' => terminator,
+          'sensitivity' => sensitivity,
+          'initial-timeout' => initial_timeout,
+          'inter-digit-timeout' => inter_digit_timeout
+        }
+      end
+
+      def rayo_children(root)
+        grammars.each do |grammar|
+          grammar.to_rayo(root)
+        end
+        super
       end
 
       class Grammar < RayoNode
-        ##
-        # @param [Hash] options
-        # @option options [String] :content_type the document content type
-        # @option options [String] :value the grammar document
-        # @option options [String] :url the url from which to fetch the grammar
-        #
-        def self.new(options = {})
-          super(:grammar).tap do |new_node|
-            case options
-            when Nokogiri::XML::Node
-              new_node.inherit options
-            when Hash
-              new_node.content_type = options[:content_type]
-              new_node.value = options[:value]
-              new_node.url = options[:url]
-            end
+        register :grammar, :input
+
+        GRXML_CONTENT_TYPE = 'application/srgs+xml'
+
+        attribute :value
+        attribute :content_type, String, default: ->(grammar, attribute) { grammar.url ? nil : GRXML_CONTENT_TYPE }
+        attribute :url
+
+        def inherit(xml_node)
+          self.value = xml_node.content.strip
+          super
+        end
+
+        def rayo_attributes
+          {}.tap do |atts|
+            atts['url'] = url
+            atts['content-type'] = content_type
           end
         end
 
-        ##
-        # @return [String] the document content type
-        #
-        def content_type
-          read_attr 'content-type'
-        end
-
-        ##
-        # @param [String] content_type Defaults to GRXML
-        #
-        def content_type=(content_type)
-          return unless content_type
-          write_attr 'content-type', content_type
-        end
-
-        ##
-        # @return [String, RubySpeech::GRXML::Grammar] the grammar document
-        def value
-          return nil unless content.present?
-          if grxml?
-            RubySpeech::GRXML.import content
-          else
-            content
-          end
-        end
-
-        ##
-        # @param [String, RubySpeech::GRXML::Grammar] value the grammar document
-        def value=(value)
-          return unless value
-          self.content_type = grxml_content_type unless self.content_type
-          if grxml? && !value.is_a?(RubySpeech::GRXML::Element)
-            value = RubySpeech::GRXML.import value
-          end
-          Nokogiri::XML::Builder.with(self) do |xml|
-            xml.cdata " #{value} "
-          end
-        end
-
-        ##
-        # @return [String] the URL from which the fetch the grammar
-        #
-        def url
-          read_attr 'url'
-        end
-
-        ##
-        # @param [String] other the URL from which the fetch the grammar
-        #
-        def url=(other)
-          write_attr 'url', other
-        end
-
-        def inspect_attributes # :nodoc:
-          [:content_type, :value, :url] + super
+        def rayo_children(root)
+          root.cdata value
         end
 
         private
 
-        def grxml_content_type
-          'application/srgs+xml'
-        end
-
         def grxml?
-          content_type == grxml_content_type
+          content_type == GRXML_CONTENT_TYPE
         end
-      end # Choices
+      end
 
       class Complete
         class Match < Event::Complete::Reason
           register :match, :input_complete
 
-          def nlsml
-            @nlsml ||= RubySpeech.parse result_node.to_xml
-          end
-
+          attribute :nlsml
           def nlsml=(other)
-            self << other.root.to_xml
+            doc = case other
+            when Nokogiri::XML::Element, Nokogiri::XML::Document
+              RubySpeech::NLSML::Document.new(other)
+            else
+              other
+            end
+            super doc
           end
 
           def mode
@@ -316,14 +139,15 @@ module Punchblock
             nlsml.best_interpretation[:instance]
           end
 
-          def inspect_attributes # :nodoc:
-            [:name, :nlsml] + super
+          def inherit(xml_node)
+            self.nlsml = result_node(xml_node)
+            super
           end
 
           private
 
-          def result_node
-            at_xpath 'ns:result', 'ns' => NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
+          def result_node(xml)
+            xml.at_xpath 'ns:result', 'ns' => NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
           end
         end
 
@@ -334,7 +158,7 @@ module Punchblock
         class NoInput < Event::Complete::Reason
           register :noinput, :input_complete
         end
-      end # Complete
-    end # Input
-  end # Component
-end # Punchblock
+      end
+    end
+  end
+end

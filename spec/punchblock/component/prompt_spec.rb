@@ -10,7 +10,7 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        let(:output)  { Output.new :render_document => {:content_type => 'text/plain', :value => 'FooBar'} }
+        let(:output)  { Output.new :render_document => {content_type: 'text/uri-list', value: ['http://example.com/hello.mp3']} }
         let(:input)   { Input.new :mode => :speech }
         subject       { described_class.new output, input, :barge_in => true }
 
@@ -29,6 +29,24 @@ module Punchblock
 
           its(:output)  { should be == Output.new(renderer: :foo) }
           its(:input)   { should be == Input.new(recognizer: :bar) }
+        end
+
+        describe "exporting to Rayo" do
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml subject.to_rayo
+            new_instance.should be_instance_of described_class
+            new_instance.output.should be == output
+            new_instance.input.should be == input
+            new_instance.barge_in.should be_true
+          end
+
+          it "should render to a parent node if supplied" do
+            doc = Nokogiri::XML::Document.new
+            parent = Nokogiri::XML::Node.new 'foo', doc
+            doc.root = parent
+            rayo_doc = subject.to_rayo(parent)
+            rayo_doc.should == parent
+          end
         end
       end
 
@@ -62,7 +80,7 @@ module Punchblock
           MESSAGE
         end
 
-        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+        subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
         it { should be_instance_of described_class }
 
@@ -73,7 +91,7 @@ module Punchblock
 
       describe "actions" do
         let(:mock_client) { mock 'Client' }
-        let(:command) { Input.new :grammar => '[5 DIGITS]' }
+        let(:command) { described_class.new }
 
         before do
           command.component_id = 'abc123'
@@ -104,7 +122,7 @@ module Punchblock
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Input that is not executing")
+              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Prompt that is new")
             end
           end
         end

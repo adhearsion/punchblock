@@ -1,6 +1,17 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Add support for Rayo Prompt component (model only, no support on * or FS)
+  * Change: Models are now plain ruby objects, not XML nodes, and are imported from/exported to XML when necessary for communicating over XMPP.
+  * Change: `#headers` and AMI `#attributes` now do not have their names modified. A header of `'Call-ID'` will no longer be modified to `:call_id`.
+  * Change: AMI Events/Actions now have `#headers(=)` rather than `#attributes(=)`
+
+# [v1.9.3](https://github.com/adhearsion/punchblock/compare/v1.9.2...v1.9.3) - [2013-05-16](https://rubygems.org/gems/punchblock/versions/1.9.3)
+  * Bugfix: Improve error messages when trying to execute stop commands on components in an invalid state
+
+# [v1.9.2](https://github.com/adhearsion/punchblock/compare/v1.9.1...v1.9.2) - [2013-05-10](https://rubygems.org/gems/punchblock/versions/1.9.2)
   * Bugfix: We were raising an exception on connection shutdown due to waiting for the connection to end incorrectly.
+  * Bugfix/Perf: FreeSWITCH Call actors were being kept alive after hangup for no reason
+  * Bugfix/Perf: FreeSWITCH component complete events were looping out of the actor
+  * Perf: We were wasting CPU cycles listening to all ES events when we really don't need to
 
 # [v1.9.1](https://github.com/adhearsion/punchblock/compare/v1.9.0...v1.9.1) - [2013-05-08](https://rubygems.org/gems/punchblock/versions/1.9.1)
   * Bugfix: AMI errors indicating dead channels were not being handled correctly

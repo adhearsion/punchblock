@@ -7,132 +7,43 @@ module Punchblock
 
       VALID_DIRECTIONS = [:duplex, :send, :recv].freeze
 
-      ##
-      # Creates an Rayo Record command
-      #
-      # @param [Hash] options
-      # @option options [String] :format to use for recording
-      # @option options [Integer] :initial_timeout Controls how long the recognizer should wait after the end of the prompt for the caller to speak before sending a Recorder event.
-      # @option options [Integer] :final_timeout Controls the length of a period of silence after callers have spoken to conclude they finished.
-      # @option options [Integer] :max_duration Indicates the maximum duration for the recording.
-      # @option options [true, false] :start_beep Indicates whether subsequent record will be preceded with a beep.
-      # @option options [true, false] :start_paused Whether subsequent record will start in PAUSE mode.
-      #
-      # @return [Command::Record] a Rayo "record" command
-      #
-      # @example
-      #   record :text => 'Hello brown cow.'
-      #
-      #   returns:
-      #     <record xmlns="urn:xmpp:rayo:record:1">Hello brown cow.</record>
-      #
-      def self.new(options = {})
-        super().tap do |new_node|
-          options.each_pair { |k,v| new_node.send :"#{k}=", v }
-        end
-      end
-
-      ##
-      # @return [Integer] Controls the length of a period of silence after callers have spoken to conclude they finished.
-      #
-      def final_timeout
-        read_attr :'final-timeout', :to_i
-      end
-
-      ##
-      # @param [Integer] timeout Controls the length of a period of silence after callers have spoken to conclude they finished.
-      #
-      def final_timeout=(timeout)
-        write_attr :'final-timeout', timeout, :to_i
-      end
-
-      ##
       # @return [String] the codec to use for recording
-      #
-      def format
-        read_attr :format
-      end
+      attribute :format
 
-      ##
-      # @param [String] codec to use for recording
-      #
-      def format=(format)
-        write_attr :format, format
-      end
-
-      ##
       # @return [Integer] Controls how long the recognizer should wait after the end of the prompt for the caller to speak before sending a Recorder event.
-      #
-      def initial_timeout
-        read_attr :'initial-timeout', :to_i
-      end
+      attribute :initial_timeout, Integer
 
-      ##
-      # @param [Integer] timeout Controls how long the recognizer should wait after the end of the prompt for the caller to speak before sending a Recorder event.
-      #
-      def initial_timeout=(timeout)
-        write_attr :'initial-timeout', timeout, :to_i
-      end
+      # @return [Integer] Controls the length of a period of silence after callers have spoken to conclude they finished.
+      attribute :final_timeout, Integer
 
-      ##
       # @return [Integer] Indicates the maximum duration for the recording.
-      #
-      def max_duration
-        read_attr :'max-duration', :to_i
-      end
+      attribute :max_duration, Integer
 
-      ##
-      # @param [Integer] other Indicates the maximum duration for the recording.
-      #
-      def max_duration=(other)
-        write_attr :'max-duration', other, :to_i
-      end
-
-      ##
       # @return [true, false] Indicates whether subsequent record will be preceded with a beep.
-      #
-      def start_beep
-        read_attr(:'start-beep') == 'true'
-      end
+      attribute :start_beep, Boolean
 
-      ##
-      # @param [true, false] sb Indicates whether subsequent record will be preceded with a beep.
-      #
-      def start_beep=(sb)
-        write_attr :'start-beep', sb
-      end
-
-      ##
       # @return [true, false] Whether subsequent record will start in PAUSE mode.
-      #
-      def start_paused
-        read_attr(:'start-paused') == 'true'
-      end
+      attribute :start_paused, Boolean
 
-      ##
-      # @param [true, false] other Whether subsequent record will start in PAUSE mode.
-      #
-      def start_paused=(other)
-        write_attr :'start-paused', other
-      end
-
-      ##
       # @return [Symbol] the direction of media to be recorded.
-      def direction
-        read_attr :direction, :to_sym
-      end
-
-      ##
-      # @param [#to_s] otherthe direction of media to be recorded. Can be :duplex, :recv or :send
+      attribute :direction, Symbol
       def direction=(direction)
         if direction && !VALID_DIRECTIONS.include?(direction.to_sym)
           raise ArgumentError, "Invalid Direction (#{direction}), use: #{VALID_DIRECTIONS*' '}"
         end
-        write_attr :direction, direction
+        super
       end
 
-      def inspect_attributes # :nodoc:
-        [:final_timeout, :format, :initial_timeout, :max_duration, :start_beep, :start_paused, :direction] + super
+      def rayo_attributes
+        {
+          'format' => format,
+          'initial-timeout' => initial_timeout,
+          'final-timeout' => final_timeout,
+          'max-duration' => max_duration,
+          'start-beep' => start_beep,
+          'start-paused' => start_paused,
+          'direction' => direction
+        }
       end
 
       state_machine :state do
@@ -221,25 +132,9 @@ module Punchblock
       class Recording < Event
         register :recording, :record_complete
 
-        def uri
-          read_attr :uri
-        end
-
-        def uri=(other)
-          write_attr :uri, other
-        end
-
-        def duration
-          read_attr :duration, :to_i
-        end
-
-        def size
-          read_attr :size, :to_i
-        end
-
-        def inspect_attributes # :nodoc:
-          [:uri, :duration, :size] + super
-        end
+        attribute :uri
+        attribute :duration, Integer
+        attribute :size, Integer
       end
 
       class Complete
@@ -255,6 +150,6 @@ module Punchblock
           register :'final-timeout', :record_complete
         end
       end
-    end # Record
-  end # Command
-end # Punchblock
+    end
+  end
+end

@@ -5,161 +5,112 @@ module Punchblock
     class Output < ComponentNode
       register :output, :output
 
-      ##
-      # Creates an Rayo Output command
-      #
-      # @param [Hash] options
-      # @option options [String, Optional] :text to speak back
-      # @option options [Document] :render_document document to render TTS
-      # @option options [Symbol] :interrupt_on input type on which to interrupt output. May be :speech, :dtmf or :any
-      # @option options [Integer] :start_offset Indicates some offset through which the output should be skipped before rendering begins.
-      # @option options [true, false] :start_paused Indicates wether or not the component should be started in a paused state to be resumed at a later time.
-      # @option options [Integer] :repeat_interval Indicates the duration of silence that should space repeats of the rendered document.
-      # @option options [Integer] :repeat_times Indicates the number of times the output should be played.
-      # @option options [Integer] :max_time Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
-      #
-      # @return [Command::Output] an Rayo "output" command
-      #
-      # @example
-      #   output :render_document => {:content => RubySpeech::SSML.draw }
-      #
-      #   returns:
-      #     <output xmlns="urn:xmpp:rayo:output:1">Hello brown cow.</output>
-      #
-      def self.new(options = {})
-        super().tap do |new_node|
-          case options
-          when Hash
-            options.each_pair { |k,v| new_node.send :"#{k}=", v }
-          when Nokogiri::XML::Element
-            new_node.inherit options
+      class Document < RayoNode
+        SSML_CONTENT_TYPE = 'application/ssml+xml'
+
+        # @return [String] the URL from which the fetch the grammar
+        attribute :url
+
+        # @return [String] the document content type
+        attribute :content_type, String, default: ->(grammar, attribute) { grammar.url ? nil : SSML_CONTENT_TYPE }
+
+        # @return [String, RubySpeech::SSML::Speak, Array] the document
+        attribute :value
+
+        def inherit(xml_node)
+          super
+          self.value = if ssml?
+            RubySpeech::SSML.import xml_node.content
+          elsif urilist?
+            xml_node.content.strip.split("\n").map(&:strip)
+          else
+            xml_node.content
           end
+          self
+        end
+
+        def rayo_attributes
+          {
+            'url' => url,
+            'content-type' => content_type
+          }
+        end
+
+        def xml_value
+          if ssml?
+            value.to_xml
+          elsif urilist?
+            value.join("\n")
+          elsif
+            value
+          end
+        end
+
+        private
+
+        def ssml?
+          content_type == SSML_CONTENT_TYPE
+        end
+
+        def urilist?
+          content_type == 'text/uri-list'
         end
       end
 
-      ##
+      def inherit(xml_node)
+        document_nodes = xml_node.xpath 'ns:document', ns: self.class.registered_ns
+        self.render_documents = document_nodes.to_a.map { |node| Document.from_xml node }
+        super
+      end
+
       # @return [String] the TTS voice to use
-      #
-      def voice
-        read_attr :voice
-      end
+      attribute :voice, String
 
-      ##
-      # @param [String] voice to use when rendering TTS
-      #
-      def voice=(voice)
-        write_attr :voice, voice
-      end
-
-      ##
       # @return [Symbol] input type on which to interrupt output
-      #
-      def interrupt_on
-        read_attr :'interrupt-on', :to_sym
-      end
+      attribute :interrupt_on, Symbol
 
-      ##
-      # @param [Symbol] other input type on which to interrupt output. May be :speech, :dtmf or :any
-      #
-      def interrupt_on=(other)
-        write_attr :'interrupt-on', other
-      end
-
-      ##
       # @return [Integer] Indicates some offset through which the output should be skipped before rendering begins.
-      #
-      def start_offset
-        read_attr :'start-offset', :to_i
-      end
+      attribute :start_offset, Integer
 
-      ##
-      # @param [Integer] other Indicates some offset through which the output should be skipped before rendering begins.
-      #
-      def start_offset=(other)
-        write_attr :'start-offset', other, :to_i
-      end
-
-      ##
       # @return [true, false] Indicates wether or not the component should be started in a paused state to be resumed at a later time.
-      #
-      def start_paused
-        read_attr(:'start-paused') == 'true'
-      end
+      attribute :start_paused, Boolean, default: false
 
-      ##
-      # @param [true, false] other Indicates wether or not the component should be started in a paused state to be resumed at a later time.
-      #
-      def start_paused=(other)
-        write_attr :'start-paused', other, :to_s
-      end
-
-      ##
       # @return [Integer] Indicates the duration of silence that should space repeats of the rendered document.
-      #
-      def repeat_interval
-        read_attr :'repeat-interval', :to_i
-      end
+      attribute :repeat_interval, Integer
 
-      ##
-      # @param [Integer] other Indicates the duration of silence that should space repeats of the rendered document.
-      #
-      def repeat_interval=(other)
-        write_attr :'repeat-interval', other, :to_i
-      end
-
-      ##
       # @return [Integer] Indicates the number of times the output should be played.
-      #
-      def repeat_times
-        read_attr :'repeat-times', :to_i
-      end
+      attribute :repeat_times, Integer
 
-      ##
-      # @param [Integer] other Indicates the number of times the output should be played.
-      #
-      def repeat_times=(other)
-        write_attr :'repeat-times', other, :to_i
-      end
-
-      ##
       # @return [Integer] Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
-      #
-      def max_time
-        read_attr :'max-time', :to_i
-      end
+      attribute :max_time, Integer
 
-      ##
-      # @param [Integer] other Indicates the maximum amount of time for which the output should be allowed to run before being terminated. Includes repeats.
-      #
-      def max_time=(other)
-        write_attr :'max-time', other, :to_i
-      end
-
-      ##
       # @return [String] the rendering engine requested by the component
-      #
-      def renderer
-        read_attr :renderer
+      attribute :renderer, String
+
+      def rayo_attributes
+        {
+          'voice' => voice,
+          'interrupt-on' => interrupt_on,
+          'start-offset' => start_offset,
+          'start-paused' => start_paused,
+          'repeat-interval' => repeat_interval,
+          'repeat-times' => repeat_times,
+          'max-time' => max_time,
+          'renderer' => renderer
+        }
       end
 
-      ##
-      # @param [String] the rendering engine to use with this component
-      #
-      def renderer=(renderer)
-        write_attr :renderer, renderer
+      def rayo_children(root)
+        render_documents.each do |render_document|
+          root.document(render_document.rayo_attributes.delete_if { |k,v| v.nil? }) do |xml|
+            xml.cdata render_document.xml_value
+          end
+        end
+        super
       end
 
-      def inspect_attributes
-        super + [:voice, :render_documents, :interrupt_on, :start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time, :renderer]
-      end
-
-      ##
       # @return [Document] the document to render
-      #
-      def render_documents
-        nodes = find 'ns:document', :ns => self.class.registered_ns
-        nodes.map { |node| Document.new node }
-      end
+      attribute :render_documents, Array[Document], default: []
 
       ##
       # @param [Hash] other
@@ -171,117 +122,8 @@ module Punchblock
         self.render_documents = [other].compact
       end
 
-      ##
-      # @param[Array<Hash>] others
-      # @see #render_document= for hash format
-      #
-      def render_documents=(others)
-        remove_children :document
-        others.each do |other|
-          document = Document.new(other) unless other.is_a?(Document)
-          self << document
-        end
-      end
-
       def ssml=(other)
-        self.render_document = {:value => other}
-      end
-
-      class Document < RayoNode
-        ##
-        # @param [Hash] options
-        # @option options [String] :content_type the document content type
-        # @option options [String] :value the output document
-        # @option options [String] :url the url from which to fetch the document
-        #
-        def self.new(options = {})
-          super(:document).tap do |new_node|
-            case options
-            when Nokogiri::XML::Node
-              new_node.inherit options
-            when Hash
-              new_node.content_type = options[:content_type]
-              new_node.value = options[:value]
-              new_node.url = options[:url]
-            end
-          end
-        end
-
-        ##
-        # @return [String] the URL from which the fetch the grammar
-        #
-        def url
-          read_attr 'url'
-        end
-
-        ##
-        # @param [String] other the URL from which the fetch the grammar
-        #
-        def url=(other)
-          write_attr 'url', other
-        end
-
-        ##
-        # @return [String] the document content type
-        #
-        def content_type
-          read_attr 'content-type'
-        end
-
-        ##
-        # @param [String] content_type Defaults to SSML
-        #
-        def content_type=(content_type)
-          return unless content_type
-          write_attr 'content-type', content_type
-        end
-
-        ##
-        # @return [String, RubySpeech::SSML::Speak, Array] the document
-        def value
-          return nil unless content.present?
-          if ssml?
-            RubySpeech::SSML.import content
-          elsif urilist?
-            content.strip.split("\n").map(&:strip)
-          else
-            content
-          end
-        end
-
-        ##
-        # @param [String, RubySpeech::SSML::Speak, Array] value the document
-        def value=(value)
-          return unless value
-          self.content_type = ssml_content_type unless self.content_type
-          if ssml? && !value.is_a?(RubySpeech::SSML::Element)
-            value = RubySpeech::SSML.import value
-          end
-          if urilist?
-            value = value.join("\n")
-          end
-          Nokogiri::XML::Builder.with(self) do |xml|
-            xml.cdata " #{value} "
-          end
-        end
-
-        def inspect_attributes # :nodoc:
-          [:url, :content_type, :value] + super
-        end
-
-        private
-
-        def ssml_content_type
-          'application/ssml+xml'
-        end
-
-        def ssml?
-          content_type == ssml_content_type
-        end
-
-        def urilist?
-          content_type == 'text/uri-list'
-        end
+        self.render_documents = [{:value => other}]
       end
 
       state_machine :state do
@@ -390,20 +232,8 @@ module Punchblock
       class Seek < CommandNode # :nodoc:
         register :seek, :output
 
-        def self.new(options = {})
-          super.tap do |new_node|
-            new_node.direction  = options[:direction]
-            new_node.amount     = options[:amount]
-          end
-        end
-
-        def direction=(other)
-          write_attr :direction, other
-        end
-
-        def amount=(other)
-          write_attr :amount, other
-        end
+        attribute :direction
+        attribute :amount
 
         def request!
           source.seeking!
@@ -413,6 +243,10 @@ module Punchblock
         def execute!
           source.stopped_seeking!
           super
+        end
+
+        def rayo_attributes
+          {'direction' => direction, 'amount' => amount}
         end
       end
 

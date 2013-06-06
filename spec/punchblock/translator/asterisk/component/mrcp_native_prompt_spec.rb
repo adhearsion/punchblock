@@ -190,13 +190,11 @@ module Punchblock
                           input 'Hello', mode: :speech
                           instance 'Hello'
                         end
-                      end
+                      end.root
                     end
 
                     it 'should send a match complete event' do
-                      expected_complete_reason = Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml,
-                        component_id: subject.id,
-                        target_call_id: mock_call.id
+                      expected_complete_reason = Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
 
                       mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
@@ -208,7 +206,7 @@ module Punchblock
                     let(:recog_completion_cause) { '001' }
 
                     it 'should send a nomatch complete event' do
-                      expected_complete_reason = Punchblock::Component::Input::Complete::NoMatch.new component_id: subject.id, target_call_id: mock_call.id
+                      expected_complete_reason = Punchblock::Component::Input::Complete::NoMatch.new
                       mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
                       original_command.complete_event(0.1).reason.should == expected_complete_reason
@@ -219,7 +217,7 @@ module Punchblock
                     let(:recog_completion_cause) { '002' }
 
                     it 'should send a nomatch complete event' do
-                      expected_complete_reason = Punchblock::Component::Input::Complete::NoInput.new component_id: subject.id, target_call_id: mock_call.id
+                      expected_complete_reason = Punchblock::Component::Input::Complete::NoInput.new
                       mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
                       original_command.complete_event(0.1).reason.should == expected_complete_reason

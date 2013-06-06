@@ -22,7 +22,6 @@ module Punchblock
   autoload :DeadActorSafety
   autoload :DisconnectedError
   autoload :HasHeaders
-  autoload :Header
   autoload :MediaNode
   autoload :ProtocolError
   autoload :RayoNode

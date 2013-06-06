@@ -6,7 +6,7 @@ module Punchblock
   module Component
     describe Output do
       it 'registers itself' do
-        RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should be == Output
+        RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should be == described_class
       end
 
       describe 'default values' do
@@ -81,6 +81,14 @@ module Punchblock
           end
 
           its(:render_documents) { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])] }
+
+          describe "exporting to Rayo" do
+            it "should export to XML that can be understood by its parser" do
+              puts subject.to_rayo.to_xml
+              new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
+              new_instance.render_documents.should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])]
+            end
+          end
         end
 
         context "with a nil document" do
@@ -94,6 +102,35 @@ module Punchblock
           subject { described_class.new }
 
           its(:render_documents) { should == [] }
+        end
+
+        describe "exporting to Rayo" do
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
+            new_instance.should be_instance_of described_class
+            new_instance.interrupt_on.should be == :speech
+            new_instance.start_offset.should be == 2000
+            new_instance.start_paused.should be == false
+            new_instance.repeat_interval.should be == 2000
+            new_instance.repeat_times.should be == 10
+            new_instance.max_time.should be == 30000
+            new_instance.voice.should be == 'allison'
+            new_instance.renderer.should be == 'swift'
+            new_instance.render_documents.should be == [Output::Document.new(:value => ssml_doc)]
+          end
+
+          it "should wrap the document value in CDATA" do
+            grammar_node = subject.to_rayo.at_xpath('ns:document', ns: described_class.registered_ns)
+            grammar_node.children.first.should be_a Nokogiri::XML::CDATA
+          end
+
+          it "should render to a parent node if supplied" do
+            doc = Nokogiri::XML::Document.new
+            parent = Nokogiri::XML::Node.new 'foo', doc
+            doc.root = parent
+            rayo_doc = subject.to_rayo(parent)
+            rayo_doc.should == parent
+          end
         end
       end
 
@@ -131,7 +168,7 @@ module Punchblock
           MESSAGE
         end
 
-        subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+        subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
         it { should be_instance_of Output }
 
@@ -174,38 +211,19 @@ module Punchblock
 
           its(:content_type) { should be == 'application/ssml+xml' }
 
-          let(:expected_message) { "<![CDATA[ #{ssml_doc} ]]>" }
-
-          it "should wrap SSML in CDATA" do
-            subject.child.to_xml.should be == expected_message.strip
-          end
-
           its(:value) { should be == ssml_doc }
 
           describe "comparison" do
-            let(:document2) { Output::Document.new :value => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>' }
-            let(:document3) { Output::Document.new :value => ssml_doc }
-            let(:document4) { Output::Document.new :value => ssml_doc(:normal) }
+            let(:document2) { Output::Document.new :value => ssml_doc }
+            let(:document3) { Output::Document.new :value => ssml_doc(:normal) }
 
             it { should be == document2 }
-            it { should be == document3 }
-            it { should_not be == document4 }
+            it { should_not be == document3 }
           end
         end
 
         describe 'with a urilist' do
           subject { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
-
-          let(:expected_message) do
-            <<-CONTENT
-<![CDATA[ http://example.com/hello.mp3
-http://example.com/goodbye.mp3 ]]>
-            CONTENT
-          end
-
-          it "should wrap list in CDATA" do
-            subject.child.to_xml.should be == expected_message.strip
-          end
 
           its(:value) { should be == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
 
@@ -225,18 +243,18 @@ http://example.com/goodbye.mp3 ]]>
         describe 'with a document reference by URL' do
           let(:url) { 'http://foo.com/bar.grxml' }
 
-          subject { Input::Grammar.new :url => url }
+          subject { Output::Document.new :url => url }
 
           its(:url)           { should be == url }
           its(:content_type)  { should be nil}
 
           describe "comparison" do
             it "should be the same with the same url" do
-              Input::Grammar.new(:url => url).should be == Input::Grammar.new(:url => url)
+              Output::Document.new(:url => url).should be == Output::Document.new(:url => url)
             end
 
             it "should be different with a different url" do
-              Input::Grammar.new(:url => url).should_not be == Input::Grammar.new(:url => 'http://doo.com/dah')
+              Output::Document.new(:url => url).should_not be == Output::Document.new(:url => 'http://doo.com/dah')
             end
           end
         end
@@ -244,7 +262,7 @@ http://example.com/goodbye.mp3 ]]>
 
       describe "actions" do
         let(:mock_client) { mock 'Client' }
-        let(:command) { Output.new :render_document => {:value => ssml_doc}, :voice => 'kate' }
+        let(:command) { described_class.new }
 
         before do
           command.component_id = 'abc123'
@@ -363,7 +381,7 @@ http://example.com/goodbye.mp3 ]]>
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Output that is not executing")
+              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Output that is new")
             end
           end
         end # #stop!
@@ -718,7 +736,7 @@ http://example.com/goodbye.mp3 ]]>
           MESSAGE
         end
 
-        subject { RayoNode.import(parse_stanza(stanza).root).reason }
+        subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
         it { should be_instance_of klass }
 
@@ -726,4 +744,4 @@ http://example.com/goodbye.mp3 ]]>
       end
     end
   end
-end # Punchblock
+end

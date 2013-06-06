@@ -1,17 +1,23 @@
 # encoding: utf-8
 
 require 'active_support/core_ext/class/attribute'
-require 'niceogiri'
+require 'virtus'
 
 module Punchblock
-  class RayoNode < Niceogiri::XML::Node
+  class RayoNode
+    include Virtus
+
     InvalidNodeError = Class.new Punchblock::Error
 
     @@registrations = {}
 
     class_attribute :registered_ns, :registered_name
 
-    attr_accessor :target_call_id, :target_mixer_name, :component_id, :domain, :connection, :client, :original_component
+    attribute :target_call_id
+    attribute :target_mixer_name
+    attribute :component_id
+
+    attr_accessor :domain, :connection, :client, :original_component
 
     # Register a new stanza class to a name and/or namespace
     #
@@ -42,12 +48,11 @@ module Punchblock
     # elements of the XML::Node
     # @param [XML::Node] node the node to import
     # @return the appropriate object based on the node name and namespace
-    def self.import(node, call_id = nil, component_id = nil)
-      node = Nokogiri::XML(node.to_xml).root if Punchblock.jruby?
+    def self.from_xml(node, call_id = nil, component_id = nil)
       ns = (node.namespace.href if node.namespace)
       klass = class_from_registration(node.element_name, ns)
       if klass && klass != self
-        klass.import node, call_id, component_id
+        klass.from_xml node, call_id, component_id
       else
         new.inherit node
       end.tap do |event|
@@ -56,27 +61,19 @@ module Punchblock
       end
     end
 
-    # Create a new Node object
-    #
-    # @param [String, nil] name the element name
-    # @param [XML::Document, nil] doc the document to attach the node to. If
-    # not provided one will be created
-    # @return a new object with the registered name and namespace
-    def self.new(name = registered_name, doc = nil)
-      raise InvalidNodeError, "Trying to create a new #{self} with no name" unless name
-      super name, doc, registered_ns
-    end
-
-    def inspect_attributes # :nodoc:
-      [:target_call_id, :component_id, :target_mixer_name]
+    def inherit(xml_node)
+      xml_node.attributes.each do |key, attr_node|
+        send "#{key.gsub('-', '_')}=", attr_node.value
+      end
+      self
     end
 
     def inspect
-      "#<#{self.class} #{inspect_attributes.map { |c| "#{c}=#{self.__send__(c).inspect rescue nil}" }.compact * ', '}>"
+      "#<#{self.class} #{to_hash.map { |k, v| "#{k}=#{v.inspect}" }.compact * ', '}>"
     end
 
-    def eql?(o, *fields)
-      super o, *(fields + inspect_attributes)
+    def ==(o)
+      o.is_a?(self.class) && self.attributes == o.attributes
     end
 
     ##
@@ -87,7 +84,27 @@ module Punchblock
       @source ||= original_component
     end
 
+    def rayo_attributes
+      {}
+    end
+
+    def rayo_children(root)
+    end
+
+    def to_rayo(parent = nil)
+      parent = parent.parent if parent.is_a?(Nokogiri::XML::Builder)
+      Nokogiri::XML::Builder.with(parent) do |xml|
+        xml.send(registered_name,
+          {xmlns: registered_ns}.merge(rayo_attributes.delete_if { |k,v| v.nil? })) do |root|
+          rayo_children root
+        end
+      end.doc.root
+    end
+
+    def to_xml
+      to_rayo.to_xml
+    end
+
     alias :to_s :inspect
-    alias :xmlns :namespace_href
   end
 end

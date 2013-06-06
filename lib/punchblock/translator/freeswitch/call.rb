@@ -145,8 +145,8 @@ module Punchblock
           options[:origination_caller_id_number] = "'#{cid_number}'" if cid_number.present?
           options[:origination_caller_id_name] = "'#{cid_name}'" if cid_name.present?
           options[:originate_timeout] = dial_command.timeout/1000 if dial_command.timeout
-          dial_command.headers.each do |header|
-            options["sip_h_#{header.name}"] = "'#{header.value}'"
+          dial_command.headers.each do |name, value|
+            options["sip_h_#{name}"] = "'#{value}'"
           end
           opts = options.inject([]) do |a, (k, v)|
             a << "#{k}=#{v}"
@@ -245,13 +245,13 @@ module Punchblock
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
           translator.deregister_call current_actor
-          after(5) { terminate }
+          terminate
         end
 
         def execute_component(type, command, *execute_args)
           type.new_link(command, current_actor).tap do |component|
             register_component component
-            component.async.execute(*execute_args)
+            component.execute(*execute_args)
           end
         end
 

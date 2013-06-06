@@ -72,7 +72,6 @@ module Punchblock
           before do
             call.stub answered?: true, execute_agi_command: true
             original_command.request!
-            output_command.request!
           end
 
           def ami_event_for_dtmf(digit, position)

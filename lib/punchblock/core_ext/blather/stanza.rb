@@ -8,7 +8,7 @@ module Blather
     #
     def rayo_node
       first_child = at_xpath '*'
-      Punchblock::RayoNode.import first_child, nil, component_id if first_child
+      Punchblock::RayoNode.from_xml first_child, nil, component_id if first_child
     rescue Punchblock::RayoNode::InvalidNodeError
       nil
     end

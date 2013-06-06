@@ -89,9 +89,7 @@ module Punchblock
                 end
 
                 let :expected_event do
-                  Punchblock::Component::Input::Complete::Match.new :nlsml => expected_nlsml,
-                    :component_id => subject.id,
-                    :target_call_id => call.id
+                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
                 end
 
                 it "should send a success complete event with the relevant data" do
@@ -111,8 +109,7 @@ module Punchblock
                 end
 
                 let :expected_event do
-                  Punchblock::Component::Input::Complete::NoMatch.new :component_id => subject.id,
-                                                                      :target_call_id => call.id
+                  Punchblock::Component::Input::Complete::NoMatch.new
                 end
 
                 it "should send a nomatch complete event" do
@@ -201,9 +198,7 @@ module Punchblock
                 end
 
                 let :expected_event do
-                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml,
-                    component_id: subject.id,
-                    target_call_id: call.id
+                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
                 end
 
                 context "when encountered with a match" do
@@ -229,8 +224,7 @@ module Punchblock
                   end
 
                   let :expected_event do
-                    Punchblock::Component::Input::Complete::NoMatch.new component_id: subject.id,
-                      target_call_id: call.id
+                    Punchblock::Component::Input::Complete::NoMatch.new
                   end
 
                   it "should send a nomatch complete event with the relevant data" do
@@ -245,8 +239,7 @@ module Punchblock
                   end
 
                   let :expected_event do
-                    Punchblock::Component::Input::Complete::NoMatch.new component_id: subject.id,
-                      target_call_id: call.id
+                    Punchblock::Component::Input::Complete::NoMatch.new
                   end
 
                   it "should send a nomatch complete event with the relevant data" do
@@ -360,7 +353,7 @@ module Punchblock
                           instance "dtmf-1 dtmf-1"
                           input '11', mode: :dtmf
                         end
-                      end
+                      end.root
                     end
 
                     it "should fire a match on timeout" do

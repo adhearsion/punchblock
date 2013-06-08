@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v1.9.4](https://github.com/adhearsion/punchblock/compare/v1.9.3...v1.9.4) - [2013-06-08](https://rubygems.org/gems/punchblock/versions/1.9.4)
   * Bugfix: Finish more setup before sending output ref on Asterisk
   * Bugfix: Allow early media TTS on Asterisk in addition to audio playback
   * Bugfix: Correctly mark Asterisk calls as answered after successfully executing an answer command

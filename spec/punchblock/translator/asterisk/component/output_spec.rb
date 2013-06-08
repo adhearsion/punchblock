@@ -31,7 +31,7 @@ module Punchblock
           subject { Output.new original_command, mock_call }
 
           def expect_answered(value = true)
-            mock_call.should_receive(:answered?).at_least(:once).and_return(value)
+            mock_call.stub(:answered?).and_return(value)
           end
 
           describe '#execute' do
@@ -70,6 +70,8 @@ module Punchblock
                 prefix + base_doc + postfix
               end
 
+              before { expect_answered }
+
               it "should execute Swift" do
                 mock_call.should_receive(:execute_agi_command).once.with 'EXEC Swift', ssml_with_options
                 subject.execute
@@ -92,6 +94,16 @@ module Punchblock
                 end
               end
 
+              context "when the call is not answered" do
+                before { expect_answered false }
+
+                it "should send progress" do
+                  mock_call.should_receive(:send_progress)
+                  mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                  subject.execute
+                end
+              end
+
               describe 'interrupt_on' do
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
@@ -104,7 +116,6 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should add the interrupt options to the argument" do
-                    expect_answered
                     mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
                     subject.execute
                   end
@@ -113,7 +124,6 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should add the interrupt options to the argument" do
-                    expect_answered
                     mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
                     subject.execute
                   end
@@ -174,6 +184,8 @@ module Punchblock
                 end.and_return code: 200, result: 1
               end
 
+              before { expect_answered }
+
               it "should execute MRCPSynth" do
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, '').and_return code: 200, result: 1
                 subject.execute
@@ -209,6 +221,16 @@ module Punchblock
                   complete_reason = original_command.complete_event(0.1).reason
                   complete_reason.should be_a Punchblock::Event::Complete::Error
                   complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                end
+              end
+
+              context "when the call is not answered" do
+                before { expect_answered false }
+
+                it "should send progress" do
+                  mock_call.should_receive(:send_progress)
+                  mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                  subject.execute
                 end
               end
 
@@ -348,7 +370,6 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should pass the i option to MRCPSynth" do
-                    expect_answered
                     expect_mrcpsynth_with_options(/i=any/)
                     subject.execute
                   end
@@ -357,7 +378,6 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should pass the i option to MRCPSynth" do
-                    expect_answered
                     expect_mrcpsynth_with_options(/i=any/)
                     subject.execute
                   end

@@ -929,6 +929,12 @@ module Punchblock
               command.response(0.5).should be true
             end
 
+            it "should be answered" do
+              subject.wrapped_object.should_receive(:execute_agi_command)
+              subject.execute_command command
+              subject.should be_answered
+            end
+
             context "when the AMI commannd raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
@@ -938,6 +944,11 @@ module Punchblock
               it "should return an error with the message" do
                 subject.execute_command command
                 command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              it "should not be answered" do
+                subject.execute_command command
+                subject.should_not be_answered
               end
 
               context "with message 'No such channel'" do

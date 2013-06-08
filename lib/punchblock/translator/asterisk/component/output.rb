@@ -53,9 +53,11 @@ module Punchblock
               opts = early ? "#{path},noanswer" : path
               @call.execute_agi_command 'EXEC Playback', opts
             when :unimrcp
+              @call.send_progress if early
               send_ref
               @call.execute_agi_command 'EXEC MRCPSynth', escape_commas(escaped_doc), mrcpsynth_options
             when :swift
+              @call.send_progress if early
               send_ref
               @call.execute_agi_command 'EXEC Swift', swift_doc
             else

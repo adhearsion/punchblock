@@ -39,8 +39,6 @@ module Punchblock
 
               path = filenames.join '&'
 
-              send_ref
-
               @call.send_progress if early
 
               if interrupt
@@ -49,6 +47,8 @@ module Punchblock
                   output_component.stop_by_redirect Punchblock::Component::Output::Complete::Success.new
                 end
               end
+
+              send_ref
 
               opts = early ? "#{path},noanswer" : path
               @call.execute_agi_command 'EXEC Playback', opts

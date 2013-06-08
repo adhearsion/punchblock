@@ -181,6 +181,7 @@ module Punchblock
             end
           when Command::Answer
             execute_agi_command 'ANSWER'
+            @answered = true
             command.response = true
           when Command::Hangup
             send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16

@@ -322,6 +322,8 @@ module Punchblock
             end
 
             it "should not allow commands to be executed while components are shutting down" do
+              call_id = subject.id
+
               subject.stub :send_progress
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
@@ -333,7 +335,7 @@ module Punchblock
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
               comp_command.request!
               subject.execute_command comp_command
-              comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+              comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
             end
 
             context "with an undefined cause" do

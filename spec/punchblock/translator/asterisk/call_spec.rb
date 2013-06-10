@@ -37,26 +37,26 @@ module Punchblock
 
         let :sip_headers do
           {
-            :x_agi_request      => 'async',
-            :x_agi_channel      => 'SIP/1234-00000000',
-            :x_agi_language     => 'en',
-            :x_agi_type         => 'SIP',
-            :x_agi_uniqueid     => '1320835995.0',
-            :x_agi_version      => '1.8.4.1',
-            :x_agi_callerid     => '5678',
-            :x_agi_calleridname => 'Jane Smith',
-            :x_agi_callingpres  => '0',
-            :x_agi_callingani2  => '0',
-            :x_agi_callington   => '0',
-            :x_agi_callingtns   => '0',
-            :x_agi_dnid         => 'unknown',
-            :x_agi_rdnis        => 'unknown',
-            :x_agi_context      => 'default',
-            :x_agi_extension    => '1000',
-            :x_agi_priority     => '1',
-            :x_agi_enhanced     => '0.0',
-            :x_agi_accountcode  => '',
-            :x_agi_threadid     => '4366221312'
+            'X-agi_request'      => 'async',
+            'X-agi_channel'      => 'SIP/1234-00000000',
+            'X-agi_language'     => 'en',
+            'X-agi_type'         => 'SIP',
+            'X-agi_uniqueid'     => '1320835995.0',
+            'X-agi_version'      => '1.8.4.1',
+            'X-agi_callerid'     => '5678',
+            'X-agi_calleridname' => 'Jane Smith',
+            'X-agi_callingpres'  => '0',
+            'X-agi_callingani2'  => '0',
+            'X-agi_callington'   => '0',
+            'X-agi_callingtns'   => '0',
+            'X-agi_dnid'         => 'unknown',
+            'X-agi_rdnis'        => 'unknown',
+            'X-agi_context'      => 'default',
+            'X-agi_extension'    => '1000',
+            'X-agi_priority'     => '1',
+            'X-agi_enhanced'     => '0.0',
+            'X-agi_accountcode'  => '',
+            'X-agi_threadid'     => '4366221312'
           }
         end
 

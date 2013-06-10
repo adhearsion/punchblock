@@ -319,7 +319,7 @@ module Punchblock
 
         def sip_headers
           agi_env.to_a.inject({}) do |accumulator, element|
-            accumulator[('x_' + element[0].to_s).to_sym] = element[1] || ''
+            accumulator['X-' + element[0].to_s] = element[1] || ''
             accumulator
           end
         end

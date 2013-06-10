@@ -37,6 +37,22 @@ module Punchblock
 
           its(:headers) { should == {} }
         end
+
+        context "with multiple headers of the same name" do
+          let :stanza do
+            <<-MESSAGE
+<offer xmlns='urn:xmpp:rayo:1'
+    to='tel:+18003211212'
+    from='tel:+13058881212'>
+  <!-- Signaling (e.g. SIP) Headers -->
+  <header name="X-skill" value="sales" />
+  <header name="X-skill" value="complaints" />
+</offer>
+            MESSAGE
+          end
+
+          its(:headers) { should == {'X-skill' => ['sales', 'complaints']} }
+        end
       end
 
       describe "when setting options in initializer" do

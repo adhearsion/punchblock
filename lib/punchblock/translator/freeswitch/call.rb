@@ -14,9 +14,10 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON = Hash.new :error
 
         HANGUP_CAUSE_TO_END_REASON['USER_BUSY'] = :busy
+        HANGUP_CAUSE_TO_END_REASON['MANAGER_REQUEST'] = :hangup_command
 
         %w{
-          NORMAL_CLEARING ORIGINATOR_CANCEL SYSTEM_SHUTDOWN MANAGER_REQUEST
+          NORMAL_CLEARING ORIGINATOR_CANCEL SYSTEM_SHUTDOWN
           BLIND_TRANSFER ATTENDED_TRANSFER PICKED_OFF NORMAL_UNSPECIFIED
         }.each { |c| HANGUP_CAUSE_TO_END_REASON[c] = :hangup }
 
@@ -222,7 +223,7 @@ module Punchblock
           end
         end
 
-        def hangup(reason = 'NORMAL_CLEARING')
+        def hangup(reason = 'MANAGER_REQUEST')
           sendmsg :call_command => 'hangup', :hangup_cause => reason
         end
 

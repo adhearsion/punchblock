@@ -336,6 +336,23 @@ module Punchblock
               comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
             end
 
+            context "after processing a hangup command" do
+              let(:command) { Command::Hangup.new }
+
+              before do
+                command.request!
+                subject.execute_command command
+              end
+
+              it 'should send an end (hangup_command) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hangup_command,
+                                                                :target_call_id  => subject.id
+                translator.should_receive(:handle_pb_event).with expected_end_event
+
+                subject.process_ami_event ami_event
+              end
+            end
+
             context "with an undefined cause" do
               let(:cause)     { '0' }
               let(:cause_txt) { 'Undefined' }

@@ -36,6 +36,7 @@ module Punchblock
           @progress_sent = false
           @block_commands = false
           @channel_variables = {}
+          @hangup_cause = nil
         end
 
         def register_component(component)
@@ -111,7 +112,8 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
-            handle_hangup_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
+            cause = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
+            handle_hangup_event cause
           when 'AsyncAGI'
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
@@ -186,6 +188,7 @@ module Punchblock
             command.response = true
           when Command::Hangup
             send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
+            @hangup_cause = :hangup_command
             command.response = true
           when Command::Join
             other_call = translator.call_with_id command.call_id

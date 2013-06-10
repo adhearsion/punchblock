@@ -374,7 +374,6 @@ module Punchblock
               'NORMAL_CLEARING',
               'ORIGINATOR_CANCEL',
               'SYSTEM_SHUTDOWN',
-              'MANAGER_REQUEST',
               'BLIND_TRANSFER',
               'ATTENDED_TRANSFER',
               'PICKED_OFF',
@@ -389,6 +388,17 @@ module Punchblock
                   translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.handle_es_event es_event
                 end
+              end
+            end
+
+            context "with a MANAGER_REQUEST cause" do
+              let(:cause) { 'MANAGER_REQUEST' }
+
+              it 'should send an end (hangup-command) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason         => :hangup_command,
+                                                                :target_call_id => subject.id
+                translator.should_receive(:handle_pb_event).with expected_end_event
+                subject.handle_es_event es_event
               end
             end
 
@@ -738,7 +748,7 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a hangup message and set the command's response" do
-              expect_hangup_with_reason 'NORMAL_CLEARING'
+              expect_hangup_with_reason 'MANAGER_REQUEST'
               subject.execute_command command
               command.response(0.5).should be true
             end

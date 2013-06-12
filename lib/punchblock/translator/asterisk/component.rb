@@ -7,8 +7,12 @@ module Punchblock
         extend ActiveSupport::Autoload
 
         autoload :Asterisk
+        autoload :ComposedPrompt
         autoload :Input
         autoload :Output
+        autoload :MRCPPrompt
+        autoload :MRCPNativePrompt
+        autoload :MRCPRecogPrompt
         autoload :Record
         autoload :StopByRedirect
 
@@ -73,7 +77,7 @@ module Punchblock
           end
 
           def send_ref
-            set_node_response Ref.new :id => id
+            set_node_response Ref.new uri: id
           end
 
           def with_error(name, text)

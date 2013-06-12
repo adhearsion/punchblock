@@ -356,7 +356,7 @@ module Punchblock
 
             it "should cause all components to send complete events before sending end event" do
               ssml_doc = RubySpeech::SSML.draw { audio { 'foo.wav' } }
-              comp_command = Punchblock::Component::Output.new :ssml => ssml_doc
+              comp_command = Punchblock::Component::Output.new :render_document => {:value => ssml_doc}
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
@@ -374,7 +374,6 @@ module Punchblock
               'NORMAL_CLEARING',
               'ORIGINATOR_CANCEL',
               'SYSTEM_SHUTDOWN',
-              'MANAGER_REQUEST',
               'BLIND_TRANSFER',
               'ATTENDED_TRANSFER',
               'PICKED_OFF',
@@ -389,6 +388,17 @@ module Punchblock
                   translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.handle_es_event es_event
                 end
+              end
+            end
+
+            context "with a MANAGER_REQUEST cause" do
+              let(:cause) { 'MANAGER_REQUEST' }
+
+              it 'should send an end (hangup-command) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason         => :hangup_command,
+                                                                :target_call_id => subject.id
+                translator.should_receive(:handle_pb_event).with expected_end_event
+                subject.handle_es_event es_event
               end
             end
 
@@ -598,7 +608,7 @@ module Punchblock
             let :expected_joined do
               Punchblock::Event::Joined.new.tap do |joined|
                 joined.target_call_id = subject.id
-                joined.call_id = other_call_id
+                joined.call_uri = other_call_id
               end
             end
 
@@ -639,7 +649,7 @@ module Punchblock
             let :expected_unjoined do
               Punchblock::Event::Unjoined.new.tap do |joined|
                 joined.target_call_id = subject.id
-                joined.call_id = other_call_id
+                joined.call_uri = other_call_id
               end
             end
 
@@ -738,7 +748,7 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a hangup message and set the command's response" do
-              expect_hangup_with_reason 'NORMAL_CLEARING'
+              expect_hangup_with_reason 'MANAGER_REQUEST'
               subject.execute_command command
               command.response(0.5).should be true
             end
@@ -888,10 +898,10 @@ module Punchblock
 
             context "for a component which began executing but crashed" do
               let :component_command do
-                Punchblock::Component::Output.new :ssml => RubySpeech::SSML.draw
+                Punchblock::Component::Output.new :render_document => {:value => RubySpeech::SSML.draw}
               end
 
-              let(:comp_id) { component_command.response.id }
+              let(:comp_id) { component_command.response.uri }
 
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 
@@ -951,7 +961,7 @@ module Punchblock
             let(:other_call_id) { Punchblock.new_uuid }
 
             let :command do
-              Punchblock::Command::Join.new :call_id => other_call_id
+              Punchblock::Command::Join.new :call_uri => other_call_id
             end
 
             it "executes the proper uuid_bridge command" do
@@ -983,7 +993,7 @@ module Punchblock
             let(:other_call_id) { Punchblock.new_uuid }
 
             let :command do
-              Punchblock::Command::Unjoin.new :call_id => other_call_id
+              Punchblock::Command::Unjoin.new :call_uri => other_call_id
             end
 
             it "executes the unjoin via transfer to park" do

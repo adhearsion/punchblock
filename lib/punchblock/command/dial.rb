@@ -31,14 +31,12 @@ module Punchblock
       end
 
       def rayo_children(root)
-        if join
-          root.join(join.rayo_attributes.delete_if { |k,v| v.nil? })
-        end
+        join.to_rayo(root.parent) if join
         super
       end
 
       def response=(other)
-        @target_call_id = other.id if other.is_a?(Ref)
+        @target_call_id = other.uri if other.is_a?(Ref)
         super
       end
     end

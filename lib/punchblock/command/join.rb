@@ -8,7 +8,7 @@ module Punchblock
       VALID_DIRECTIONS = [:duplex, :send, :recv].freeze
 
       # @return [String] the call ID to join
-      attribute :call_id
+      attribute :call_uri
 
       # @return [String] the mixer name to join
       attribute :mixer_name
@@ -27,7 +27,7 @@ module Punchblock
 
       def rayo_attributes
         {
-          'call-id' => call_id,
+          'call-uri' => call_uri,
           'mixer-name' => mixer_name,
           'direction' => direction,
           'media' => media

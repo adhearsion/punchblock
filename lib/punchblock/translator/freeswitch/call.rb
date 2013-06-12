@@ -14,9 +14,10 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON = Hash.new :error
 
         HANGUP_CAUSE_TO_END_REASON['USER_BUSY'] = :busy
+        HANGUP_CAUSE_TO_END_REASON['MANAGER_REQUEST'] = :hangup_command
 
         %w{
-          NORMAL_CLEARING ORIGINATOR_CANCEL SYSTEM_SHUTDOWN MANAGER_REQUEST
+          NORMAL_CLEARING ORIGINATOR_CANCEL SYSTEM_SHUTDOWN
           BLIND_TRANSFER ATTENDED_TRANSFER PICKED_OFF NORMAL_UNSPECIFIED
         }.each { |c| HANGUP_CAUSE_TO_END_REASON[c] = :hangup }
 
@@ -91,16 +92,16 @@ module Punchblock
             command = @pending_joins[event[:other_leg_unique_id]]
             command.response = true if command
 
-            other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
-            send_pb_event Event::Joined.new(:call_id => other_call_id)
+            other_call_uri = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
+            send_pb_event Event::Joined.new(:call_uri => other_call_uri)
           end
 
           register_handler :es, :event_name => 'CHANNEL_UNBRIDGE' do |event|
             command = @pending_unjoins[event[:other_leg_unique_id]]
             command.response = true if command
 
-            other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
-            send_pb_event Event::Unjoined.new(:call_id => other_call_id)
+            other_call_uri = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
+            send_pb_event Event::Unjoined.new(:call_uri => other_call_uri)
           end
 
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
@@ -154,7 +155,7 @@ module Punchblock
 
           stream.bgapi "originate {#{opts}}#{dial_command.to} &park()"
 
-          dial_command.response = Ref.new :id => id
+          dial_command.response = Ref.new uri: id
         end
 
         def outbound?
@@ -195,10 +196,10 @@ module Punchblock
             hangup
             command.response = true
           when Command::Join
-            @pending_joins[command.call_id] = command
-            uuid_foo :bridge, command.call_id
+            @pending_joins[command.call_uri] = command
+            uuid_foo :bridge, command.call_uri
           when Command::Unjoin
-            @pending_unjoins[command.call_id] = command
+            @pending_unjoins[command.call_uri] = command
             uuid_foo :transfer, '-both park inline'
           when Command::Reject
             hangup REJECT_TO_HANGUP_REASON[command.reason]
@@ -222,7 +223,7 @@ module Punchblock
           end
         end
 
-        def hangup(reason = 'NORMAL_CLEARING')
+        def hangup(reason = 'MANAGER_REQUEST')
           sendmsg :call_command => 'hangup', :hangup_cause => reason
         end
 

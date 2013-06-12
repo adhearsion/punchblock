@@ -27,7 +27,7 @@ module Punchblock
               let(:component_id) { Punchblock.new_uuid }
 
               let :expected_response do
-                Ref.new :id => component_id
+                Ref.new uri: component_id
               end
 
               before { stub_uuids component_id }

@@ -50,6 +50,16 @@ module Punchblock
             rayo_doc = subject.to_rayo(parent)
             rayo_doc.should == parent
           end
+
+          context "with multiple headers of the same name" do
+            subject { described_class.new headers: { 'X-skill' => ['sales', 'complaints'] } }
+
+            it "should export to XML that can be understood by its parser" do
+              new_instance = RayoNode.from_xml subject.to_rayo
+              new_instance.should be_instance_of described_class
+              new_instance.headers.should == { 'X-skill' => ['sales', 'complaints'] }
+            end
+          end
         end
       end
     end

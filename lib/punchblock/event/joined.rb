@@ -6,7 +6,7 @@ module Punchblock
       register :joined, :core
 
       # @return [String] the call ID that was joined
-      attribute :call_id
+      attribute :call_uri
 
       # @return [String] the mixer name that was joined
       attribute :mixer_name

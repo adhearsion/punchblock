@@ -10,16 +10,16 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        subject { Unjoin.new :call_id => 'abc123', :mixer_name => 'blah' }
+        subject { Unjoin.new :call_uri => 'abc123', :mixer_name => 'blah' }
 
-        its(:call_id)     { should be == 'abc123' }
+        its(:call_uri)    { should be == 'abc123' }
         its(:mixer_name)  { should be == 'blah' }
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
             new_instance.should be_instance_of described_class
-            new_instance.call_id.should == 'abc123'
+            new_instance.call_uri.should == 'abc123'
             new_instance.mixer_name.should == 'blah'
           end
 
@@ -32,10 +32,10 @@ module Punchblock
           end
 
           context "when attributes are not set" do
-            subject { described_class.new call_id: 'abc123' }
+            subject { described_class.new call_uri: 'abc123' }
 
             it "should not include them in the XML representation" do
-              subject.to_rayo['call-id'].should == 'abc123'
+              subject.to_rayo['call-uri'].should == 'abc123'
               subject.to_rayo['mixer-name'].should be_nil
             end
           end
@@ -46,7 +46,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <unjoin xmlns="urn:xmpp:rayo:1"
-      call-id="abc123"
+      call-uri="abc123"
       mixer-name="blah" />
           MESSAGE
         end
@@ -55,7 +55,7 @@ module Punchblock
 
         it { should be_instance_of described_class }
 
-        its(:call_id)     { should be == 'abc123' }
+        its(:call_uri)    { should be == 'abc123' }
         its(:mixer_name)  { should be == 'blah' }
       end
     end

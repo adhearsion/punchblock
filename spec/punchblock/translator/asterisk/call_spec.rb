@@ -296,7 +296,6 @@ module Punchblock
             it "should cause the actor to be terminated" do
               translator.should_receive(:handle_pb_event).twice
               subject.process_ami_event ami_event
-              sleep 5.5
               subject.should_not be_alive
             end
 
@@ -308,7 +307,7 @@ module Punchblock
 
             it "should cause all components to send complete events before sending end event" do
               subject.stub :send_progress
-              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar root="foo"><rule id="foo"/></grammar>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
@@ -325,17 +324,34 @@ module Punchblock
               call_id = subject.id
 
               subject.stub :send_progress
-              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar root="foo"><rule id="foo"/></grammar>'}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
 
               subject.async.process_ami_event ami_event
 
-              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar root="foo"><rule id="foo"/></grammar>'}, :mode => :dtmf
               comp_command.request!
               subject.execute_command comp_command
               comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+            end
+
+            context "after processing a hangup command" do
+              let(:command) { Command::Hangup.new }
+
+              before do
+                command.request!
+                subject.execute_command command
+              end
+
+              it 'should send an end (hangup_command) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hangup_command,
+                                                                :target_call_id  => subject.id
+                translator.should_receive(:handle_pb_event).with expected_end_event
+
+                subject.process_ami_event ami_event
+              end
             end
 
             context "with an undefined cause" do
@@ -623,7 +639,7 @@ module Punchblock
 
               let(:other_call_id) { other_call.id }
               let :command do
-                Punchblock::Command::Join.new :call_id => other_call_id
+                Punchblock::Command::Join.new call_uri: other_call_id
               end
 
               before do
@@ -706,7 +722,7 @@ module Punchblock
               let :expected_joined do
                 Punchblock::Event::Joined.new.tap do |joined|
                   joined.target_call_id = subject.id
-                  joined.call_id = other_call_id
+                  joined.call_uri = other_call_id
                 end
               end
 
@@ -727,7 +743,7 @@ module Punchblock
               let :expected_unjoined do
                 Punchblock::Event::Unjoined.new.tap do |joined|
                   joined.target_call_id = subject.id
-                  joined.call_id = other_call_id
+                  joined.call_uri = other_call_id
                 end
               end
 
@@ -781,7 +797,7 @@ module Punchblock
             let :expected_unjoined do
               Punchblock::Event::Unjoined.new.tap do |joined|
                 joined.target_call_id = subject.id
-                joined.call_id = other_call_id
+                joined.call_uri = other_call_id
               end
             end
 
@@ -1037,6 +1053,81 @@ module Punchblock
             end
           end
 
+          context 'with a Prompt component' do
+            def grxml_doc(mode = :dtmf)
+              RubySpeech::GRXML.draw :mode => mode.to_s, :root => 'digits' do
+                rule id: 'digits' do
+                  one_of do
+                    0.upto(1) { |d| item { d.to_s } }
+                  end
+                end
+              end
+            end
+
+            let :command do
+              Punchblock::Component::Prompt.new(
+                {
+                  render_document: {
+                    content_type: 'text/uri-list',
+                    value: ['http://example.com/hello.mp3']
+                  },
+                  renderer: renderer
+                },
+                {
+                  grammar: {
+                    value: grxml_doc,
+                    content_type: 'application/srgs+xml'
+                  },
+                  recognizer: recognizer
+                })
+            end
+
+            let(:mock_action) { Translator::Asterisk::Component::MRCPPrompt.new(command, subject) }
+
+            context "when the recognizer is unimrcp and the renderer is unimrcp" do
+              let(:recognizer)  { :unimrcp }
+              let(:renderer)    { :unimrcp }
+
+              it 'should create an MRCPPrompt component and execute it asynchronously' do
+                Component::MRCPPrompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+                mock_action.async.should_receive(:execute).once
+                subject.execute_command command
+              end
+            end
+
+            context "when the recognizer is unimrcp and the renderer is asterisk" do
+              let(:recognizer)  { :unimrcp }
+              let(:renderer)    { :asterisk }
+
+              it 'should create an MRCPPrompt component and execute it asynchronously' do
+                Component::MRCPNativePrompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+                mock_action.async.should_receive(:execute).once
+                subject.execute_command command
+              end
+            end
+
+            context "when the recognizer is unimrcp and the renderer is something we can't compose with unimrcp" do
+              let(:recognizer)  { :unimrcp }
+              let(:renderer)    { :swift }
+
+              it 'should return an error' do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup(:invalid_command, "Invalid recognizer/renderer combination", subject.id)
+              end
+            end
+
+            context "when the recognizer is something other than unimrcp" do
+              let(:recognizer)  { :asterisk }
+              let(:renderer)    { :unimrcp }
+
+              it 'should create a ComposedPrompt component and execute it asynchronously' do
+                Component::ComposedPrompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+                mock_action.async.should_receive(:execute).once
+                subject.execute_command command
+              end
+            end
+          end
+
           context 'with a Record component' do
             let :command do
               Punchblock::Component::Record.new
@@ -1076,7 +1167,7 @@ module Punchblock
                 Punchblock::Component::Asterisk::AGI::Command.new :name => 'Wait'
               end
 
-              let(:comp_id) { component_command.response.id }
+              let(:comp_id) { component_command.response.uri }
 
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 
@@ -1154,7 +1245,7 @@ module Punchblock
             end
 
             let :command do
-              Punchblock::Command::Join.new :call_id => other_call_id
+              Punchblock::Command::Join.new call_uri: other_call_id
             end
 
             it "executes the proper dialplan Bridge application" do
@@ -1173,7 +1264,7 @@ module Punchblock
             end
 
             let :command do
-              Punchblock::Command::Unjoin.new :call_id => other_call_id
+              Punchblock::Command::Unjoin.new call_uri: other_call_id
             end
 
             it "executes the unjoin through redirection" do

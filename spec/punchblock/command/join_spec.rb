@@ -10,9 +10,9 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        subject { described_class.new :call_id => 'abc123', :mixer_name => 'blah', :direction => :duplex, :media => :bridge }
+        subject { described_class.new :call_uri => 'abc123', :mixer_name => 'blah', :direction => :duplex, :media => :bridge }
 
-        its(:call_id)     { should be == 'abc123' }
+        its(:call_uri)    { should be == 'abc123' }
         its(:mixer_name)  { should be == 'blah' }
         its(:direction)   { should be == :duplex }
         its(:media)       { should be == :bridge }
@@ -21,7 +21,7 @@ module Punchblock
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
             new_instance.should be_instance_of described_class
-            new_instance.call_id.should == 'abc123'
+            new_instance.call_uri.should == 'abc123'
             new_instance.mixer_name.should == 'blah'
             new_instance.direction.should == :duplex
             new_instance.media.should == :bridge
@@ -36,10 +36,10 @@ module Punchblock
           end
 
           context "when attributes are not set" do
-            subject { described_class.new call_id: 'abc123' }
+            subject { described_class.new call_uri: 'abc123' }
 
             it "should not include them in the XML representation" do
-              subject.to_rayo['call-id'].should == 'abc123'
+              subject.to_rayo['call-uri'].should == 'abc123'
               subject.to_rayo['mixer-name'].should be_nil
             end
           end
@@ -50,7 +50,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <join xmlns="urn:xmpp:rayo:1"
-      call-id="abc123"
+      call-uri="abc123"
       mixer-name="blah"
       direction="duplex"
       media="bridge" />
@@ -61,7 +61,7 @@ module Punchblock
 
         it { should be_instance_of described_class }
 
-        its(:call_id)     { should be == 'abc123' }
+        its(:call_uri)    { should be == 'abc123' }
         its(:mixer_name)  { should be == 'blah' }
         its(:direction)   { should be == :duplex }
         its(:media)       { should be == :bridge }
@@ -69,7 +69,7 @@ module Punchblock
         context "when no attributes are set" do
           let(:stanza) { '<join xmlns="urn:xmpp:rayo:1" />' }
 
-          its(:call_id)     { should be_nil }
+          its(:call_uri)    { should be_nil }
           its(:mixer_name)  { should be_nil }
           its(:direction)   { should be_nil }
           its(:media)       { should be_nil }

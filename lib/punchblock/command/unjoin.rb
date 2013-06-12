@@ -6,13 +6,13 @@ module Punchblock
       register :unjoin, :core
 
       # @return [String] the call ID to unjoin
-      attribute :call_id
+      attribute :call_uri
 
       # @return [String] the mixer name to unjoin
       attribute :mixer_name
 
       def rayo_attributes
-        {'call-id' => call_id, 'mixer-name' => mixer_name}
+        {'call-uri' => call_uri, 'mixer-name' => mixer_name}
       end
     end
   end

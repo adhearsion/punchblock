@@ -74,11 +74,17 @@ module Punchblock
                   sleep 0.5
                 end
 
+                let :expected_nlsml do
+                  RubySpeech::NLSML.draw do
+                    interpretation confidence: 1 do
+                      instance "dtmf-1 dtmf-2"
+                      input "12", mode: :dtmf
+                    end
+                  end
+                end
+
                 let :expected_event do
-                  Punchblock::Component::Input::Complete::Success.new :mode => :dtmf,
-                    :confidence => 1,
-                    :utterance => '12',
-                    :interpretation => 'dtmf-1 dtmf-2'
+                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
                 end
 
                 it "should send a success complete event with the relevant data" do
@@ -116,6 +122,15 @@ module Punchblock
                   original_command.response(0.1).should be == error
                 end
               end
+
+              context 'with multiple grammars' do
+                let(:original_command_opts) { { :grammars => [{:value => grammar}, {:value => grammar}] } }
+                it "should return an error and not execute any actions" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'Only a single grammar is supported.'
+                  original_command.response(0.1).should be == error
+                end
+              end
             end
 
             describe 'mode' do
@@ -137,8 +152,8 @@ module Punchblock
                 end
               end
 
-              context 'speech' do
-                let(:original_command_opts) { { :mode => :speech } }
+              context 'voice' do
+                let(:original_command_opts) { { :mode => :voice } }
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
@@ -164,7 +179,7 @@ module Punchblock
                   send_dtmf 1
                   sleep 1.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Success
+                  reason.should be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoInput complete event to be sent after the timeout" do
@@ -215,10 +230,10 @@ module Punchblock
                   send_dtmf 1
                   sleep 0.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Success
+                  reason.should be_a Punchblock::Component::Input::Complete::Match
                 end
 
-                it "should cause a NoMatch complete event to be sent after the timeout" do
+                it "should cause a InterDigitTimeout complete event to be sent after the timeout" do
                   subject.execute
                   sleep 1.5
                   send_dtmf 1

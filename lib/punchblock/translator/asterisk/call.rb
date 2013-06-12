@@ -11,6 +11,8 @@ module Punchblock
         extend ActorHasGuardedHandlers
         execute_guarded_handlers_on_receiver
 
+        InvalidCommandError = Class.new Punchblock::Error
+
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
@@ -34,6 +36,7 @@ module Punchblock
           @progress_sent = false
           @block_commands = false
           @channel_variables = {}
+          @hangup_cause = nil
         end
 
         def register_component(component)
@@ -79,7 +82,7 @@ module Punchblock
                                                                               :params => params
           originate_action.request!
           translator.async.execute_global_command originate_action
-          dial_command.response = Ref.new :id => id
+          dial_command.response = Ref.new uri: id
         end
 
         def outbound?
@@ -109,7 +112,8 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
-            handle_hangup_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
+            cause = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
+            handle_hangup_event cause
           when 'AsyncAGI'
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
@@ -135,23 +139,16 @@ module Punchblock
             if other_call = translator.call_for_channel(other_call_channel)
               event = case ami_event['Bridgestate']
               when 'Link'
-                Event::Joined.new.tap do |e|
-                  e.call_id = other_call.id
-                end
+                Event::Joined.new call_uri: other_call.id
               when 'Unlink'
-                Event::Unjoined.new.tap do |e|
-                  e.call_id = other_call.id
-                end
+                Event::Unjoined.new call_uri: other_call.id
               end
               send_pb_event event
             end
           when 'Unlink'
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
-              event = Event::Unjoined.new.tap do |e|
-                e.call_id = other_call.id
-              end
-              send_pb_event event
+              send_pb_event Event::Unjoined.new(call_uri: other_call.id)
             end
           when 'VarSet'
             @channel_variables[ami_event['Variable']] = ami_event['Value']
@@ -185,13 +182,14 @@ module Punchblock
             command.response = true
           when Command::Hangup
             send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
+            @hangup_cause = :hangup_command
             command.response = true
           when Command::Join
-            other_call = translator.call_with_id command.call_id
+            other_call = translator.call_with_id command.call_uri
             @pending_joins[other_call.channel] = command
             execute_agi_command 'EXEC Bridge', other_call.channel
           when Command::Unjoin
-            other_call = translator.call_with_id command.call_id
+            other_call = translator.call_with_id command.call_uri
             redirect_back other_call
             command.response = true
           when Command::Reject
@@ -213,11 +211,28 @@ module Punchblock
             execute_component Component::Output, command
           when Punchblock::Component::Input
             execute_component Component::Input, command
+          when Punchblock::Component::Prompt
+            component_class = case command.input.recognizer
+            when 'unimrcp'
+              case command.output.renderer
+              when 'unimrcp'
+                Component::MRCPPrompt
+              when 'asterisk'
+                Component::MRCPNativePrompt
+              else
+                raise InvalidCommandError, 'Invalid recognizer/renderer combination'
+              end
+            else
+              Component::ComposedPrompt
+            end
+            execute_component component_class, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        rescue InvalidCommandError => e
+          command.response = ProtocolError.new.setup :invalid_command, e.message, id
         rescue RubyAMI::Error => e
           command.response = case e.message
           when 'No such channel'

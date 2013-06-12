@@ -18,17 +18,18 @@ module Punchblock
         its(:max_time)         { should be nil }
         its(:voice)            { should be nil }
         its(:renderer)         { should be nil }
+        its(:render_documents) { should be == [] }
+      end
+
+      def ssml_doc(mode = :ordinal)
+        RubySpeech::SSML.draw do
+          say_as(:interpret_as => mode) { string '100' }
+        end
       end
 
       describe "when setting options in initializer" do
-        let(:ssml_doc) do
-          RubySpeech::SSML.draw do
-            audio(src: 'http://foo.com/bar.mp3')
-          end
-        end
-
         subject do
-          Output.new  :interrupt_on     => :speech,
+          Output.new  :interrupt_on     => :voice,
                       :start_offset     => 2000,
                       :start_paused     => false,
                       :repeat_interval  => 2000,
@@ -36,10 +37,10 @@ module Punchblock
                       :max_time         => 30000,
                       :voice            => 'allison',
                       :renderer         => 'swift',
-                      :ssml             => ssml_doc
+                      :render_document  => {:value => ssml_doc}
         end
 
-        its(:interrupt_on)     { should be == :speech }
+        its(:interrupt_on)     { should be == :voice }
         its(:start_offset)     { should be == 2000 }
         its(:start_paused)     { should be == false }
         its(:repeat_interval)  { should be == 2000 }
@@ -47,13 +48,67 @@ module Punchblock
         its(:max_time)         { should be == 30000 }
         its(:voice)            { should be == 'allison' }
         its(:renderer)         { should be == 'swift' }
-        its(:ssml)             { should be == ssml_doc }
+        its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc)] }
+
+        context "using #ssml=" do
+          subject do
+            Output.new :ssml => ssml_doc
+          end
+
+          its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc)] }
+        end
+
+        context "with multiple documents" do
+          subject do
+            Output.new :render_documents => [
+              {:value => ssml_doc},
+              {:value => ssml_doc(:cardinal)}
+            ]
+          end
+
+          its(:render_documents) { should be == [
+            Output::Document.new(:value => ssml_doc),
+            Output::Document.new(:value => ssml_doc(:cardinal))
+          ]}
+        end
+
+        context "with a urilist" do
+          subject do
+            Output.new render_document: {
+              content_type: 'text/uri-list',
+              value: ['http://example.com/hello.mp3']
+            }
+          end
+
+          its(:render_documents) { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])] }
+
+          describe "exporting to Rayo" do
+            it "should export to XML that can be understood by its parser" do
+              puts subject.to_rayo.to_xml
+              new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
+              new_instance.render_documents.should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])]
+            end
+          end
+        end
+
+        context "with a nil document" do
+          it "removes all documents" do
+            subject.render_document = nil
+            subject.render_documents.should == []
+          end
+        end
+
+        context "without any documents" do
+          subject { described_class.new }
+
+          its(:render_documents) { should == [] }
+        end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
             new_instance.should be_instance_of described_class
-            new_instance.interrupt_on.should be == :speech
+            new_instance.interrupt_on.should be == :voice
             new_instance.start_offset.should be == 2000
             new_instance.start_paused.should be == false
             new_instance.repeat_interval.should be == 2000
@@ -61,7 +116,12 @@ module Punchblock
             new_instance.max_time.should be == 30000
             new_instance.voice.should be == 'allison'
             new_instance.renderer.should be == 'swift'
-            new_instance.ssml.should be == ssml_doc
+            new_instance.render_documents.should be == [Output::Document.new(:value => ssml_doc)]
+          end
+
+          it "should wrap the document value in CDATA" do
+            grammar_node = subject.to_rayo.at_xpath('ns:document', ns: described_class.registered_ns)
+            grammar_node.children.first.should be_a Nokogiri::XML::CDATA
           end
 
           it "should render to a parent node if supplied" do
@@ -78,7 +138,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <output xmlns='urn:xmpp:rayo:output:1'
-        interrupt-on='speech'
+        interrupt-on='voice'
         start-offset='2000'
         start-paused='false'
         repeat-interval='2000'
@@ -86,57 +146,117 @@ module Punchblock
         max-time='30000'
         voice='allison'
         renderer='swift'>
-  <speak version="1.0"
-        xmlns="http://www.w3.org/2001/10/synthesis"
-        xml:lang="en-US">
-    <say-as interpret-as="ordinal">100</say-as>
-  </speak>
+  <document content-type="application/ssml+xml">
+    <![CDATA[
+      <speak version="1.0"
+            xmlns="http://www.w3.org/2001/10/synthesis"
+            xml:lang="en-US">
+        <say-as interpret-as="ordinal">100</say-as>
+      </speak>
+    ]]>
+  </document>
+  <document content-type="application/ssml+xml">
+    <![CDATA[
+      <speak version="1.0"
+            xmlns="http://www.w3.org/2001/10/synthesis"
+            xml:lang="en-US">
+        <say-as interpret-as="ordinal">100</say-as>
+      </speak>
+    ]]>
+  </document>
 </output>
           MESSAGE
-        end
-
-        def ssml_doc(mode = :ordinal)
-          RubySpeech::SSML.draw do
-            say_as(:interpret_as => mode) { string '100' }
-          end
         end
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
         it { should be_instance_of Output }
 
-        its(:interrupt_on)    { should be == :speech }
-        its(:start_offset)    { should be == 2000 }
-        its(:start_paused)    { should be == false }
-        its(:repeat_interval) { should be == 2000 }
-        its(:repeat_times)    { should be == 10 }
-        its(:max_time)        { should be == 30000 }
-        its(:voice)           { should be == 'allison' }
-        its(:renderer)        { should be == 'swift' }
-        its(:ssml)            { should be == ssml_doc }
+        its(:interrupt_on)     { should be == :voice }
+        its(:start_offset)     { should be == 2000 }
+        its(:start_paused)     { should be == false }
+        its(:repeat_interval)  { should be == 2000 }
+        its(:repeat_times)     { should be == 10 }
+        its(:max_time)         { should be == 30000 }
+        its(:voice)            { should be == 'allison' }
+        its(:renderer)         { should be == 'swift' }
+        its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc), Output::Document.new(:value => ssml_doc)] }
+
+        context "with a urilist" do
+          let :stanza do
+            <<-MESSAGE
+<output xmlns='urn:xmpp:rayo:output:1'>
+  <document content-type="text/uri-list">
+    <![CDATA[
+      http://example.com/hello.mp3
+      http://example.com/goodbye.mp3
+    ]]>
+  </document>
+</output>
+            MESSAGE
+          end
+
+          its(:render_documents) { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'])] }
+        end
       end
 
-      describe "for SSML" do
-        def ssml_doc(mode = :ordinal)
-          RubySpeech::SSML.draw do
-            say_as(:interpret_as => mode) { string '100' }
+      describe Output::Document do
+        describe "when not passing a content type" do
+          subject { Output::Document.new :value => ssml_doc }
+          its(:content_type) { should be == 'application/ssml+xml' }
+        end
+
+        describe 'with an SSML document' do
+          subject { Output::Document.new :value => ssml_doc, :content_type => 'application/ssml+xml' }
+
+          its(:content_type) { should be == 'application/ssml+xml' }
+
+          its(:value) { should be == ssml_doc }
+
+          describe "comparison" do
+            let(:document2) { Output::Document.new :value => ssml_doc }
+            let(:document3) { Output::Document.new :value => ssml_doc(:normal) }
+
+            it { should be == document2 }
+            it { should_not be == document3 }
           end
         end
 
-        subject { described_class.new :ssml => ssml_doc, :voice => 'kate' }
+        describe 'with a urilist' do
+          subject { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
 
-        its(:voice) { should be == 'kate' }
+          its(:value) { should be == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
 
-        its(:ssml) { should be == ssml_doc }
+          describe "comparison" do
+            let(:document2) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+            let(:document3) { Output::Document.new value: '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>' }
+            let(:document4) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'] }
+            let(:document5) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/goodbye.mp3', 'http://example.com/hello.mp3'] }
 
-        describe "comparison" do
-          let(:output2) { described_class.new :ssml => '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>', :voice => 'kate'  }
-          let(:output3) { described_class.new :ssml => ssml_doc, :voice => 'kate'  }
-          let(:output4) { described_class.new :ssml => ssml_doc(:normal), :voice => 'kate'  }
+            it { should be == document2 }
+            it { should_not be == document3 }
+            it { should_not be == document4 }
+            it { should_not be == document5 }
+          end
+        end
 
-          it { should be == output2 }
-          it { should be == output3 }
-          it { should_not be == output4 }
+        describe 'with a document reference by URL' do
+          let(:url) { 'http://foo.com/bar.grxml' }
+
+          subject { Output::Document.new :url => url }
+
+          its(:url)           { should be == url }
+          its(:content_type)  { should be nil}
+
+          describe "comparison" do
+            it "should be the same with the same url" do
+              Output::Document.new(:url => url).should be == Output::Document.new(:url => url)
+            end
+
+            it "should be different with a different url" do
+              Output::Document.new(:url => url).should_not be == Output::Document.new(:url => 'http://doo.com/dah')
+            end
+          end
         end
       end
 
@@ -603,20 +723,25 @@ module Punchblock
       end
     end
 
-    describe Output::Complete::Success do
-      let :stanza do
-        <<-MESSAGE
+    {
+      Output::Complete::Finish => :finish,
+      Output::Complete::MaxTime => :'max-time',
+    }.each do |klass, element_name|
+      describe klass do
+        let :stanza do
+          <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-<success xmlns='urn:xmpp:rayo:output:complete:1' />
+<#{element_name} xmlns='urn:xmpp:rayo:output:complete:1' />
 </complete>
-        MESSAGE
+          MESSAGE
+        end
+
+        subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
+
+        it { should be_instance_of klass }
+
+        its(:name) { should be == element_name }
       end
-
-      subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
-
-      it { should be_instance_of Output::Complete::Success }
-
-      its(:name) { should be == :success }
     end
   end
 end

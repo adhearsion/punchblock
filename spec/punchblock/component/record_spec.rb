@@ -257,31 +257,37 @@ module Punchblock
         end
       end
 
-      describe Record::Complete::Success do
-        let :stanza do
-          <<-MESSAGE
-<complete xmlns='urn:xmpp:rayo:ext:1'>
-<success xmlns='urn:xmpp:rayo:record:complete:1'/>
-<recording xmlns='urn:xmpp:rayo:record:complete:1' uri="file:/tmp/rayo7451601434771683422.mp3" duration="34000" size="23450"/>
-</complete>
-          MESSAGE
-        end
+      {
+        Record::Complete::MaxDuration => :'max-duration',
+        Record::Complete::InitialTimeout => :'initial-timeout',
+        Record::Complete::FinalTimeout => :'final-timeout',
+      }.each do |klass, element_name|
+        describe klass do
+          let :stanza do
+            <<-MESSAGE
+  <complete xmlns='urn:xmpp:rayo:ext:1'>
+  <#{element_name} xmlns='urn:xmpp:rayo:record:complete:1'/>
+  <recording xmlns='urn:xmpp:rayo:record:complete:1' uri="file:/tmp/rayo7451601434771683422.mp3" duration="34000" size="23450"/>
+  </complete>
+            MESSAGE
+          end
 
-        describe "#reason" do
-          subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
+          describe "#reason" do
+            subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-          it { should be_instance_of Record::Complete::Success }
+            it { should be_instance_of klass }
 
-          its(:name)  { should be == :success }
-        end
+            its(:name)  { should be == element_name }
+          end
 
-        describe "#recording" do
-          subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
+          describe "#recording" do
+            subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
-          it { should be_instance_of Record::Recording }
-          its(:uri)       { should be == "file:/tmp/rayo7451601434771683422.mp3" }
-          its(:duration)  { should be == 34000 }
-          its(:size)      { should be == 23450 }
+            it { should be_instance_of Record::Recording }
+            its(:uri)       { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+            its(:duration)  { should be == 34000 }
+            its(:size)      { should be == 23450 }
+          end
         end
       end
 

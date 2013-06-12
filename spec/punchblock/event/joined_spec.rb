@@ -10,7 +10,7 @@ module Punchblock
       end
 
       describe "from a stanza" do
-        let(:stanza) { '<joined xmlns="urn:xmpp:rayo:1" call-id="b" mixer-name="m" />' }
+        let(:stanza) { '<joined xmlns="urn:xmpp:rayo:1" call-uri="b" mixer-name="m" />' }
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
@@ -18,14 +18,14 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:call_id)     { should be == 'b' }
+        its(:call_uri)    { should be == 'b' }
         its(:mixer_name)  { should be == 'm' }
       end
 
       describe "when setting options in initializer" do
-        subject { described_class.new :call_id => 'abc123', :mixer_name => 'blah' }
+        subject { described_class.new :call_uri => 'abc123', :mixer_name => 'blah' }
 
-        its(:call_id)     { should be == 'abc123' }
+        its(:call_uri)    { should be == 'abc123' }
         its(:mixer_name)  { should be == 'blah' }
       end
     end

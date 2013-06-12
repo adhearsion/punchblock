@@ -7,11 +7,11 @@ module Punchblock
   class Ref < RayoNode
     register :ref, :core
 
-    # @return [String] the command ID
-    attribute :id
+    # @return [String] the command URI
+    attribute :uri
 
     def rayo_attributes
-      {id: id}
+      {uri: uri}
     end
   end
 end

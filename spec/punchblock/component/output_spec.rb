@@ -29,7 +29,7 @@ module Punchblock
 
       describe "when setting options in initializer" do
         subject do
-          Output.new  :interrupt_on     => :speech,
+          Output.new  :interrupt_on     => :voice,
                       :start_offset     => 2000,
                       :start_paused     => false,
                       :repeat_interval  => 2000,
@@ -40,7 +40,7 @@ module Punchblock
                       :render_document  => {:value => ssml_doc}
         end
 
-        its(:interrupt_on)     { should be == :speech }
+        its(:interrupt_on)     { should be == :voice }
         its(:start_offset)     { should be == 2000 }
         its(:start_paused)     { should be == false }
         its(:repeat_interval)  { should be == 2000 }
@@ -108,7 +108,7 @@ module Punchblock
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
             new_instance.should be_instance_of described_class
-            new_instance.interrupt_on.should be == :speech
+            new_instance.interrupt_on.should be == :voice
             new_instance.start_offset.should be == 2000
             new_instance.start_paused.should be == false
             new_instance.repeat_interval.should be == 2000
@@ -138,7 +138,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <output xmlns='urn:xmpp:rayo:output:1'
-        interrupt-on='speech'
+        interrupt-on='voice'
         start-offset='2000'
         start-paused='false'
         repeat-interval='2000'
@@ -172,7 +172,7 @@ module Punchblock
 
         it { should be_instance_of Output }
 
-        its(:interrupt_on)     { should be == :speech }
+        its(:interrupt_on)     { should be == :voice }
         its(:start_offset)     { should be == 2000 }
         its(:start_paused)     { should be == false }
         its(:repeat_interval)  { should be == 2000 }

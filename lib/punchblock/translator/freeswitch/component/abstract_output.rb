@@ -43,7 +43,7 @@ module Punchblock
             end
 
             case @component_node.interrupt_on
-            when :speech, :dtmf, :any
+            when :voice, :dtmf, :any
               raise OptionError, "An interrupt-on value of #{@component_node.interrupt_on} is unsupported."
             end
           end

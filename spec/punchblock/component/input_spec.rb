@@ -12,7 +12,7 @@ module Punchblock
       describe "when setting options in initializer" do
         subject do
           described_class.new grammar: {value: '[5 DIGITS]', content_type: 'application/grammar+custom'},
-                    :mode                 => :speech,
+                    :mode                 => :voice,
                     :terminator           => '#',
                     :max_silence          => 1000,
                     :recognizer           => 'default',
@@ -24,7 +24,7 @@ module Punchblock
         end
 
         its(:grammars)            { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom')] }
-        its(:mode)                { should be == :speech }
+        its(:mode)                { should be == :voice }
         its(:terminator)          { should be == '#' }
         its(:max_silence)         { should be == 1000 }
         its(:recognizer)          { should be == 'default' }
@@ -66,7 +66,7 @@ module Punchblock
             new_instance = RayoNode.from_xml subject.to_rayo
             new_instance.should be_instance_of described_class
             new_instance.grammars.should be == [Input::Grammar.new(value: '[5 DIGITS]', content_type: 'application/grammar+custom')]
-            new_instance.mode.should be == :speech
+            new_instance.mode.should be == :voice
             new_instance.terminator.should be == '#'
             new_instance.max_silence.should be == 1000
             new_instance.recognizer.should be == 'default'
@@ -96,7 +96,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <input xmlns="urn:xmpp:rayo:input:1"
-       mode="speech"
+       mode="voice"
        terminator="#"
        max-silence="1000"
        recognizer="default"
@@ -120,7 +120,7 @@ module Punchblock
         it { should be_instance_of Input }
 
         its(:grammars)            { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'), Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')] }
-        its(:mode)                { should be == :speech }
+        its(:mode)                { should be == :voice }
         its(:terminator)          { should be == '#' }
         its(:max_silence)         { should be == 1000 }
         its(:recognizer)          { should be == 'default' }
@@ -161,7 +161,7 @@ module Punchblock
 
           describe "comparison" do
             let(:grammar2) { Input::Grammar.new :value => grxml_doc }
-            let(:grammar3) { Input::Grammar.new :value => grxml_doc(:speech) }
+            let(:grammar3) { Input::Grammar.new :value => grxml_doc(:voice) }
 
             it { should be == grammar2 }
             it { should_not be == grammar3 }
@@ -232,7 +232,7 @@ module Punchblock
           '''
 <result xmlns="http://www.ietf.org/xml/ns/mrcpv2" grammar="http://flight">
   <interpretation confidence="0.60">
-    <input mode="speech">I want to go to Pittsburgh</input>
+    <input mode="voice">I want to go to Pittsburgh</input>
     <instance>
       <airline>
         <to_city>Pittsburgh</to_city>
@@ -271,7 +271,7 @@ module Punchblock
 
         its(:name)            { should be == :match }
         its(:nlsml)           { should be == expected_nlsml }
-        its(:mode)            { should be == :speech }
+        its(:mode)            { should be == :voice }
         its(:confidence)      { should be == 0.6 }
         its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
         its(:utterance)       { should be == 'I want to go to Pittsburgh' }
@@ -282,7 +282,7 @@ module Punchblock
           end
 
           its(:nlsml)           { should be == expected_nlsml }
-          its(:mode)            { should be == :speech }
+          its(:mode)            { should be == :voice }
           its(:confidence)      { should be == 0.6 }
           its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
           its(:utterance)       { should be == 'I want to go to Pittsburgh' }

@@ -11,7 +11,7 @@ module Punchblock
 
       describe "when setting options in initializer" do
         let(:output)  { Output.new :render_document => {content_type: 'text/uri-list', value: ['http://example.com/hello.mp3']} }
-        let(:input)   { Input.new :mode => :speech }
+        let(:input)   { Input.new :mode => :voice }
         subject       { described_class.new output, input, :barge_in => true }
 
         its(:output)    { should be == output }
@@ -71,7 +71,7 @@ module Punchblock
       ]]>
     </document>
   </output>
-  <input xmlns="urn:xmpp:rayo:input:1" mode="speech">
+  <input xmlns="urn:xmpp:rayo:input:1" mode="voice">
     <grammar content-type="application/grammar+custom">
       <![CDATA[ [5 DIGITS] ]]>
     </grammar>
@@ -86,7 +86,7 @@ module Punchblock
 
         its(:barge_in)  { should be_true }
         its(:output)    { should be == Output.new(:voice => 'allison', :render_document => {:value => ssml}) }
-        its(:input)     { should be == Input.new(:mode => :speech, :grammar => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'}) }
+        its(:input)     { should be == Input.new(:mode => :voice, :grammar => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'}) }
       end
 
       describe "actions" do

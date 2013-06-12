@@ -157,8 +157,8 @@ module Punchblock
                 end
               end
 
-              context 'speech' do
-                let(:original_command_opts) { { :mode => :speech } }
+              context 'voice' do
+                let(:original_command_opts) { { :mode => :voice } }
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'

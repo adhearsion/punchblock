@@ -187,7 +187,7 @@ module Punchblock
                     let :expected_nlsml do
                       RubySpeech::NLSML.draw do
                         interpretation grammar: 'session:grammar-0', confidence: 0.43 do
-                          input 'Hello', mode: :speech
+                          input 'Hello', mode: :voice
                           instance 'Hello'
                         end
                       end.root

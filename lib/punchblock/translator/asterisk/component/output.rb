@@ -19,7 +19,7 @@ module Punchblock
           def execute
             raise OptionError, 'An SSML document is required.' unless @component_node.render_documents.first.value
             raise OptionError, 'Only a single document is supported.' unless @component_node.render_documents.size == 1
-            raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :speech
+            raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :voice
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt

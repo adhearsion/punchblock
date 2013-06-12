@@ -224,8 +224,8 @@ module Punchblock
                 end
               end
 
-              context "set to :speech" do
-                let(:command_opts) { { :interrupt_on => :speech } }
+              context "set to :voice" do
+                let(:command_opts) { { :interrupt_on => :voice } }
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'

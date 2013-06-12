@@ -13,7 +13,7 @@ module Punchblock
       # @return [Float] Confidence with which to consider a response acceptable
       attribute :min_confidence, Float
 
-      # @return [Symbol] mode by which to accept input. Can be :speech, :dtmf or :any
+      # @return [Symbol] mode by which to accept input. Can be :voice, :dtmf or :any
       attribute :mode, Symbol, default: :dtmf
 
       # @return [String] recognizer to use for speech recognition

@@ -720,10 +720,8 @@ module Punchblock
               let(:state) { 'Link' }
 
               let :expected_joined do
-                Punchblock::Event::Joined.new.tap do |joined|
-                  joined.target_call_id = subject.id
-                  joined.call_uri = other_call_id
-                end
+                Punchblock::Event::Joined.new target_call_id: subject.id,
+                  call_uri: other_call_id
               end
 
               it 'sends the Joined event when the call is the first channel' do
@@ -741,10 +739,8 @@ module Punchblock
               let(:state) { 'Unlink' }
 
               let :expected_unjoined do
-                Punchblock::Event::Unjoined.new.tap do |joined|
-                  joined.target_call_id = subject.id
-                  joined.call_uri = other_call_id
-                end
+                Punchblock::Event::Unjoined.new target_call_id: subject.id,
+                  call_uri: other_call_id
               end
 
               it 'sends the Unjoined event when the call is the first channel' do
@@ -795,10 +791,8 @@ module Punchblock
             end
 
             let :expected_unjoined do
-              Punchblock::Event::Unjoined.new.tap do |joined|
-                joined.target_call_id = subject.id
-                joined.call_uri = other_call_id
-              end
+              Punchblock::Event::Unjoined.new target_call_id: subject.id,
+                call_uri: other_call_id
             end
 
             it 'sends the Unjoined event when the call is the first channel' do
@@ -1172,11 +1166,9 @@ module Punchblock
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 
               let :expected_event do
-                Punchblock::Event::Complete.new.tap do |e|
-                  e.target_call_id = subject.id
-                  e.component_id = comp_id
-                  e.reason = Punchblock::Event::Complete::Error.new
-                end
+                Punchblock::Event::Complete.new target_call_id: subject.id,
+                  component_id: comp_id,
+                  reason: Punchblock::Event::Complete::Error.new
               end
 
               before do

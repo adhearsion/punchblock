@@ -45,10 +45,7 @@ module Punchblock
           def send_complete_event(reason, recording = nil)
             return if @complete
             @complete = true
-            event = Punchblock::Event::Complete.new.tap do |c|
-              c.reason = reason
-              c.recording = recording
-            end
+            event = Punchblock::Event::Complete.new reason: reason, recording: recording
             send_event event
             terminate
           end

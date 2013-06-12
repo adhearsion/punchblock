@@ -286,7 +286,7 @@ module Punchblock
                 let(:command_opts) { { :interrupt_on => :voice } }
                 it "should return an error and not execute any actions" do
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
+                  error = ProtocolError.new.setup 'option error', 'An interrupt-on value of voice is unsupported.'
                   original_command.response(0.1).should be == error
                 end
               end

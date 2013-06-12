@@ -82,7 +82,7 @@ module Punchblock
                                                                               :params => params
           originate_action.request!
           translator.async.execute_global_command originate_action
-          dial_command.response = Ref.new :id => id
+          dial_command.response = Ref.new uri: id
         end
 
         def outbound?
@@ -139,23 +139,16 @@ module Punchblock
             if other_call = translator.call_for_channel(other_call_channel)
               event = case ami_event['Bridgestate']
               when 'Link'
-                Event::Joined.new.tap do |e|
-                  e.call_id = other_call.id
-                end
+                Event::Joined.new call_uri: other_call.id
               when 'Unlink'
-                Event::Unjoined.new.tap do |e|
-                  e.call_id = other_call.id
-                end
+                Event::Unjoined.new call_uri: other_call.id
               end
               send_pb_event event
             end
           when 'Unlink'
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
-              event = Event::Unjoined.new.tap do |e|
-                e.call_id = other_call.id
-              end
-              send_pb_event event
+              send_pb_event Event::Unjoined.new(call_uri: other_call.id)
             end
           when 'VarSet'
             @channel_variables[ami_event['Variable']] = ami_event['Value']
@@ -191,11 +184,11 @@ module Punchblock
             @hangup_cause = :hangup_command
             command.response = true
           when Command::Join
-            other_call = translator.call_with_id command.call_id
+            other_call = translator.call_with_id command.call_uri
             @pending_joins[other_call.channel] = command
             execute_agi_command 'EXEC Bridge', other_call.channel
           when Command::Unjoin
-            other_call = translator.call_with_id command.call_id
+            other_call = translator.call_with_id command.call_uri
             redirect_back other_call
             command.response = true
           when Command::Reject

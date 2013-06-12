@@ -637,7 +637,7 @@ module Punchblock
 
               let(:other_call_id) { other_call.id }
               let :command do
-                Punchblock::Command::Join.new :call_id => other_call_id
+                Punchblock::Command::Join.new call_uri: other_call_id
               end
 
               before do
@@ -720,7 +720,7 @@ module Punchblock
               let :expected_joined do
                 Punchblock::Event::Joined.new.tap do |joined|
                   joined.target_call_id = subject.id
-                  joined.call_id = other_call_id
+                  joined.call_uri = other_call_id
                 end
               end
 
@@ -741,7 +741,7 @@ module Punchblock
               let :expected_unjoined do
                 Punchblock::Event::Unjoined.new.tap do |joined|
                   joined.target_call_id = subject.id
-                  joined.call_id = other_call_id
+                  joined.call_uri = other_call_id
                 end
               end
 
@@ -795,7 +795,7 @@ module Punchblock
             let :expected_unjoined do
               Punchblock::Event::Unjoined.new.tap do |joined|
                 joined.target_call_id = subject.id
-                joined.call_id = other_call_id
+                joined.call_uri = other_call_id
               end
             end
 
@@ -1154,7 +1154,7 @@ module Punchblock
                 Punchblock::Component::Asterisk::AGI::Command.new :name => 'Wait'
               end
 
-              let(:comp_id) { component_command.response.id }
+              let(:comp_id) { component_command.response.uri }
 
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 
@@ -1232,7 +1232,7 @@ module Punchblock
             end
 
             let :command do
-              Punchblock::Command::Join.new :call_id => other_call_id
+              Punchblock::Command::Join.new call_uri: other_call_id
             end
 
             it "executes the proper dialplan Bridge application" do
@@ -1251,7 +1251,7 @@ module Punchblock
             end
 
             let :command do
-              Punchblock::Command::Unjoin.new :call_id => other_call_id
+              Punchblock::Command::Unjoin.new call_uri: other_call_id
             end
 
             it "executes the unjoin through redirection" do

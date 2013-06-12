@@ -10,7 +10,7 @@ module Punchblock
         RayoNode.class_from_registration(:dial, 'urn:xmpp:rayo:1').should be == described_class
       end
 
-      let(:join_params) { {:call_id => 'abc123'} }
+      let(:join_params) { {:call_uri => 'abc123'} }
 
       describe "when setting options in initializer" do
         subject { described_class.new to: 'tel:+14155551212', from: 'tel:+13035551212', timeout: 30000, headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' }, join: join_params }
@@ -55,7 +55,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <dial to='tel:+14155551212' from='tel:+13035551212' timeout='30000' xmlns='urn:xmpp:rayo:1'>
-  <join call-id="abc123" />
+  <join call-uri="abc123" />
   <header name="X-skill" value="agent" />
   <header name="X-customer-id" value="8877" />
 </dial>
@@ -85,9 +85,7 @@ module Punchblock
         let(:call_id) { 'abc123' }
 
         let :ref do
-          Ref.new.tap do |ref|
-            ref.id = call_id
-          end
+          Ref.new uri: call_id
         end
 
         it "should set the call ID from the ref" do

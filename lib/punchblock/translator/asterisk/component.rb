@@ -77,7 +77,7 @@ module Punchblock
           end
 
           def send_ref
-            set_node_response Ref.new :id => id
+            set_node_response Ref.new uri: id
           end
 
           def with_error(name, text)

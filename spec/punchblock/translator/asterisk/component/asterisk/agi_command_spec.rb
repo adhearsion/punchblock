@@ -56,7 +56,7 @@ module Punchblock
               end
 
               let :expected_response do
-                Ref.new :id => component_id
+                Ref.new uri: component_id
               end
 
               let :response do

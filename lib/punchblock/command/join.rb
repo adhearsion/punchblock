@@ -9,6 +9,7 @@ module Punchblock
 
       # @return [String] the call ID to join
       attribute :call_uri
+      alias :call_id= :call_uri=
 
       # @return [String] the mixer name to join
       attribute :mixer_name

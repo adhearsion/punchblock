@@ -19,13 +19,14 @@ module Punchblock
         it_should_behave_like 'event'
 
         its(:call_uri)    { should be == 'b' }
+        its(:call_id)     { should be == 'b' }
         its(:mixer_name)  { should be == 'm' }
       end
 
       describe "when setting options in initializer" do
         subject { described_class.new :call_uri => 'abc123', :mixer_name => 'blah' }
 
-        its(:call_uri)    { should be == 'abc123' }
+        its(:call_id)     { should be == 'abc123' }
         its(:mixer_name)  { should be == 'blah' }
       end
     end

@@ -17,6 +17,12 @@ module Punchblock
         its(:direction)   { should be == :duplex }
         its(:media)       { should be == :bridge }
 
+        context "with old call_id attribute" do
+          subject { described_class.new call_id: 'abc123' }
+
+          its(:call_uri)  { should be == 'abc123' }
+        end
+
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo

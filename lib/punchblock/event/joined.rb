@@ -10,6 +10,8 @@ module Punchblock
 
       # @return [String] the mixer name that was joined
       attribute :mixer_name
+
+      alias :call_id :call_uri
     end
   end
 end

@@ -7,6 +7,7 @@ module Punchblock
 
       # @return [String] the call ID to unjoin
       attribute :call_uri
+      alias :call_id= :call_uri=
 
       # @return [String] the mixer name to unjoin
       attribute :mixer_name

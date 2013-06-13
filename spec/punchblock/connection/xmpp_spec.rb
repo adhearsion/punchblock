@@ -271,7 +271,7 @@ module Punchblock
         end
 
         context "with a call command" do
-          let(:command)       { Command::Answer.new.tap { |a| a.target_call_id = 'abc123' } }
+          let(:command)       { Command::Answer.new target_call_id: 'abc123' }
           let(:expected_jid)  { 'abc123@calls.rayo.net' }
 
           it "should use the correct JID" do

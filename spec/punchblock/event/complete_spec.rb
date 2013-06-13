@@ -21,19 +21,15 @@ module Punchblock
 
       describe "comparing for equality" do
         subject do
-          described_class.new.tap do |c|
-            c.reason          = Complete::Stop.new
-            c.target_call_id  = '1234'
-            c.component_id    = 'abcd'
-          end
+          described_class.new reason: Complete::Stop.new,
+            target_call_id: '1234',
+            component_id: 'abcd'
         end
 
         let :other_complete do
-          described_class.new.tap do |c|
-            c.reason          = reason
-            c.target_call_id  = call_id
-            c.component_id    = component_id
-          end
+          described_class.new reason: reason,
+            target_call_id: call_id,
+            component_id: component_id
         end
 
         context 'with reason, call id and component id the same' do

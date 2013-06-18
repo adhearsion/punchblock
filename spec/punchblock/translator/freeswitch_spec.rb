@@ -88,7 +88,7 @@ module Punchblock
 
         it 'should make the call inaccessible by ID' do
           subject.call_with_id(call_id).should be call
-          subject.deregister_call call
+          subject.deregister_call call_id
           subject.call_with_id(call_id).should be_nil
         end
       end

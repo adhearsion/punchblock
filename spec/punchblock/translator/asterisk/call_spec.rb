@@ -302,7 +302,7 @@ module Punchblock
 
             it "de-registers the call from the translator" do
               translator.stub :handle_pb_event
-              translator.should_receive(:deregister_call).once.with(subject)
+              translator.should_receive(:deregister_call).once.with(subject.id, subject.channel)
               subject.process_ami_event ami_event
             end
 

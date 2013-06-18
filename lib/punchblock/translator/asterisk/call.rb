@@ -295,7 +295,7 @@ module Punchblock
 
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
-          translator.deregister_call current_actor
+          translator.deregister_call id, channel
           after(5) { shutdown }
         end
 

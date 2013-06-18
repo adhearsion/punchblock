@@ -237,6 +237,8 @@ module Punchblock
           command.response = case e.message
           when 'No such channel'
             ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
+          when /Channel \S+ does not exist./
+            ProtocolError.new.setup :item_not_found, "Could not find a channel for call with ID #{id}", id
           else
             ProtocolError.new.setup 'error', e.message, id
           end

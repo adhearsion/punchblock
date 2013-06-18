@@ -883,6 +883,15 @@ module Punchblock
                   command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
                 end
               end
+
+              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
+                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
             end
           end
 
@@ -923,6 +932,15 @@ module Punchblock
 
               context "with message 'No such channel'" do
                 let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+
+              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
+                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
@@ -971,6 +989,15 @@ module Punchblock
                   command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
                 end
               end
+
+              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
+                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
             end
           end
 
@@ -996,6 +1023,15 @@ module Punchblock
 
               context "with message 'No such channel'" do
                 let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+
+              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
+                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command

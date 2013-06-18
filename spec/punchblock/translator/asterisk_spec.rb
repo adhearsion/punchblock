@@ -112,13 +112,13 @@ module Punchblock
 
         it 'should make the call inaccessible by ID' do
           subject.call_with_id(call_id).should be call
-          subject.deregister_call call
+          subject.deregister_call call_id, channel
           subject.call_with_id(call_id).should be_nil
         end
 
         it 'should make the call inaccessible by channel' do
           subject.call_for_channel(channel).should be call
-          subject.deregister_call call
+          subject.deregister_call call_id, channel
           subject.call_for_channel(channel).should be_nil
         end
       end

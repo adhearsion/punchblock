@@ -235,10 +235,8 @@ module Punchblock
           command.response = ProtocolError.new.setup :invalid_command, e.message, id
         rescue RubyAMI::Error => e
           command.response = case e.message
-          when 'No such channel'
+          when 'No such channel', /Channel (\S+) does not exist./
             ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
-          when /Channel \S+ does not exist./
-            ProtocolError.new.setup :item_not_found, "Could not find a channel for call with ID #{id}", id
           else
             ProtocolError.new.setup 'error', e.message, id
           end

@@ -94,8 +94,9 @@ module Punchblock
             describe 'initial_timeout' do
               context "set to nil" do
                 let(:command_options) { { :initial_timeout => nil } }
-                it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
+                it "should setvar RECORD_INITIAL_TIMEOUT_MS with a 0 value" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_INITIAL_TIMEOUT_MS 0").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -103,8 +104,9 @@ module Punchblock
 
               context "set to -1" do
                 let(:command_options) { { :initial_timeout => -1 } }
-                it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
+                it "should setvar RECORD_INITIAL_TIMEOUT_MS with a 0 value" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_INITIAL_TIMEOUT_MS 0").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -112,11 +114,11 @@ module Punchblock
 
               context "set to a positive number" do
                 let(:command_options) { { :initial_timeout => 10 } }
-                it "should return an error and not execute any actions" do
-                  mock_call.should_receive(:uuid_foo).never
+                it "should setvar RECORD_INITIAL_TIMEOUT_MS with a value in ms" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_INITIAL_TIMEOUT_MS 10").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'An initial-timeout value is unsupported.'
-                  original_command.response(0.1).should be == error
+                  original_command.response(0.1).should be_a Ref
                 end
               end
             end
@@ -124,8 +126,9 @@ module Punchblock
             describe 'final_timeout' do
               context "set to nil" do
                 let(:command_options) { { :final_timeout => nil } }
-                it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
+                it "should setvar RECORD_FINAL_TIMEOUT_MS with a 0 value" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_FINAL_TIMEOUT_MS 0").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -133,8 +136,9 @@ module Punchblock
 
               context "set to -1" do
                 let(:command_options) { { :final_timeout => -1 } }
-                it "should execute normally" do
-                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
+                it "should setvar RECORD_FINAL_TIMEOUT_MS with a 0 value" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_FINAL_TIMEOUT_MS 0").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -142,11 +146,11 @@ module Punchblock
 
               context "set to a positive number" do
                 let(:command_options) { { :final_timeout => 10 } }
-                it "should return an error and not execute any actions" do
-                  mock_call.should_receive(:uuid_foo).never
+                it "should setvar RECORD_FINAL_TIMEOUT_MS with a value in ms" do
+                  mock_call.should_receive(:uuid_foo).once.with(:setvar, "RECORD_FINAL_TIMEOUT_MS 10").ordered
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/).ordered
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A final-timeout value is unsupported.'
-                  original_command.response(0.1).should be == error
+                  original_command.response(0.1).should be_a Ref
                 end
               end
             end

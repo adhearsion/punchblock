@@ -13,11 +13,11 @@ module Punchblock
 
           def execute
             max_duration = @component_node.max_duration || -1
+            initial_timeout = @component_node.initial_timeout || -1
+            final_timeout = @component_node.final_timeout || -1
 
             raise OptionError, 'A start-beep value of true is unsupported.' if @component_node.start_beep
             raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
-            raise OptionError, 'An initial-timeout value is unsupported.' if @component_node.initial_timeout && @component_node.initial_timeout != -1
-            raise OptionError, 'A final-timeout value is unsupported.' if @component_node.final_timeout && @component_node.final_timeout != -1
             raise OptionError, 'A max-duration value that is negative (and not -1) is invalid.' unless max_duration >= -1
 
             @format = @component_node.format || 'wav'
@@ -29,16 +29,18 @@ module Punchblock
 
             record_args = ['start', filename]
             record_args << max_duration/1000 unless max_duration == -1
-            case @component_node.direction
-            when :send
-              call.uuid_foo :setvar, "RECORD_WRITE_ONLY true"
-            when :recv
-              call.uuid_foo :setvar, "RECORD_READ_ONLY true"
-            else
-              call.uuid_foo :setvar, "RECORD_STEREO true"
-            end
-            call.uuid_foo :record, record_args.join(' ')
 
+            direction = case @component_node.direction
+            when :send then :RECORD_WRITE_ONLY
+            when :recv then :RECORD_READ_ONLY
+            else            :RECORD_STEREO
+            end
+            setvar direction, true
+
+            setvar :RECORD_INITIAL_TIMEOUT_MS, initial_timeout > -1 ? initial_timeout : 0
+            setvar :RECORD_FINAL_TIMEOUT_MS, final_timeout > -1 ? final_timeout : 0
+
+            call.uuid_foo :record, record_args.join(' ')
             send_ref
           rescue OptionError => e
             with_error 'option error', e.message
@@ -60,6 +62,10 @@ module Punchblock
           end
 
           private
+
+          def setvar(key, value)
+            call.uuid_foo :setvar, "#{key} #{value}"
+          end
 
           def filename
             File.join RECORDING_BASE_PATH, [id, @format].join('.')

@@ -58,7 +58,7 @@ module Punchblock
           end
 
           def finished
-            send_complete_event(@complete_reason || success_reason)
+            send_complete_event(@complete_reason || max_duration_reason)
           end
 
           private
@@ -79,8 +79,8 @@ module Punchblock
             Punchblock::Event::Complete::Stop.new
           end
 
-          def success_reason
-            Punchblock::Component::Record::Complete::Success.new
+          def max_duration_reason
+            Punchblock::Component::Record::Complete::MaxDuration.new
           end
 
           def send_complete_event(reason)

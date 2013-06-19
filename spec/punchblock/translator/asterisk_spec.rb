@@ -135,7 +135,7 @@ module Punchblock
 
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
-        let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
+        let(:command) { Command::Answer.new target_call_id: call_id }
 
         context "with a known call ID" do
           let(:call) { Translator::Asterisk::Call.new 'SIP/foo', subject, ami_client, connection }
@@ -153,16 +153,13 @@ module Punchblock
         end
 
         let :end_error_event do
-          Punchblock::Event::End.new.tap do |e|
-            e.target_call_id = call_id
-            e.reason = :error
-          end
+          Punchblock::Event::End.new reason: :error, target_call_id: call_id
         end
 
         context "for an outgoing call which began executing but crashed" do
           let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
 
-          let(:call_id) { dial_command.response.id }
+          let(:call_id) { dial_command.response.uri }
 
           before do
             subject.async.should_receive(:execute_global_command)
@@ -238,7 +235,7 @@ module Punchblock
         let(:component_node)  { Component::Output.new }
         let(:component)       { Translator::Asterisk::Component::Output.new(component_node, call) }
 
-        let(:command) { Component::Stop.new.tap { |c| c.component_id = component.id } }
+        let(:command) { Component::Stop.new component_id: component.id }
 
         before do
           command.request!
@@ -338,11 +335,11 @@ module Punchblock
         end
 
         let :expected_pb_event do
-          Event::Asterisk::AMI::Event.new :name => 'Newchannel',
-                                          :attributes => { :channel  => "SIP/101-3f3f",
-                                                           :state    => "Ring",
-                                                           :callerid => "101",
-                                                           :uniqueid => "1094154427.10"}
+          Event::Asterisk::AMI::Event.new name: 'Newchannel',
+                                          headers: { 'Channel'  => "SIP/101-3f3f",
+                                                     'State'    => "Ring",
+                                                     'Callerid' => "101",
+                                                     'Uniqueid' => "1094154427.10"}
         end
 
         it 'should create a Punchblock AMI event object and pass it to the connection' do

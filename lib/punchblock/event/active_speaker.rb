@@ -3,16 +3,8 @@
 module Punchblock
   class Event
     module ActiveSpeaker
-      def call_id
-        read_attr :'call-id'
-      end
-
-      def call_id=(other)
-        write_attr :'call-id', other
-      end
-
-      def inspect_attributes # :nodoc:
-        [:call_id] + super
+      def self.included(klass)
+        klass.attribute :call_id
       end
     end
   end

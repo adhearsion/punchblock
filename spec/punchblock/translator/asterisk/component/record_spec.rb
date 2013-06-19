@@ -53,13 +53,13 @@ module Punchblock
               subject.execute
             end
 
-            it "sends a success complete event when the recording ends" do
+            it "sends a max duration complete event when the recording ends" do
               full_filename = "file://#{Record::RECORDING_BASE_PATH}/#{subject.id}.wav"
               ami_client.should_receive(:send_action)
               subject.execute
               monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
               mock_call.process_ami_event monitor_stop_event
-              reason.should be_a Punchblock::Component::Record::Complete::Success
+              reason.should be_a Punchblock::Component::Record::Complete::MaxDuration
               recording.uri.should be == full_filename
               original_command.should be_complete
             end
@@ -297,7 +297,7 @@ module Punchblock
                   monitor_stop_event = RubyAMI::Event.new 'MonitorStop', 'Channel' => channel
                   mock_call.process_ami_event monitor_stop_event
 
-                  reason.should be_a Punchblock::Component::Record::Complete::Success
+                  reason.should be_a Punchblock::Component::Record::Complete::MaxDuration
                   recording.uri.should be == full_filename
                   original_command.should be_complete
                 end

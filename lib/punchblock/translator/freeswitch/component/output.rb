@@ -17,7 +17,7 @@ module Punchblock
           end
 
           def filenames
-            @filenames ||= @component_node.ssml.children.map do |node|
+            @filenames ||= @component_node.render_documents.first.value.children.map do |node|
               case node
               when RubySpeech::SSML::Audio
                 node.src
@@ -33,9 +33,8 @@ module Punchblock
           end
 
           def playback(path)
-            op = current_actor
             register_handler :es, :event_name => 'CHANNEL_EXECUTE_COMPLETE' do |event|
-              op.async.send_complete_event complete_reason_for_event(event)
+              send_complete_event complete_reason_for_event(event)
             end
             application 'playback', path
           end
@@ -43,7 +42,7 @@ module Punchblock
           def complete_reason_for_event(event)
             case event[:application_response]
             when 'FILE PLAYED'
-              success_reason
+              finish_reason
             else
               Punchblock::Event::Complete::Error.new(:details => "Engine error: #{event[:application_response]}")
             end

@@ -15,7 +15,8 @@ module Punchblock
       end
 
       def run
-        ami_client.run
+        ami_client.async.run
+        Celluloid::Actor.join(ami_client)
         raise DisconnectedError
       end
 

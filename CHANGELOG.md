@@ -1,12 +1,40 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Added FS support for initial timeout and final timeout on Record.
+  * Feature: Compliance with v0.2 of the published Rayo spec (http://xmpp.org/extensions/xep-0327.html)
+  * Feature: Add support for Rayo Prompt component (no support on FS)
+  * Change: Models are now plain ruby objects, not XML nodes, and are imported from/exported to XML when necessary for communicating over XMPP.
+  * Change: `#headers` and AMI `#attributes` now do not have their names modified. A header of `'Call-ID'` will no longer be modified to `:call_id`.
+  * Change: AMI Events/Actions now have `#headers(=)` rather than `#attributes(=)`
+  * Change: Remove event queue
+
+# [v1.9.4](https://github.com/adhearsion/punchblock/compare/v1.9.3...v1.9.4) - [2013-06-08](https://rubygems.org/gems/punchblock/versions/1.9.4)
+  * Bugfix: Finish more setup before sending output ref on Asterisk
+  * Bugfix: Allow early media TTS on Asterisk in addition to audio playback
+  * Bugfix: Correctly mark Asterisk calls as answered after successfully executing an answer command
+
+# [v1.9.3](https://github.com/adhearsion/punchblock/compare/v1.9.2...v1.9.3) - [2013-05-16](https://rubygems.org/gems/punchblock/versions/1.9.3)
+  * Bugfix: Improve error messages when trying to execute stop commands on components in an invalid state
+
+# [v1.9.2](https://github.com/adhearsion/punchblock/compare/v1.9.1...v1.9.2) - [2013-05-10](https://rubygems.org/gems/punchblock/versions/1.9.2)
+  * Bugfix: We were raising an exception on connection shutdown due to waiting for the connection to end incorrectly.
+  * Bugfix/Perf: FreeSWITCH Call actors were being kept alive after hangup for no reason
+  * Bugfix/Perf: FreeSWITCH component complete events were looping out of the actor
+  * Perf: We were wasting CPU cycles listening to all ES events when we really don't need to
+
+# [v1.9.1](https://github.com/adhearsion/punchblock/compare/v1.9.0...v1.9.1) - [2013-05-08](https://rubygems.org/gems/punchblock/versions/1.9.1)
+  * Bugfix: AMI errors indicating dead channels were not being handled correctly
+  * Bugfix: We were broken on Celluloid 0.14 due to changes in block execution semantics between actors
+
+# [v1.9.0](https://github.com/adhearsion/punchblock/compare/v1.8.2...v1.9.0) - [2013-05-03](https://rubygems.org/gems/punchblock/versions/1.9.0)
   * Feature: Use RubyAMI 2.0 with a single AMI connection.
   * Feature: Cache channel variables on Asterisk calls.
   * Feature: Allow optional sending of end event when breaking from AsyncAGI on Asterisk. This enables dialplan handback. Only triggers if the channel variable 'PUNCHBLOCK_END_ON_ASYNCAGI_BREAK' is set.
-  * Bugfix: Detect MRCPSynth failure in output component.
   * Bugfix: Avoid DTMF recognizer failures and race conditions by bringing DTMFRecognizer back into the Input component actor.
   * Bugfix: Catch Asterisk AMI errors in all cases and fail accordingly, instead of ploughing ahead in the face of adversity.
   * Bugfix: Improve performance of Asterisk implementation by no longer spinning up a component actor for AGI command execution.
+
+# [v1.8.2](https://github.com/adhearsion/punchblock/compare/v1.8.1...v1.8.2) - [2013-04-19](https://rubygems.org/gems/punchblock/versions/1.8.2)
+  * Bugfix: Input initial timeout was being set as a float rather than an integer
 
 # [v1.8.2](https://github.com/adhearsion/punchblock/compare/v1.8.1...v1.8.2) - [2013-04-19](https://rubygems.org/gems/punchblock/versions/1.8.2)
   * Bugfix: Input initial timeout was being set as a float rather than an integer

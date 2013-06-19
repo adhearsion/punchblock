@@ -8,12 +8,16 @@ module Punchblock
         include Celluloid
         include DeadActorSafety
 
+        extend ActorHasGuardedHandlers
+        execute_guarded_handlers_on_receiver
+
         HANGUP_CAUSE_TO_END_REASON = Hash.new :error
 
         HANGUP_CAUSE_TO_END_REASON['USER_BUSY'] = :busy
+        HANGUP_CAUSE_TO_END_REASON['MANAGER_REQUEST'] = :hangup_command
 
         %w{
-          NORMAL_CLEARING ORIGINATOR_CANCEL SYSTEM_SHUTDOWN MANAGER_REQUEST
+          NORMAL_CLEARING ORIGINATOR_CANCEL SYSTEM_SHUTDOWN
           BLIND_TRANSFER ATTENDED_TRANSFER PICKED_OFF NORMAL_UNSPECIFIED
         }.each { |c| HANGUP_CAUSE_TO_END_REASON[c] = :hangup }
 
@@ -88,16 +92,16 @@ module Punchblock
             command = @pending_joins[event[:other_leg_unique_id]]
             command.response = true if command
 
-            other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
-            send_pb_event Event::Joined.new(:call_id => other_call_id)
+            other_call_uri = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
+            send_pb_event Event::Joined.new(:call_uri => other_call_uri)
           end
 
           register_handler :es, :event_name => 'CHANNEL_UNBRIDGE' do |event|
             command = @pending_unjoins[event[:other_leg_unique_id]]
             command.response = true if command
 
-            other_call_id = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
-            send_pb_event Event::Unjoined.new(:call_id => other_call_id)
+            other_call_uri = event[:unique_id] == id ? event[:other_leg_unique_id] : event[:unique_id]
+            send_pb_event Event::Unjoined.new(:call_uri => other_call_uri)
           end
 
           register_handler :es, [:has_key?, :scope_variable_punchblock_component_id] => true do |event|
@@ -142,8 +146,8 @@ module Punchblock
           options[:origination_caller_id_number] = "'#{cid_number}'" if cid_number.present?
           options[:origination_caller_id_name] = "'#{cid_name}'" if cid_name.present?
           options[:originate_timeout] = dial_command.timeout/1000 if dial_command.timeout
-          dial_command.headers.each do |header|
-            options["sip_h_#{header.name}"] = "'#{header.value}'"
+          dial_command.headers.each do |name, value|
+            options["sip_h_#{name}"] = "'#{value}'"
           end
           opts = options.inject([]) do |a, (k, v)|
             a << "#{k}=#{v}"
@@ -151,7 +155,7 @@ module Punchblock
 
           stream.bgapi "originate {#{opts}}#{dial_command.to} &park()"
 
-          dial_command.response = Ref.new :id => id
+          dial_command.response = Ref.new uri: id
         end
 
         def outbound?
@@ -192,10 +196,10 @@ module Punchblock
             hangup
             command.response = true
           when Command::Join
-            @pending_joins[command.call_id] = command
-            uuid_foo :bridge, command.call_id
+            @pending_joins[command.call_uri] = command
+            uuid_foo :bridge, command.call_uri
           when Command::Unjoin
-            @pending_unjoins[command.call_id] = command
+            @pending_unjoins[command.call_uri] = command
             uuid_foo :transfer, '-both park inline'
           when Command::Reject
             hangup REJECT_TO_HANGUP_REASON[command.reason]
@@ -219,7 +223,7 @@ module Punchblock
           end
         end
 
-        def hangup(reason = 'NORMAL_CLEARING')
+        def hangup(reason = 'MANAGER_REQUEST')
           sendmsg :call_command => 'hangup', :hangup_cause => reason
         end
 
@@ -242,13 +246,13 @@ module Punchblock
         def send_end_event(reason)
           send_pb_event Event::End.new(:reason => reason)
           translator.deregister_call current_actor
-          after(5) { terminate }
+          terminate
         end
 
         def execute_component(type, command, *execute_args)
           type.new_link(command, current_actor).tap do |component|
             register_component component
-            component.async.execute(*execute_args)
+            component.execute(*execute_args)
           end
         end
 
@@ -265,7 +269,7 @@ module Punchblock
 
         def headers
           es_env.to_a.inject({}) do |accumulator, element|
-            accumulator[('x_' + element[0].to_s).to_sym] = element[1] || ''
+            accumulator['X-' + element[0].to_s] = element[1] || ''
             accumulator
           end
         end

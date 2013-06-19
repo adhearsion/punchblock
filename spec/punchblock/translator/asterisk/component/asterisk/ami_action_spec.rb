@@ -27,7 +27,7 @@ module Punchblock
               let(:component_id) { Punchblock.new_uuid }
 
               let :expected_response do
-                Ref.new :id => component_id
+                Ref.new uri: component_id
               end
 
               before { stub_uuids component_id }
@@ -50,7 +50,7 @@ module Punchblock
               end
 
               let :expected_complete_reason do
-                Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => 'Channel status will follow', :attributes => {:exten => "idonno", :context => "default", :hint => "", :status => "-1"}
+                Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: 'Channel status will follow', headers: {'Exten' => "idonno", 'Context' => "default", 'Hint' => "", 'Status' => "-1"}
               end
 
               context 'for a non-causal action' do
@@ -88,19 +88,19 @@ module Punchblock
                 end
 
                 let :event_node do
-                  Punchblock::Event::Asterisk::AMI::Event.new :name => 'CoreShowChannel', :component_id => subject.id, :attributes => {
-                    :channel          => 'SIP/127.0.0.1-00000013',
-                    :uniqueid         => '1287686437.19',
-                    :context          => 'adhearsion',
-                    :extension        => '23432',
-                    :priority         => '2',
-                    :channelstate     => '6',
-                    :channelstatedesc => 'Up'
+                  Punchblock::Event::Asterisk::AMI::Event.new name: 'CoreShowChannel', component_id: subject.id, headers: {
+                    'Channel'          => 'SIP/127.0.0.1-00000013',
+                    'UniqueID'         => '1287686437.19',
+                    'Context'          => 'adhearsion',
+                    'Extension'        => '23432',
+                    'Priority'         => '2',
+                    'ChannelState'     => '6',
+                    'ChannelStateDesc' => 'Up'
                   }
                 end
 
                 let :expected_complete_reason do
-                  Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => 'Channel status will follow', :attributes => {:exten => "idonno", :context => "default", :hint => "", :status => "-1", :eventlist => 'Complete', :listitems => '3'}
+                  Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: 'Channel status will follow', headers: {'Exten' => "idonno", 'Context' => "default", 'Hint' => "", 'Status' => "-1", 'EventList' => 'Complete', 'ListItems' => '3'}
                 end
 
                 before { ami_client.should_receive(:send_action).once.and_return response }
@@ -130,7 +130,7 @@ module Punchblock
                 end
 
                 let :expected_complete_reason do
-                  Punchblock::Event::Complete::Error.new :details => 'Action failed', component_id: subject.id
+                  Punchblock::Event::Complete::Error.new details: 'Action failed'
                 end
 
                 it 'should send a complete event to the component node' do

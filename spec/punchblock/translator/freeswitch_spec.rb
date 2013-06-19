@@ -105,7 +105,7 @@ module Punchblock
 
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
-        let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
+        let(:command) { Command::Answer.new target_call_id: call_id }
 
         context "with a known call ID" do
           let(:call) { described_class::Call.new 'SIP/foo', subject }
@@ -123,16 +123,13 @@ module Punchblock
         end
 
         let :end_error_event do
-          Punchblock::Event::End.new.tap do |e|
-            e.target_call_id = call_id
-            e.reason = :error
-          end
+          Punchblock::Event::End.new reason: :error, target_call_id: call_id
         end
 
         context "for an outgoing call which began executing but crashed" do
           let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
 
-          let(:call_id) { dial_command.response.id }
+          let(:call_id) { dial_command.response.uri }
 
           before do
             stream.as_null_object
@@ -205,7 +202,7 @@ module Punchblock
         let(:component_node)  { Component::Output.new }
         let(:component)       { Translator::Freeswitch::Component::Output.new(component_node, call) }
 
-        let(:command) { Component::Stop.new.tap { |c| c.component_id = component.id } }
+        let(:command) { Component::Stop.new component_id: component.id }
 
         before do
           command.request!

@@ -22,17 +22,17 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.3.7") if s.respond_to? :required_rubygems_version=
 
-  s.add_runtime_dependency %q<niceogiri>, ["~> 1.1"]
   s.add_runtime_dependency %q<nokogiri>, ["~> 1.5", ">= 1.5.6"]
   s.add_runtime_dependency %q<blather>, [">= 0.7.0"]
   s.add_runtime_dependency %q<activesupport>, ["~> 3.0"]
   s.add_runtime_dependency %q<state_machine>, ["~> 1.0"]
   s.add_runtime_dependency %q<future-resource>, ["~> 1.0"]
   s.add_runtime_dependency %q<has-guarded-handlers>, ["~> 1.5"]
-  s.add_runtime_dependency %q<celluloid>, ["~> 0.13"]
+  s.add_runtime_dependency %q<celluloid>, ["~> 0.14"]
   s.add_runtime_dependency %q<ruby_ami>, ["~> 2.0"]
-  s.add_runtime_dependency %q<ruby_fs>, ["~> 1.0"]
-  s.add_runtime_dependency %q<ruby_speech>, ["~> 1.0"]
+  s.add_runtime_dependency %q<ruby_fs>, ["~> 1.1"]
+  s.add_runtime_dependency %q<ruby_speech>, ["~> 2.0"]
+  s.add_runtime_dependency %q<virtus>
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]
   s.add_development_dependency %q<rspec>, ["~> 2.7"]

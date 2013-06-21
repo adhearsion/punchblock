@@ -254,7 +254,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-  <match xmlns="urn:xmpp:rayo:input:complete:1">
+  <match xmlns="urn:xmpp:rayo:input:complete:1" content-type="application/nlsml+xml">
     #{nlsml_string}
   </match>
 </complete>
@@ -270,6 +270,7 @@ module Punchblock
         it { should be_instance_of Input::Complete::Match }
 
         its(:name)            { should be == :match }
+        its(:content_type)    { should be == 'application/nlsml+xml' }
         its(:nlsml)           { should be == expected_nlsml }
         its(:mode)            { should be == :voice }
         its(:confidence)      { should be == 0.6 }
@@ -281,6 +282,7 @@ module Punchblock
             Input::Complete::Match.new :nlsml => expected_nlsml
           end
 
+          its(:content_type)    { should be == 'application/nlsml+xml' }
           its(:nlsml)           { should be == expected_nlsml }
           its(:mode)            { should be == :voice }
           its(:confidence)      { should be == 0.6 }

@@ -112,6 +112,8 @@ module Punchblock
         class Match < Event::Complete::Reason
           register :match, :input_complete
 
+          attribute :content_type, String, default: 'application/nlsml+xml'
+
           attribute :nlsml
           def nlsml=(other)
             doc = case other

@@ -19,8 +19,11 @@ module Punchblock
       # @return [Integer] Indicates the maximum duration for the recording.
       attribute :max_duration, Integer
 
-      # @return [true, false] Indicates whether subsequent record will be preceded with a beep.
+      # @return [true, false] Indicates whether record will be preceded with a beep.
       attribute :start_beep, Boolean
+
+      # @return [true, false] Indicates whether record will be followed by a beep.
+      attribute :stop_beep, Boolean
 
       # @return [true, false] Whether subsequent record will start in PAUSE mode.
       attribute :start_paused, Boolean
@@ -34,6 +37,9 @@ module Punchblock
         super
       end
 
+      # @return [true, false] wether to mix audio down or not
+      attribute :mix, Boolean
+
       def rayo_attributes
         {
           'format' => format,
@@ -41,8 +47,10 @@ module Punchblock
           'final-timeout' => final_timeout,
           'max-duration' => max_duration,
           'start-beep' => start_beep,
+          'stop-beep' => start_beep,
           'start-paused' => start_paused,
-          'direction' => direction
+          'direction' => direction,
+          'mix' => mix
         }
       end
 

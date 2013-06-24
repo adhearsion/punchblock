@@ -149,7 +149,7 @@ module Punchblock
           private
 
           def result_node(xml)
-            document = Nokogiri::XML.parse xml.children.find(&:cdata?), nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS
+            document = Nokogiri::XML.parse xml.text, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS
             document.at_xpath 'ns:result', 'ns' => NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
           end
         end

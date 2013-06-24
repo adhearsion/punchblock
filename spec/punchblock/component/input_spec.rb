@@ -255,7 +255,7 @@ module Punchblock
           <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
   <match xmlns="urn:xmpp:rayo:input:complete:1" content-type="application/nlsml+xml">
-    #{nlsml_string}
+    <![CDATA[#{nlsml_string}]]>
   </match>
 </complete>
           MESSAGE
@@ -302,7 +302,7 @@ module Punchblock
               <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
   <match xmlns="urn:xmpp:rayo:input:complete:1">
-    <result xmlns="http://www.ietf.org/xml/ns/mrcpv2" grammar="http://flight"/>
+    <![CDATA[<result xmlns="http://www.ietf.org/xml/ns/mrcpv2" grammar="http://flight"/>]]>
   </match>
 </complete>
               MESSAGE

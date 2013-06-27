@@ -20,7 +20,7 @@ module Punchblock
       attribute :join, Join
 
       def inherit(xml_node)
-        if join_element = xml_node.find_first('ns:join', ns: Join.registered_ns)
+        if join_element = xml_node.at_xpath('ns:join', ns: Join.registered_ns)
           self.join = Join.from_xml(join_element)
         end
         super

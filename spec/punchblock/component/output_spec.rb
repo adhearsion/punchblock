@@ -223,7 +223,7 @@ module Punchblock
         end
 
         describe 'with a urilist' do
-          subject { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+          subject { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
 
           its(:value) { should be == Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
 

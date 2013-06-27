@@ -13,5 +13,9 @@ module Punchblock
     def to_s
       join("\n")
     end
+
+    def ==(other)
+      self.__getobj__ == other.to_ary
+    end
   end
 end

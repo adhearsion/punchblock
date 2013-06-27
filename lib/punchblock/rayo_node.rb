@@ -50,7 +50,7 @@ module Punchblock
     # @return the appropriate object based on the node name and namespace
     def self.from_xml(node, call_id = nil, component_id = nil)
       ns = (node.namespace.href if node.namespace)
-      klass = class_from_registration(node.element_name, ns)
+      klass = class_from_registration(node.name, ns)
       if klass && klass != self
         klass.from_xml node, call_id, component_id
       else

@@ -27,6 +27,7 @@ module Punchblock
   autoload :ProtocolError
   autoload :RayoNode
   autoload :Translator
+  autoload :URIList
 
   class << self
     def logger

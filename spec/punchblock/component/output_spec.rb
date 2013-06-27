@@ -76,7 +76,7 @@ module Punchblock
           subject do
             Output.new render_document: {
               content_type: 'text/uri-list',
-              value: ['http://example.com/hello.mp3']
+              value: Punchblock::URIList.new('http://example.com/hello.mp3')
             }
           end
 
@@ -225,13 +225,13 @@ module Punchblock
         describe 'with a urilist' do
           subject { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
 
-          its(:value) { should be == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+          its(:value) { should be == Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
 
           describe "comparison" do
-            let(:document2) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+            let(:document2) { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
             let(:document3) { Output::Document.new value: '<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US"><say-as interpret-as="ordinal">100</say-as></speak>' }
-            let(:document4) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'] }
-            let(:document5) { Output::Document.new content_type: 'text/uri-list', value: ['http://example.com/goodbye.mp3', 'http://example.com/hello.mp3'] }
+            let(:document4) { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/hello.mp3') }
+            let(:document5) { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/goodbye.mp3', 'http://example.com/hello.mp3') }
 
             it { should be == document2 }
             it { should_not be == document3 }

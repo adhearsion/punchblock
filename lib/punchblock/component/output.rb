@@ -16,7 +16,7 @@ module Punchblock
         # @return [String] the document content type
         attribute :content_type, String, default: ->(grammar, attribute) { grammar.url ? nil : SSML_CONTENT_TYPE }
 
-        # @return [String, RubySpeech::SSML::Speak, Array] the document
+        # @return [String, RubySpeech::SSML::Speak, URIList] the document
         attribute :value
 
         def inherit(xml_node)
@@ -24,7 +24,7 @@ module Punchblock
           self.value = if ssml?
             RubySpeech::SSML.import xml_node.content
           elsif urilist?
-            xml_node.content.strip.split("\n").map(&:strip)
+            URIList.import xml_node.content
           else
             xml_node.content
           end
@@ -49,7 +49,7 @@ module Punchblock
           if ssml?
             value.to_xml
           elsif urilist?
-            value.join("\n")
+            value.to_s
           elsif
             value
           end

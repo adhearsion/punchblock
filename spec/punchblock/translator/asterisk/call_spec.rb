@@ -307,7 +307,7 @@ module Punchblock
 
             it "should cause all components to send complete events before sending end event" do
               subject.stub :send_progress
-              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar root="foo"><rule id="foo"/></grammar>'}, :mode => :dtmf
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => RubySpeech::GRXML.draw(root: 'foo') { rule id: 'foo' }}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
@@ -324,7 +324,7 @@ module Punchblock
               call_id = subject.id
 
               subject.stub :send_progress
-              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar root="foo"><rule id="foo"/></grammar>'}, :mode => :dtmf
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => RubySpeech::GRXML.draw(root: 'foo') { rule id: 'foo' }}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref

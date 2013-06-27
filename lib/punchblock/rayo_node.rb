@@ -63,7 +63,7 @@ module Punchblock
 
     def inherit(xml_node)
       xml_node.attributes.each do |key, attr_node|
-        send "#{key.gsub('-', '_')}=", attr_node.value
+        send "#{key.gsub('-', '_')}=", xml_node[key]
       end
       self
     end

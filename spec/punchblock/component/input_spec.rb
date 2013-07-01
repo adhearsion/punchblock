@@ -306,6 +306,22 @@ module Punchblock
           end
         end
 
+        context "when nested directly" do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+  <match xmlns="urn:xmpp:rayo:input:complete:1" content-type="application/nlsml+xml">
+    #{nlsml_string}
+  </match>
+</complete>
+            MESSAGE
+          end
+
+          it "should parse the NLSML correctly" do
+            subject.nlsml.grammar.should == "http://flight"
+          end
+        end
+
         describe "comparison" do
           context "with the same nlsml" do
             it "should be equal" do

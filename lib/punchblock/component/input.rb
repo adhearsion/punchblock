@@ -149,8 +149,10 @@ module Punchblock
           private
 
           def result_node(xml)
+            directly_nested = xml.at_xpath 'ns:result', ns: NLSML_NAMESPACE
+            return directly_nested if directly_nested
             document = Nokogiri::XML.parse xml.text, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS
-            document.at_xpath 'ns:result', 'ns' => NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
+            document.at_xpath 'ns:result', ns: NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
           end
         end
 

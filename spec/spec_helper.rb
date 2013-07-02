@@ -4,6 +4,8 @@ require 'punchblock'
 require 'countdownlatch'
 require 'logger'
 require 'celluloid'
+require 'coveralls'
+Coveralls.wear!
 
 Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
 

@@ -43,4 +43,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<countdownlatch>, [">= 0"]
   s.add_development_dependency %q<guard-rspec>
   s.add_development_dependency %q<rb-fsevent>, ['~> 0.9']
+  s.add_development_dependency %q<coveralls>, ['>= 0']
 end

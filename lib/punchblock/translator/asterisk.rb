@@ -20,7 +20,7 @@ module Punchblock
       REDIRECT_EXTENSION = '1'
       REDIRECT_PRIORITY = '1'
 
-      CHANNEL_NORMALIZATION_REGEXP = /^(?<prefix>Bridge\/)*(?<channel>[^<>]*)(?<suffix><.*>)*$/.freeze
+      CHANNEL_NORMALIZATION_REGEXP = /^(?<prefix>Bridge\/)*(?<name>[^<>]*)(?<suffix><.*>)*$/.freeze
       EVENTS_ALLOWED_BRIDGED = %w{AGIExec AsyncAGI}
 
       trap_exit :actor_died
@@ -45,7 +45,8 @@ module Punchblock
       end
 
       def call_for_channel(channel)
-        call_with_id @channel_to_call_id[channel.match(CHANNEL_NORMALIZATION_REGEXP)[:channel]]
+        channel = channel.is_a?(MatchData) ? channel : channel.match(CHANNEL_NORMALIZATION_REGEXP)
+        call_with_id @channel_to_call_id[channel[:name]]
       end
 
       def register_component(component)
@@ -182,7 +183,7 @@ module Punchblock
       end
 
       def channels_for_ami_event(event)
-        [event['Channel'], event['Channel1'], event['Channel2']].compact
+        [event['Channel'], event['Channel1'], event['Channel2']].compact.map { |channel| channel.match CHANNEL_NORMALIZATION_REGEXP }
       end
 
       def ami_event_known_call?(event)
@@ -192,8 +193,7 @@ module Punchblock
       end
 
       def channel_is_bridged?(channel)
-        matches = channel.match CHANNEL_NORMALIZATION_REGEXP
-        matches[:prefix] || matches[:suffix]
+        channel[:prefix] || channel[:suffix]
       end
 
       def handle_async_agi_start_event(event)

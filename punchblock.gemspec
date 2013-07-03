@@ -44,4 +44,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<guard-rspec>
   s.add_development_dependency %q<rb-fsevent>, ['~> 0.9']
   s.add_development_dependency %q<coveralls>, ['>= 0']
+  s.add_development_dependency %q<guard-rake>
+  s.add_development_dependency %q<benchmark_suite>
 end

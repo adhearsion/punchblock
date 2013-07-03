@@ -31,15 +31,11 @@ module Punchblock
       end
     end
 
-    it 'should handle connection events' do
-      subject.should_receive(:handle_event).with(mock_event).once
-      connection.event_handler.call mock_event
-    end
-
-    describe '#handle_event' do
+    describe 'handling events from connection' do
       it "sets the event's client" do
+        subject
         event = Event::Offer.new
-        subject.handle_event event
+        connection.event_handler.call event
         event.client.should be subject
       end
 
@@ -55,7 +51,7 @@ module Punchblock
           subject.register_event_handler do |event|
             handler.call event
           end
-          subject.handle_event mock_event
+          connection.event_handler.call mock_event
         end
       end
 
@@ -70,7 +66,7 @@ module Punchblock
           subject.register_event_handler do |event|
             handler.call event
           end
-          subject.handle_event mock_event
+          connection.event_handler.call mock_event
         end
       end
     end
@@ -102,11 +98,17 @@ module Punchblock
       end
 
       it "should handle a component's events" do
-        subject.should_receive(:trigger_handler).with(:event, event).once
+        received_events = []
+        subject.register_event_handler do |event|
+          received_events << event
+        end
+
         execute_command
         component.request!
         component.execute!
         component.add_event event
+
+        received_events.should == [event]
       end
     end
   end # describe Client

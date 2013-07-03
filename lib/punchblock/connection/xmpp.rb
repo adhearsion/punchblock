@@ -11,7 +11,7 @@ module Punchblock
   module Connection
     class XMPP < GenericConnection
       include Blather::DSL
-      attr_accessor :event_handler, :root_domain, :calls_domain, :mixers_domain
+      attr_accessor :root_domain, :calls_domain, :mixers_domain
 
       ##
       # Initialize the required connection attributes
@@ -75,15 +75,13 @@ module Punchblock
       # Fire up the connection
       #
       def run
-        connect
+        defer { connect }
       end
 
       def connect
-        begin
-          EM.run { client.run }
-        rescue Blather::Stream::ConnectionFailed, Blather::Stream::ConnectionTimeout, Blather::StreamError => e
-          raise DisconnectedError.new(e.class.to_s, e.message)
-        end
+        EM.run { client.run }
+      rescue Blather::Stream::ConnectionFailed, Blather::Stream::ConnectionTimeout, Blather::StreamError => e
+        raise DisconnectedError.new(e.class.to_s, e.message)
       end
 
       def stop
@@ -94,12 +92,12 @@ module Punchblock
         client.connected?
       end
 
-      def ready!
+      def ready
         send_presence :chat
         super
       end
 
-      def not_ready!
+      def not_ready
         send_presence :dnd
         super
       end
@@ -159,13 +157,13 @@ module Punchblock
         when_ready do
           event_handler.call Connected.new
           pb_logger.info "Connected to XMPP as #{@username}"
-          @rayo_ping = EM::PeriodicTimer.new(@ping_period) { ping_rayo } if @ping_period
+          every(@ping_period) { ping_rayo } if @ping_period
           throw :pass
         end
 
         disconnected do
-          @rayo_ping.cancel if @rayo_ping
-          raise DisconnectedError
+          pb_logger.info "Disconnected from server"
+          terminate
         end
 
         # Read/handle presence requests. This is how we get events.

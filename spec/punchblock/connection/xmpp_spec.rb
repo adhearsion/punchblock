@@ -104,7 +104,7 @@ module Punchblock
 
         sleep 0.5 # Block so there's enough time for the write thread to get to the point where it's waiting on an IQ
 
-        connection.__send__ :handle_iq_result, result
+        connection._send_ :handle_iq_result, result
 
         write_thread.join
 
@@ -120,7 +120,7 @@ module Punchblock
 </presence>
         MSG
 
-        connection.__send__ :handle_presence, example_complete
+        connection._send_ :handle_presence, example_complete
         output.complete_event(0.5).source.should be == output
 
         output.component_id.should be == 'fgh4590'
@@ -133,7 +133,7 @@ module Punchblock
           stanza.should be_a Blather::Stanza::Presence::Status
           stanza.chat?.should be true
         end
-        connection.ready!
+        connection.ready
       end
 
       it 'should send a "Do Not Disturb" presence when not_ready' do
@@ -143,7 +143,7 @@ module Punchblock
           stanza.should be_a Blather::Stanza::Presence::Status
           stanza.dnd?.should be true
         end
-        connection.not_ready!
+        connection.not_ready
       end
 
       describe '#handle_presence' do
@@ -178,7 +178,7 @@ module Punchblock
 
         describe "presence received" do
           describe "from an offer" do
-            let(:handle_presence) { connection.__send__ :handle_presence, example_offer }
+            let(:handle_presence) { connection._send_ :handle_presence, example_offer }
 
             it 'should call the event handler with the event' do
               mock_event_handler.should_receive(:call).once.with do |event|
@@ -209,7 +209,7 @@ module Punchblock
 
             it 'should not handle the event' do
               mock_event_handler.should_receive(:call).never
-              lambda { connection.__send__ :handle_presence, example_irrelevant_event }.should throw_symbol(:pass)
+              lambda { connection._send_ :handle_presence, example_irrelevant_event }.should throw_symbol(:pass)
             end
           end
         end
@@ -235,7 +235,7 @@ module Punchblock
 
         before do
           cmd.request!
-          connection.__send__ :handle_error, example_error, cmd
+          connection._send_ :handle_error, example_error, cmd
         end
 
         subject { cmd.response }
@@ -340,7 +340,7 @@ module Punchblock
               event.target_call_id.should be nil
               event.domain.should be == 'mixers.rayo.net'
             end
-            connection.__send__ :handle_presence, active_speaker_event
+            connection._send_ :handle_presence, active_speaker_event
           end
         end
       end

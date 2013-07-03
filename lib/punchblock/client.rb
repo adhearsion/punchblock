@@ -1,12 +1,14 @@
 # encoding: utf-8
 
+require 'celluloid'
+require 'punchblock/client/component_registry'
+
 module Punchblock
   class Client
-    extend ActiveSupport::Autoload
-
-    autoload :ComponentRegistry
-
     include HasGuardedHandlers
+    include Celluloid
+
+    execute_block_on_receiver :register_handler, :register_tmp_handler, :register_handler_with_priority, :register_event_handler
 
     attr_reader :connection, :component_registry
 
@@ -16,13 +18,15 @@ module Punchblock
     # @option options [Connection::XMPP] :connection The Punchblock connection to use for this session
     #
     def initialize(options = {})
-      @connection = options[:connection]
-      @connection.event_handler = lambda { |event| self.handle_event event } if @connection
+      if @connection = options[:connection]
+        client = current_actor
+        @connection.event_handler = ->(event) { client.handle_event event }
+      end
       @component_registry = ComponentRegistry.new
     end
 
     def handle_event(event)
-      event.client = self
+      event.client = current_actor
       if event.source
         event.source.add_event event
       else
@@ -47,10 +51,11 @@ module Punchblock
     end
 
     def execute_command(command, options = {})
-      command.client = self
+      client = current_actor
+      command.client = current_actor
       if command.respond_to?(:register_handler)
         command.register_handler :internal do |event|
-          trigger_handler :event, event
+          client.trigger_handler :event, event
         end
       end
       connection.write command, options

@@ -37,11 +37,17 @@ module Punchblock
 
       describe '#run' do
         it 'starts the RubyAMI::Stream' do
-          subject.ami_client.async.should_receive(:run).once do
-            subject.ami_client.terminate
-          end
-          lambda { subject.run }.should raise_error DisconnectedError
+          subject.ami_client.async.should_receive(:run).once
+          subject.run
         end
+      end
+
+      describe "when the translator crashes" do
+        it "also crashes"
+      end
+
+      describe "when the stream crashes" do
+        it "also crashes"
       end
 
       describe '#stop' do

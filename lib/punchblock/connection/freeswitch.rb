@@ -6,10 +6,9 @@ module Punchblock
   module Connection
     class Freeswitch < GenericConnection
       attr_reader :translator, :stream
-      attr_accessor :event_handler
 
       def initialize(options = {})
-        @translator = Translator::Freeswitch.new self, options[:media_engine], options[:default_voice]
+        @translator = Translator::Freeswitch.new current_actor, options[:media_engine], options[:default_voice]
         @stream_options = options.values_at(:host, :port, :password)
         @stream = new_fs_stream
         super()
@@ -17,8 +16,7 @@ module Punchblock
 
       def run
         pb_logger.debug "Starting the RubyFS stream"
-        start_stream
-        raise DisconnectedError
+        stream.run
       end
 
       def stop
@@ -42,11 +40,6 @@ module Punchblock
 
       def event_mask
         %w{CHANNEL_PARK CHANNEL_ANSWER CHANNEL_STATE CHANNEL_HANGUP CHANNEL_BRIDGE CHANNEL_UNBRIDGE CHANNEL_EXECUTE_COMPLETE DTMF RECORD_STOP}
-      end
-
-      def start_stream
-        @stream = new_fs_stream unless @stream.alive?
-        @stream.run
       end
     end
   end

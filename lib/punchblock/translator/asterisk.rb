@@ -172,14 +172,9 @@ module Punchblock
       def ami_dispatch_to_or_create_call(event)
         if ami_event_known_call?(event)
           channels_for_ami_event(event).each do |channel|
-            call = call_for_channel channel
-            if call
-              if channel_is_bridged?(channel)
-                call.async.process_ami_event event if EVENTS_ALLOWED_BRIDGED.include?(event.name)
-              else
-                call.async.process_ami_event event
-              end
-            end
+            next if channel_is_bridged?(channel) && !EVENTS_ALLOWED_BRIDGED.include?(event.name)
+            next unless call = call_for_channel(channel)
+            call.async.process_ami_event event
           end
         elsif event.name == "AsyncAGI" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event

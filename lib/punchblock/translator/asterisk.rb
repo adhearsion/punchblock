@@ -12,6 +12,7 @@ module Punchblock
 
       autoload :AGICommand
       autoload :Call
+      autoload :Channel
       autoload :Component
 
       attr_reader :ami_client, :connection, :media_engine, :calls
@@ -20,7 +21,6 @@ module Punchblock
       REDIRECT_EXTENSION = '1'
       REDIRECT_PRIORITY = '1'
 
-      CHANNEL_NORMALIZATION_REGEXP = /^(?<prefix>Bridge\/)*(?<channel>[^<>]*)(?<suffix><.*>)*$/.freeze
       EVENTS_ALLOWED_BRIDGED = %w{AGIExec AsyncAGI}
 
       trap_exit :actor_died
@@ -45,7 +45,7 @@ module Punchblock
       end
 
       def call_for_channel(channel)
-        call_with_id @channel_to_call_id[channel.match(CHANNEL_NORMALIZATION_REGEXP)[:channel]]
+        call_with_id @channel_to_call_id[Channel.new(channel).name]
       end
 
       def register_component(component)
@@ -170,10 +170,15 @@ module Punchblock
       end
 
       def ami_dispatch_to_or_create_call(event)
-        if ami_event_known_call?(event)
-          channels_for_ami_event(event).each do |channel|
-            next if channel_is_bridged?(channel) && !EVENTS_ALLOWED_BRIDGED.include?(event.name)
-            next unless call = call_for_channel(channel)
+        calls_for_event = channels_for_ami_event(event).inject({}) do |h, channel|
+          call = call_for_channel channel
+          h[channel] = call if call
+          h
+        end
+
+        if !calls_for_event.empty?
+          calls_for_event.each_pair do |channel, call|
+            next if channel.bridged? && !EVENTS_ALLOWED_BRIDGED.include?(event.name)
             call.async.process_ami_event event
           end
         elsif event.name == "AsyncAGI" && event['SubEvent'] == "Start"
@@ -182,18 +187,13 @@ module Punchblock
       end
 
       def channels_for_ami_event(event)
-        [event['Channel'], event['Channel1'], event['Channel2']].compact
+        [event['Channel'], event['Channel1'], event['Channel2']].compact.map { |channel| Channel.new(channel) }
       end
 
       def ami_event_known_call?(event)
         (event['Channel'] && call_for_channel(event['Channel'])) ||
           (event['Channel1'] && call_for_channel(event['Channel1'])) ||
           (event['Channel2'] && call_for_channel(event['Channel2']))
-      end
-
-      def channel_is_bridged?(channel)
-        matches = channel.match CHANNEL_NORMALIZATION_REGEXP
-        matches[:prefix] || matches[:suffix]
       end
 
       def handle_async_agi_start_event(event)

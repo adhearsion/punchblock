@@ -405,8 +405,7 @@ module Punchblock
 
           it 'should instruct the call to send an offer' do
             mock_call = stub('Asterisk::Call').as_null_object
-            Asterisk::Call.should_receive(:new).once.and_return mock_call
-            subject.wrapped_object.should_receive(:link)
+            Asterisk::Call.should_receive(:new_link).once.and_return mock_call
             mock_call.async.should_receive(:send_offer).once
             subject.handle_ami_event ami_event
           end
@@ -419,7 +418,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Asterisk::Call.should_receive(:new).never
+              Asterisk::Call.should_receive(:new_link).never
               subject.handle_ami_event ami_event
             end
           end

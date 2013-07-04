@@ -201,8 +201,7 @@ module Punchblock
 
         return if env[:agi_extension] == 'h' || env[:agi_type] == 'Kill'
 
-        call = Call.new event['Channel'], current_actor, ami_client, connection, env
-        link call
+        call = Call.new_link event['Channel'], current_actor, ami_client, connection, env
         register_call call
         call.async.send_offer
       end

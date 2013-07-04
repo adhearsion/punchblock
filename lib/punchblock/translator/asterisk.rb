@@ -21,7 +21,7 @@ module Punchblock
       REDIRECT_PRIORITY = '1'
 
       CHANNEL_NORMALIZATION_REGEXP = /^(?<prefix>Bridge\/)*(?<channel>[^<>]*)(?<suffix><.*>)*$/.freeze
-      EVENTS_ALLOWED_BRIDGED = %w{agiexec asyncagi}
+      EVENTS_ALLOWED_BRIDGED = %w{AGIExec AsyncAGI}
 
       trap_exit :actor_died
 
@@ -65,7 +65,7 @@ module Punchblock
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
 
-        if event.name.downcase == "fullybooted"
+        if event.name == 'FullyBooted'
           handle_pb_event Connection::Connected.new
           run_at_fully_booted
           return
@@ -176,13 +176,13 @@ module Punchblock
             call = call_for_channel channel
             if call
               if channel_is_bridged?(channel)
-                call.async.process_ami_event event if EVENTS_ALLOWED_BRIDGED.include?(event.name.downcase)
+                call.async.process_ami_event event if EVENTS_ALLOWED_BRIDGED.include?(event.name)
               else
                 call.async.process_ami_event event
               end
             end
           end
-        elsif event.name.downcase == "asyncagi" && event['SubEvent'] == "Start"
+        elsif event.name == "AsyncAGI" && event['SubEvent'] == "Start"
           handle_async_agi_start_event event
         end
       end

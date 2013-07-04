@@ -28,7 +28,6 @@ module Punchblock
       def initialize(ami_client, connection, media_engine = nil)
         @ami_client, @connection, @media_engine = ami_client, connection, media_engine
         @calls, @components, @channel_to_call_id = {}, {}, {}
-        @fully_booted_count = 0
       end
 
       def register_call(call)

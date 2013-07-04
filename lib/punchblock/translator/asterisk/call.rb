@@ -25,6 +25,25 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
+        EXEC                = 'Exec'.freeze
+        COMMAND_ID          = 'CommandID'.freeze
+        LINK                = 'Link'.freeze
+        UNLINK              = 'Unlink'.freeze
+        HANGUP              = 'Hangup'.freeze
+        NEWSTATE            = 'Newstate'.freeze
+        CHANNEL_STATE       = 'ChannelState'.freeze
+        ORIGINATE_RESPONSE  = 'OriginateResponse'.freeze
+        BRIDGE_EXEC         = 'BridgeExec'.freeze
+        BRIDGE              = 'Bridge'.freeze
+        BRIDGESTATE         = 'Bridgestate'.freeze
+        CAUSE               = 'Cause'.freeze
+        RESPONSE            = 'Response'.freeze
+        FAILURE             = 'Failure'.freeze
+        UNIQUEID            = 'Uniqueid'.freeze
+        NULL_ID             = '<null>'.freeze
+        CHANNEL_RINGING     = '5'.freeze
+        CHANNEL_ANSWERED    = '6'.freeze
+
         trap_exit :actor_died
 
         def initialize(channel, translator, ami_client, connection, agi_env = nil)
@@ -111,47 +130,47 @@ module Punchblock
           send_pb_event Event::Asterisk::AMI::Event.new(name: ami_event.name, headers: ami_event.headers)
 
           case ami_event.name
-          when 'Hangup'
-            cause = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
+          when HANGUP
+            cause = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[ami_event[CAUSE].to_i]
             handle_hangup_event cause
-          when 'AsyncAGI'
-            if component = component_with_id(ami_event['CommandID'])
+          when ASYNC_AGI
+            if component = component_with_id(ami_event[COMMAND_ID])
               component.handle_ami_event ami_event
             end
-          when 'Newstate'
-            case ami_event['ChannelState']
-            when '5'
+          when NEWSTATE
+            case ami_event[CHANNEL_STATE]
+            when CHANNEL_RINGING
               send_pb_event Event::Ringing.new
-            when '6'
+            when CHANNEL_ANSWERED
               @answered = true
               send_pb_event Event::Answered.new
             end
-          when 'OriginateResponse'
-            if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'
+          when ORIGINATE_RESPONSE
+            if ami_event[RESPONSE] == FAILURE && ami_event[UNIQUEID] == NULL_ID
               send_end_event :error
             end
-          when 'BridgeExec'
-            join_command   = @pending_joins.delete ami_event['Channel1']
-            join_command ||= @pending_joins.delete ami_event['Channel2']
+          when BRIDGE_EXEC
+            join_command   = @pending_joins.delete ami_event[CHANNEL1]
+            join_command ||= @pending_joins.delete ami_event[CHANNEL2]
             join_command.response = true if join_command
-          when 'Bridge'
-            other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
+          when BRIDGE
+            other_call_channel = ([ami_event[CHANNEL1], ami_event[CHANNEL2]] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
-              event = case ami_event['Bridgestate']
-              when 'Link'
+              event = case ami_event[BRIDGESTATE]
+              when LINK
                 Event::Joined.new call_uri: other_call.id
-              when 'Unlink'
+              when UNLINK
                 Event::Unjoined.new call_uri: other_call.id
               end
               send_pb_event event
             end
-          when 'Unlink'
-            other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
+          when UNLINK
+            other_call_channel = ([ami_event[CHANNEL1], ami_event[CHANNEL2]] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
               send_pb_event Event::Unjoined.new(call_uri: other_call.id)
             end
-          when 'VarSet'
-            @channel_variables[ami_event['Variable']] = ami_event['Value']
+          when VARSET
+            @channel_variables[ami_event[VARIABLE]] = ami_event[VALUE]
           end
           trigger_handler :ami, ami_event
         end
@@ -181,7 +200,7 @@ module Punchblock
             @answered = true
             command.response = true
           when Command::Hangup
-            send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
+            send_ami_action HANGUP, CHANNEL => channel, CAUSE => 16
             @hangup_cause = :hangup_command
             command.response = true
           when Command::Join
@@ -247,7 +266,7 @@ module Punchblock
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
           condition = Celluloid::Condition.new
-          register_tmp_handler :ami, name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec', [:[], 'CommandID'] => agi.id do |event|
+          register_tmp_handler :ami, name: ASYNC_AGI, [:[], SUBEVENT] => EXEC, [:[], COMMAND_ID] => agi.id do |event|
             condition.signal event
           end
           agi.execute @ami_client
@@ -300,8 +319,8 @@ module Punchblock
         private
 
         def fetch_channel_var(variable)
-          result = @ami_client.send_action 'GetVar', 'Channel' => channel, 'Variable' => variable
-          result['Value'] == '(null)' ? nil : result['Value']
+          result = @ami_client.send_action 'GetVar', CHANNEL => channel, VARIABLE => variable
+          result[VALUE] == '(null)' ? nil : result[VALUE]
         end
 
         def send_ami_action(name, headers = {})

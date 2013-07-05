@@ -51,7 +51,7 @@ module Punchblock
     # @return [Punchblock::Client] a punchblock client object
     #
     def client_with_connection(type, options)
-      connection = Connection.const_get(type.to_s.classify).new options
+      connection = Connection.const_get(type == :xmpp ? 'XMPP' : type.to_s.classify).new options
       Client.new :connection => connection
     rescue NameError
       raise ArgumentError, "Connection type #{type.inspect} is not valid."

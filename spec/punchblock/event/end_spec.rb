@@ -13,7 +13,7 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <end xmlns="urn:xmpp:rayo:1">
-  <timeout />
+  <timeout platform-code="18" />
   <!-- Signaling (e.g. SIP) Headers -->
   <header name="X-skill" value="agent" />
   <header name="X-customer-id" value="8877" />
@@ -28,12 +28,14 @@ module Punchblock
         it_should_behave_like 'event'
 
         its(:reason) { should be == :timeout }
+        its(:platform_code) { should be == '18' }
         its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
 
         context "with no headers or reason provided" do
           let(:stanza) { '<end xmlns="urn:xmpp:rayo:1"/>' }
 
           its(:reason) { should be_nil}
+          its(:platform_code) { should be_nil }
           its(:headers) { should == {} }
         end
       end
@@ -41,10 +43,12 @@ module Punchblock
       describe "when setting options in initializer" do
         subject do
           described_class.new reason: :hangup,
+                              platform_code: 18,
                               headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' }
         end
 
         its(:reason) { should be == :hangup }
+        its(:platform_code) { should be == '18' }
         its(:headers) { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
       end
     end

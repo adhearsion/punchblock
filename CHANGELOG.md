@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Reconnect dead Asterisk streams correctly
   * Feature: Added FS support for initial timeout and final timeout on Record.
   * Feature: Compliance with v0.2 of the published Rayo spec (http://xmpp.org/extensions/xep-0327.html)
   * Feature: Add support for Rayo Prompt component (no support on FS)

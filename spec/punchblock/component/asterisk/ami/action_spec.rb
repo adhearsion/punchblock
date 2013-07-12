@@ -99,6 +99,7 @@ module Punchblock
 <complete xmlns="urn:xmpp:rayo:ext:1">
   <success xmlns="urn:xmpp:rayo:asterisk:ami:complete:1">
     <message>Originate successfully queued</message>
+    <text-body>Some thing happened</text-body>
     <attribute name="Channel" value="SIP/101-3f3f"/>
     <attribute name="State" value="Ring"/>
   </success>
@@ -112,15 +113,17 @@ module Punchblock
 
                 its(:name)    { should be == :success }
                 its(:message) { should be == "Originate successfully queued" }
+                its(:text_body) { should be == 'Some thing happened' }
                 its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
                 its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
 
                 describe "when setting options in initializer" do
                   subject do
-                    described_class.new message: 'Originate successfully queued', headers: {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
+                    described_class.new message: 'Originate successfully queued', text_body: 'Some thing happened', headers: {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
                   end
 
                   its(:message) { should be == 'Originate successfully queued' }
+                  its(:text_body) { should be == 'Some thing happened' }
                   its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
                   its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
                 end

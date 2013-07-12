@@ -73,7 +73,11 @@ module Punchblock
     end
 
     def ==(o)
-      o.is_a?(self.class) && self.attributes == o.attributes
+      o.is_a?(self.class) && self.to_hash == o.to_hash
+    end
+
+    def to_hash
+      get_attributes(&:public_reader?)
     end
 
     ##

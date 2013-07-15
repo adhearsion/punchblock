@@ -430,6 +430,9 @@ module Punchblock
                   Punchblock::Component::Output.new command_options
                 end
 
+                let(:playbackstatus) { 'SUCCESS' }
+                before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
+
                 describe 'ssml' do
                   context 'unset' do
                     let(:ssml_doc) { nil }
@@ -470,6 +473,19 @@ module Punchblock
                         complete_reason = original_command.complete_event(0.1).reason
                         complete_reason.should be_a Punchblock::Event::Complete::Error
                         complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      end
+                    end
+
+                    context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
+                      let(:playbackstatus) { 'FAILED' }
+
+                      it "should send an error complete event" do
+                        expect_answered
+                        mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to playback error"
                       end
                     end
                   end
@@ -826,6 +842,9 @@ module Punchblock
               let :original_command do
                 Punchblock::Component::Output.new command_options
               end
+
+              let(:playbackstatus) { 'SUCCESS' }
+              before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
 
               it "should use the media renderer set and not the platform default" do
                 expect_answered

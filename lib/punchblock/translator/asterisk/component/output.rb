@@ -12,6 +12,7 @@ module Punchblock
 
           UnrenderableDocError  = Class.new OptionError
           UniMRCPError          = Class.new Punchblock::Error
+          PlaybackError         = Class.new Punchblock::Error
 
           def setup
             @media_engine = @call.translator.media_engine
@@ -55,6 +56,7 @@ module Punchblock
 
               opts = early ? "#{path},noanswer" : path
               @call.execute_agi_command 'EXEC Playback', opts
+              raise PlaybackError if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
             when :unimrcp
               @call.send_progress if early
               send_ref
@@ -68,6 +70,8 @@ module Punchblock
               raise OptionError, "The renderer #{rendering_engine} is unsupported."
             end
             send_finish
+          rescue PlaybackError
+            complete_with_error 'Terminated due to playback error'
           rescue UniMRCPError
             complete_with_error 'Terminated due to UniMRCP error'
           rescue RubyAMI::Error => e

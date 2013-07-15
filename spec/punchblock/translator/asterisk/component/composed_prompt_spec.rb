@@ -69,8 +69,11 @@ module Punchblock
 
           subject { described_class.new original_command, call }
 
+          let(:playbackstatus) { 'SUCCESS' }
+
           before do
             call.stub answered?: true, execute_agi_command: true
+            call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus
             original_command.request!
           end
 

@@ -8,7 +8,7 @@ module Punchblock
 
     include HasGuardedHandlers
 
-    attr_reader :connection, :event_queue, :component_registry
+    attr_reader :connection, :component_registry
 
     delegate :run, :stop, :to => :connection
 
@@ -16,11 +16,9 @@ module Punchblock
     # @option options [Connection::XMPP] :connection The Punchblock connection to use for this session
     #
     def initialize(options = {})
-      @event_queue = Queue.new
       @connection = options[:connection]
       @connection.event_handler = lambda { |event| self.handle_event event } if @connection
       @component_registry = ComponentRegistry.new
-      @write_timeout = options[:write_timeout] || 3
     end
 
     def handle_event(event)
@@ -28,7 +26,7 @@ module Punchblock
       if event.source
         event.source.add_event event
       else
-        trigger_handler(:event, event) || event_queue.push(event)
+        trigger_handler :event, event
       end
     end
 
@@ -49,7 +47,6 @@ module Punchblock
     end
 
     def execute_command(command, options = {})
-      async = options.has_key?(:async) ? options.delete(:async) : true
       command.client = self
       if command.respond_to?(:register_handler)
         command.register_handler :internal do |event|
@@ -57,7 +54,6 @@ module Punchblock
         end
       end
       connection.write command, options
-      command.response(@write_timeout).tap { |result| raise result if result.is_a? Exception } unless async
     end
   end
 end

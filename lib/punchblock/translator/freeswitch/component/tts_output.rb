@@ -9,14 +9,14 @@ module Punchblock
 
           def do_output(engine, default_voice = nil)
             register_handler :es, :event_name => 'CHANNEL_EXECUTE_COMPLETE' do |event|
-              send_complete_event success_reason
+              send_complete_event finish_reason
             end
             voice = @component_node.voice || default_voice || 'kal'
             application :speak, [engine, voice, document].join('|')
           end
 
           def document
-            @component_node.ssml.to_s
+            @component_node.render_documents.first.value.to_s
           end
         end
       end

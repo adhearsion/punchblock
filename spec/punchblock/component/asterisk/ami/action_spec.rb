@@ -8,7 +8,7 @@ module Punchblock
       module AMI
         describe Action do
           it 'registers itself' do
-            RayoNode.class_from_registration(:action, 'urn:xmpp:rayo:asterisk:ami:1').should be == Action
+            RayoNode.class_from_registration(:action, 'urn:xmpp:rayo:asterisk:ami:1').should be == described_class
           end
 
           describe "from a stanza" do
@@ -27,31 +27,21 @@ module Punchblock
               MESSAGE
             end
 
-            subject { RayoNode.import parse_stanza(stanza).root, '9f00061', '1' }
+            subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-            it { should be_instance_of Action }
+            it { should be_instance_of described_class }
 
             it_should_behave_like 'event'
 
             its(:name)    { should be == 'Originate' }
-            its(:params)  { should be == [Action::Param.new('Channel', 'SIP/101test'),
-                                      Action::Param.new('Context', 'default'),
-                                      Action::Param.new('Exten', '8135551212'),
-                                      Action::Param.new('Priority', '1'),
-                                      Action::Param.new('Callerid', '3125551212'),
-                                      Action::Param.new('Timeout', '30000'),
-                                      Action::Param.new('Variable', 'var1=23|var2=24|var3=25'),
-                                      Action::Param.new('Async', '1')
-                                     ]}
-
-            its(:params_hash) { should be == {:channel   => 'SIP/101test',
-                                           :context   => 'default',
-                                           :exten     => '8135551212',
-                                           :priority  => '1',
-                                           :callerid  => '3125551212',
-                                           :timeout   => '30000',
-                                           :variable  => 'var1=23|var2=24|var3=25',
-                                           :async     => '1'} }
+            its(:params)  { should be == { 'Channel'   => 'SIP/101test',
+                                           'Context'   => 'default',
+                                           'Exten'     => '8135551212',
+                                           'Priority'  => '1',
+                                           'Callerid'  => '3125551212',
+                                           'Timeout'   => '30000',
+                                           'Variable'  => 'var1=23|var2=24|var3=25',
+                                           'Async'     => '1'} }
           end
 
           describe "testing equality" do
@@ -76,22 +66,32 @@ module Punchblock
 
           describe "when setting options in initializer" do
             subject do
-              Action.new :name => 'Originate',
-                         :params => { :channel => 'SIP/101test' }
+              described_class.new :name => 'Originate',
+                                  :params => { 'Channel' => 'SIP/101test' }
             end
 
-            its(:name)        { should be == 'Originate' }
-            its(:params)      { should be == [Action::Param.new(:channel, 'SIP/101test')]}
-            its(:params_hash) { should be == { :channel => 'SIP/101test' } }
+            its(:name)    { should be == 'Originate' }
+            its(:params)  { should be == { 'Channel' => 'SIP/101test' } }
+
+            describe "exporting to Rayo" do
+              it "should export to XML that can be understood by its parser" do
+                new_instance = RayoNode.from_xml subject.to_rayo
+                new_instance.should be_instance_of described_class
+                new_instance.name.should == 'Originate'
+                new_instance.params.should == { 'Channel' => 'SIP/101test' }
+              end
+
+              it "should render to a parent node if supplied" do
+                doc = Nokogiri::XML::Document.new
+                parent = Nokogiri::XML::Node.new 'foo', doc
+                doc.root = parent
+                rayo_doc = subject.to_rayo(parent)
+                rayo_doc.should == parent
+              end
+            end
           end
 
           class Action
-            describe Param do
-              let(:class_name)    { Param }
-              let(:element_name)  { 'param' }
-              it_should_behave_like 'key_value_pairs'
-            end
-
             class Complete
               describe Success do
                 let :stanza do
@@ -99,6 +99,7 @@ module Punchblock
 <complete xmlns="urn:xmpp:rayo:ext:1">
   <success xmlns="urn:xmpp:rayo:asterisk:ami:complete:1">
     <message>Originate successfully queued</message>
+    <text-body>Some thing happened</text-body>
     <attribute name="Channel" value="SIP/101-3f3f"/>
     <attribute name="State" value="Ring"/>
   </success>
@@ -106,35 +107,31 @@ module Punchblock
                   MESSAGE
                 end
 
-                subject { RayoNode.import(parse_stanza(stanza).root).reason }
+                subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-                it { should be_instance_of Success }
+                it { should be_instance_of described_class }
 
-                its(:name)            { should be == :success }
-                its(:message)         { should be == "Originate successfully queued" }
-                its(:attributes)      { should be == [Attribute.new('Channel', 'SIP/101-3f3f'), Attribute.new('State', 'Ring')]}
-                its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
+                its(:name)    { should be == :success }
+                its(:message) { should be == "Originate successfully queued" }
+                its(:text_body) { should be == 'Some thing happened' }
+                its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
 
                 describe "when setting options in initializer" do
                   subject do
-                    Success.new :message => 'Originate successfully queued', :attributes => {:channel => 'SIP/101-3f3f', :state => 'Ring'}
+                    described_class.new message: 'Originate successfully queued', text_body: 'Some thing happened', headers: {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
                   end
 
-                  its(:message)         { should be == 'Originate successfully queued' }
-                  its(:attributes)      { should be == [Attribute.new(:channel, 'SIP/101-3f3f'), Attribute.new(:state, 'Ring')]}
-                  its(:attributes_hash) { should be == {:channel => 'SIP/101-3f3f', :state => 'Ring'} }
+                  its(:message) { should be == 'Originate successfully queued' }
+                  its(:text_body) { should be == 'Some thing happened' }
+                  its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                  its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
                 end
-              end
-
-              describe Attribute do
-                let(:class_name)    { Attribute }
-                let(:element_name)  { 'attribute' }
-                it_should_behave_like 'key_value_pairs'
               end
             end
           end
-        end # Action
-      end # AMI
-    end # Asterisk
-  end # Component
-end # Punchblock
+        end
+      end
+    end
+  end
+end

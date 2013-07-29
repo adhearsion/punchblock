@@ -4,6 +4,7 @@
   active_support/dependencies/autoload
   active_support/core_ext/object/blank
   active_support/core_ext/module/delegation
+  active_support/inflector
   future-resource
   has_guarded_handlers
   ruby_speech
@@ -22,11 +23,11 @@ module Punchblock
   autoload :DeadActorSafety
   autoload :DisconnectedError
   autoload :HasHeaders
-  autoload :Header
   autoload :MediaNode
   autoload :ProtocolError
   autoload :RayoNode
   autoload :Translator
+  autoload :URIList
 
   class << self
     def logger
@@ -50,7 +51,7 @@ module Punchblock
     # @return [Punchblock::Client] a punchblock client object
     #
     def client_with_connection(type, options)
-      connection = Connection.const_get(type.to_s.classify).new options
+      connection = Connection.const_get(type == :xmpp ? 'XMPP' : type.to_s.classify).new options
       Client.new :connection => connection
     rescue NameError
       raise ArgumentError, "Connection type #{type.inspect} is not valid."
@@ -74,7 +75,7 @@ module Punchblock
   RAYO_VERSION            = '1'
   RAYO_NAMESPACES         = {:core => [BASE_RAYO_NAMESPACE, RAYO_VERSION].compact.join(':')}
 
-  [:ext, :record, :output, :input].each do |ns|
+  [:ext, :record, :output, :input, :prompt].each do |ns|
     RAYO_NAMESPACES[ns] = [BASE_RAYO_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
     RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_RAYO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
   end

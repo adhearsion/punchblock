@@ -255,13 +255,8 @@ module Punchblock
           event = condition.wait
           return unless event
           agi.parse_result event
-        rescue RubyAMI::Error => e
-          case e.message
-          when 'No such channel', /Channel (\S+) does not exist./
-            abort ChannelGoneError.new(e.message)
-          else
-            abort e
-          end
+        rescue ChannelGoneError, RubyAMI::Error => e
+          abort e
         end
 
         def logger_id

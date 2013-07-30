@@ -14,8 +14,16 @@ module Punchblock
           @id, @channel, @command, @params = id, channel, command, params
         end
 
+        # @raises RubyAMI::Error, ChannelGoneError
         def execute(ami_client)
           ami_client.send_action 'AGI', 'Channel' => @channel, 'Command' => agi_command, 'CommandID' => id
+        rescue RubyAMI::Error => e
+          case e.message
+          when 'No such channel', /Channel (\S+) does not exist./
+            raise ChannelGoneError, e.message
+          else
+            raise e
+          end
         end
 
         def parse_result(event)

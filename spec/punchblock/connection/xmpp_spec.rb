@@ -8,7 +8,7 @@ module Punchblock
       let(:options)     { { :root_domain => 'rayo.net' } }
       let(:connection)  { XMPP.new({:username => '1@app.rayo.net', :password => 1}.merge(options)) }
 
-      let(:mock_event_handler) { stub('Event Handler').as_null_object }
+      let(:mock_event_handler) { double('Event Handler').as_null_object }
 
       before do
         connection.event_handler = mock_event_handler

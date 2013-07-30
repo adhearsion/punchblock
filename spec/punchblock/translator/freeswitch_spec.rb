@@ -5,12 +5,12 @@ require 'spec_helper'
 module Punchblock
   module Translator
     describe Freeswitch do
-      let(:connection)    { mock 'Connection::Freeswitch' }
+      let(:connection)    { double 'Connection::Freeswitch' }
       let(:media_engine)  { :flite }
       let(:default_voice) { :hal }
 
       let(:translator)  { described_class.new connection, media_engine, default_voice }
-      let(:stream)      { mock 'RubyFS::Stream' }
+      let(:stream)      { double 'RubyFS::Stream' }
 
       before { connection.should_receive(:stream).at_most(:once).and_return stream }
 
@@ -95,7 +95,7 @@ module Punchblock
 
       describe '#register_component' do
         let(:component_id) { 'abc123' }
-        let(:component)    { mock 'Foo', :id => component_id }
+        let(:component)    { double 'Foo', :id => component_id }
 
         it 'should make the component accessible by ID' do
           subject.register_component component
@@ -253,7 +253,7 @@ module Punchblock
           end
 
           it 'should instruct the call to send a dial' do
-            mock_call = stub('Freeswitch::Call').as_null_object
+            mock_call = double('Freeswitch::Call').as_null_object
             Freeswitch::Call.should_receive(:new_link).once.and_return mock_call
             mock_call.async.should_receive(:dial).once.with command
             subject.execute_global_command command
@@ -274,7 +274,7 @@ module Punchblock
 
       describe '#handle_pb_event' do
         it 'should forward the event to the connection' do
-          event = mock 'Punchblock::Event'
+          event = double 'Punchblock::Event'
           subject.connection.should_receive(:handle_event).once.with event
           subject.handle_pb_event event
         end
@@ -527,7 +527,7 @@ module Punchblock
 
         describe 'with a CHANNEL_PARK event' do
           it 'should instruct the call to send an offer' do
-            mock_call = stub('Freeswitch::Call').as_null_object
+            mock_call = double('Freeswitch::Call').as_null_object
             Freeswitch::Call.should_receive(:new).once.and_return mock_call
             subject.wrapped_object.should_receive(:link)
             mock_call.async.should_receive(:send_offer).once

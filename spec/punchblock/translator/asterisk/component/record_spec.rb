@@ -11,7 +11,7 @@ module Punchblock
 
           let(:media_engine)  { nil }
           let(:channel)       { 'SIP/foo' }
-          let(:ami_client)    { stub('AMI Client').as_null_object }
+          let(:ami_client)    { double('AMI Client').as_null_object }
           let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
           let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator, ami_client, connection }
 

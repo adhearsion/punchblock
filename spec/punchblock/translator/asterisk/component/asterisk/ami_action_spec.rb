@@ -49,8 +49,10 @@ module Punchblock
                                       'Status'    => '-1'
               end
 
+              before { response.text_body = 'Some text body' }
+
               let :expected_complete_reason do
-                Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: 'Channel status will follow', headers: {'Exten' => "idonno", 'Context' => "default", 'Hint' => "", 'Status' => "-1"}
+                Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: 'Channel status will follow', text_body: 'Some text body', headers: {'Exten' => "idonno", 'Context' => "default", 'Hint' => "", 'Status' => "-1"}
               end
 
               context 'for a non-causal action' do
@@ -100,7 +102,7 @@ module Punchblock
                 end
 
                 let :expected_complete_reason do
-                  Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: 'Channel status will follow', headers: {'Exten' => "idonno", 'Context' => "default", 'Hint' => "", 'Status' => "-1", 'EventList' => 'Complete', 'ListItems' => '3'}
+                  Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: 'Channel status will follow', text_body: 'Some text body', headers: {'Exten' => "idonno", 'Context' => "default", 'Hint' => "", 'Status' => "-1", 'EventList' => 'Complete', 'ListItems' => '3'}
                 end
 
                 before { ami_client.should_receive(:send_action).once.and_return response }

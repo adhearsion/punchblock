@@ -112,6 +112,8 @@ module Punchblock
         class Match < Event::Complete::Reason
           register :match, :input_complete
 
+          attribute :content_type, String, default: 'application/nlsml+xml'
+
           attribute :nlsml
           def nlsml=(other)
             doc = case other
@@ -147,7 +149,10 @@ module Punchblock
           private
 
           def result_node(xml)
-            xml.at_xpath 'ns:result', 'ns' => NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
+            directly_nested = xml.at_xpath 'ns:result', ns: NLSML_NAMESPACE
+            return directly_nested if directly_nested
+            document = Nokogiri::XML.parse xml.text, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS
+            document.at_xpath 'ns:result', ns: NLSML_NAMESPACE or raise "Couldn't find the NLSML node"
           end
         end
 

@@ -10,7 +10,7 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        let(:output)  { Output.new :render_document => {content_type: 'text/uri-list', value: ['http://example.com/hello.mp3']} }
+        let(:output)  { Output.new :render_document => {content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/hello.mp3')} }
         let(:input)   { Input.new :mode => :voice }
         subject       { described_class.new output, input, :barge_in => true }
 

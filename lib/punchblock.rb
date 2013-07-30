@@ -4,6 +4,7 @@
   active_support/dependencies/autoload
   active_support/core_ext/object/blank
   active_support/core_ext/module/delegation
+  active_support/inflector
   future-resource
   has_guarded_handlers
   ruby_speech
@@ -26,6 +27,7 @@ module Punchblock
   autoload :ProtocolError
   autoload :RayoNode
   autoload :Translator
+  autoload :URIList
 
   class << self
     def logger
@@ -49,7 +51,7 @@ module Punchblock
     # @return [Punchblock::Client] a punchblock client object
     #
     def client_with_connection(type, options)
-      connection = Connection.const_get(type.to_s.classify).new options
+      connection = Connection.const_get(type == :xmpp ? 'XMPP' : type.to_s.classify).new options
       Client.new :connection => connection
     rescue NameError
       raise ArgumentError, "Connection type #{type.inspect} is not valid."

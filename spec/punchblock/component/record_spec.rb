@@ -13,20 +13,24 @@ module Punchblock
         subject do
           Record.new :format          => 'WAV',
                      :start_beep      => true,
+                     :stop_beep       => true,
                      :start_paused    => false,
                      :max_duration    => 500000,
                      :initial_timeout => 10000,
                      :final_timeout   => 30000,
-                     :direction       => :duplex
+                     :direction       => :duplex,
+                     :mix             => true
         end
 
         its(:format)          { should be == 'WAV' }
         its(:start_beep)      { should be == true }
+        its(:stop_beep)       { should be == true }
         its(:start_paused)    { should be == false }
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }
         its(:final_timeout)   { should be == 30000 }
         its(:direction)       { should be == :duplex }
+        its(:mix)             { should be == true }
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
@@ -34,11 +38,13 @@ module Punchblock
             new_instance.should be_instance_of described_class
             new_instance.format.should be == 'WAV'
             new_instance.start_beep.should be == true
+            new_instance.stop_beep.should be == true
             new_instance.start_paused.should be == false
             new_instance.max_duration.should be == 500000
             new_instance.initial_timeout.should be == 10000
             new_instance.final_timeout.should be == 30000
             new_instance.direction.should be == :duplex
+            new_instance.mix.should be == true
           end
 
           it "should render to a parent node if supplied" do
@@ -57,10 +63,12 @@ module Punchblock
 <record xmlns="urn:xmpp:rayo:record:1"
         format="WAV"
         start-beep="true"
+        stop-beep="true"
         start-paused="false"
         max-duration="500000"
         initial-timeout="10000"
         direction="duplex"
+        mix="true"
         final-timeout="30000"/>
           MESSAGE
         end
@@ -71,11 +79,13 @@ module Punchblock
 
         its(:format)          { should be == 'WAV' }
         its(:start_beep)      { should be == true }
+        its(:stop_beep)       { should be == true }
         its(:start_paused)    { should be == false }
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }
         its(:final_timeout)   { should be == 30000 }
         its(:direction)       { should be == :duplex }
+        its(:mix)             { should be == true }
       end
 
       describe "with a direction" do

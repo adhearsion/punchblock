@@ -33,6 +33,7 @@ module Punchblock
               register :success, :ami_complete
 
               attribute :message
+              attribute :text_body
               attribute :headers, Hash, default: {}
 
               alias :attributes :headers
@@ -40,6 +41,10 @@ module Punchblock
               def inherit(xml_node)
                 message_node = xml_node.at_xpath 'ns:message', ns: self.class.registered_ns
                 self.message = message_node.text if message_node
+
+                text_body_node = xml_node.at_xpath 'ns:text-body', ns: self.class.registered_ns
+                self.text_body = text_body_node.text if text_body_node
+
                 xml_node.xpath('//ns:attribute', ns: self.class.registered_ns).to_a.each do |attribute|
                   headers[attribute[:name]] = attribute[:value]
                 end

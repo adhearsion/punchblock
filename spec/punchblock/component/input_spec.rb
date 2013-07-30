@@ -254,8 +254,8 @@ module Punchblock
         let :stanza do
           <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
-  <match xmlns="urn:xmpp:rayo:input:complete:1">
-    #{nlsml_string}
+  <match xmlns="urn:xmpp:rayo:input:complete:1" content-type="application/nlsml+xml">
+    <![CDATA[#{nlsml_string}]]>
   </match>
 </complete>
           MESSAGE
@@ -270,6 +270,7 @@ module Punchblock
         it { should be_instance_of Input::Complete::Match }
 
         its(:name)            { should be == :match }
+        its(:content_type)    { should be == 'application/nlsml+xml' }
         its(:nlsml)           { should be == expected_nlsml }
         its(:mode)            { should be == :voice }
         its(:confidence)      { should be == 0.6 }
@@ -281,11 +282,44 @@ module Punchblock
             Input::Complete::Match.new :nlsml => expected_nlsml
           end
 
+          its(:content_type)    { should be == 'application/nlsml+xml' }
           its(:nlsml)           { should be == expected_nlsml }
           its(:mode)            { should be == :voice }
           its(:confidence)      { should be == 0.6 }
           its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
           its(:utterance)       { should be == 'I want to go to Pittsburgh' }
+        end
+
+        context "when not enclosed in CDATA, but escaped" do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+  <match xmlns="urn:xmpp:rayo:input:complete:1" content-type="application/nlsml+xml">
+    &lt;result xmlns=&quot;http://www.ietf.org/xml/ns/mrcpv2&quot; grammar=&quot;http://flight&quot;/&gt;
+  </match>
+</complete>
+            MESSAGE
+          end
+
+          it "should parse the NLSML correctly" do
+            subject.nlsml.grammar.should == "http://flight"
+          end
+        end
+
+        context "when nested directly" do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+  <match xmlns="urn:xmpp:rayo:input:complete:1" content-type="application/nlsml+xml">
+    #{nlsml_string}
+  </match>
+</complete>
+            MESSAGE
+          end
+
+          it "should parse the NLSML correctly" do
+            subject.nlsml.grammar.should == "http://flight"
+          end
         end
 
         describe "comparison" do
@@ -300,7 +334,7 @@ module Punchblock
               <<-MESSAGE
 <complete xmlns='urn:xmpp:rayo:ext:1'>
   <match xmlns="urn:xmpp:rayo:input:complete:1">
-    <result xmlns="http://www.ietf.org/xml/ns/mrcpv2" grammar="http://flight"/>
+    <![CDATA[<result xmlns="http://www.ietf.org/xml/ns/mrcpv2" grammar="http://flight"/>]]>
   </match>
 </complete>
               MESSAGE

@@ -36,7 +36,7 @@ module Punchblock
               headers = response.headers
               headers.merge! final_event.headers if final_event
               headers.delete 'ActionID'
-              Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: headers.delete('Message'), headers: headers
+              Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: headers.delete('Message'), text_body: response.text_body, headers: headers
             end
 
             def send_events(response)

@@ -50,7 +50,7 @@ module Punchblock
     # @return the appropriate object based on the node name and namespace
     def self.from_xml(node, call_id = nil, component_id = nil)
       ns = (node.namespace.href if node.namespace)
-      klass = class_from_registration(node.element_name, ns)
+      klass = class_from_registration(node.name, ns)
       if klass && klass != self
         klass.from_xml node, call_id, component_id
       else
@@ -63,7 +63,7 @@ module Punchblock
 
     def inherit(xml_node)
       xml_node.attributes.each do |key, attr_node|
-        send "#{key.gsub('-', '_')}=", attr_node.value
+        send "#{key.gsub('-', '_')}=", xml_node[key]
       end
       self
     end
@@ -73,7 +73,11 @@ module Punchblock
     end
 
     def ==(o)
-      o.is_a?(self.class) && self.attributes == o.attributes
+      o.is_a?(self.class) && self.to_hash == o.to_hash
+    end
+
+    def to_hash
+      get_attributes(&:public_reader?)
     end
 
     ##

@@ -233,17 +233,18 @@ module Punchblock
           end
         rescue InvalidCommandError => e
           command.response = ProtocolError.new.setup :invalid_command, e.message, id
+        rescue ChannelGoneError
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
         rescue RubyAMI::Error => e
-          command.response = case e.message
-          when 'No such channel', /Channel (\S+) does not exist./
-            ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
-          else
-            ProtocolError.new.setup 'error', e.message, id
-          end
+          command.response = ProtocolError.new.setup 'error', e.message, id
         rescue Celluloid::DeadActorError
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end
 
+        #
+        # @return [Hash] AGI result
+        #
+        # @raises RubyAMI::Error, ChannelGoneError
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
           condition = Celluloid::Condition.new
@@ -255,7 +256,12 @@ module Punchblock
           return unless event
           agi.parse_result event
         rescue RubyAMI::Error => e
-          abort e
+          case e.message
+          when 'No such channel', /Channel (\S+) does not exist./
+            abort ChannelGoneError.new(e.message)
+          else
+            abort e
+          end
         end
 
         def logger_id

@@ -875,17 +875,8 @@ module Punchblock
                 command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
               end
 
-              context "with message 'No such channel'" do
-                let(:message) { 'No such channel' }
-
-                it "should return an :item_not_found event for the call" do
-                  subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
-                end
-              end
-
-              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
-                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+              context "because the channel is gone" do
+                let(:error) { ChannelGoneError }
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
@@ -930,17 +921,8 @@ module Punchblock
                 command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
               end
 
-              context "with message 'No such channel'" do
-                let(:message) { 'No such channel' }
-
-                it "should return an :item_not_found event for the call" do
-                  subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
-                end
-              end
-
-              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
-                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+              context "because the channel is gone" do
+                let(:error) { ChannelGoneError }
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
@@ -981,17 +963,8 @@ module Punchblock
                 subject.should_not be_answered
               end
 
-              context "with message 'No such channel'" do
-                let(:message) { 'No such channel' }
-
-                it "should return an :item_not_found event for the call" do
-                  subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
-                end
-              end
-
-              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
-                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+              context "because the channel is gone" do
+                let(:error) { ChannelGoneError }
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
@@ -1021,17 +994,8 @@ module Punchblock
                 command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
               end
 
-              context "with message 'No such channel'" do
-                let(:message) { 'No such channel' }
-
-                it "should return an :item_not_found event for the call" do
-                  subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
-                end
-              end
-
-              context "with message 'Channel SIP/nosuchchannel does not exist.'" do
-                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+              context "because the channel is gone" do
+                let(:error) { ChannelGoneError }
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
@@ -1372,13 +1336,33 @@ module Punchblock
           end
 
           context 'with an error' do
+            let(:message) { 'Action failed' }
+
             let :error do
-              RubyAMI::Error.new.tap { |e| e.message = 'Action failed' }
+              RubyAMI::Error.new.tap { |e| e.message = message }
             end
 
             it 'should raise the error' do
               ami_client.should_receive(:send_action).once.and_raise error
               expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(RubyAMI::Error, 'Action failed')
+            end
+
+            context "which is 'No such channel'" do
+              let(:message) { 'No such channel' }
+
+              it 'should raise ChannelGoneError' do
+                ami_client.should_receive(:send_action).once.and_raise error
+                expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(ChannelGoneError, message)
+              end
+            end
+
+            context "which is 'Channel SIP/nosuchchannel does not exist.'" do
+              let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+
+              it 'should raise ChannelGoneError' do
+                ami_client.should_receive(:send_action).once.and_raise error
+                expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(ChannelGoneError, message)
+              end
             end
           end
 

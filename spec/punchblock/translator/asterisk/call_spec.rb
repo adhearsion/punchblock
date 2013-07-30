@@ -7,8 +7,8 @@ module Punchblock
     class Asterisk
       describe Call do
         let(:channel)         { 'SIP/foo' }
-        let(:ami_client)      { stub('AMI Client').as_null_object }
-        let(:connection)      { stub('connection').as_null_object }
+        let(:ami_client)      { double('AMI Client').as_null_object }
+        let(:connection)      { double('connection').as_null_object }
         let(:translator)      { Asterisk.new ami_client, connection }
         let(:agi_env) do
           {
@@ -80,7 +80,7 @@ module Punchblock
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'
-            component    = mock 'Translator::Asterisk::Component', :id => component_id
+            component    = double 'Translator::Asterisk::Component', :id => component_id
             subject.register_component component
             subject.component_with_id(component_id).should be component
           end
@@ -610,7 +610,7 @@ module Punchblock
                 'Channel'   => "SIP/1234-00000000"
             end
 
-            let(:response) { mock 'Response' }
+            let(:response) { double 'Response' }
 
             it 'should execute the handler' do
               response.should_receive(:call).once.with ami_event
@@ -1144,7 +1144,7 @@ module Punchblock
             end
 
             let :mock_component do
-              mock 'Component', :id => component_id
+              double 'Component', :id => component_id
             end
 
             context "for a known component ID" do
@@ -1230,7 +1230,7 @@ module Punchblock
           context "with a join command" do
             let(:other_call_id)     { "abc123" }
             let(:other_channel)     { 'SIP/bar' }
-            let(:other_translator)  { stub('Translator::Asterisk').as_null_object }
+            let(:other_translator)  { double('Translator::Asterisk').as_null_object }
 
             let :other_call do
               Call.new other_channel, other_translator, ami_client, connection

@@ -12,10 +12,10 @@ module Punchblock
     its(:component_registry)  { should be_a Client::ComponentRegistry }
 
     let(:call_id)         { 'abc123' }
-    let(:mock_event)      { stub('Event').as_null_object }
+    let(:mock_event)      { double('Event').as_null_object }
     let(:component_id)    { 'abc123' }
-    let(:mock_component)  { stub 'Component', :component_id => component_id }
-    let(:mock_command)    { stub 'Command' }
+    let(:mock_component)  { double 'Component', :component_id => component_id }
+    let(:mock_command)    { double 'Command' }
 
     describe '#run' do
       it 'should start up the connection' do
@@ -50,7 +50,7 @@ module Punchblock
         end
 
         it 'should not call event handlers' do
-          handler = mock 'handler'
+          handler = double 'handler'
           handler.should_receive(:call).never
           subject.register_event_handler do |event|
             handler.call event
@@ -65,7 +65,7 @@ module Punchblock
         end
 
         it 'should call registered event handlers' do
-          handler = mock 'handler'
+          handler = double 'handler'
           handler.should_receive(:call).once.with mock_event
           subject.register_event_handler do |event|
             handler.call event

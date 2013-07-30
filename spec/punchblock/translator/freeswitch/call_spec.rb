@@ -7,10 +7,10 @@ module Punchblock
     class Freeswitch
       describe Call do
         let(:id) { Punchblock.new_uuid }
-        let(:stream)        { stub('RubyFS::Stream').as_null_object }
+        let(:stream)        { double('RubyFS::Stream').as_null_object }
         let(:media_engine)  { 'freeswitch' }
         let(:default_voice) { :hal }
-        let(:translator)    { Freeswitch.new stub('Connection::Freeswitch').as_null_object }
+        let(:translator)    { Freeswitch.new double('Connection::Freeswitch').as_null_object }
         let(:es_env) do
           {
             :variable_direction                   => "inbound",
@@ -176,7 +176,7 @@ module Punchblock
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'
-            component    = mock 'Translator::Freeswitch::Component', :id => component_id
+            component    = double 'Translator::Freeswitch::Component', :id => component_id
             subject.register_component component
             subject.component_with_id(component_id).should be component
           end
@@ -510,7 +510,7 @@ module Punchblock
           end
 
           context 'with an event for a known component' do
-            let(:mock_component_node) { mock 'Punchblock::Component::Output' }
+            let(:mock_component_node) { double 'Punchblock::Component::Output' }
             let :component do
               Component::Output.new mock_component_node, subject
             end
@@ -591,7 +591,7 @@ module Punchblock
               RubyFS::Event.new nil, :event_name => 'DTMF'
             end
 
-            let(:response) { mock 'Response' }
+            let(:response) { double 'Response' }
 
             it 'should execute the handler' do
               response.should_receive(:call).once.with es_event
@@ -880,7 +880,7 @@ module Punchblock
             end
 
             let :mock_component do
-              mock 'Component', :id => component_id
+              double 'Component', :id => component_id
             end
 
             context "for a known component ID" do

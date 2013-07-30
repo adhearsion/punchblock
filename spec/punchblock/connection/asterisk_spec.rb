@@ -15,7 +15,7 @@ module Punchblock
         }
       end
 
-      let(:mock_event_handler) { stub('Event Handler').as_null_object }
+      let(:mock_event_handler) { double('Event Handler').as_null_object }
 
       let(:connection) { Asterisk.new options }
 
@@ -79,7 +79,7 @@ module Punchblock
 
       describe '#write' do
         it 'sends a command to the translator' do
-          command = mock 'Command'
+          command = double 'Command'
           options = {:foo => :bar}
           subject.translator.async.should_receive(:execute_command).once.with command, options
           subject.write command, options

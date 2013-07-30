@@ -10,7 +10,7 @@ module Punchblock
           describe AMIAction do
             include HasMockCallbackConnection
 
-            let(:ami_client)      { stub('AMI Client').as_null_object }
+            let(:ami_client)      { double('AMI Client').as_null_object }
             let(:mock_translator) { Punchblock::Translator::Asterisk.new ami_client, connection }
 
             let :original_command do

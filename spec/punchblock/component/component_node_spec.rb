@@ -52,7 +52,7 @@ module Punchblock
         end
 
         describe "with an event handler set" do
-          let(:handler) { mock 'Response' }
+          let(:handler) { double 'Response' }
 
           before do
             handler.should_receive(:call).once.with(event)

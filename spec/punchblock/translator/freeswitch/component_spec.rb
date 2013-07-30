@@ -26,7 +26,7 @@ module Punchblock
                 RubyFS::Event.new nil, :event_name => 'CHANNEL_EXECUTE'
               end
 
-              let(:response) { mock 'Response' }
+              let(:response) { double 'Response' }
 
               it 'should execute the handler' do
                 response.should_receive(:call).once.with es_event

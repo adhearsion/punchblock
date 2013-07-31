@@ -947,7 +947,7 @@ module Punchblock
               subject.should be_answered
             end
 
-            context "when the AMI commannd raises an error" do
+            context "when the AMI command raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
@@ -994,8 +994,142 @@ module Punchblock
                 command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
               end
 
+              context "which is 'No such channel'" do
+                let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+
+              context "which is 'Channel SIP/nosuchchannel does not exist.'" do
+                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+            end
+          end
+
+          context "with a join command" do
+            let(:other_call_id)     { "abc123" }
+            let(:other_channel)     { 'SIP/bar' }
+            let(:other_translator)  { double('Translator::Asterisk').as_null_object }
+
+            let :other_call do
+              Call.new other_channel, other_translator, ami_client, connection
+            end
+
+            let :command do
+              Punchblock::Command::Join.new call_uri: other_call_id
+            end
+
+            before { translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call) }
+
+            it "executes the proper dialplan Bridge application" do
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Bridge', other_channel).and_return code: 200
+              subject.execute_command command
+            end
+
+            context "when the AMI command raises an error" do
+              let(:message) { 'Some error' }
+              let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
+
+              before { subject.wrapped_object.should_receive(:execute_agi_command).and_raise error }
+
+              it "should return an error with the message" do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              it "should not be answered" do
+                subject.execute_command command
+                subject.should_not be_answered
+              end
+
               context "because the channel is gone" do
                 let(:error) { ChannelGoneError }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+            end
+          end
+
+          context "with an unjoin command" do
+            let(:other_call_id) { "abc123" }
+            let(:other_channel) { 'SIP/bar' }
+
+            let :other_call do
+              Call.new other_channel, translator, ami_client, connection
+            end
+
+            let :command do
+              Punchblock::Command::Unjoin.new call_uri: other_call_id
+            end
+
+            it "executes the unjoin through redirection" do
+              translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
+
+              ami_client.should_receive(:send_action).once.with("Redirect",
+                'Channel'   => channel,
+                'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+              ).and_return RubyAMI::Response.new
+
+              subject.execute_command command
+
+              command.response(1).should be_true
+            end
+
+            it "executes the unjoin through redirection, on the subject call and the other call" do
+              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
+
+              ami_client.should_receive(:send_action).once.with("Redirect",
+                'Channel'       => channel,
+                'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'Context'       => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
+                'ExtraChannel'  => other_channel,
+                'ExtraExten'    => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
+                'ExtraPriority' => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
+                'ExtraContext'  => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
+              ).and_return RubyAMI::Response.new
+
+              subject.execute_command command
+            end
+
+            context "when the AMI commannd raises an error" do
+              let(:message) { 'Some error' }
+              let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
+
+              before do
+                translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
+                ami_client.should_receive(:send_action).and_raise error
+              end
+
+              it "should return an error with the message" do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              context "which is 'No such channel'" do
+                let(:message) { 'No such channel' }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+
+              context "which is 'Channel SIP/nosuchchannel does not exist.'" do
+                let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
@@ -1224,89 +1358,6 @@ module Punchblock
             it 'sends an error in response to the command' do
               subject.execute_command command
               command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
-            end
-          end
-
-          context "with a join command" do
-            let(:other_call_id)     { "abc123" }
-            let(:other_channel)     { 'SIP/bar' }
-            let(:other_translator)  { double('Translator::Asterisk').as_null_object }
-
-            let :other_call do
-              Call.new other_channel, other_translator, ami_client, connection
-            end
-
-            let :command do
-              Punchblock::Command::Join.new call_uri: other_call_id
-            end
-
-            it "executes the proper dialplan Bridge application" do
-              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Bridge', other_channel).and_return code: 200
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
-              subject.execute_command command
-            end
-          end
-
-          context "with an unjoin command" do
-            let(:other_call_id) { "abc123" }
-            let(:other_channel) { 'SIP/bar' }
-
-            let :other_call do
-              Call.new other_channel, translator, ami_client, connection
-            end
-
-            let :command do
-              Punchblock::Command::Unjoin.new call_uri: other_call_id
-            end
-
-            it "executes the unjoin through redirection" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
-
-              ami_client.should_receive(:send_action).once.with("Redirect",
-                'Channel'   => channel,
-                'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
-                'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
-                'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
-              ).and_return RubyAMI::Response.new
-
-              subject.execute_command command
-
-              command.response(1).should be_true
-            end
-
-            it "executes the unjoin through redirection, on the subject call and the other call" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
-
-              ami_client.should_receive(:send_action).once.with("Redirect",
-                'Channel'       => channel,
-                'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
-                'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
-                'Context'       => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
-                'ExtraChannel'  => other_channel,
-                'ExtraExten'    => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
-                'ExtraPriority' => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
-                'ExtraContext'  => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT
-              ).and_return RubyAMI::Response.new
-
-              subject.execute_command command
-            end
-
-            it "handles redirect errors" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
-
-              error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-
-              ami_client.should_receive(:send_action).once.with("Redirect",
-                'Channel'   => channel,
-                'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
-                'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
-                'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
-              ).and_raise error
-
-              subject.execute_command command
-              response = command.response(1)
-              response.should be_a ProtocolError
-              response.text.should == 'FooBar'
             end
           end
         end#execute_command

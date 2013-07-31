@@ -307,6 +307,13 @@ module Punchblock
 
         def send_ami_action(name, headers = {})
           @ami_client.send_action name, headers
+        rescue RubyAMI::Error => e
+          case e.message
+          when 'No such channel', /Channel (\S+) does not exist./
+            raise ChannelGoneError, e.message
+          else
+            raise e
+          end
         end
 
         def send_end_event(reason)

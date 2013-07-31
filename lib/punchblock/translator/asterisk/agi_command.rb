@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'active_support/core_ext/string/filters'
+require 'punchblock/translator/asterisk/ami_error_converter'
 
 module Punchblock
   module Translator
@@ -14,8 +15,9 @@ module Punchblock
           @id, @channel, @command, @params = id, channel, command, params
         end
 
+        # @raises RubyAMI::Error, ChannelGoneError
         def execute(ami_client)
-          ami_client.send_action 'AGI', 'Channel' => @channel, 'Command' => agi_command, 'CommandID' => id
+          AMIErrorConverter.convert { ami_client.send_action 'AGI', 'Channel' => @channel, 'Command' => agi_command, 'CommandID' => id }
         end
 
         def parse_result(event)

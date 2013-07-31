@@ -94,6 +94,16 @@ module Punchblock
                 end
               end
 
+              context "when the channel is gone" do
+                it "should send an error complete event" do
+                  error = ChannelGoneError.new 'FooBar'
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                end
+              end
+
               context "when the call is not answered" do
                 before { expect_answered false }
 
@@ -208,6 +218,16 @@ module Punchblock
                   complete_reason = original_command.complete_event(0.1).reason
                   complete_reason.should be_a Punchblock::Event::Complete::Error
                   complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                end
+              end
+
+              context "when the channel is gone" do
+                it "should send an error complete event" do
+                  error = ChannelGoneError.new 'FooBar'
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Hangup
                 end
               end
 
@@ -473,6 +493,17 @@ module Punchblock
                         complete_reason = original_command.complete_event(0.1).reason
                         complete_reason.should be_a Punchblock::Event::Complete::Error
                         complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      end
+                    end
+
+                    context "when the channel is gone" do
+                      it "should send an error complete event" do
+                        expect_answered
+                        error = ChannelGoneError.new 'FooBar'
+                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Hangup
                       end
                     end
 

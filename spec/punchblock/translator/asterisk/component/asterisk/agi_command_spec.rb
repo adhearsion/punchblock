@@ -71,15 +71,37 @@ module Punchblock
               end
 
               context 'with an error' do
+                let(:message) { 'Action failed' }
                 let :response do
-                  RubyAMI::Error.new.tap { |e| e.message = 'Action failed' }
+                  RubyAMI::Error.new.tap { |e| e.message = message }
                 end
 
+                before { ami_client.should_receive(:send_action).once.and_raise response }
+
                 it 'should send the component node false' do
-                  ami_client.should_receive(:send_action).once.and_raise response
                   subject.execute
                   original_command.response(1).should be_false
                   subject.should_not be_alive
+                end
+
+                context "which is 'No such channel'" do
+                  let(:message) { 'No such channel' }
+
+                  it "should return an :item_not_found error for the command" do
+                    subject.execute
+                    original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
+                    subject.should_not be_alive
+                  end
+                end
+
+                context "which is 'Channel SIP/nosuchchannel does not exist.'" do
+                  let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+
+                  it "should return an :item_not_found error for the command" do
+                    subject.execute
+                    original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
+                    subject.should_not be_alive
+                  end
                 end
               end
             end

@@ -70,6 +70,8 @@ module Punchblock
               raise OptionError, "The renderer #{rendering_engine} is unsupported."
             end
             send_finish
+          rescue ChannelGoneError
+            call_ended
           rescue PlaybackError
             complete_with_error 'Terminated due to playback error'
           rescue UniMRCPError

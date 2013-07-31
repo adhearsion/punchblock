@@ -8,6 +8,9 @@ module Punchblock
     class Asterisk
       include Celluloid
 
+      # Indicates that a command was executed against a channel which no longer exists
+      ChannelGoneError = Class.new Punchblock::Error
+
       extend ActiveSupport::Autoload
 
       autoload :AGICommand

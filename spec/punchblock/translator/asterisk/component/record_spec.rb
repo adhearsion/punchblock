@@ -235,14 +235,23 @@ module Punchblock
                 end
 
                 context "when we get a RubyAMI Error" do
-                  it "should send an error complete event" do
+                  it "should send an error response" do
                     error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
                     mock_call.should_receive(:execute_agi_command).and_raise error
                     ami_client.should_receive(:send_action).never
                     subject.execute
-                    complete_reason = original_command.complete_event(0.1).reason
-                    complete_reason.should be_a Punchblock::Event::Complete::Error
-                    complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                    error = ProtocolError.new.setup :platform_error, "Terminated due to AMI error 'FooBar'"
+                    original_command.response(0.1).should be == error
+                  end
+                end
+
+                context "when the channel is no longer available" do
+                  it "should send an error complete event" do
+                    mock_call.should_receive(:execute_agi_command).and_raise ChannelGoneError
+                    ami_client.should_receive(:send_action).never
+                    subject.execute
+                    error = ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
+                    original_command.response(0.1).should be == error
                   end
                 end
               end

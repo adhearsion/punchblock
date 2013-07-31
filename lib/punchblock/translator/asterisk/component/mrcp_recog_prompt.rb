@@ -15,6 +15,8 @@ module Punchblock
             send_ref
             execute_unimrcp_app
             complete
+          rescue ChannelGoneError
+            call_ended
           rescue UniMRCPError
             complete_with_error 'Terminated due to UniMRCP error'
           rescue RubyAMI::Error => e

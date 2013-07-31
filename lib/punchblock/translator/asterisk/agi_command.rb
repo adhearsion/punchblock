@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'active_support/core_ext/string/filters'
+require 'punchblock/translator/asterisk/ami_error_converter'
 
 module Punchblock
   module Translator
@@ -16,14 +17,7 @@ module Punchblock
 
         # @raises RubyAMI::Error, ChannelGoneError
         def execute(ami_client)
-          ami_client.send_action 'AGI', 'Channel' => @channel, 'Command' => agi_command, 'CommandID' => id
-        rescue RubyAMI::Error => e
-          case e.message
-          when 'No such channel', /Channel (\S+) does not exist./
-            raise ChannelGoneError, e.message
-          else
-            raise e
-          end
+          AMIErrorConverter.convert { ami_client.send_action 'AGI', 'Channel' => @channel, 'Command' => agi_command, 'CommandID' => id }
         end
 
         def parse_result(event)

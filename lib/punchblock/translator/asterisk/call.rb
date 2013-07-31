@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require 'punchblock/translator/asterisk/ami_error_converter'
+
 module Punchblock
   module Translator
     class Asterisk
@@ -306,14 +308,7 @@ module Punchblock
         end
 
         def send_ami_action(name, headers = {})
-          @ami_client.send_action name, headers
-        rescue RubyAMI::Error => e
-          case e.message
-          when 'No such channel', /Channel (\S+) does not exist./
-            raise ChannelGoneError, e.message
-          else
-            raise e
-          end
+          AMIErrorConverter.convert { @ami_client.send_action name, headers }
         end
 
         def send_end_event(reason)

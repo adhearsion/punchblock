@@ -183,7 +183,7 @@ module Punchblock
             @answered = true
             command.response = true
           when Command::Hangup
-            send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
+            send_hangup_command
             @hangup_cause = :hangup_command
             command.response = true
           when Command::Join
@@ -195,17 +195,16 @@ module Punchblock
             redirect_back other_call
             command.response = true
           when Command::Reject
-            rejection = case command.reason
+            case command.reason
             when :busy
-              'EXEC Busy'
+              execute_agi_command 'EXEC Busy'
             when :decline
-              'EXEC Busy'
+              send_hangup_command 21
             when :error
-              'EXEC Congestion'
+              execute_agi_command 'EXEC Congestion'
             else
-              'EXEC Congestion'
+              execute_agi_command 'EXEC Congestion'
             end
-            execute_agi_command rejection
             command.response = true
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
@@ -305,6 +304,10 @@ module Punchblock
         def fetch_channel_var(variable)
           result = @ami_client.send_action 'GetVar', 'Channel' => channel, 'Variable' => variable
           result['Value'] == '(null)' ? nil : result['Value']
+        end
+
+        def send_hangup_command(cause_code = 16)
+          send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => cause_code
         end
 
         def send_ami_action(name, headers = {})

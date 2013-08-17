@@ -896,9 +896,9 @@ module Punchblock
               command.response(0.5).should be true
             end
 
-            it "with a :decline reason should send an EXEC Busy AGI command and set the command's response" do
+            it "with a :decline reason should send a Hangup AMI command (cause 21) and set the command's response" do
               command.reason = :decline
-              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Busy').and_return code: 200
+              ami_client.should_receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 21).and_return RubyAMI::Response.new
               subject.execute_command command
               command.response(0.5).should be true
             end

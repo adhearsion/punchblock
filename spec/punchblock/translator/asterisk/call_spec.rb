@@ -313,7 +313,7 @@ module Punchblock
               comp_command.response(0.1).should be_a Ref
               expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id
               expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
-              expected_end_event = Punchblock::Event::End.new :reason => :hangup, :target_call_id  => subject.id
+              expected_end_event = Punchblock::Event::End.new :reason => :hangup, platform_code: cause, :target_call_id  => subject.id
 
               translator.should_receive(:handle_pb_event).with(expected_complete_event).once.ordered
               translator.should_receive(:handle_pb_event).with(expected_end_event).once.ordered
@@ -347,6 +347,7 @@ module Punchblock
 
               it 'should send an end (hangup_command) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup_command,
+                                                                platform_code: cause,
                                                                 :target_call_id  => subject.id
                 translator.should_receive(:handle_pb_event).with expected_end_event
 
@@ -360,6 +361,7 @@ module Punchblock
 
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+                                                                platform_code: cause,
                                                                 :target_call_id  => subject.id
                 translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
@@ -372,6 +374,7 @@ module Punchblock
 
               it 'should send an end (hangup) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+                                                                platform_code: cause,
                                                                 :target_call_id  => subject.id
                 translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
@@ -384,6 +387,7 @@ module Punchblock
 
               it 'should send an end (busy) event to the translator' do
                 expected_end_event = Punchblock::Event::End.new :reason   => :busy,
+                                                                platform_code: cause,
                                                                 :target_call_id  => subject.id
                 translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
@@ -400,6 +404,7 @@ module Punchblock
 
                 it 'should send an end (timeout) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :timeout,
+                                                                  platform_code: cause,
                                                                   :target_call_id  => subject.id
                   translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
@@ -418,6 +423,7 @@ module Punchblock
 
                 it 'should send an end (reject) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :reject,
+                                                                  platform_code: cause,
                                                                   :target_call_id  => subject.id
                   translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
@@ -470,6 +476,7 @@ module Punchblock
 
                 it 'should send an end (error) event to the translator' do
                   expected_end_event = Punchblock::Event::End.new :reason   => :error,
+                                                                  platform_code: cause,
                                                                   :target_call_id  => subject.id
                   translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event

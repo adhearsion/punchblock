@@ -114,8 +114,7 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
-            cause = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
-            handle_hangup_event cause
+            handle_hangup_event ami_event['Cause'].to_i
           when 'AsyncAGI'
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
@@ -280,14 +279,15 @@ module Punchblock
           send_ami_action 'Redirect', redirect_options
         end
 
-        def handle_hangup_event(reason = :hangup)
+        def handle_hangup_event(code = 16)
+          reason = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[code]
           @block_commands = true
           @components.dup.each_pair do |id, component|
             safe_from_dead_actors do
               component.call_ended if component.alive?
             end
           end
-          send_end_event reason
+          send_end_event reason, code
         end
 
         def actor_died(actor, reason)
@@ -314,8 +314,8 @@ module Punchblock
           AMIErrorConverter.convert { @ami_client.send_action name, headers }
         end
 
-        def send_end_event(reason)
-          send_pb_event Event::End.new(:reason => reason)
+        def send_end_event(reason, code = nil)
+          send_pb_event Event::End.new(reason: reason, platform_code: code)
           translator.deregister_call id, channel
           terminate
         end

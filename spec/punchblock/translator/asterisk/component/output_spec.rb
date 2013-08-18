@@ -464,7 +464,7 @@ module Punchblock
                   end
 
                   context 'with a single audio SSML node' do
-                    let(:audio_filename) { 'http://foo.com/bar.mp3' }
+                    let(:audio_filename) { 'tt-monkeys' }
                     let :ssml_doc do
                       RubySpeech::SSML.draw { audio :src => audio_filename }
                     end
@@ -482,6 +482,16 @@ module Punchblock
                       expect_playback
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+
+                    context "when the audio filename is prefixed by file://" do
+                      let(:audio_filename) { 'file://tt-monkeys' }
+
+                      it 'should playback the audio file using Playback' do
+                        expect_answered
+                        expect_playback 'tt-monkeys'
+                        subject.execute
+                      end
                     end
 
                     context "when we get a RubyAMI Error" do

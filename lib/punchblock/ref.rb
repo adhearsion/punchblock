@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require 'ruby_jid'
+
 module Punchblock
   ##
   # A rayo Ref message. This provides the command ID in response to execution of a command.
@@ -8,10 +10,16 @@ module Punchblock
     register :ref, :core
 
     # @return [String] the command URI
-    attribute :uri
+    attribute :uri, RubyJID
+    def uri=(other)
+      jid = URI(other).opaque
+      super RubyJID.new(jid)
+    end
 
     def rayo_attributes
-      {uri: uri}
+      {}.tap do |atts|
+        atts[:uri] = "xmpp:#{uri}" if uri
+      end
     end
   end
 end

@@ -164,6 +164,7 @@ module Punchblock
 
                     it 'should send an end (hangup) event to the translator' do
                       expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                                                                      platform_code: 16,
                                                                       target_call_id: mock_call.id
 
                       translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)

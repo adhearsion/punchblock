@@ -11,7 +11,7 @@ module Punchblock
   module Connection
     class XMPP < GenericConnection
       include Blather::DSL
-      attr_accessor :event_handler, :root_domain, :calls_domain, :mixers_domain
+      attr_accessor :event_handler, :root_domain
 
       ##
       # Initialize the required connection attributes
@@ -29,11 +29,8 @@ module Punchblock
 
         setup(*[:username, :password, :host, :port, :certs, :connection_timeout].map { |key| options.delete key })
 
-        @root_domain    = Blather::JID.new(options[:root_domain] || options[:rayo_domain] || @username).domain
-        @calls_domain   = options[:calls_domain]  || "calls.#{@root_domain}"
-        @mixers_domain  = options[:mixers_domain] || "mixers.#{@root_domain}"
+        @root_domain = Blather::JID.new(options[:root_domain] || options[:rayo_domain] || @username).domain
 
-        @callmap = {} # This hash maps call IDs to their XMPP domain.
         @joined_mixers = []
 
         @ping_period = options.has_key?(:ping_period) ? options[:ping_period] : 60
@@ -111,15 +108,11 @@ module Punchblock
 
         if command.target_call_id
           node = command.target_call_id
-          domain = @callmap[command.target_call_id] || calls_domain
         elsif command.target_mixer_name
           node = command.target_mixer_name
-          domain = @callmap[command.target_mixer_name] || mixers_domain
-        else
-          domain = calls_domain
         end
 
-        Blather::JID.new(node, domain, command.component_id).to_s
+        Blather::JID.new(node, command.domain || root_domain, command.component_id).to_s
       end
 
       def send_presence(presence)
@@ -130,7 +123,6 @@ module Punchblock
 
       def handle_presence(p)
         throw :pass unless p.rayo_event?
-        @callmap[p.call_id] = p.from.domain
         event = p.event
         event.connection = self
         event.domain = p.from.domain
@@ -143,8 +135,6 @@ module Punchblock
       end
 
       def handle_iq_result(iq, command)
-        # FIXME: Do we need to raise a warning if the domain changes?
-        @callmap[iq.from.node] = iq.from.domain
         command.response = iq.rayo_node.is_a?(Ref) ? iq.rayo_node : true
       end
 

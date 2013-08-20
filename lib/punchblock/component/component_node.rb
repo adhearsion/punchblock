@@ -37,7 +37,7 @@ module Punchblock
 
       def response=(other)
         if other.is_a?(Ref)
-          @component_id = other.uri
+          @component_id = other.component_id
           client.register_component self if client
         end
         super

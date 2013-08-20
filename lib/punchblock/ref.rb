@@ -37,6 +37,15 @@ module Punchblock
       end
     end
 
+    def component_id
+      case scheme
+      when 'xmpp'
+        RubyJID.new(uri.opaque).resource
+      else
+        call_id
+      end
+    end
+
     def rayo_attributes
       {}.tap do |atts|
         atts[:uri] = uri if uri

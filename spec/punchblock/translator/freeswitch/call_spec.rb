@@ -897,7 +897,7 @@ module Punchblock
                 Punchblock::Component::Output.new :render_document => {:value => RubySpeech::SSML.draw}
               end
 
-              let(:comp_id) { component_command.response.uri }
+              let(:comp_id) { component_command.response.component_id }
 
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 

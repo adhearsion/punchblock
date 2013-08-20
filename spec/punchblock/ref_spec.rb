@@ -15,42 +15,44 @@ module Punchblock
       subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
       it { should be_instance_of described_class }
-
-      it_should_behave_like 'event'
+      its(:target_call_id)  { should be == '9f00061' }
 
       context "when the URI isn't actually a URI" do
         let(:uri) { 'fgh4590' }
 
-        its(:uri)     { should be == URI('fgh4590') }
-        its(:scheme)  { should be == nil }
-        its(:call_id) { should be == 'fgh4590' }
-        its(:domain)  { should be == nil }
+        its(:uri)           { should be == URI('fgh4590') }
+        its(:scheme)        { should be == nil }
+        its(:call_id)       { should be == 'fgh4590' }
+        its(:domain)        { should be == nil }
+        its(:component_id)  { should be == 'fgh4590' }
       end
 
       context "when the URI is an XMPP JID" do
-        let(:uri) { 'xmpp:fgh4590@rayo.net' }
+        let(:uri) { 'xmpp:fgh4590@rayo.net/abc123' }
 
-        its(:uri)     { should be == URI('xmpp:fgh4590@rayo.net') }
-        its(:scheme)  { should be == 'xmpp' }
-        its(:call_id) { should be == 'fgh4590' }
-        its(:domain)  { should be == 'rayo.net' }
+        its(:uri)           { should be == URI('xmpp:fgh4590@rayo.net/abc123') }
+        its(:scheme)        { should be == 'xmpp' }
+        its(:call_id)       { should be == 'fgh4590' }
+        its(:domain)        { should be == 'rayo.net' }
+        its(:component_id)  { should be == 'abc123' }
       end
 
       context "when the URI is an asterisk UUID" do
         let(:uri) { 'asterisk:fgh4590' }
 
-        its(:uri)     { should be == URI('asterisk:fgh4590') }
-        its(:scheme)  { should be == 'asterisk' }
-        its(:call_id) { should be == 'fgh4590' }
-        its(:domain)  { should be == nil }
+        its(:uri)           { should be == URI('asterisk:fgh4590') }
+        its(:scheme)        { should be == 'asterisk' }
+        its(:call_id)       { should be == 'fgh4590' }
+        its(:domain)        { should be == nil }
+        its(:component_id)  { should be == 'fgh4590' }
       end
     end
 
     describe "when setting options in initializer" do
       subject { Ref.new uri: uri }
-      let(:uri) { 'xmpp:fgh4590@rayo.net' }
+      let(:uri) { 'xmpp:fgh4590@rayo.net/abc123' }
 
-      its(:uri) { should be == URI('xmpp:fgh4590@rayo.net') }
+      its(:uri) { should be == URI('xmpp:fgh4590@rayo.net/abc123') }
 
       describe "exporting to Rayo" do
         context "when the URI isn't actually a URI" do

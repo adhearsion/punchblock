@@ -83,14 +83,25 @@ module Punchblock
         before { subject.request! }
 
         let(:call_id) { 'abc123' }
+        let(:domain)  { 'rayo.net' }
 
         let :ref do
-          Ref.new uri: call_id
+          Ref.new uri: "xmpp:#{call_id}@#{domain}"
+        end
+
+        it "should set the transport from the ref" do
+          subject.response = ref
+          subject.transport.should be == 'xmpp'
         end
 
         it "should set the call ID from the ref" do
           subject.response = ref
           subject.target_call_id.should be == call_id
+        end
+
+        it "should set the domain from the ref" do
+          subject.response = ref
+          subject.domain.should be == domain
         end
       end
     end

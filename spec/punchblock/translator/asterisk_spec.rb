@@ -159,7 +159,7 @@ module Punchblock
         context "for an outgoing call which began executing but crashed" do
           let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
 
-          let(:call_id) { dial_command.response.uri }
+          let(:call_id) { dial_command.response.call_id }
 
           before do
             subject.async.should_receive(:execute_global_command)

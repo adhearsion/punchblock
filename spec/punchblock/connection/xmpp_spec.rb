@@ -251,10 +251,10 @@ module Punchblock
           end
 
           context "with a domain specified" do
-            let(:command)       { Command::Answer.new target_call_id: 'abc123', domain: 'calls.rayo.net' }
             let(:expected_jid)  { 'abc123@calls.rayo.net' }
 
             it "should use the specified domain in the JID" do
+              stanza = subject.prep_command_for_execution command, domain: 'calls.rayo.net'
               stanza.to.should be == expected_jid
             end
           end

@@ -59,6 +59,7 @@ module Punchblock
         command.connection    = self
         command.target_call_id    ||= options[:call_id]
         command.target_mixer_name ||= options[:mixer_name]
+        command.domain            ||= options[:domain]
         command.component_id      ||= options[:component_id]
         if command.is_a?(Command::Join) && command.mixer_name
           @joined_mixers << command.mixer_name

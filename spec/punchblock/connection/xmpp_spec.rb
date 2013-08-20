@@ -163,6 +163,7 @@ module Punchblock
                 event.should be_instance_of Event::Offer
                 event.target_call_id.should be == '9f00061'
                 event.domain.should be == 'call.rayo.net'
+                event.transport.should be == 'xmpp'
               end
               handle_presence
             end

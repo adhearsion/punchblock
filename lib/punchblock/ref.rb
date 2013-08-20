@@ -10,15 +10,34 @@ module Punchblock
     register :ref, :core
 
     # @return [String] the command URI
-    attribute :uri, RubyJID
+    attribute :uri
     def uri=(other)
-      jid = URI(other).opaque
-      super RubyJID.new(jid)
+      super URI(other)
+    end
+
+    def scheme
+      uri.scheme
+    end
+
+    def call_id
+      case scheme
+      when 'xmpp'
+        RubyJID.new(uri.opaque).node
+      else
+        uri.opaque
+      end
+    end
+
+    def domain
+      case scheme
+      when 'xmpp'
+        RubyJID.new(uri.opaque).domain
+      end
     end
 
     def rayo_attributes
       {}.tap do |atts|
-        atts[:uri] = "xmpp:#{uri}" if uri
+        atts[:uri] = uri if uri
       end
     end
   end

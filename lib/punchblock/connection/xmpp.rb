@@ -127,6 +127,7 @@ module Punchblock
         event = p.event
         event.connection = self
         event.domain = p.from.domain
+        event.transport = "xmpp"
         if @joined_mixers.include?(p.call_id)
           event.target_mixer_name = p.call_id
         else

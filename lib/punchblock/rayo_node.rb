@@ -17,6 +17,7 @@ module Punchblock
     attribute :target_mixer_name
     attribute :component_id
     attribute :domain
+    attribute :transport
 
     attr_accessor :connection, :client, :original_component
 

@@ -89,6 +89,11 @@ module Punchblock
           Ref.new uri: "xmpp:#{call_id}@#{domain}"
         end
 
+        it "should set the transport from the ref" do
+          subject.response = ref
+          subject.transport.should be == 'xmpp'
+        end
+
         it "should set the call ID from the ref" do
           subject.response = ref
           subject.target_call_id.should be == call_id

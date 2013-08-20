@@ -23,6 +23,8 @@ module Punchblock
       case scheme
       when 'xmpp'
         RubyJID.new(uri.opaque).node
+      when nil
+        uri.path
       else
         uri.opaque
       end

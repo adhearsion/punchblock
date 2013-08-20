@@ -18,6 +18,15 @@ module Punchblock
 
       it_should_behave_like 'event'
 
+      context "when the URI isn't actually a URI" do
+        let(:uri) { 'fgh4590' }
+
+        its(:uri)     { should be == URI('fgh4590') }
+        its(:scheme)  { should be == nil }
+        its(:call_id) { should be == 'fgh4590' }
+        its(:domain)  { should be == nil }
+      end
+
       context "when the URI is an XMPP JID" do
         let(:uri) { 'xmpp:fgh4590@rayo.net' }
 
@@ -44,6 +53,16 @@ module Punchblock
       its(:uri) { should be == URI('xmpp:fgh4590@rayo.net') }
 
       describe "exporting to Rayo" do
+        context "when the URI isn't actually a URI" do
+          let(:uri) { 'fgh4590' }
+
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml subject.to_rayo
+            new_instance.should be_instance_of described_class
+            new_instance.uri.should == URI('fgh4590')
+          end
+        end
+
         context "when the URI is an XMPP JID" do
           let(:uri) { 'xmpp:fgh4590@rayo.net' }
 

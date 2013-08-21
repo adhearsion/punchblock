@@ -21,40 +21,18 @@ module Punchblock
           let(:options) { { :username => '1@app.rayo.net' } }
 
           its(:root_domain)   { should be == 'app.rayo.net' }
-          its(:calls_domain)  { should be == 'calls.app.rayo.net' }
-          its(:mixers_domain) { should be == 'mixers.app.rayo.net' }
         end
 
         context "with only a rayo domain set" do
           let(:options) { { :rayo_domain => 'rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)  { should be == 'calls.rayo.org' }
-          its(:mixers_domain) { should be == 'mixers.rayo.org' }
         end
 
         context "with only a root domain set" do
           let(:options) { { :root_domain => 'rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)  { should be == 'calls.rayo.org' }
-          its(:mixers_domain) { should be == 'mixers.rayo.org' }
-        end
-
-        context "with a root domain and calls domain set" do
-          let(:options) { { :root_domain => 'rayo.org', :calls_domain => 'phone_calls.rayo.org' } }
-
-          its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)  { should be == 'phone_calls.rayo.org' }
-          its(:mixers_domain) { should be == 'mixers.rayo.org' }
-        end
-
-        context "with a root domain and mixers domain set" do
-          let(:options) { { :root_domain => 'rayo.org', :mixers_domain => 'conferences.rayo.org' } }
-
-          its(:root_domain)   { should be == 'rayo.org' }
-          its(:calls_domain)  { should be == 'calls.rayo.org' }
-          its(:mixers_domain) { should be == 'conferences.rayo.org' }
         end
       end
 
@@ -185,14 +163,9 @@ module Punchblock
                 event.should be_instance_of Event::Offer
                 event.target_call_id.should be == '9f00061'
                 event.domain.should be == 'call.rayo.net'
+                event.transport.should be == 'xmpp'
               end
               handle_presence
-            end
-
-            it "should populate the call map with the domain for the call ID" do
-              handle_presence
-              callmap = connection.instance_variable_get(:'@callmap')
-              callmap['9f00061'].should be == 'call.rayo.net'
             end
           end
 
@@ -220,7 +193,7 @@ module Punchblock
         let(:component_id)  { 'abc123' }
         let :error_xml do
           <<-MSG
-<iq type="error" id="blather000e" from="f6d437f4-1e18-457b-99f8-b5d853f50347@10.0.1.11/abc123" to="usera@10.0.1.11/voxeo">
+<iq type="error" id="blather000e" from="f6d437f4-1e18-457b-99f8-b5d853f50347@call.rayo.net/abc123" to="usera@rayo.net">
   <output xmlns="urn:xmpp:rayo:output:1"/>
   <error type="cancel">
     <item-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
@@ -272,16 +245,25 @@ module Punchblock
 
         context "with a call command" do
           let(:command)       { Command::Answer.new target_call_id: 'abc123' }
-          let(:expected_jid)  { 'abc123@calls.rayo.net' }
+          let(:expected_jid)  { 'abc123@rayo.net' }
 
           it "should use the correct JID" do
             stanza.to.should be == expected_jid
+          end
+
+          context "with a domain specified" do
+            let(:expected_jid)  { 'abc123@calls.rayo.net' }
+
+            it "should use the specified domain in the JID" do
+              stanza = subject.prep_command_for_execution command, domain: 'calls.rayo.net'
+              stanza.to.should be == expected_jid
+            end
           end
         end
 
         context "with a call component" do
           let(:command)       { Component::Output.new :target_call_id => 'abc123' }
-          let(:expected_jid)  { 'abc123@calls.rayo.net' }
+          let(:expected_jid)  { 'abc123@rayo.net' }
 
           it "should use the correct JID" do
             stanza.to.should be == expected_jid
@@ -290,7 +272,7 @@ module Punchblock
 
         context "with a call component command" do
           let(:command)       { Component::Stop.new :target_call_id => 'abc123', :component_id => 'foobar' }
-          let(:expected_jid)  { 'abc123@calls.rayo.net/foobar' }
+          let(:expected_jid)  { 'abc123@rayo.net/foobar' }
 
           it "should use the correct JID" do
             stanza.to.should be == expected_jid
@@ -299,7 +281,7 @@ module Punchblock
 
         context "with a mixer component" do
           let(:command)       { Component::Output.new :target_mixer_name => 'abc123' }
-          let(:expected_jid)  { 'abc123@mixers.rayo.net' }
+          let(:expected_jid)  { 'abc123@rayo.net' }
 
           it "should use the correct JID" do
             stanza.to.should be == expected_jid
@@ -308,7 +290,7 @@ module Punchblock
 
         context "with a mixer component command" do
           let(:command)       { Component::Stop.new :target_mixer_name => 'abc123', :component_id => 'foobar' }
-          let(:expected_jid)  { 'abc123@mixers.rayo.net/foobar' }
+          let(:expected_jid)  { 'abc123@rayo.net/foobar' }
 
           it "should use the correct JID" do
             stanza.to.should be == expected_jid
@@ -325,7 +307,7 @@ module Punchblock
 
           let :active_speaker_xml do
             <<-MSG
-<presence to='16577@app.rayo.net/1' from='foomixer@mixers.rayo.net'>
+<presence to='16577@app.rayo.net/1' from='foomixer@rayo.net'>
   <started-speaking xmlns="urn:xmpp:rayo:1" call-id="foocall"/>
 </presence>
             MSG
@@ -338,7 +320,7 @@ module Punchblock
               event.should be_instance_of Event::StartedSpeaking
               event.target_mixer_name.should be == 'foomixer'
               event.target_call_id.should be nil
-              event.domain.should be == 'mixers.rayo.net'
+              event.domain.should be == 'rayo.net'
             end
             connection.__send__ :handle_presence, active_speaker_event
           end

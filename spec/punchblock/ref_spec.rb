@@ -9,27 +9,80 @@ module Punchblock
     end
 
     describe "from a stanza" do
-      let(:stanza) { "<ref uri='fgh4590' xmlns='urn:xmpp:rayo:1' />" }
+      let(:uri)     { 'some_uri' }
+      let(:stanza)  { "<ref uri='#{uri}' xmlns='urn:xmpp:rayo:1' />" }
 
       subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
       it { should be_instance_of described_class }
+      its(:target_call_id)  { should be == '9f00061' }
 
-      it_should_behave_like 'event'
+      context "when the URI isn't actually a URI" do
+        let(:uri) { 'fgh4590' }
 
-      its(:uri) { should be == 'fgh4590' }
+        its(:uri)           { should be == URI('fgh4590') }
+        its(:scheme)        { should be == nil }
+        its(:call_id)       { should be == 'fgh4590' }
+        its(:domain)        { should be == nil }
+        its(:component_id)  { should be == 'fgh4590' }
+      end
+
+      context "when the URI is an XMPP JID" do
+        let(:uri) { 'xmpp:fgh4590@rayo.net/abc123' }
+
+        its(:uri)           { should be == URI('xmpp:fgh4590@rayo.net/abc123') }
+        its(:scheme)        { should be == 'xmpp' }
+        its(:call_id)       { should be == 'fgh4590' }
+        its(:domain)        { should be == 'rayo.net' }
+        its(:component_id)  { should be == 'abc123' }
+      end
+
+      context "when the URI is an asterisk UUID" do
+        let(:uri) { 'asterisk:fgh4590' }
+
+        its(:uri)           { should be == URI('asterisk:fgh4590') }
+        its(:scheme)        { should be == 'asterisk' }
+        its(:call_id)       { should be == 'fgh4590' }
+        its(:domain)        { should be == nil }
+        its(:component_id)  { should be == 'fgh4590' }
+      end
     end
 
     describe "when setting options in initializer" do
-      subject { Ref.new uri: 'foo' }
+      subject { Ref.new uri: uri }
+      let(:uri) { 'xmpp:fgh4590@rayo.net/abc123' }
 
-      its(:uri) { should be == 'foo' }
+      its(:uri) { should be == URI('xmpp:fgh4590@rayo.net/abc123') }
 
       describe "exporting to Rayo" do
-        it "should export to XML that can be understood by its parser" do
-          new_instance = RayoNode.from_xml subject.to_rayo
-          new_instance.should be_instance_of described_class
-          new_instance.uri.should == 'foo'
+        context "when the URI isn't actually a URI" do
+          let(:uri) { 'fgh4590' }
+
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml subject.to_rayo
+            new_instance.should be_instance_of described_class
+            new_instance.uri.should == URI('fgh4590')
+          end
+        end
+
+        context "when the URI is an XMPP JID" do
+          let(:uri) { 'xmpp:fgh4590@rayo.net' }
+
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml subject.to_rayo
+            new_instance.should be_instance_of described_class
+            new_instance.uri.should == URI('xmpp:fgh4590@rayo.net')
+          end
+        end
+
+        context "when the URI is an asterisk UUID" do
+          let(:uri) { 'asterisk:fgh4590' }
+
+          it "should export to XML that can be understood by its parser" do
+            new_instance = RayoNode.from_xml subject.to_rayo
+            new_instance.should be_instance_of described_class
+            new_instance.uri.should == URI('asterisk:fgh4590')
+          end
         end
 
         it "should render to a parent node if supplied" do

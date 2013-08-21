@@ -16,8 +16,10 @@ module Punchblock
     attribute :target_call_id
     attribute :target_mixer_name
     attribute :component_id
+    attribute :domain
+    attribute :transport
 
-    attr_accessor :domain, :connection, :client, :original_component
+    attr_accessor :connection, :client, :original_component
 
     # Register a new stanza class to a name and/or namespace
     #

@@ -1,17 +1,17 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
 # [v2.0.0.beta1](https://github.com/adhearsion/punchblock/compare/v1.9.4...v2.0.0.beta1) - [2013-08-20](https://rubygems.org/gems/punchblock/versions/2.0.0.beta1)
-  * Bugfix: Reconnect dead Asterisk streams correctly
-  * Feature: Added FS support for initial timeout and final timeout on Record.
   * Feature: Compliance with v0.2 of the published Rayo spec (http://xmpp.org/extensions/xep-0327.html)
-  * Feature: Add support for Rayo Prompt component (no support on FS)
+  * Feature: Add support for Rayo Prompt component
+  * Feature: Added FS support for initial timeout and final timeout on Record
   * Change: Models are now plain ruby objects, not XML nodes, and are imported from/exported to XML when necessary for communicating over XMPP.
   * Change: `#headers` and AMI `#attributes` now do not have their names modified. A header of `'Call-ID'` will no longer be modified to `:call_id`.
   * Change: AMI Events/Actions now have `#headers(=)` rather than `#attributes(=)`
   * Change: Remove event queue
+  * Bugfix: Reconnect dead Asterisk streams correctly
   * Bugfix: Include AMI response text_body in AMI component complete events
   * Bugfix: Avoid crashing translators (Asterisk or FreeSWITCH) by instructing them to call back to terminated Call objects
-  * Bugfix: Detect MRCPSynth failure in output component.
+  * Bugfix: Detect MRCPSynth failure in output component
   * Bugfix: Handle AMI errors indicating dead channels correctly
 
 # [v1.9.4](https://github.com/adhearsion/punchblock/compare/v1.9.3...v1.9.4) - [2013-06-08](https://rubygems.org/gems/punchblock/versions/1.9.4)

@@ -7,8 +7,10 @@ module Blather
     #   representing the Rayo command/event contained within the stanza
     #
     def rayo_node
-      first_child = at_xpath '*'
-      Punchblock::RayoNode.from_xml first_child, nil, component_id if first_child
+      @rayo_node ||= begin
+        first_child = at_xpath '*'
+        Punchblock::RayoNode.from_xml first_child, nil, component_id if first_child
+      end
     rescue Punchblock::RayoNode::InvalidNodeError
       nil
     end

@@ -139,6 +139,16 @@ module Punchblock
 
         it { example_complete.should be_a Blather::Stanza::Presence }
 
+        describe "accessing the rayo node for a presence stanza" do
+          it "should import the rayo node" do
+            example_complete.rayo_node.should be_a Punchblock::Event::Complete
+          end
+
+          it "should be memoized" do
+            example_complete.rayo_node.should be example_complete.rayo_node
+          end
+        end
+
         describe "presence received" do
           let(:handle_presence) { connection.__send__ :handle_presence, example_event }
 

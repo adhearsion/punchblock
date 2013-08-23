@@ -183,12 +183,20 @@ module Punchblock
             let :irrelevant_xml do
               <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
-  <foo/>
+  <foo bar="baz"/>
 </presence>
               MSG
             end
 
             let(:example_event) { import_stanza irrelevant_xml }
+
+            it 'should not be considered to be a rayo event' do
+              example_event.rayo_event?.should be_false
+            end
+
+            it 'should have a nil rayo_node' do
+              example_event.rayo_node.should be_nil
+            end
 
             it 'should not handle the event' do
               mock_event_handler.should_receive(:call).never

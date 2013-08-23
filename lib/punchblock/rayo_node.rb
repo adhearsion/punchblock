@@ -7,8 +7,6 @@ module Punchblock
   class RayoNode
     include Virtus
 
-    InvalidNodeError = Class.new Punchblock::Error
-
     @@registrations = {}
 
     class_attribute :registered_ns, :registered_name
@@ -65,7 +63,8 @@ module Punchblock
 
     def inherit(xml_node)
       xml_node.attributes.each do |key, attr_node|
-        send "#{key.gsub('-', '_')}=", xml_node[key]
+        setter_method = "#{key.gsub('-', '_')}="
+        send setter_method, xml_node[key] if respond_to?(setter_method)
       end
       self
     end

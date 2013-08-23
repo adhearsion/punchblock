@@ -2,17 +2,16 @@
 
 module Blather
   class Stanza
+    RAYO_NODE_PATH = "(#{Punchblock::RAYO_NAMESPACES.keys.map { |k| "#{k}:*" }.join("|")})".freeze
     ##
     # @return [Punchblock::RayoNode] a child of RayoNode
     #   representing the Rayo command/event contained within the stanza
     #
     def rayo_node
       @rayo_node ||= begin
-        first_child = at_xpath '*'
+        first_child = at_xpath RAYO_NODE_PATH, Punchblock::RAYO_NAMESPACES
         Punchblock::RayoNode.from_xml first_child, nil, component_id if first_child
       end
-    rescue Punchblock::RayoNode::InvalidNodeError
-      nil
     end
 
     ##

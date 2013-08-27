@@ -6,10 +6,8 @@ module Punchblock
   module Translator
     describe Freeswitch do
       let(:connection)    { double 'Connection::Freeswitch' }
-      let(:media_engine)  { :flite }
-      let(:default_voice) { :hal }
 
-      let(:translator)  { described_class.new connection, media_engine, default_voice }
+      let(:translator)  { described_class.new connection }
       let(:stream)      { double 'RubyFS::Stream' }
 
       before { connection.should_receive(:stream).at_most(:once).and_return stream }
@@ -248,8 +246,6 @@ module Punchblock
             call.should be_a Freeswitch::Call
             call.translator.should be subject
             call.stream.should be stream
-            call.media_engine.should be media_engine
-            call.default_voice.should be default_voice
           end
 
           it 'should instruct the call to send a dial' do
@@ -430,8 +426,6 @@ module Punchblock
           call.should be_a Freeswitch::Call
           call.translator.should be subject
           call.stream.should be stream
-          call.media_engine.should be media_engine
-          call.default_voice.should be default_voice
           call.es_env.should be ==  {
             :variable_direction                   => "inbound",
             :variable_uuid                        => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",

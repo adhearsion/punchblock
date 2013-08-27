@@ -5,15 +5,11 @@ require 'spec_helper'
 module Punchblock
   module Connection
     describe Freeswitch do
-      let(:media_engine)  { :flite }
-      let(:default_voice) { :hal }
       let :options do
         {
-          :host           => '127.0.0.1',
-          :port           => 8021,
-          :password       => 'test',
-          :media_engine   => media_engine,
-          :default_voice  => default_voice
+          :host     => '127.0.0.1',
+          :port     => 8021,
+          :password => 'test'
         }
       end
 
@@ -31,14 +27,6 @@ module Punchblock
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
-      end
-
-      it 'should set the media engine on the translator' do
-        subject.translator.media_engine.should be media_engine
-      end
-
-      it 'should set the default voice on the translator' do
-        subject.translator.default_voice.should be default_voice
       end
 
       describe '#run' do

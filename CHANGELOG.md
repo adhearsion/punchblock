@@ -8,6 +8,7 @@
   * Change: `#headers` and AMI `#attributes` now do not have their names modified. A header of `'Call-ID'` will no longer be modified to `:call_id`.
   * Change: AMI Events/Actions now have `#headers(=)` rather than `#attributes(=)`
   * Change: Remove event queue
+  * Change: Removed `media_engine` and `default_voice` settings
   * Bugfix: Reconnect dead Asterisk streams correctly
   * Bugfix: Include AMI response text_body in AMI component complete events
   * Bugfix: Avoid crashing translators (Asterisk or FreeSWITCH) by instructing them to call back to terminated Call objects

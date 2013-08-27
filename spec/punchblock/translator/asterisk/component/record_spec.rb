@@ -9,10 +9,9 @@ module Punchblock
         describe Record do
           include HasMockCallbackConnection
 
-          let(:media_engine)  { nil }
           let(:channel)       { 'SIP/foo' }
           let(:ami_client)    { double('AMI Client').as_null_object }
-          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
+          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection }
           let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator, ami_client, connection }
 
           let :original_command do

@@ -9,10 +9,10 @@ module Punchblock
         describe Output do
           include HasMockCallbackConnection
 
-          let(:media_engine)  { nil }
-          let(:ami_client)    { double('AMI') }
-          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
-          let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
+          let(:renderer)    { nil }
+          let(:ami_client)  { double('AMI') }
+          let(:translator)  { Punchblock::Translator::Asterisk.new ami_client, connection }
+          let(:mock_call)   { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
 
           let :original_command do
             Punchblock::Component::Output.new command_options
@@ -24,8 +24,10 @@ module Punchblock
             end
           end
 
+          let(:command_opts) { {} }
+
           let :command_options do
-            { :render_document => {:value => ssml_doc} }
+            { :render_document => {:value => ssml_doc}, renderer: renderer }
           end
 
           subject { Output.new original_command, mock_call }
@@ -37,8 +39,8 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            context 'with an invalid media engine' do
-              let(:media_engine) { 'foobar' }
+            context 'with an invalid renderer' do
+              let(:renderer) { 'foobar' }
 
               it "should return an error and not execute any actions" do
                 subject.execute
@@ -47,8 +49,8 @@ module Punchblock
               end
             end
 
-            context 'with a media engine of :swift' do
-              let(:media_engine) { 'swift' }
+            context 'with a renderer of :swift' do
+              let(:renderer) { 'swift' }
 
               let(:audio_filename) { 'http://foo.com/bar.mp3' }
 
@@ -59,10 +61,8 @@ module Punchblock
                 end
               end
 
-              let(:command_opts) { {} }
-
               let :command_options do
-                { :render_document => {:value => ssml_doc} }.merge(command_opts)
+                { :render_document => {:value => ssml_doc}, renderer: renderer }.merge(command_opts)
               end
 
               def ssml_with_options(prefix = '', postfix = '')
@@ -169,8 +169,8 @@ module Punchblock
               end
             end
 
-            context 'with a media engine of :unimrcp' do
-              let(:media_engine) { :unimrcp }
+            context 'with a renderer of :unimrcp' do
+              let(:renderer) { :unimrcp }
 
               let(:audio_filename) { 'http://foo.com/bar.mp3' }
 
@@ -184,7 +184,7 @@ module Punchblock
               let(:command_opts) { {} }
 
               let :command_options do
-                { :render_document => {:value => ssml_doc} }.merge(command_opts)
+                { :render_document => {:value => ssml_doc}, renderer: renderer }.merge(command_opts)
               end
 
               let(:synthstatus) { 'OK' }
@@ -422,8 +422,8 @@ module Punchblock
               end
             end
 
-            [:asterisk, nil].each do |media_engine|
-              context "with a media engine of #{media_engine.inspect}" do
+            [:asterisk, nil].each do |renderer|
+              context "with a renderer of #{renderer.inspect}" do
                 def expect_playback(filename = audio_filename)
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', filename).and_return code: 200
                 end
@@ -443,7 +443,7 @@ module Punchblock
                 let(:command_opts) { {} }
 
                 let :command_options do
-                  { :render_document => {:value => ssml_doc} }.merge(command_opts)
+                  { :render_document => {:value => ssml_doc}, renderer: renderer }.merge(command_opts)
                 end
 
                 let :original_command do
@@ -862,35 +862,6 @@ module Punchblock
                     end
                   end
                 end
-              end
-            end
-
-            context "with a media renderer set on itself" do
-              let(:media_engine) { :swift }
-              let(:audio_filename) { '/foo/bar.wav' }
-              let :ssml_doc do
-                RubySpeech::SSML.draw do
-                  audio :src => audio_filename
-                end
-              end
-
-              let(:command_opts) { {:renderer => :asterisk} }
-
-              let :command_options do
-                { :render_document => {:value => ssml_doc} }.merge(command_opts)
-              end
-
-              let :original_command do
-                Punchblock::Component::Output.new command_options
-              end
-
-              let(:playbackstatus) { 'SUCCESS' }
-              before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
-
-              it "should use the media renderer set and not the platform default" do
-                expect_answered
-                mock_call.should_receive(:execute_agi_command).once.with 'EXEC Playback', audio_filename
-                subject.execute
               end
             end
           end

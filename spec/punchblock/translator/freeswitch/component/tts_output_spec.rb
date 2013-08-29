@@ -9,10 +9,8 @@ module Punchblock
         describe TTSOutput do
           include HasMockCallbackConnection
 
-          let(:media_engine)  { :flite }
-          let(:default_voice) { :hal }
-          let(:translator)    { Punchblock::Translator::Freeswitch.new connection }
-          let(:mock_call)     { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
+          let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
+          let(:mock_call)   { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
 
           let :original_command do
             Punchblock::Component::Output.new command_options
@@ -25,19 +23,19 @@ module Punchblock
           end
 
           let :command_options do
-            { :render_document => {:value => ssml_doc} }
+            { :render_document => {:value => ssml_doc}, :renderer => :flite }
           end
 
           def execute
-            subject.execute media_engine, default_voice
+            subject.execute
           end
 
           subject { described_class.new original_command, mock_call }
 
           describe '#execute' do
             before { original_command.request! }
-            def expect_playback(voice = default_voice)
-              subject.wrapped_object.should_receive(:application).once.with :speak, "#{media_engine}|#{voice}|#{ssml_doc}"
+            def expect_playback(voice = :kal, renderer = :flite)
+              subject.wrapped_object.should_receive(:application).once.with :speak, "#{renderer}|#{voice}|#{ssml_doc}"
             end
 
             let :ssml_doc do

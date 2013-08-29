@@ -125,21 +125,6 @@ module Punchblock
       end
 
       describe '#handle_presence' do
-        let :offer_xml do
-          <<-MSG
-<presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net'>
-  <offer xmlns="urn:xmpp:rayo:1" to="sip:whatever@127.0.0.1" from="sip:ylcaomxb@192.168.1.9">
-  <header name="Max-Forwards" value="70"/>
-  <header name="Content-Length" value="367"/>
-  </offer>
-</presence>
-          MSG
-        end
-
-        let(:example_offer) { import_stanza offer_xml }
-
-        it { example_offer.should be_a Blather::Stanza::Presence }
-
         let :complete_xml do
           <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
@@ -154,9 +139,34 @@ module Punchblock
 
         it { example_complete.should be_a Blather::Stanza::Presence }
 
+        describe "accessing the rayo node for a presence stanza" do
+          it "should import the rayo node" do
+            example_complete.rayo_node.should be_a Punchblock::Event::Complete
+          end
+
+          it "should be memoized" do
+            example_complete.rayo_node.should be example_complete.rayo_node
+          end
+        end
+
         describe "presence received" do
+          let(:handle_presence) { connection.__send__ :handle_presence, example_event }
+
           describe "from an offer" do
-            let(:handle_presence) { connection.__send__ :handle_presence, example_offer }
+            let :offer_xml do
+              <<-MSG
+    <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net'>
+      <offer xmlns="urn:xmpp:rayo:1" to="sip:whatever@127.0.0.1" from="sip:ylcaomxb@192.168.1.9">
+      <header name="Max-Forwards" value="70"/>
+      <header name="Content-Length" value="367"/>
+      </offer>
+    </presence>
+              MSG
+            end
+
+            let(:example_event) { import_stanza offer_xml }
+
+            it { example_event.should be_a Blather::Stanza::Presence }
 
             it 'should call the event handler with the event' do
               mock_event_handler.should_receive(:call).once.with do |event|
@@ -173,16 +183,24 @@ module Punchblock
             let :irrelevant_xml do
               <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
-  <foo/>
+  <foo bar="baz"/>
 </presence>
               MSG
             end
 
-            let(:example_irrelevant_event) { import_stanza irrelevant_xml }
+            let(:example_event) { import_stanza irrelevant_xml }
+
+            it 'should not be considered to be a rayo event' do
+              example_event.rayo_event?.should be_false
+            end
+
+            it 'should have a nil rayo_node' do
+              example_event.rayo_node.should be_nil
+            end
 
             it 'should not handle the event' do
               mock_event_handler.should_receive(:call).never
-              lambda { connection.__send__ :handle_presence, example_irrelevant_event }.should throw_symbol(:pass)
+              lambda { handle_presence }.should throw_symbol(:pass)
             end
           end
         end

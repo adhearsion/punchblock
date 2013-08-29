@@ -7,10 +7,10 @@ module Punchblock
         class AbstractOutput < Component
           UnrenderableDocError = Class.new OptionError
 
-          def execute(*args)
+          def execute
             validate
             send_ref
-            do_output(*args)
+            do_output
           rescue UnrenderableDocError => e
             with_error 'unrenderable document error', e.message
           rescue OptionError => e

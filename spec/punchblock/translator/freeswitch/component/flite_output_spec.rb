@@ -9,10 +9,8 @@ module Punchblock
         describe FliteOutput do
           include HasMockCallbackConnection
 
-          let(:media_engine)  { :flite }
-          let(:default_voice) { nil }
-          let(:translator)    { Punchblock::Translator::Freeswitch.new connection }
-          let(:mock_call)     { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
+          let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
+          let(:mock_call)   { Punchblock::Translator::Freeswitch::Call.new 'foo', translator }
 
           let :original_command do
             Punchblock::Component::Output.new command_options
@@ -29,7 +27,7 @@ module Punchblock
           end
 
           def execute
-            subject.execute media_engine, default_voice
+            subject.execute
           end
 
           subject { described_class.new original_command, mock_call }
@@ -37,7 +35,7 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(voice = :kal)
-              subject.wrapped_object.should_receive(:application).once.with :speak, "#{media_engine}|#{voice}|FOO"
+              subject.wrapped_object.should_receive(:application).once.with :speak, "flite|#{voice}|FOO"
             end
 
             let(:command_opts) { {} }

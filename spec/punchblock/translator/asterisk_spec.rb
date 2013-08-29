@@ -8,9 +8,8 @@ module Punchblock
     describe Asterisk do
       let(:ami_client)    { double 'RubyAMI::Client' }
       let(:connection)    { double 'Connection::Asterisk', handle_event: nil }
-      let(:media_engine)  { :asterisk }
 
-      let(:translator) { Asterisk.new ami_client, connection, media_engine }
+      let(:translator) { Asterisk.new ami_client, connection }
 
       subject { translator }
 
@@ -18,16 +17,6 @@ module Punchblock
       its(:connection) { should be connection }
 
       after { translator.terminate if translator.alive? }
-
-      context 'with a configured media engine of :asterisk' do
-        let(:media_engine) { :asterisk }
-        its(:media_engine) { should be == :asterisk }
-      end
-
-      context 'with a configured media engine of :unimrcp' do
-        let(:media_engine) { :unimrcp }
-        its(:media_engine) { should be == :unimrcp }
-      end
 
       describe '#shutdown' do
         it "instructs all calls to shutdown" do

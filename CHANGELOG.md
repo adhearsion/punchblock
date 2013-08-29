@@ -1,6 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
-# [v2.0.0.beta2](https://github.com/adhearsion/punchblock/compare/v1.9.4...v2.0.0.beta2) - [2013-08-27](https://rubygems.org/gems/punchblock/versions/2.0.0.beta2)
+# [v2.0.0](https://github.com/adhearsion/punchblock/compare/v1.9.4...v2.0.0) - [2013-08-29](https://rubygems.org/gems/punchblock/versions/2.0.0)
   * Feature: Compliance with v0.2 of the published Rayo spec (http://xmpp.org/extensions/xep-0327.html)
   * Feature: Add support for Rayo Prompt component
   * Feature: Added FS support for initial timeout and final timeout on Record

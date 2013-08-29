@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require 'punchblock/translator/asterisk/ami_error_converter'
+
 module Punchblock
   module Translator
     class Asterisk
@@ -10,6 +12,8 @@ module Punchblock
 
         extend ActorHasGuardedHandlers
         execute_guarded_handlers_on_receiver
+
+        InvalidCommandError = Class.new Punchblock::Error
 
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
@@ -34,6 +38,7 @@ module Punchblock
           @progress_sent = false
           @block_commands = false
           @channel_variables = {}
+          @hangup_cause = nil
         end
 
         def register_component(component)
@@ -79,7 +84,7 @@ module Punchblock
                                                                               :params => params
           originate_action.request!
           translator.async.execute_global_command originate_action
-          dial_command.response = Ref.new :id => id
+          dial_command.response = Ref.new uri: id
         end
 
         def outbound?
@@ -105,11 +110,11 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
-          send_pb_event Event::Asterisk::AMI::Event.new(:name => ami_event.name, :attributes => ami_event.headers)
+          send_pb_event Event::Asterisk::AMI::Event.new(name: ami_event.name, headers: ami_event.headers)
 
           case ami_event.name
           when 'Hangup'
-            handle_hangup_event HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
+            handle_hangup_event ami_event['Cause'].to_i
           when 'AsyncAGI'
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
@@ -135,23 +140,16 @@ module Punchblock
             if other_call = translator.call_for_channel(other_call_channel)
               event = case ami_event['Bridgestate']
               when 'Link'
-                Event::Joined.new.tap do |e|
-                  e.call_id = other_call.id
-                end
+                Event::Joined.new call_uri: other_call.id
               when 'Unlink'
-                Event::Unjoined.new.tap do |e|
-                  e.call_id = other_call.id
-                end
+                Event::Unjoined.new call_uri: other_call.id
               end
               send_pb_event event
             end
           when 'Unlink'
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
-              event = Event::Unjoined.new.tap do |e|
-                e.call_id = other_call.id
-              end
-              send_pb_event event
+              send_pb_event Event::Unjoined.new(call_uri: other_call.id)
             end
           when 'VarSet'
             @channel_variables[ami_event['Variable']] = ami_event['Value']
@@ -184,28 +182,28 @@ module Punchblock
             @answered = true
             command.response = true
           when Command::Hangup
-            send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
+            send_hangup_command
+            @hangup_cause = :hangup_command
             command.response = true
           when Command::Join
-            other_call = translator.call_with_id command.call_id
+            other_call = translator.call_with_id command.call_uri
             @pending_joins[other_call.channel] = command
             execute_agi_command 'EXEC Bridge', other_call.channel
           when Command::Unjoin
-            other_call = translator.call_with_id command.call_id
+            other_call = translator.call_with_id command.call_uri
             redirect_back other_call
             command.response = true
           when Command::Reject
-            rejection = case command.reason
+            case command.reason
             when :busy
-              'EXEC Busy'
+              execute_agi_command 'EXEC Busy'
             when :decline
-              'EXEC Busy'
+              send_hangup_command 21
             when :error
-              'EXEC Congestion'
+              execute_agi_command 'EXEC Congestion'
             else
-              'EXEC Congestion'
+              execute_agi_command 'EXEC Congestion'
             end
-            execute_agi_command rejection
             command.response = true
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
@@ -213,22 +211,40 @@ module Punchblock
             execute_component Component::Output, command
           when Punchblock::Component::Input
             execute_component Component::Input, command
+          when Punchblock::Component::Prompt
+            component_class = case command.input.recognizer
+            when 'unimrcp'
+              case command.output.renderer
+              when 'unimrcp'
+                Component::MRCPPrompt
+              when 'asterisk'
+                Component::MRCPNativePrompt
+              else
+                raise InvalidCommandError, 'Invalid recognizer/renderer combination'
+              end
+            else
+              Component::ComposedPrompt
+            end
+            execute_component component_class, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
           else
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for call #{id}", id
           end
+        rescue InvalidCommandError => e
+          command.response = ProtocolError.new.setup :invalid_command, e.message, id
+        rescue ChannelGoneError
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
         rescue RubyAMI::Error => e
-          command.response = case e.message
-          when 'No such channel'
-            ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
-          else
-            ProtocolError.new.setup 'error', e.message, id
-          end
+          command.response = ProtocolError.new.setup 'error', e.message, id
         rescue Celluloid::DeadActorError
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end
 
+        #
+        # @return [Hash] AGI result
+        #
+        # @raises RubyAMI::Error, ChannelGoneError
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
           condition = Celluloid::Condition.new
@@ -239,7 +255,7 @@ module Punchblock
           event = condition.wait
           return unless event
           agi.parse_result event
-        rescue RubyAMI::Error => e
+        rescue ChannelGoneError, RubyAMI::Error => e
           abort e
         end
 
@@ -263,14 +279,15 @@ module Punchblock
           send_ami_action 'Redirect', redirect_options
         end
 
-        def handle_hangup_event(reason = :hangup)
+        def handle_hangup_event(code = 16)
+          reason = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[code]
           @block_commands = true
           @components.dup.each_pair do |id, component|
             safe_from_dead_actors do
               component.call_ended if component.alive?
             end
           end
-          send_end_event reason
+          send_end_event reason, code
         end
 
         def actor_died(actor, reason)
@@ -289,14 +306,18 @@ module Punchblock
           result['Value'] == '(null)' ? nil : result['Value']
         end
 
-        def send_ami_action(name, headers = {})
-          @ami_client.send_action name, headers
+        def send_hangup_command(cause_code = 16)
+          send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => cause_code
         end
 
-        def send_end_event(reason)
-          send_pb_event Event::End.new(:reason => reason)
-          translator.deregister_call current_actor
-          after(5) { shutdown }
+        def send_ami_action(name, headers = {})
+          AMIErrorConverter.convert { @ami_client.send_action name, headers }
+        end
+
+        def send_end_event(reason, code = nil)
+          send_pb_event Event::End.new(reason: reason, platform_code: code)
+          translator.deregister_call id, channel
+          terminate
         end
 
         def execute_component(type, command, options = {})
@@ -319,7 +340,7 @@ module Punchblock
 
         def sip_headers
           agi_env.to_a.inject({}) do |accumulator, element|
-            accumulator[('x_' + element[0].to_s).to_sym] = element[1] || ''
+            accumulator['X-' + element[0].to_s] = element[1] || ''
             accumulator
           end
         end
@@ -327,8 +348,8 @@ module Punchblock
         def variable_for_headers(headers)
           variables = { :punchblock_call_id => id }
           header_counter = 51
-          headers.each do |header|
-            variables["SIPADDHEADER#{header_counter}"] = "\"#{header.name}: #{header.value}\""
+          headers.each do |name, value|
+            variables["SIPADDHEADER#{header_counter}"] = "\"#{name}: #{value}\""
             header_counter += 1
           end
           variables.inject([]) do |a, (k, v)|

@@ -10,12 +10,11 @@ module Punchblock
           :host     => '127.0.0.1',
           :port     => 5038,
           :username => 'test',
-          :password => 'test',
-          :media_engine => :swift
+          :password => 'test'
         }
       end
 
-      let(:mock_event_handler) { stub('Event Handler').as_null_object }
+      let(:mock_event_handler) { double('Event Handler').as_null_object }
 
       let(:connection) { Asterisk.new options }
 
@@ -25,14 +24,11 @@ module Punchblock
         subject.event_handler = mock_event_handler
       end
 
-      its(:ami_client) { should be_a RubyAMI::Stream }
+      its(:ami_client) { should be_a RubyAMIStreamProxy }
+      its('ami_client.stream') { should be_a RubyAMI::Stream }
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
-      end
-
-      it 'should set the media engine on the translator' do
-        subject.translator.media_engine.should be == :swift
       end
 
       describe '#run' do
@@ -41,6 +37,19 @@ module Punchblock
             subject.ami_client.terminate
           end
           lambda { subject.run }.should raise_error DisconnectedError
+        end
+
+        it 'rebuilds the RubyAMI::Stream if dead' do
+          subject.ami_client.async.should_receive(:run).once do
+            subject.ami_client.terminate
+          end
+          lambda { subject.run }.should raise_error DisconnectedError
+          subject.ami_client.alive?.should be_false
+          subject.should_receive(:new_ami_stream).once do
+            subject.ami_client.alive?.should be_true
+            subject.ami_client.async.should_receive(:run).once
+          end
+          lambda { subject.run }.should_not raise_error DisconnectedError
         end
       end
 
@@ -65,7 +74,7 @@ module Punchblock
 
       describe '#write' do
         it 'sends a command to the translator' do
-          command = mock 'Command'
+          command = double 'Command'
           options = {:foo => :bar}
           subject.translator.async.should_receive(:execute_command).once.with command, options
           subject.write command, options

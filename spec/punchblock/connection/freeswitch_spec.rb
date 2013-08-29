@@ -5,23 +5,19 @@ require 'spec_helper'
 module Punchblock
   module Connection
     describe Freeswitch do
-      let(:media_engine)  { :flite }
-      let(:default_voice) { :hal }
       let :options do
         {
-          :host           => '127.0.0.1',
-          :port           => 8021,
-          :password       => 'test',
-          :media_engine   => media_engine,
-          :default_voice  => default_voice
+          :host     => '127.0.0.1',
+          :port     => 8021,
+          :password => 'test'
         }
       end
 
-      let(:mock_event_handler) { stub('Event Handler').as_null_object }
+      let(:mock_event_handler) { double('Event Handler').as_null_object }
 
       let(:connection) { described_class.new options }
 
-      let(:mock_stream) { mock 'RubyFS::Stream' }
+      let(:mock_stream) { double 'RubyFS::Stream' }
 
       subject { connection }
 
@@ -31,14 +27,6 @@ module Punchblock
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
-      end
-
-      it 'should set the media engine on the translator' do
-        subject.translator.media_engine.should be media_engine
-      end
-
-      it 'should set the default voice on the translator' do
-        subject.translator.default_voice.should be default_voice
       end
 
       describe '#run' do
@@ -62,7 +50,7 @@ module Punchblock
       end
 
       it 'sends events from RubyFS to the translator' do
-        event = mock 'RubyFS::Event'
+        event = double 'RubyFS::Event'
         subject.translator.async.should_receive(:handle_es_event).once.with event
         subject.translator.async.should_receive(:handle_es_event).once.with RubyFS::Stream::Disconnected.new
         subject.stream.fire_event event
@@ -70,7 +58,7 @@ module Punchblock
 
       describe '#write' do
         it 'sends a command to the translator' do
-          command = mock 'Command'
+          command = double 'Command'
           options = {:foo => :bar}
           subject.translator.async.should_receive(:execute_command).once.with command, options
           subject.write command, options

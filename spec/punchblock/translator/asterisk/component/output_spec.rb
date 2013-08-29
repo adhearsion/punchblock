@@ -9,10 +9,10 @@ module Punchblock
         describe Output do
           include HasMockCallbackConnection
 
-          let(:media_engine)  { nil }
-          let(:ami_client)    { mock('AMI') }
-          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
-          let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
+          let(:renderer)    { nil }
+          let(:ami_client)  { double('AMI') }
+          let(:translator)  { Punchblock::Translator::Asterisk.new ami_client, connection }
+          let(:mock_call)   { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
 
           let :original_command do
             Punchblock::Component::Output.new command_options
@@ -24,8 +24,10 @@ module Punchblock
             end
           end
 
+          let(:command_opts) { {} }
+
           let :command_options do
-            { :ssml => ssml_doc }
+            { :render_document => {:value => ssml_doc}, renderer: renderer }
           end
 
           subject { Output.new original_command, mock_call }
@@ -37,8 +39,8 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
 
-            context 'with an invalid media engine' do
-              let(:media_engine) { 'foobar' }
+            context 'with an invalid renderer' do
+              let(:renderer) { 'foobar' }
 
               it "should return an error and not execute any actions" do
                 subject.execute
@@ -47,8 +49,8 @@ module Punchblock
               end
             end
 
-            context 'with a media engine of :swift' do
-              let(:media_engine) { 'swift' }
+            context 'with a renderer of :swift' do
+              let(:renderer) { 'swift' }
 
               let(:audio_filename) { 'http://foo.com/bar.mp3' }
 
@@ -59,10 +61,8 @@ module Punchblock
                 end
               end
 
-              let(:command_opts) { {} }
-
               let :command_options do
-                { :ssml => ssml_doc }.merge(command_opts)
+                { :render_document => {:value => ssml_doc}, renderer: renderer }.merge(command_opts)
               end
 
               def ssml_with_options(prefix = '', postfix = '')
@@ -80,7 +80,7 @@ module Punchblock
               it 'should send a complete event when Swift completes' do
                 mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                 subject.execute
-                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
               end
 
               context "when we get a RubyAMI Error" do
@@ -91,6 +91,16 @@ module Punchblock
                   complete_reason = original_command.complete_event(0.1).reason
                   complete_reason.should be_a Punchblock::Event::Complete::Error
                   complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                end
+              end
+
+              context "when the channel is gone" do
+                it "should send an error complete event" do
+                  error = ChannelGoneError.new 'FooBar'
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Hangup
                 end
               end
 
@@ -129,8 +139,8 @@ module Punchblock
                   end
                 end
 
-                context "set to :speech" do
-                  let(:command_opts) { { :interrupt_on => :speech } }
+                context "set to :voice" do
+                  let(:command_opts) { { :interrupt_on => :voice } }
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
@@ -159,8 +169,8 @@ module Punchblock
               end
             end
 
-            context 'with a media engine of :unimrcp' do
-              let(:media_engine) { :unimrcp }
+            context 'with a renderer of :unimrcp' do
+              let(:renderer) { :unimrcp }
 
               let(:audio_filename) { 'http://foo.com/bar.mp3' }
 
@@ -174,43 +184,30 @@ module Punchblock
               let(:command_opts) { {} }
 
               let :command_options do
-                { :ssml => ssml_doc }.merge(command_opts)
+                { :render_document => {:value => ssml_doc}, renderer: renderer }.merge(command_opts)
               end
+
+              let(:synthstatus) { 'OK' }
+              before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
               def expect_mrcpsynth_with_options(options)
                 mock_call.should_receive(:execute_agi_command).once.with do |*args|
                   args[0].should be == 'EXEC MRCPSynth'
-                  args[2].should match options
+                  args[1].should match options
                 end.and_return code: 200, result: 1
               end
 
               before { expect_answered }
 
               it "should execute MRCPSynth" do
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', ssml_doc.to_s.squish.gsub(/["\\]/) { |m| "\\#{m}" }, '').and_return code: 200, result: 1
+                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', ["\"#{ssml_doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
                 subject.execute
-              end
-
-              context "when the SSML document contains commas" do
-                let :ssml_doc do
-                  RubySpeech::SSML.draw do
-                    string "this, here, is a test"
-                  end
-                end
-
-                it 'should escape TTS strings containing a comma' do
-                  mock_call.should_receive(:execute_agi_command).once.with do |*args|
-                    args[0].should be == 'EXEC MRCPSynth'
-                    args[1].should match(/this\\, here\\, is a test/)
-                  end.and_return code: 200, result: 1
-                  subject.execute
-                end
               end
 
               it 'should send a complete event when MRCPSynth completes' do
                 mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
                 subject.execute
-                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
               end
 
               context "when we get a RubyAMI Error" do
@@ -224,6 +221,16 @@ module Punchblock
                 end
               end
 
+              context "when the channel is gone" do
+                it "should send an error complete event" do
+                  error = ChannelGoneError.new 'FooBar'
+                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                end
+              end
+
               context "when the call is not answered" do
                 before { expect_answered false }
 
@@ -234,12 +241,33 @@ module Punchblock
                 end
               end
 
-              describe 'ssml' do
+              context "when the SYNTHSTATUS variable is set to 'ERROR'" do
+                let(:synthstatus) { 'ERROR' }
+
+                it "should send an error complete event" do
+                  mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                  subject.execute
+                  complete_reason = original_command.complete_event(0.1).reason
+                  complete_reason.should be_a Punchblock::Event::Complete::Error
+                  complete_reason.details.should == "Terminated due to UniMRCP error"
+                end
+              end
+
+              describe 'document' do
                 context 'unset' do
-                  let(:command_opts) { { :ssml => nil } }
+                  let(:ssml_doc) { nil }
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
+                    original_command.response(0.1).should be == error
+                  end
+                end
+
+                context 'with multiple documents' do
+                  let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
+                  it "should return an error and not execute any actions" do
+                    subject.execute
+                    error = ProtocolError.new.setup 'option error', 'Only a single document is supported.'
                     original_command.response(0.1).should be == error
                   end
                 end
@@ -383,8 +411,8 @@ module Punchblock
                   end
                 end
 
-                context "set to :speech" do
-                  let(:command_opts) { { :interrupt_on => :speech } }
+                context "set to :voice" do
+                  let(:command_opts) { { :interrupt_on => :voice } }
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
@@ -394,8 +422,8 @@ module Punchblock
               end
             end
 
-            [:asterisk, nil].each do |media_engine|
-              context "with a media engine of #{media_engine.inspect}" do
+            [:asterisk, nil].each do |renderer|
+              context "with a renderer of #{renderer.inspect}" do
                 def expect_playback(filename = audio_filename)
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', filename).and_return code: 200
                 end
@@ -415,16 +443,19 @@ module Punchblock
                 let(:command_opts) { {} }
 
                 let :command_options do
-                  { :ssml => ssml_doc }.merge(command_opts)
+                  { :render_document => {:value => ssml_doc}, renderer: renderer }.merge(command_opts)
                 end
 
                 let :original_command do
                   Punchblock::Component::Output.new command_options
                 end
 
+                let(:playbackstatus) { 'SUCCESS' }
+                before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
+
                 describe 'ssml' do
                   context 'unset' do
-                    let(:command_opts) { { :ssml => nil } }
+                    let(:ssml_doc) { nil }
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
@@ -433,11 +464,9 @@ module Punchblock
                   end
 
                   context 'with a single audio SSML node' do
-                    let(:audio_filename) { 'http://foo.com/bar.mp3' }
-                    let :command_options do
-                      {
-                        :ssml => RubySpeech::SSML.draw { audio :src => audio_filename }
-                      }
+                    let(:audio_filename) { 'tt-monkeys' }
+                    let :ssml_doc do
+                      RubySpeech::SSML.draw { audio :src => audio_filename }
                     end
 
                     it 'should playback the audio file using Playback' do
@@ -452,7 +481,17 @@ module Punchblock
                       end
                       expect_playback
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+
+                    context "when the audio filename is prefixed by file://" do
+                      let(:audio_filename) { 'file://tt-monkeys' }
+
+                      it 'should playback the audio file using Playback' do
+                        expect_answered
+                        expect_playback 'tt-monkeys'
+                        subject.execute
+                      end
                     end
 
                     context "when we get a RubyAMI Error" do
@@ -466,14 +505,36 @@ module Punchblock
                         complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
                       end
                     end
+
+                    context "when the channel is gone" do
+                      it "should send an error complete event" do
+                        expect_answered
+                        error = ChannelGoneError.new 'FooBar'
+                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                      end
+                    end
+
+                    context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
+                      let(:playbackstatus) { 'FAILED' }
+
+                      it "should send an error complete event" do
+                        expect_answered
+                        mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to playback error"
+                      end
+                    end
                   end
 
                   context 'with a single text node without spaces' do
                     let(:audio_filename) { 'tt-monkeys' }
-                    let :command_options do
-                      {
-                        :ssml => RubySpeech::SSML.draw { string audio_filename }
-                      }
+                    let :ssml_doc do
+                      RubySpeech::SSML.draw { string audio_filename }
                     end
 
                     it 'should playback the audio file using Playback' do
@@ -486,7 +547,7 @@ module Punchblock
                       expect_answered
                       expect_playback
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Success
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context "when we get a RubyAMI Error" do
@@ -513,7 +574,9 @@ module Punchblock
                         let(:audio_filename) { 'tt-monkeys' }
                         let :command_options do
                           {
-                            :ssml => RubySpeech::SSML.draw { string audio_filename },
+                            :render_document => {
+                              :value => RubySpeech::SSML.draw { string audio_filename },
+                            },
                             :interrupt_on => :any
                           }
                         end
@@ -527,28 +590,14 @@ module Punchblock
                     end
                   end
 
-                  context 'with a string (not SSML)' do
-                    let :command_options do
-                      { :text => 'Foo Bar' }
-                    end
-
-                    it "should return an unrenderable document error" do
-                      subject.execute
-                      error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
-                      original_command.response(0.1).should be == error
-                    end
-                  end
-
                   context 'with multiple audio SSML nodes' do
                     let(:audio_filename1) { 'http://foo.com/bar.mp3' }
                     let(:audio_filename2) { 'http://foo.com/baz.mp3' }
-                    let :command_options do
-                      {
-                        :ssml => RubySpeech::SSML.draw do
-                          audio :src => audio_filename1
-                          audio :src => audio_filename2
-                        end
-                      }
+                    let :ssml_doc do
+                      RubySpeech::SSML.draw do
+                        audio :src => audio_filename1
+                        audio :src => audio_filename2
+                      end
                     end
 
                     it 'should playback all audio files using Playback' do
@@ -565,7 +614,7 @@ module Punchblock
                       expect_playback [audio_filename1, audio_filename2].join('&')
                       latch = CountDownLatch.new 1
                       original_command.should_receive(:add_event).once.with do |e|
-                        e.reason.should be_a Punchblock::Component::Output::Complete::Success
+                        e.reason.should be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
                       end
                       subject.execute
@@ -574,12 +623,10 @@ module Punchblock
                   end
 
                   context "with an SSML document containing elements other than <audio/>" do
-                    let :command_options do
-                      {
-                        :ssml => RubySpeech::SSML.draw do
-                          string "Foo Bar"
-                        end
-                      }
+                    let :ssml_doc do
+                      RubySpeech::SSML.draw do
+                        string "Foo Bar"
+                      end
                     end
 
                     it "should return an unrenderable document error" do
@@ -750,7 +797,7 @@ module Punchblock
                     before do
                       expect_answered
                       mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                      subject.wrapped_object.should_receive(:send_success).and_return nil
+                      subject.wrapped_object.should_receive(:send_finish).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
@@ -763,7 +810,7 @@ module Punchblock
                         mock_call.async.process_ami_event ami_event
                         sleep 0.2
                         original_command.should be_complete
-                        reason.should be_a Punchblock::Component::Output::Complete::Success
+                        reason.should be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do
@@ -781,7 +828,7 @@ module Punchblock
                     before do
                       expect_answered
                       mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                      subject.wrapped_object.should_receive(:send_success).and_return nil
+                      subject.wrapped_object.should_receive(:send_finish).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
@@ -794,7 +841,7 @@ module Punchblock
                         mock_call.async.process_ami_event ami_event
                         sleep 0.2
                         original_command.should be_complete
-                        reason.should be_a Punchblock::Component::Output::Complete::Success
+                        reason.should be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do
@@ -806,8 +853,8 @@ module Punchblock
                     end
                   end
 
-                  context "set to :speech" do
-                    let(:command_opts) { { :interrupt_on => :speech } }
+                  context "set to :voice" do
+                    let(:command_opts) { { :interrupt_on => :voice } }
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
@@ -815,32 +862,6 @@ module Punchblock
                     end
                   end
                 end
-              end
-            end
-
-            context "with a media renderer set on itself" do
-              let(:media_engine) { :swift }
-              let(:audio_filename) { '/foo/bar.wav' }
-              let :ssml_doc do
-                RubySpeech::SSML.draw do
-                  audio :src => audio_filename
-                end
-              end
-
-              let(:command_opts) { {:renderer => :asterisk} }
-
-              let :command_options do
-                { :ssml => ssml_doc }.merge(command_opts)
-              end
-
-              let :original_command do
-                Punchblock::Component::Output.new command_options
-              end
-
-              it "should use the media renderer set and not the platform default" do
-                expect_answered
-                mock_call.should_receive(:execute_agi_command).once.with 'EXEC Playback', audio_filename
-                subject.execute
               end
             end
           end

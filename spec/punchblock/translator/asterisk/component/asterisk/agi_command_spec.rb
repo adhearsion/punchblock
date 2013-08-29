@@ -11,7 +11,7 @@ module Punchblock
             include HasMockCallbackConnection
 
             let(:channel)       { 'SIP/foo' }
-            let(:ami_client)    { stub('AMI Client').as_null_object }
+            let(:ami_client)    { double('AMI Client').as_null_object }
             let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection }
             let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new channel, translator, ami_client, connection }
             let(:component_id)  { Punchblock.new_uuid }
@@ -56,7 +56,7 @@ module Punchblock
               end
 
               let :expected_response do
-                Ref.new :id => component_id
+                Ref.new uri: component_id
               end
 
               let :response do
@@ -67,19 +67,41 @@ module Punchblock
               it 'should send the component node a ref with the action ID' do
                 ami_client.should_receive(:send_action).once.and_return response
                 subject.execute
-                original_command.response(1).should eql(expected_response)
+                original_command.response(1).should == expected_response
               end
 
               context 'with an error' do
+                let(:message) { 'Action failed' }
                 let :response do
-                  RubyAMI::Error.new.tap { |e| e.message = 'Action failed' }
+                  RubyAMI::Error.new.tap { |e| e.message = message }
                 end
 
+                before { ami_client.should_receive(:send_action).once.and_raise response }
+
                 it 'should send the component node false' do
-                  ami_client.should_receive(:send_action).once.and_raise response
                   subject.execute
                   original_command.response(1).should be_false
                   subject.should_not be_alive
+                end
+
+                context "which is 'No such channel'" do
+                  let(:message) { 'No such channel' }
+
+                  it "should return an :item_not_found error for the command" do
+                    subject.execute
+                    original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
+                    subject.should_not be_alive
+                  end
+                end
+
+                context "which is 'Channel SIP/nosuchchannel does not exist.'" do
+                  let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
+
+                  it "should return an :item_not_found error for the command" do
+                    subject.execute
+                    original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
+                    subject.should_not be_alive
+                  end
                 end
               end
             end
@@ -142,6 +164,7 @@ module Punchblock
 
                     it 'should send an end (hangup) event to the translator' do
                       expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                                                                      platform_code: 16,
                                                                       target_call_id: mock_call.id
 
                       translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)

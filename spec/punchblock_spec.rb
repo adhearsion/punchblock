@@ -2,7 +2,17 @@ require 'spec_helper'
 
 describe Punchblock do
   describe '#client_with_connection' do
-    let(:mock_connection) { stub('Connection').as_null_object }
+    let(:mock_connection) { double('Connection').as_null_object }
+
+    context 'with :xmpp' do
+      it 'sets up an XMPP connection, passing options, and a client with the connection attached' do
+        options = {:username => 'foo', :password => 'bar'}
+        Punchblock::Connection::XMPP.should_receive(:new).once.with(options).and_return mock_connection
+        client = Punchblock.client_with_connection :xmpp, options
+        client.should be_a Punchblock::Client
+        client.connection.should be mock_connection
+      end
+    end
 
     context 'with :XMPP' do
       it 'sets up an XMPP connection, passing options, and a client with the connection attached' do

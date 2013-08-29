@@ -52,7 +52,7 @@ module Punchblock
         end
 
         describe "with an event handler set" do
-          let(:handler) { mock 'Response' }
+          let(:handler) { double 'Response' }
 
           before do
             handler.should_receive(:call).once.with(event)
@@ -74,9 +74,7 @@ module Punchblock
         let(:component_id) { 'abc123' }
 
         let :ref do
-          Ref.new.tap do |ref|
-            ref.id = component_id
-          end
+          Ref.new uri: component_id
         end
 
         it "should set the component ID from the ref" do
@@ -90,7 +88,7 @@ module Punchblock
         before do
           subject.request!
           subject.client = Client.new
-          subject.response = Ref.new id: 'abc'
+          subject.response = Ref.new uri: 'abc'
           subject.client.find_component_by_id('abc').should be subject
         end
 

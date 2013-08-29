@@ -29,14 +29,14 @@ module Punchblock
             end
 
             def error_reason(response)
-              Punchblock::Event::Complete::Error.new :details => response.message
+              Punchblock::Event::Complete::Error.new details: response.message
             end
 
             def success_reason(response, final_event = nil)
               headers = response.headers
               headers.merge! final_event.headers if final_event
               headers.delete 'ActionID'
-              Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new :message => headers.delete('Message'), :attributes => headers
+              Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: headers.delete('Message'), text_body: response.text_body, headers: headers
             end
 
             def send_events(response)
@@ -50,12 +50,12 @@ module Punchblock
             def pb_event_from_ami_event(ami_event)
               headers = ami_event.headers
               headers.delete 'ActionID'
-              Event::Asterisk::AMI::Event.new :name => ami_event.name, :attributes => headers
+              Event::Asterisk::AMI::Event.new name: ami_event.name, headers: headers
             end
 
             def action_headers
               headers = {}
-              @component_node.params_hash.each_pair do |key, value|
+              @component_node.params.each_pair do |key, value|
                 headers[key.to_s.capitalize] = value
               end
               headers

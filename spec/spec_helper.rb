@@ -3,6 +3,9 @@
 require 'punchblock'
 require 'countdownlatch'
 require 'logger'
+require 'celluloid'
+require 'coveralls'
+Coveralls.wear!
 
 Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
 
@@ -12,13 +15,20 @@ RSpec.configure do |config|
   config.filter_run :focus => true
   config.run_all_when_everything_filtered = true
 
+  config.mock_with :rspec do |mocks|
+    mocks.add_stub_and_should_receive_to Celluloid::AbstractProxy
+  end
+
   config.before :suite do |variable|
     Punchblock.logger = Logger.new(STDOUT)
     Punchblock.logger.define_singleton_method :trace, Punchblock.logger.method(:debug)
   end
 
   config.after :each do
-    Object.const_defined?(:Celluloid) && Celluloid.shutdown
+    if Object.const_defined?(:Celluloid)
+      Celluloid.shutdown
+      Celluloid.boot
+    end
   end
 end
 
@@ -42,20 +52,9 @@ shared_examples_for 'event' do
 end
 
 shared_examples_for 'command_headers' do
-  it 'takes a hash of keys and values for headers' do
-    headers = { :x_skill => 'agent', :x_customer_id => '8877' }
-
-    control = [ Punchblock::Header.new(:x_skill, 'agent'), Punchblock::Header.new(:x_customer_id, '8877')]
-
-    di = subject.class.new :headers => headers
-    di.headers.should have(2).items
-    di.headers.each { |i| control.include?(i).should be_true }
-  end
 end
 
 shared_examples_for 'event_headers' do
-  its(:headers) { should be == [Punchblock::Header.new('X-skill', 'agent'), Punchblock::Header.new('X-customer-id', '8877')]}
-  its(:headers_hash) { should be == {:x_skill => 'agent', :x_customer_id => '8877'} }
 end
 
 shared_examples_for 'key_value_pairs' do

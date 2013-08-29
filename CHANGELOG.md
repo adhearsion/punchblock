@@ -1,5 +1,20 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v2.0.0](https://github.com/adhearsion/punchblock/compare/v1.9.4...v2.0.0) - [2013-08-29](https://rubygems.org/gems/punchblock/versions/2.0.0)
+  * Feature: Compliance with v0.2 of the published Rayo spec (http://xmpp.org/extensions/xep-0327.html)
+  * Feature: Add support for Rayo Prompt component
+  * Feature: Added FS support for initial timeout and final timeout on Record
+  * Change: Models are now plain ruby objects, not XML nodes, and are imported from/exported to XML when necessary for communicating over XMPP.
+  * Change: `#headers` and AMI `#attributes` now do not have their names modified. A header of `'Call-ID'` will no longer be modified to `:call_id`.
+  * Change: AMI Events/Actions now have `#headers(=)` rather than `#attributes(=)`
+  * Change: Remove event queue
+  * Change: Removed `media_engine` and `default_voice` settings
+  * Bugfix: Reconnect dead Asterisk streams correctly
+  * Bugfix: Include AMI response text_body in AMI component complete events
+  * Bugfix: Avoid crashing translators (Asterisk or FreeSWITCH) by instructing them to call back to terminated Call objects
+  * Bugfix: Detect MRCPSynth failure in output component
+  * Bugfix: Handle AMI errors indicating dead channels correctly
+
 # [v1.9.4](https://github.com/adhearsion/punchblock/compare/v1.9.3...v1.9.4) - [2013-06-08](https://rubygems.org/gems/punchblock/versions/1.9.4)
   * Bugfix: Finish more setup before sending output ref on Asterisk
   * Bugfix: Allow early media TTS on Asterisk in addition to audio playback
@@ -25,6 +40,9 @@
   * Bugfix: Avoid DTMF recognizer failures and race conditions by bringing DTMFRecognizer back into the Input component actor.
   * Bugfix: Catch Asterisk AMI errors in all cases and fail accordingly, instead of ploughing ahead in the face of adversity.
   * Bugfix: Improve performance of Asterisk implementation by no longer spinning up a component actor for AGI command execution.
+
+# [v1.8.2](https://github.com/adhearsion/punchblock/compare/v1.8.1...v1.8.2) - [2013-04-19](https://rubygems.org/gems/punchblock/versions/1.8.2)
+  * Bugfix: Input initial timeout was being set as a float rather than an integer
 
 # [v1.8.2](https://github.com/adhearsion/punchblock/compare/v1.8.1...v1.8.2) - [2013-04-19](https://rubygems.org/gems/punchblock/versions/1.8.2)
   * Bugfix: Input initial timeout was being set as a float rather than an integer

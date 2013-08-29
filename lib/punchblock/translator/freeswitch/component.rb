@@ -45,10 +45,7 @@ module Punchblock
           def send_complete_event(reason, recording = nil)
             return if @complete
             @complete = true
-            event = Punchblock::Event::Complete.new.tap do |c|
-              c.reason = reason
-              c << recording if recording
-            end
+            event = Punchblock::Event::Complete.new reason: reason, recording: recording
             send_event event
             terminate
           end
@@ -82,7 +79,7 @@ module Punchblock
           end
 
           def send_ref
-            set_node_response Ref.new :id => id
+            set_node_response Ref.new uri: id
           end
 
           def with_error(name, text)

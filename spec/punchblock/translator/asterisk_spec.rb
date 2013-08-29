@@ -6,11 +6,10 @@ require 'ostruct'
 module Punchblock
   module Translator
     describe Asterisk do
-      let(:ami_client)    { mock 'RubyAMI::Client' }
-      let(:connection)    { mock 'Connection::Asterisk', handle_event: nil }
-      let(:media_engine)  { :asterisk }
+      let(:ami_client)    { double 'RubyAMI::Client' }
+      let(:connection)    { double 'Connection::Asterisk', handle_event: nil }
 
-      let(:translator) { Asterisk.new ami_client, connection, media_engine }
+      let(:translator) { Asterisk.new ami_client, connection }
 
       subject { translator }
 
@@ -18,16 +17,6 @@ module Punchblock
       its(:connection) { should be connection }
 
       after { translator.terminate if translator.alive? }
-
-      context 'with a configured media engine of :asterisk' do
-        let(:media_engine) { :asterisk }
-        its(:media_engine) { should be == :asterisk }
-      end
-
-      context 'with a configured media engine of :unimrcp' do
-        let(:media_engine) { :unimrcp }
-        its(:media_engine) { should be == :unimrcp }
-      end
 
       describe '#shutdown' do
         it "instructs all calls to shutdown" do
@@ -112,20 +101,20 @@ module Punchblock
 
         it 'should make the call inaccessible by ID' do
           subject.call_with_id(call_id).should be call
-          subject.deregister_call call
+          subject.deregister_call call_id, channel
           subject.call_with_id(call_id).should be_nil
         end
 
         it 'should make the call inaccessible by channel' do
           subject.call_for_channel(channel).should be call
-          subject.deregister_call call
+          subject.deregister_call call_id, channel
           subject.call_for_channel(channel).should be_nil
         end
       end
 
       describe '#register_component' do
         let(:component_id) { 'abc123' }
-        let(:component)    { mock 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }
+        let(:component)    { double 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }
 
         it 'should make the component accessible by ID' do
           subject.register_component component
@@ -135,7 +124,7 @@ module Punchblock
 
       describe '#execute_call_command' do
         let(:call_id) { 'abc123' }
-        let(:command) { Command::Answer.new.tap { |c| c.target_call_id = call_id } }
+        let(:command) { Command::Answer.new target_call_id: call_id }
 
         context "with a known call ID" do
           let(:call) { Translator::Asterisk::Call.new 'SIP/foo', subject, ami_client, connection }
@@ -153,16 +142,13 @@ module Punchblock
         end
 
         let :end_error_event do
-          Punchblock::Event::End.new.tap do |e|
-            e.target_call_id = call_id
-            e.reason = :error
-          end
+          Punchblock::Event::End.new reason: :error, target_call_id: call_id
         end
 
         context "for an outgoing call which began executing but crashed" do
           let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
 
-          let(:call_id) { dial_command.response.id }
+          let(:call_id) { dial_command.response.call_id }
 
           before do
             subject.async.should_receive(:execute_global_command)
@@ -238,7 +224,7 @@ module Punchblock
         let(:component_node)  { Component::Output.new }
         let(:component)       { Translator::Asterisk::Component::Output.new(component_node, call) }
 
-        let(:command) { Component::Stop.new.tap { |c| c.component_id = component.id } }
+        let(:command) { Component::Stop.new component_id: component.id }
 
         before do
           command.request!
@@ -281,7 +267,7 @@ module Punchblock
           end
 
           it 'should instruct the call to send a dial' do
-            mock_call = stub('Asterisk::Call').as_null_object
+            mock_call = double('Asterisk::Call').as_null_object
             Asterisk::Call.should_receive(:new_link).once.and_return mock_call
             mock_call.async.should_receive(:dial).once.with command
             subject.execute_global_command command
@@ -293,7 +279,7 @@ module Punchblock
             Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
           end
 
-          let(:mock_action) { stub('Asterisk::Component::Asterisk::AMIAction').as_null_object }
+          let(:mock_action) { double('Asterisk::Component::Asterisk::AMIAction').as_null_object }
 
           it 'should create a component actor and execute it asynchronously' do
             Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject, ami_client).and_return mock_action
@@ -322,7 +308,7 @@ module Punchblock
 
       describe '#handle_pb_event' do
         it 'should forward the event to the connection' do
-          event = mock 'Punchblock::Event'
+          event = double 'Punchblock::Event'
           subject.connection.should_receive(:handle_event).once.with event
           subject.handle_pb_event event
         end
@@ -338,11 +324,11 @@ module Punchblock
         end
 
         let :expected_pb_event do
-          Event::Asterisk::AMI::Event.new :name => 'Newchannel',
-                                          :attributes => { :channel  => "SIP/101-3f3f",
-                                                           :state    => "Ring",
-                                                           :callerid => "101",
-                                                           :uniqueid => "1094154427.10"}
+          Event::Asterisk::AMI::Event.new name: 'Newchannel',
+                                          headers: { 'Channel'  => "SIP/101-3f3f",
+                                                     'State'    => "Ring",
+                                                     'Callerid' => "101",
+                                                     'Uniqueid' => "1094154427.10"}
         end
 
         it 'should create a Punchblock AMI event object and pass it to the connection' do
@@ -407,9 +393,8 @@ module Punchblock
           end
 
           it 'should instruct the call to send an offer' do
-            mock_call = stub('Asterisk::Call').as_null_object
-            Asterisk::Call.should_receive(:new).once.and_return mock_call
-            subject.wrapped_object.should_receive(:link)
+            mock_call = double('Asterisk::Call').as_null_object
+            Asterisk::Call.should_receive(:new_link).once.and_return mock_call
             mock_call.async.should_receive(:send_offer).once
             subject.handle_ami_event ami_event
           end
@@ -422,7 +407,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Asterisk::Call.should_receive(:new).never
+              Asterisk::Call.should_receive(:new_link).never
               subject.handle_ami_event ami_event
             end
           end

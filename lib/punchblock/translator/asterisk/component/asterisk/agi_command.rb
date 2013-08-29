@@ -7,7 +7,7 @@ module Punchblock
         module Asterisk
           class AGICommand < Component
             def setup
-              @agi = Punchblock::Translator::Asterisk::AGICommand.new id, @call.channel, @component_node.name, *@component_node.params_array
+              @agi = Punchblock::Translator::Asterisk::AGICommand.new id, @call.channel, @component_node.name, *@component_node.params
             end
 
             def execute
@@ -15,6 +15,9 @@ module Punchblock
               send_ref
             rescue RubyAMI::Error
               set_node_response false
+              terminate
+            rescue ChannelGoneError
+              set_node_response ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
               terminate
             end
             exclusive :execute

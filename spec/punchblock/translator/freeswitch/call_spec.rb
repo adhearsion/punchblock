@@ -6,11 +6,9 @@ module Punchblock
   module Translator
     class Freeswitch
       describe Call do
-        let(:id) { Punchblock.new_uuid }
-        let(:stream)        { stub('RubyFS::Stream').as_null_object }
-        let(:media_engine)  { 'freeswitch' }
-        let(:default_voice) { :hal }
-        let(:translator)    { Freeswitch.new stub('Connection::Freeswitch').as_null_object }
+        let(:id)            { Punchblock.new_uuid }
+        let(:stream)        { double('RubyFS::Stream').as_null_object }
+        let(:translator)    { Freeswitch.new double('Connection::Freeswitch').as_null_object }
         let(:es_env) do
           {
             :variable_direction                   => "inbound",
@@ -90,93 +88,92 @@ module Punchblock
 
         let :headers do
           {
-            :x_variable_direction                   => "inbound",
-            :x_variable_uuid                        => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
-            :x_variable_session_id                  => "1",
-            :x_variable_sip_local_network_addr      => "109.148.160.137",
-            :x_variable_sip_network_ip              => "192.168.1.74",
-            :x_variable_sip_network_port            => "59253",
-            :x_variable_sip_received_ip             => "192.168.1.74",
-            :x_variable_sip_received_port           => "59253",
-            :x_variable_sip_via_protocol            => "udp",
-            :x_variable_sip_authorized              => "true",
-            :x_variable_sip_number_alias            => "1000",
-            :x_variable_sip_auth_username           => "1000",
-            :x_variable_sip_auth_realm              => "127.0.0.1",
-            :x_variable_number_alias                => "1000",
-            :x_variable_user_name                   => "1000",
-            :x_variable_domain_name                 => "127.0.0.1",
-            :x_variable_record_stereo               => "true",
-            :x_variable_default_gateway             => "example.com",
-            :x_variable_default_areacode            => "918",
-            :x_variable_transfer_fallback_extension => "operator",
-            :x_variable_toll_allow                  => "domestic,international,local",
-            :x_variable_accountcode                 => "1000",
-            :x_variable_user_context                => "default",
-            :x_variable_effective_caller_id_name    => "Extension 1000",
-            :x_variable_effective_caller_id_number  => "1000",
-            :x_variable_outbound_caller_id_name     => "FreeSWITCH",
-            :x_variable_outbound_caller_id_number   => "0000000000",
-            :x_variable_callgroup                   => "techsupport",
-            :x_variable_sip_from_user               => "1000",
-            :x_variable_sip_from_uri                => "1000@127.0.0.1",
-            :x_variable_sip_from_host               => "127.0.0.1",
-            :x_variable_sip_from_user_stripped      => "1000",
-            :x_variable_sip_from_tag                => "1248111553",
-            :x_variable_sofia_profile_name          => "internal",
-            :x_variable_sip_full_via                => "SIP/2.0/UDP 192.168.1.74:59253;rport=59253;branch=z9hG4bK2021947958",
-            :x_variable_sip_full_from               => "<sip:1000@127.0.0.1>;tag=1248111553",
-            :x_variable_sip_full_to                 => "<sip:10@127.0.0.1>",
-            :x_variable_sip_req_user                => "10",
-            :x_variable_sip_req_uri                 => "10@127.0.0.1",
-            :x_variable_sip_req_host                => "127.0.0.1",
-            :x_variable_sip_to_user                 => "10",
-            :x_variable_sip_to_uri                  => "10@127.0.0.1",
-            :x_variable_sip_to_host                 => "127.0.0.1",
-            :x_variable_sip_contact_user            => "1000",
-            :x_variable_sip_contact_port            => "59253",
-            :x_variable_sip_contact_uri             => "1000@192.168.1.74:59253",
-            :x_variable_sip_contact_host            => "192.168.1.74",
-            :x_variable_channel_name                => "sofia/internal/1000@127.0.0.1",
-            :x_variable_sip_call_id                 => "1251435211@127.0.0.1",
-            :x_variable_sip_user_agent              => "YATE/4.1.0",
-            :x_variable_sip_via_host                => "192.168.1.74",
-            :x_variable_sip_via_port                => "59253",
-            :x_variable_sip_via_rport               => "59253",
-            :x_variable_max_forwards                => "20",
-            :x_variable_presence_id                 => "1000@127.0.0.1",
-            :x_variable_switch_r_sdp                => "v=0\r\no=yate 1340801245 1340801245 IN IP4 172.20.10.3\r\ns=SIP Call\r\nc=IN IP4 172.20.10.3\r\nt=0 0\r\nm=audio 25048 RTP/AVP 0 8 11 98 97 102 103 104 105 106 101\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:11 L16/8000\r\na=rtpmap:98 iLBC/8000\r\na=fmtp:98 mode=20\r\na=rtpmap:97 iLBC/8000\r\na=fmtp:97 mode=30\r\na=rtpmap:102 SPEEX/8000\r\na=rtpmap:103 SPEEX/16000\r\na=rtpmap:104 SPEEX/32000\r\na=rtpmap:105 iSAC/16000\r\na=rtpmap:106 iSAC/32000\r\na=rtpmap:101 telephone-event/8000\r\na=ptime:30\r\n",
-            :x_variable_remote_media_ip             => "172.20.10.3",
-            :x_variable_remote_media_port           => "25048",
-            :x_variable_sip_audio_recv_pt           => "0",
-            :x_variable_sip_use_codec_name          => "PCMU",
-            :x_variable_sip_use_codec_rate          => "8000",
-            :x_variable_sip_use_codec_ptime         => "30",
-            :x_variable_read_codec                  => "PCMU",
-            :x_variable_read_rate                   => "8000",
-            :x_variable_write_codec                 => "PCMU",
-            :x_variable_write_rate                  => "8000",
-            :x_variable_endpoint_disposition        => "RECEIVED",
-            :x_variable_call_uuid                   => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
-            :x_variable_open                        => "true",
-            :x_variable_rfc2822_date                => "Wed, 27 Jun 2012 13:47:25 +0100",
-            :x_variable_export_vars                 => "RFC2822_DATE",
-            :x_variable_current_application         => "park"
+            'X-variable_direction'                   => "inbound",
+            'X-variable_uuid'                        => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            'X-variable_session_id'                  => "1",
+            'X-variable_sip_local_network_addr'      => "109.148.160.137",
+            'X-variable_sip_network_ip'              => "192.168.1.74",
+            'X-variable_sip_network_port'            => "59253",
+            'X-variable_sip_received_ip'             => "192.168.1.74",
+            'X-variable_sip_received_port'           => "59253",
+            'X-variable_sip_via_protocol'            => "udp",
+            'X-variable_sip_authorized'              => "true",
+            'X-variable_sip_number_alias'            => "1000",
+            'X-variable_sip_auth_username'           => "1000",
+            'X-variable_sip_auth_realm'              => "127.0.0.1",
+            'X-variable_number_alias'                => "1000",
+            'X-variable_user_name'                   => "1000",
+            'X-variable_domain_name'                 => "127.0.0.1",
+            'X-variable_record_stereo'               => "true",
+            'X-variable_default_gateway'             => "example.com",
+            'X-variable_default_areacode'            => "918",
+            'X-variable_transfer_fallback_extension' => "operator",
+            'X-variable_toll_allow'                  => "domestic,international,local",
+            'X-variable_accountcode'                 => "1000",
+            'X-variable_user_context'                => "default",
+            'X-variable_effective_caller_id_name'    => "Extension 1000",
+            'X-variable_effective_caller_id_number'  => "1000",
+            'X-variable_outbound_caller_id_name'     => "FreeSWITCH",
+            'X-variable_outbound_caller_id_number'   => "0000000000",
+            'X-variable_callgroup'                   => "techsupport",
+            'X-variable_sip_from_user'               => "1000",
+            'X-variable_sip_from_uri'                => "1000@127.0.0.1",
+            'X-variable_sip_from_host'               => "127.0.0.1",
+            'X-variable_sip_from_user_stripped'      => "1000",
+            'X-variable_sip_from_tag'                => "1248111553",
+            'X-variable_sofia_profile_name'          => "internal",
+            'X-variable_sip_full_via'                => "SIP/2.0/UDP 192.168.1.74:59253;rport=59253;branch=z9hG4bK2021947958",
+            'X-variable_sip_full_from'               => "<sip:1000@127.0.0.1>;tag=1248111553",
+            'X-variable_sip_full_to'                 => "<sip:10@127.0.0.1>",
+            'X-variable_sip_req_user'                => "10",
+            'X-variable_sip_req_uri'                 => "10@127.0.0.1",
+            'X-variable_sip_req_host'                => "127.0.0.1",
+            'X-variable_sip_to_user'                 => "10",
+            'X-variable_sip_to_uri'                  => "10@127.0.0.1",
+            'X-variable_sip_to_host'                 => "127.0.0.1",
+            'X-variable_sip_contact_user'            => "1000",
+            'X-variable_sip_contact_port'            => "59253",
+            'X-variable_sip_contact_uri'             => "1000@192.168.1.74:59253",
+            'X-variable_sip_contact_host'            => "192.168.1.74",
+            'X-variable_channel_name'                => "sofia/internal/1000@127.0.0.1",
+            'X-variable_sip_call_id'                 => "1251435211@127.0.0.1",
+            'X-variable_sip_user_agent'              => "YATE/4.1.0",
+            'X-variable_sip_via_host'                => "192.168.1.74",
+            'X-variable_sip_via_port'                => "59253",
+            'X-variable_sip_via_rport'               => "59253",
+            'X-variable_max_forwards'                => "20",
+            'X-variable_presence_id'                 => "1000@127.0.0.1",
+            'X-variable_switch_r_sdp'                => "v=0\r\no=yate 1340801245 1340801245 IN IP4 172.20.10.3\r\ns=SIP Call\r\nc=IN IP4 172.20.10.3\r\nt=0 0\r\nm=audio 25048 RTP/AVP 0 8 11 98 97 102 103 104 105 106 101\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:11 L16/8000\r\na=rtpmap:98 iLBC/8000\r\na=fmtp:98 mode=20\r\na=rtpmap:97 iLBC/8000\r\na=fmtp:97 mode=30\r\na=rtpmap:102 SPEEX/8000\r\na=rtpmap:103 SPEEX/16000\r\na=rtpmap:104 SPEEX/32000\r\na=rtpmap:105 iSAC/16000\r\na=rtpmap:106 iSAC/32000\r\na=rtpmap:101 telephone-event/8000\r\na=ptime:30\r\n",
+            'X-variable_remote_media_ip'             => "172.20.10.3",
+            'X-variable_remote_media_port'           => "25048",
+            'X-variable_sip_audio_recv_pt'           => "0",
+            'X-variable_sip_use_codec_name'          => "PCMU",
+            'X-variable_sip_use_codec_rate'          => "8000",
+            'X-variable_sip_use_codec_ptime'         => "30",
+            'X-variable_read_codec'                  => "PCMU",
+            'X-variable_read_rate'                   => "8000",
+            'X-variable_write_codec'                 => "PCMU",
+            'X-variable_write_rate'                  => "8000",
+            'X-variable_endpoint_disposition'        => "RECEIVED",
+            'X-variable_call_uuid'                   => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
+            'X-variable_open'                        => "true",
+            'X-variable_rfc2822_date'                => "Wed, 27 Jun 2012 13:47:25 +0100",
+            'X-variable_export_vars'                 => "RFC2822_DATE",
+            'X-variable_current_application'         => "park"
           }
         end
 
-        subject { Call.new id, translator, es_env, stream, media_engine, default_voice }
+        subject { Call.new id, translator, es_env, stream }
 
-        its(:id)            { should be == id }
-        its(:translator)    { should be translator }
-        its(:es_env)        { should be == es_env }
-        its(:stream)        { should be stream }
-        its(:media_engine)  { should be media_engine }
+        its(:id)          { should be == id }
+        its(:translator)  { should be translator }
+        its(:es_env)      { should be == es_env }
+        its(:stream)      { should be stream }
 
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'
-            component    = mock 'Translator::Freeswitch::Component', :id => component_id
+            component    = double 'Translator::Freeswitch::Component', :id => component_id
             subject.register_component component
             subject.component_with_id(component_id).should be component
           end
@@ -350,13 +347,13 @@ module Punchblock
 
             it "de-registers the call from the translator" do
               translator.stub :handle_pb_event
-              translator.should_receive(:deregister_call).once.with(subject)
+              translator.should_receive(:deregister_call).once.with(id)
               subject.handle_es_event es_event
             end
 
             it "should cause all components to send complete events before sending end event" do
               ssml_doc = RubySpeech::SSML.draw { audio { 'foo.wav' } }
-              comp_command = Punchblock::Component::Output.new :ssml => ssml_doc
+              comp_command = Punchblock::Component::Output.new :render_document => {:value => ssml_doc}
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
@@ -374,7 +371,6 @@ module Punchblock
               'NORMAL_CLEARING',
               'ORIGINATOR_CANCEL',
               'SYSTEM_SHUTDOWN',
-              'MANAGER_REQUEST',
               'BLIND_TRANSFER',
               'ATTENDED_TRANSFER',
               'PICKED_OFF',
@@ -389,6 +385,17 @@ module Punchblock
                   translator.should_receive(:handle_pb_event).with expected_end_event
                   subject.handle_es_event es_event
                 end
+              end
+            end
+
+            context "with a MANAGER_REQUEST cause" do
+              let(:cause) { 'MANAGER_REQUEST' }
+
+              it 'should send an end (hangup-command) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason         => :hangup_command,
+                                                                :target_call_id => subject.id
+                translator.should_receive(:handle_pb_event).with expected_end_event
+                subject.handle_es_event es_event
               end
             end
 
@@ -500,7 +507,7 @@ module Punchblock
           end
 
           context 'with an event for a known component' do
-            let(:mock_component_node) { mock 'Punchblock::Component::Output' }
+            let(:mock_component_node) { double 'Punchblock::Component::Output' }
             let :component do
               Component::Output.new mock_component_node, subject
             end
@@ -581,7 +588,7 @@ module Punchblock
               RubyFS::Event.new nil, :event_name => 'DTMF'
             end
 
-            let(:response) { mock 'Response' }
+            let(:response) { double 'Response' }
 
             it 'should execute the handler' do
               response.should_receive(:call).once.with es_event
@@ -596,10 +603,8 @@ module Punchblock
             let(:other_call_id) { Punchblock.new_uuid }
 
             let :expected_joined do
-              Punchblock::Event::Joined.new.tap do |joined|
-                joined.target_call_id = subject.id
-                joined.call_id = other_call_id
-              end
+              Punchblock::Event::Joined.new target_call_id: subject.id,
+                call_uri: other_call_id
             end
 
             context "where this is the joining call" do
@@ -637,10 +642,8 @@ module Punchblock
             let(:other_call_id) { Punchblock.new_uuid }
 
             let :expected_unjoined do
-              Punchblock::Event::Unjoined.new.tap do |joined|
-                joined.target_call_id = subject.id
-                joined.call_id = other_call_id
-              end
+              Punchblock::Event::Unjoined.new target_call_id: subject.id,
+                call_uri: other_call_id
             end
 
             context "where this is the unjoining call" do
@@ -738,7 +741,7 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a hangup message and set the command's response" do
-              expect_hangup_with_reason 'NORMAL_CLEARING'
+              expect_hangup_with_reason 'MANAGER_REQUEST'
               subject.execute_command command
               command.response(0.5).should be true
             end
@@ -771,15 +774,15 @@ module Punchblock
 
           context 'with an Output component' do
             let :command do
-              Punchblock::Component::Output.new
+              Punchblock::Component::Output.new renderer: renderer
             end
 
             let(:mock_component) { Translator::Freeswitch::Component::Output.new(command, subject) }
 
-            ['freeswitch', nil].each do |media_engine|
-              let(:media_engine) { media_engine }
+            ['freeswitch', 'native', nil].each do |renderer|
+              let(:renderer) { renderer }
 
-              context "with a media engine of #{media_engine}" do
+              context "with a renderer of #{renderer}" do
                 it 'should create an Output component and execute it asynchronously' do
                   Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_component
                   mock_component.should_receive(:execute).once
@@ -789,50 +792,35 @@ module Punchblock
               end
             end
 
-            context 'with the media engine of :flite' do
-              let(:media_engine) { :flite }
+            context 'with the renderer of :flite' do
+              let(:renderer) { :flite }
 
               it 'should create a FliteOutput component and execute it asynchronously using flite and the calls default voice' do
                 Component::FliteOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute).once.with(media_engine, default_voice)
+                mock_component.should_receive(:execute).once
                 subject.execute_command command
                 subject.component_with_id(mock_component.id).should be mock_component
               end
             end
 
-            context 'with the media engine of :cepstral' do
-              let(:media_engine) { :cepstral }
+            context 'with the renderer of :cepstral' do
+              let(:renderer) { :cepstral }
 
               it 'should create a TTSOutput component and execute it asynchronously using cepstral and the calls default voice' do
                 Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute).once.with(media_engine, default_voice)
+                mock_component.should_receive(:execute).once
                 subject.execute_command command
                 subject.component_with_id(mock_component.id).should be mock_component
               end
             end
 
-            context 'with the media engine of :unimrcp' do
-              let(:media_engine) { :unimrcp }
+            context 'with the renderer of :unimrcp' do
+              let(:renderer) { :unimrcp }
 
               it 'should create a TTSOutput component and execute it asynchronously using unimrcp and the calls default voice' do
                 Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute).once.with(media_engine, default_voice)
-                subject.execute_command command
-                subject.component_with_id(mock_component.id).should be mock_component
-              end
-            end
-
-            context "with a media renderer set on the component" do
-              let(:media_engine) { :cepstral }
-              let(:media_renderer) { :native }
-              let :command_with_renderer do
-                Punchblock::Component::Output.new :renderer => media_renderer
-              end
-
-              it "should use the component media engine and not the platform one if it is set" do
-                Component::Output.should_receive(:new_link).once.with(command_with_renderer, subject).and_return mock_component
                 mock_component.should_receive(:execute).once
-                subject.execute_command command_with_renderer
+                subject.execute_command command
                 subject.component_with_id(mock_component.id).should be mock_component
               end
             end
@@ -874,7 +862,7 @@ module Punchblock
             end
 
             let :mock_component do
-              mock 'Component', :id => component_id
+              double 'Component', :id => component_id
             end
 
             context "for a known component ID" do
@@ -888,19 +876,17 @@ module Punchblock
 
             context "for a component which began executing but crashed" do
               let :component_command do
-                Punchblock::Component::Output.new :ssml => RubySpeech::SSML.draw
+                Punchblock::Component::Output.new :render_document => {:value => RubySpeech::SSML.draw}
               end
 
-              let(:comp_id) { component_command.response.id }
+              let(:comp_id) { component_command.response.component_id }
 
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 
               let :expected_event do
-                Punchblock::Event::Complete.new.tap do |e|
-                  e.target_call_id = subject.id
-                  e.component_id = comp_id
-                  e.reason = Punchblock::Event::Complete::Error.new
-                end
+                Punchblock::Event::Complete.new target_call_id: subject.id,
+                  component_id: comp_id,
+                  reason: Punchblock::Event::Complete::Error.new
               end
 
               before do
@@ -951,7 +937,7 @@ module Punchblock
             let(:other_call_id) { Punchblock.new_uuid }
 
             let :command do
-              Punchblock::Command::Join.new :call_id => other_call_id
+              Punchblock::Command::Join.new :call_uri => other_call_id
             end
 
             it "executes the proper uuid_bridge command" do
@@ -983,7 +969,7 @@ module Punchblock
             let(:other_call_id) { Punchblock.new_uuid }
 
             let :command do
-              Punchblock::Command::Unjoin.new :call_id => other_call_id
+              Punchblock::Command::Unjoin.new :call_uri => other_call_id
             end
 
             it "executes the unjoin via transfer to park" do

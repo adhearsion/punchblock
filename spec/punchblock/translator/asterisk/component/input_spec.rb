@@ -9,9 +9,8 @@ module Punchblock
         describe Input do
           include HasMockCallbackConnection
 
-          let(:media_engine)    { nil }
-          let(:ami_client)      { mock('AMI') }
-          let(:translator)      { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
+          let(:ami_client)      { double('AMI') }
+          let(:translator)      { Punchblock::Translator::Asterisk.new ami_client, connection }
           let(:call)            { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
           let(:original_command_options) { {} }
 
@@ -79,13 +78,17 @@ module Punchblock
                   send_ami_events_for_dtmf 2
                 end
 
+                let :expected_nlsml do
+                  RubySpeech::NLSML.draw do
+                    interpretation confidence: 1 do
+                      instance "dtmf-1 dtmf-2"
+                      input "12", mode: :dtmf
+                    end
+                  end
+                end
+
                 let :expected_event do
-                  Punchblock::Component::Input::Complete::Success.new :mode => :dtmf,
-                    :confidence => 1,
-                    :utterance => '12',
-                    :interpretation => 'dtmf-1 dtmf-2',
-                    :component_id => subject.id,
-                    :target_call_id => call.id
+                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
                 end
 
                 it "should send a success complete event with the relevant data" do
@@ -105,8 +108,7 @@ module Punchblock
                 end
 
                 let :expected_event do
-                  Punchblock::Component::Input::Complete::NoMatch.new :component_id => subject.id,
-                                                                      :target_call_id => call.id
+                  Punchblock::Component::Input::Complete::NoMatch.new
                 end
 
                 it "should send a nomatch complete event" do
@@ -121,6 +123,15 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A grammar document is required.'
+                  original_command.response(0.1).should be == error
+                end
+              end
+
+              context 'with multiple grammars' do
+                let(:original_command_opts) { { :grammars => [{:value => grammar}, {:value => grammar}] } }
+                it "should return an error and not execute any actions" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', 'Only a single grammar is supported.'
                   original_command.response(0.1).should be == error
                 end
               end
@@ -145,8 +156,8 @@ module Punchblock
                 end
               end
 
-              context 'speech' do
-                let(:original_command_opts) { { :mode => :speech } }
+              context 'voice' do
+                let(:original_command_opts) { { :mode => :voice } }
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
@@ -156,7 +167,85 @@ module Punchblock
             end
 
             describe 'terminator' do
-              pending
+              context 'set' do
+                let(:original_command_opts) { { terminator: '#' } }
+
+                before do
+                  subject.execute
+                  expected_event
+                end
+
+                let :grammar do
+                  RubySpeech::GRXML.draw mode: 'dtmf', root: 'digits' do
+                    rule id: 'digits' do
+                      item repeat: '2-5' do
+                        one_of do
+                          0.upto(9) { |d| item { d.to_s } }
+                        end
+                      end
+                    end
+                  end
+                end
+
+                let :expected_nlsml do
+                  RubySpeech::NLSML.draw do
+                    interpretation confidence: 1 do
+                      instance "dtmf-1 dtmf-2"
+                      input "12", mode: :dtmf
+                    end
+                  end
+                end
+
+                let :expected_event do
+                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
+                end
+
+                context "when encountered with a match" do
+                  before do
+                    send_ami_events_for_dtmf 1
+                    send_ami_events_for_dtmf 2
+                    send_ami_events_for_dtmf '#'
+                  end
+
+                  it "should send a match complete event with the relevant data" do
+                    reason.should be == expected_event
+                  end
+
+                  it "should not process further dtmf events" do
+                    subject.async.should_receive(:process_dtmf).never
+                    send_ami_events_for_dtmf 3
+                  end
+                end
+
+                context "when encountered with a NoMatch" do
+                  before do
+                    send_ami_events_for_dtmf '#'
+                  end
+
+                  let :expected_event do
+                    Punchblock::Component::Input::Complete::NoMatch.new
+                  end
+
+                  it "should send a nomatch complete event with the relevant data" do
+                    reason.should be == expected_event
+                  end
+                end
+
+                context "when encountered with a PotentialMatch" do
+                  before do
+                    send_ami_events_for_dtmf 1
+                    send_ami_events_for_dtmf '#'
+                  end
+
+                  let :expected_event do
+                    Punchblock::Component::Input::Complete::NoMatch.new
+                  end
+
+                  it "should send a nomatch complete event with the relevant data" do
+                    reason.should be == expected_event
+                  end
+                end
+              end
             end
 
             describe 'recognizer' do
@@ -172,7 +261,7 @@ module Punchblock
                   send_ami_events_for_dtmf 1
                   sleep 1.5
                   send_ami_events_for_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Success
+                  reason.should be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoInput complete event to be sent after the timeout" do
@@ -223,7 +312,7 @@ module Punchblock
                   send_ami_events_for_dtmf 1
                   sleep 0.5
                   send_ami_events_for_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Success
+                  reason.should be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoMatch complete event to be sent after the timeout" do
@@ -233,6 +322,73 @@ module Punchblock
                   sleep 1.5
                   send_ami_events_for_dtmf 2
                   reason.should be_a Punchblock::Component::Input::Complete::NoMatch
+                end
+
+                context "with a trailing range repeat" do
+                  let :grammar do
+                    RubySpeech::GRXML.draw mode: 'dtmf', root: 'digits' do
+                      rule id: 'digits', scope: 'public' do
+                        item repeat: '2-5' do
+                          '1'
+                        end
+                      end
+                    end
+                  end
+
+                  context "when the buffer potentially matches the grammar" do
+                    it "should cause a NoMatch complete event to be sent after the timeout" do
+                      subject.execute
+                      sleep 1.5
+                      send_ami_events_for_dtmf 1
+                      sleep 1.5
+                      reason.should be_a Punchblock::Component::Input::Complete::NoMatch
+                    end
+                  end
+
+                  context "when the buffer matches the grammar" do
+                    let :expected_nlsml do
+                      RubySpeech::NLSML.draw do
+                        interpretation confidence: 1 do
+                          instance "dtmf-1 dtmf-1"
+                          input '11', mode: :dtmf
+                        end
+                      end.root
+                    end
+
+                    it "should fire a match on timeout" do
+                      subject.execute
+                      sleep 1.5
+                      send_ami_events_for_dtmf 1
+                      sleep 0.5
+                      send_ami_events_for_dtmf 1
+                      sleep 1.5
+                      reason.should be_a Punchblock::Component::Input::Complete::Match
+                      reason.nlsml.should == expected_nlsml
+                    end
+
+                    context "on the first keypress" do
+                      let :grammar do
+                        RubySpeech::GRXML.draw mode: 'dtmf', root: 'digits' do
+                          rule id: 'digits', scope: 'public' do
+                            item repeat: '1-5' do
+                              '1'
+                            end
+                          end
+                        end
+                      end
+
+                      it "should fire a match on timeout" do
+                        subject.execute
+                        sleep 1.5
+                        send_ami_events_for_dtmf 1
+                        sleep 0.5
+                        send_ami_events_for_dtmf 1
+                        sleep 1.5
+                        reason.should be_a Punchblock::Component::Input::Complete::Match
+                        reason.nlsml.should == expected_nlsml
+                      end
+                    end
+                  end
                 end
               end
 

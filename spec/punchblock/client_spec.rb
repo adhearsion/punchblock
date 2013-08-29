@@ -8,15 +8,14 @@ module Punchblock
 
     subject { Client.new :connection => connection }
 
-    its(:event_queue)         { should be_a Queue }
     its(:connection)          { should be connection }
     its(:component_registry)  { should be_a Client::ComponentRegistry }
 
     let(:call_id)         { 'abc123' }
-    let(:mock_event)      { stub('Event').as_null_object }
+    let(:mock_event)      { double('Event').as_null_object }
     let(:component_id)    { 'abc123' }
-    let(:mock_component)  { stub 'Component', :component_id => component_id }
-    let(:mock_command)    { stub 'Command' }
+    let(:mock_component)  { double 'Component', :component_id => component_id }
+    let(:mock_command)    { double 'Command' }
 
     describe '#run' do
       it 'should start up the connection' do
@@ -50,13 +49,8 @@ module Punchblock
           mock_component.should_receive(:add_event).with mock_event
         end
 
-        it 'should not queue up the event' do
-          subject.handle_event mock_event
-          subject.event_queue.should be_empty
-        end
-
         it 'should not call event handlers' do
-          handler = mock 'handler'
+          handler = double 'handler'
           handler.should_receive(:call).never
           subject.register_event_handler do |event|
             handler.call event
@@ -70,23 +64,13 @@ module Punchblock
           mock_event.stub :source => nil
         end
 
-        context 'if event handlers have been set' do
-          it 'should call the event handler and not queue up the event' do
-            handler = mock 'handler'
-            handler.should_receive(:call).once.with mock_event
-            subject.register_event_handler do |event|
-              handler.call event
-            end
-            subject.handle_event mock_event
-            subject.event_queue.should be_empty
+        it 'should call registered event handlers' do
+          handler = double 'handler'
+          handler.should_receive(:call).once.with mock_event
+          subject.register_event_handler do |event|
+            handler.call event
           end
-        end
-
-        context 'if event handlers have not been set' do
-          it 'should queue up the event' do
-            subject.handle_event mock_event
-            subject.event_queue.pop(true).should be == mock_event
-          end
+          subject.handle_event mock_event
         end
       end
     end

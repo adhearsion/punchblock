@@ -18,14 +18,14 @@ module Punchblock
       autoload :Call
       autoload :Component
 
-      attr_reader :connection, :media_engine, :default_voice, :calls
+      attr_reader :connection, :calls
 
       trap_exit :actor_died
 
       finalizer :finalize
 
-      def initialize(connection, media_engine = nil, default_voice = nil)
-        @connection, @media_engine, @default_voice = connection, media_engine, default_voice
+      def initialize(connection)
+        @connection = connection
         @calls, @components = {}, {}
         setup_handlers
       end
@@ -34,8 +34,8 @@ module Punchblock
         @calls[call.id] ||= call
       end
 
-      def deregister_call(call)
-        @calls.delete call.id
+      def deregister_call(id)
+        @calls.delete id
       end
 
       def call_with_id(call_id)
@@ -62,7 +62,7 @@ module Punchblock
 
         register_handler :es, :event_name => 'CHANNEL_PARK' do |event|
           throw :pass if es_event_known_call? event
-          call = Call.new event[:unique_id], current_actor, event.content.select { |k,v| k.to_s =~ /variable/ }, stream, @media_engine, @default_voice
+          call = Call.new event[:unique_id], current_actor, event.content.select { |k,v| k.to_s =~ /variable/ }, stream
           link call
           register_call call
           call.async.send_offer
@@ -135,7 +135,7 @@ module Punchblock
       def execute_global_command(command)
         case command
         when Punchblock::Command::Dial
-          call = Call.new_link Punchblock.new_uuid, current_actor, nil, stream, @media_engine, @default_voice
+          call = Call.new_link Punchblock.new_uuid, current_actor, nil, stream
           register_call call
           call.async.dial command
         else

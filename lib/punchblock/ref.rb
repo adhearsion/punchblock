@@ -1,34 +1,55 @@
 # encoding: utf-8
 
+require 'ruby_jid'
+
 module Punchblock
   ##
-  # An rayo Ref message. This provides the command ID in response to execution of a command.
+  # A rayo Ref message. This provides the command ID in response to execution of a command.
   #
   class Ref < RayoNode
     register :ref, :core
 
-    def self.new(options = {})
-      super().tap do |new_node|
-        options.each_pair { |k,v| new_node.send :"#{k}=", v }
+    # @return [String] the command URI
+    attribute :uri
+    def uri=(other)
+      super URI(other)
+    end
+
+    def scheme
+      uri.scheme
+    end
+
+    def call_id
+      case scheme
+      when 'xmpp'
+        RubyJID.new(uri.opaque).node
+      when nil
+        uri.path
+      else
+        uri.opaque
       end
     end
 
-    ##
-    # @return [String] the command ID
-    #
-    def id
-      read_attr :id
+    def domain
+      case scheme
+      when 'xmpp'
+        RubyJID.new(uri.opaque).domain
+      end
     end
 
-    ##
-    # @param [String] ref_id the command ID
-    #
-    def id=(ref_id)
-      write_attr :id, ref_id
+    def component_id
+      case scheme
+      when 'xmpp'
+        RubyJID.new(uri.opaque).resource
+      else
+        call_id
+      end
     end
 
-    def inspect_attributes # :nodoc:
-      [:id] + super
+    def rayo_attributes
+      {}.tap do |atts|
+        atts[:uri] = uri if uri
+      end
     end
-  end # Offer
-end # Punchblock
+  end
+end

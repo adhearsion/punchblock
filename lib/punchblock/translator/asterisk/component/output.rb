@@ -86,7 +86,7 @@ module Punchblock
             @filenames ||= render_doc.children.map do |node|
               case node
               when RubySpeech::SSML::Audio
-                node.src.sub('file://', '')
+                node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
               when String
                 raise if node.include?(' ')
                 node

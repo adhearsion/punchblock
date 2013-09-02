@@ -432,7 +432,7 @@ module Punchblock
                   mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
                 end
 
-                let(:audio_filename) { 'http://foo.com/bar.mp3' }
+                let(:audio_filename) { 'tt-monkeys' }
 
                 let :ssml_doc do
                   RubySpeech::SSML.draw do
@@ -491,6 +491,26 @@ module Punchblock
                         expect_answered
                         expect_playback 'tt-monkeys'
                         subject.execute
+                      end
+                    end
+
+                    context "when the audio filename has an extension" do
+                      let(:audio_filename) { 'tt-monkeys.wav' }
+
+                      it 'should playback the audio file using Playback' do
+                        expect_answered
+                        expect_playback 'tt-monkeys'
+                        subject.execute
+                      end
+
+                      context "when there are other dots in the filename" do
+                        let(:audio_filename) { 'blue.tt-monkeys.wav' }
+
+                        it 'should playback the audio file using Playback' do
+                          expect_answered
+                          expect_playback 'blue.tt-monkeys'
+                          subject.execute
+                        end
                       end
                     end
 
@@ -591,8 +611,8 @@ module Punchblock
                   end
 
                   context 'with multiple audio SSML nodes' do
-                    let(:audio_filename1) { 'http://foo.com/bar.mp3' }
-                    let(:audio_filename2) { 'http://foo.com/baz.mp3' }
+                    let(:audio_filename1) { 'foo' }
+                    let(:audio_filename2) { 'bar' }
                     let :ssml_doc do
                       RubySpeech::SSML.draw do
                         audio :src => audio_filename1

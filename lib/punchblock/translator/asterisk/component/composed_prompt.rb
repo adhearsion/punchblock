@@ -13,6 +13,8 @@ module Punchblock
             output_command.request!
             setup_dtmf_recognizer
 
+            @output_incomplete = true
+
             output_component = Output.new_link(output_command, @call)
             call.register_component output_component
             fut = output_component.future.execute
@@ -28,6 +30,7 @@ module Punchblock
               @barged = false
               register_dtmf_event_handler
               fut.value # Block until output is complete before starting timers
+              @output_incomplete = false
               start_timers unless @barged
             else
               fut.value # Block until output is complete before allowing input
@@ -37,7 +40,7 @@ module Punchblock
           end
 
           def process_dtmf(digit)
-            if @component_node.barge_in
+            if @component_node.barge_in && @output_incomplete
               call.async.redirect_back
               @barged = true
             end

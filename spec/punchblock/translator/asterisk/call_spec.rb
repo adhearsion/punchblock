@@ -296,6 +296,7 @@ module Punchblock
             it "should cause the actor to be terminated" do
               translator.should_receive(:handle_pb_event).twice
               subject.process_ami_event ami_event
+              Celluloid::Actor.join(subject, 1)
               subject.should_not be_alive
             end
 

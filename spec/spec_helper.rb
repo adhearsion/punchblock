@@ -25,7 +25,7 @@ RSpec.configure do |config|
   end
 
   config.after :each do
-    if Object.const_defined?(:Celluloid)
+    if defined?(:Celluloid)
       Celluloid.shutdown
       Celluloid.boot
     end

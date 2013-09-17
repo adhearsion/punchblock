@@ -1,5 +1,11 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v2.0.1](https://github.com/adhearsion/punchblock/compare/v2.0.0...v2.0.1) - [2013-09-17](https://rubygems.org/gems/punchblock/versions/2.0.1)
+  * Bugfix: Allow audio file URIs with file extensions on Asterisk
+  * Bugfix: Input timers were being started before output finished on Asterisk composed prompts
+  * Bugfix: Input initial timers were being started on Asterisk composed prompts even if the prompt was barged
+  * Bugfix: Output was being interrupted on Asterisk composed prompts at every DTMF keypress, even if the output was already finished
+
 # [v2.0.0](https://github.com/adhearsion/punchblock/compare/v1.9.4...v2.0.0) - [2013-08-29](https://rubygems.org/gems/punchblock/versions/2.0.0)
   * Feature: Compliance with v0.2 of the published Rayo spec (http://xmpp.org/extensions/xep-0327.html)
   * Feature: Add support for Rayo Prompt component

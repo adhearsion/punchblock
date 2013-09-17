@@ -24,10 +24,15 @@ module Punchblock
               set_node_response output_command.response
             end
 
-            fut.value unless @component_node.barge_in # Block until output is complete
+            if @component_node.barge_in
+              register_dtmf_event_handler
+            else
+              fut.value # Block until output is complete before allowing input
+              register_dtmf_event_handler
+            end
 
-            register_dtmf_event_handler
-            start_timers
+            fut.value # Block until output is complete before starting timers
+            start_timers # TODO: only do this if we havn't had input yet
           end
 
           def process_dtmf(digit)

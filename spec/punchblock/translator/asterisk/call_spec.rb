@@ -1298,7 +1298,7 @@ module Punchblock
               end
             end
 
-            context "for a component which began executing but crashed" do
+            context "for a component which began executing but terminated" do
               let :component_command do
                 Punchblock::Component::Asterisk::AGI::Command.new :name => 'Wait'
               end
@@ -1318,34 +1318,51 @@ module Punchblock
                 subject.execute_command component_command
               end
 
-              it 'sends an error in response to the command' do
-                component = subject.component_with_id comp_id
-
-                component.wrapped_object.define_singleton_method(:oops) do
-                  raise 'Woops, I died'
-                end
-
-                translator.should_receive(:handle_pb_event).once.with expected_event
-
-                lambda { component.oops }.should raise_error(/Woops, I died/)
-                sleep 0.1
-                component.should_not be_alive
-                subject.component_with_id(comp_id).should be_nil
-
-                subsequent_command.request!
-                subject.execute_command subsequent_command
-                subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
-              end
-
-              context "when we dispatch the command to it" do
+              context "normally" do
                 it 'sends an error in response to the command' do
                   component = subject.component_with_id comp_id
 
-                  component.should_receive(:execute_command).and_raise(Celluloid::DeadActorError)
+                  component.terminate
+                  sleep 0.1
+                  component.should_not be_alive
+                  subject.component_with_id(comp_id).should be_nil
 
                   subsequent_command.request!
                   subject.execute_command subsequent_command
                   subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+                end
+              end
+
+              context "by crashing" do
+                it 'sends an error in response to the command' do
+                  component = subject.component_with_id comp_id
+
+                  component.wrapped_object.define_singleton_method(:oops) do
+                    raise 'Woops, I died'
+                  end
+
+                  translator.should_receive(:handle_pb_event).once.with expected_event
+
+                  lambda { component.oops }.should raise_error(/Woops, I died/)
+                  sleep 0.1
+                  component.should_not be_alive
+                  subject.component_with_id(comp_id).should be_nil
+
+                  subsequent_command.request!
+                  subject.execute_command subsequent_command
+                  subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+                end
+
+                context "when we dispatch the command to it" do
+                  it 'sends an error in response to the command' do
+                    component = subject.component_with_id comp_id
+
+                    component.should_receive(:execute_command).and_raise(Celluloid::DeadActorError)
+
+                    subsequent_command.request!
+                    subject.execute_command subsequent_command
+                    subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+                  end
                 end
               end
             end

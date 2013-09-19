@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Punchblock do
   describe '#client_with_connection' do
-    let(:mock_connection) { stub('Connection').as_null_object }
+    let(:mock_connection) { double('Connection').as_null_object }
 
     context 'with :xmpp' do
       it 'sets up an XMPP connection, passing options, and a client with the connection attached' do

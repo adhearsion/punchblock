@@ -15,8 +15,8 @@ module Punchblock
             end
           end
 
-          let(:connection)  { stub 'Connection' }
-          let(:ami_client)  { stub('AMI Client').as_null_object }
+          let(:connection)  { double 'Connection' }
+          let(:ami_client)  { double('AMI Client').as_null_object }
           let(:translator)  { Punchblock::Translator::Asterisk.new ami_client, connection }
           let(:mock_call)   { Call.new 'SIP/foo', translator, ami_client, connection }
 

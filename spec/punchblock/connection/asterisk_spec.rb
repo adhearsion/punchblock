@@ -10,12 +10,11 @@ module Punchblock
           :host     => '127.0.0.1',
           :port     => 5038,
           :username => 'test',
-          :password => 'test',
-          :media_engine => :swift
+          :password => 'test'
         }
       end
 
-      let(:mock_event_handler) { stub('Event Handler').as_null_object }
+      let(:mock_event_handler) { double('Event Handler').as_null_object }
 
       let(:connection) { Asterisk.new options }
 
@@ -30,10 +29,6 @@ module Punchblock
 
       it 'should set the connection on the translator' do
         subject.translator.connection.should be subject
-      end
-
-      it 'should set the media engine on the translator' do
-        subject.translator.media_engine.should be == :swift
       end
 
       describe '#run' do
@@ -79,7 +74,7 @@ module Punchblock
 
       describe '#write' do
         it 'sends a command to the translator' do
-          command = mock 'Command'
+          command = double 'Command'
           options = {:foo => :bar}
           subject.translator.async.should_receive(:execute_command).once.with command, options
           subject.write command, options

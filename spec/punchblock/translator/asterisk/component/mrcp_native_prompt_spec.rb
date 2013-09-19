@@ -9,9 +9,8 @@ module Punchblock
         describe MRCPNativePrompt do
           include HasMockCallbackConnection
 
-          let(:media_engine)  { :unimrcp }
-          let(:ami_client)    { mock('AMI') }
-          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
+          let(:ami_client)    { double('AMI') }
+          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection }
           let(:mock_call)     { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
 
           let :ssml_doc do
@@ -245,6 +244,16 @@ module Punchblock
                     complete_reason = original_command.complete_event(0.1).reason
                     complete_reason.should be_a Punchblock::Event::Complete::Error
                     complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                  end
+                end
+
+                context "when the channel is gone" do
+                  it "should send an error complete event" do
+                    error = ChannelGoneError.new 'FooBar'
+                    mock_call.should_receive(:execute_agi_command).and_raise error
+                    subject.execute
+                    complete_reason = original_command.complete_event(0.1).reason
+                    complete_reason.should be_a Punchblock::Event::Complete::Hangup
                   end
                 end
               end

@@ -6,11 +6,9 @@ module Punchblock
   module Translator
     class Freeswitch
       describe Call do
-        let(:id) { Punchblock.new_uuid }
-        let(:stream)        { stub('RubyFS::Stream').as_null_object }
-        let(:media_engine)  { 'freeswitch' }
-        let(:default_voice) { :hal }
-        let(:translator)    { Freeswitch.new stub('Connection::Freeswitch').as_null_object }
+        let(:id)            { Punchblock.new_uuid }
+        let(:stream)        { double('RubyFS::Stream').as_null_object }
+        let(:translator)    { Freeswitch.new double('Connection::Freeswitch').as_null_object }
         let(:es_env) do
           {
             :variable_direction                   => "inbound",
@@ -165,18 +163,17 @@ module Punchblock
           }
         end
 
-        subject { Call.new id, translator, es_env, stream, media_engine, default_voice }
+        subject { Call.new id, translator, es_env, stream }
 
-        its(:id)            { should be == id }
-        its(:translator)    { should be translator }
-        its(:es_env)        { should be == es_env }
-        its(:stream)        { should be stream }
-        its(:media_engine)  { should be media_engine }
+        its(:id)          { should be == id }
+        its(:translator)  { should be translator }
+        its(:es_env)      { should be == es_env }
+        its(:stream)      { should be stream }
 
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'
-            component    = mock 'Translator::Freeswitch::Component', :id => component_id
+            component    = double 'Translator::Freeswitch::Component', :id => component_id
             subject.register_component component
             subject.component_with_id(component_id).should be component
           end
@@ -510,7 +507,7 @@ module Punchblock
           end
 
           context 'with an event for a known component' do
-            let(:mock_component_node) { mock 'Punchblock::Component::Output' }
+            let(:mock_component_node) { double 'Punchblock::Component::Output' }
             let :component do
               Component::Output.new mock_component_node, subject
             end
@@ -591,7 +588,7 @@ module Punchblock
               RubyFS::Event.new nil, :event_name => 'DTMF'
             end
 
-            let(:response) { mock 'Response' }
+            let(:response) { double 'Response' }
 
             it 'should execute the handler' do
               response.should_receive(:call).once.with es_event
@@ -777,15 +774,15 @@ module Punchblock
 
           context 'with an Output component' do
             let :command do
-              Punchblock::Component::Output.new
+              Punchblock::Component::Output.new renderer: renderer
             end
 
             let(:mock_component) { Translator::Freeswitch::Component::Output.new(command, subject) }
 
-            ['freeswitch', nil].each do |media_engine|
-              let(:media_engine) { media_engine }
+            ['freeswitch', 'native', nil].each do |renderer|
+              let(:renderer) { renderer }
 
-              context "with a media engine of #{media_engine}" do
+              context "with a renderer of #{renderer}" do
                 it 'should create an Output component and execute it asynchronously' do
                   Component::Output.should_receive(:new_link).once.with(command, subject).and_return mock_component
                   mock_component.should_receive(:execute).once
@@ -795,50 +792,35 @@ module Punchblock
               end
             end
 
-            context 'with the media engine of :flite' do
-              let(:media_engine) { :flite }
+            context 'with the renderer of :flite' do
+              let(:renderer) { :flite }
 
               it 'should create a FliteOutput component and execute it asynchronously using flite and the calls default voice' do
                 Component::FliteOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute).once.with(media_engine, default_voice)
+                mock_component.should_receive(:execute).once
                 subject.execute_command command
                 subject.component_with_id(mock_component.id).should be mock_component
               end
             end
 
-            context 'with the media engine of :cepstral' do
-              let(:media_engine) { :cepstral }
+            context 'with the renderer of :cepstral' do
+              let(:renderer) { :cepstral }
 
               it 'should create a TTSOutput component and execute it asynchronously using cepstral and the calls default voice' do
                 Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute).once.with(media_engine, default_voice)
+                mock_component.should_receive(:execute).once
                 subject.execute_command command
                 subject.component_with_id(mock_component.id).should be mock_component
               end
             end
 
-            context 'with the media engine of :unimrcp' do
-              let(:media_engine) { :unimrcp }
+            context 'with the renderer of :unimrcp' do
+              let(:renderer) { :unimrcp }
 
               it 'should create a TTSOutput component and execute it asynchronously using unimrcp and the calls default voice' do
                 Component::TTSOutput.should_receive(:new_link).once.with(command, subject).and_return mock_component
-                mock_component.should_receive(:execute).once.with(media_engine, default_voice)
-                subject.execute_command command
-                subject.component_with_id(mock_component.id).should be mock_component
-              end
-            end
-
-            context "with a media renderer set on the component" do
-              let(:media_engine) { :cepstral }
-              let(:media_renderer) { :native }
-              let :command_with_renderer do
-                Punchblock::Component::Output.new :renderer => media_renderer
-              end
-
-              it "should use the component media engine and not the platform one if it is set" do
-                Component::Output.should_receive(:new_link).once.with(command_with_renderer, subject).and_return mock_component
                 mock_component.should_receive(:execute).once
-                subject.execute_command command_with_renderer
+                subject.execute_command command
                 subject.component_with_id(mock_component.id).should be mock_component
               end
             end
@@ -880,7 +862,7 @@ module Punchblock
             end
 
             let :mock_component do
-              mock 'Component', :id => component_id
+              double 'Component', :id => component_id
             end
 
             context "for a known component ID" do
@@ -897,7 +879,7 @@ module Punchblock
                 Punchblock::Component::Output.new :render_document => {:value => RubySpeech::SSML.draw}
               end
 
-              let(:comp_id) { component_command.response.uri }
+              let(:comp_id) { component_command.response.component_id }
 
               let(:subsequent_command) { Punchblock::Component::Stop.new :component_id => comp_id }
 

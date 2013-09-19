@@ -37,12 +37,12 @@ module Punchblock
         REJECT_TO_HANGUP_REASON = Hash.new 'NORMAL_TEMPORARY_FAILURE'
         REJECT_TO_HANGUP_REASON.merge! :busy => 'USER_BUSY', :decline => 'CALL_REJECTED'
 
-        attr_reader :id, :translator, :es_env, :direction, :stream, :media_engine, :default_voice
+        attr_reader :id, :translator, :es_env, :direction, :stream
 
         trap_exit :actor_died
 
-        def initialize(id, translator, es_env = nil, stream = nil, media_engine = nil, default_voice = nil)
-          @id, @translator, @stream, @media_engine, @default_voice = id, translator, stream, media_engine, default_voice
+        def initialize(id, translator, es_env = nil, stream = nil)
+          @id, @translator, @stream = id, translator, stream
           @es_env = es_env || {}
           @components = {}
           @pending_joins, @pending_unjoins = {}, {}
@@ -205,14 +205,14 @@ module Punchblock
             hangup REJECT_TO_HANGUP_REASON[command.reason]
             command.response = true
           when Punchblock::Component::Output
-            media_renderer = command.renderer || media_engine || :freeswitch
-            case media_renderer.to_sym
-            when :freeswitch, :native, nil
+            media_renderer = command.renderer || :freeswitch
+            case media_renderer.to_s
+            when 'freeswitch', 'native'
               execute_component Component::Output, command
-            when :flite
-              execute_component Component::FliteOutput, command, media_engine, default_voice
+            when 'flite'
+              execute_component Component::FliteOutput, command
             else
-              execute_component Component::TTSOutput, command, media_engine, default_voice
+              execute_component Component::TTSOutput, command
             end
           when Punchblock::Component::Input
             execute_component Component::Input, command

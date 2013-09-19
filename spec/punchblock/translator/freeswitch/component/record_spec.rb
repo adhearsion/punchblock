@@ -11,7 +11,7 @@ module Punchblock
 
           let(:id)          { Punchblock.new_uuid }
           let(:translator)  { Punchblock::Translator::Freeswitch.new connection }
-          let(:mock_stream) { mock('RubyFS::Stream') }
+          let(:mock_stream) { double('RubyFS::Stream') }
           let(:mock_call)   { Punchblock::Translator::Freeswitch::Call.new id, translator, nil, mock_stream }
 
           let :original_command do

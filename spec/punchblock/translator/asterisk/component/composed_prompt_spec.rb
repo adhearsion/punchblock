@@ -20,14 +20,13 @@ module Punchblock
           end
 
           let(:connection)    { MockConnection.new }
-          let(:media_engine)  { nil }
-          let(:ami_client)    { mock('AMI') }
-          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection, media_engine }
+          let(:ami_client)    { double('AMI') }
+          let(:translator)    { Punchblock::Translator::Asterisk.new ami_client, connection }
           let(:call)          { Punchblock::Translator::Asterisk::Call.new 'foo', translator, ami_client, connection }
 
           let :ssml_doc do
             RubySpeech::SSML.draw do
-              audio src: 'http://foo.com/bar.mp3'
+              audio src: 'tt-monkeys'
             end
           end
 
@@ -93,7 +92,7 @@ module Punchblock
             context '#barge_in' do
               context 'true' do
                 it "should execute an output component on the call and return a ref" do
-                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'http://foo.com/bar.mp3')
+                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'tt-monkeys')
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end
@@ -117,7 +116,7 @@ module Punchblock
 
               context 'false' do
                 it "should execute an output component on the call" do
-                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'http://foo.com/bar.mp3')
+                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'tt-monkeys')
                   subject.execute
                   original_command.response(0.1).should be_a Ref
                 end

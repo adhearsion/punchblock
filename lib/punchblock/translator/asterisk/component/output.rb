@@ -14,10 +14,6 @@ module Punchblock
           UniMRCPError          = Class.new Punchblock::Error
           PlaybackError         = Class.new Punchblock::Error
 
-          def setup
-            @media_engine = @call.translator.media_engine
-          end
-
           def execute
             raise OptionError, 'An SSML document is required.' unless @component_node.render_documents.first.value
             raise OptionError, 'Only a single document is supported.' unless @component_node.render_documents.size == 1
@@ -29,7 +25,7 @@ module Punchblock
 
             early = !@call.answered?
 
-            rendering_engine = @component_node.renderer || @media_engine || :asterisk
+            rendering_engine = @component_node.renderer || :asterisk
 
             case rendering_engine.to_sym
             when :asterisk
@@ -70,6 +66,8 @@ module Punchblock
               raise OptionError, "The renderer #{rendering_engine} is unsupported."
             end
             send_finish
+          rescue ChannelGoneError
+            call_ended
           rescue PlaybackError
             complete_with_error 'Terminated due to playback error'
           rescue UniMRCPError
@@ -88,7 +86,7 @@ module Punchblock
             @filenames ||= render_doc.children.map do |node|
               case node
               when RubySpeech::SSML::Audio
-                node.src
+                node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
               when String
                 raise if node.include?(' ')
                 node

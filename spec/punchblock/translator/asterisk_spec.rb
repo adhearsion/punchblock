@@ -6,11 +6,10 @@ require 'ostruct'
 module Punchblock
   module Translator
     describe Asterisk do
-      let(:ami_client)    { mock 'RubyAMI::Client' }
-      let(:connection)    { mock 'Connection::Asterisk', handle_event: nil }
-      let(:media_engine)  { :asterisk }
+      let(:ami_client)    { double 'RubyAMI::Client' }
+      let(:connection)    { double 'Connection::Asterisk', handle_event: nil }
 
-      let(:translator) { Asterisk.new ami_client, connection, media_engine }
+      let(:translator) { Asterisk.new ami_client, connection }
 
       subject { translator }
 
@@ -18,16 +17,6 @@ module Punchblock
       its(:connection) { should be connection }
 
       after { translator.terminate if translator.alive? }
-
-      context 'with a configured media engine of :asterisk' do
-        let(:media_engine) { :asterisk }
-        its(:media_engine) { should be == :asterisk }
-      end
-
-      context 'with a configured media engine of :unimrcp' do
-        let(:media_engine) { :unimrcp }
-        its(:media_engine) { should be == :unimrcp }
-      end
 
       describe '#shutdown' do
         it "instructs all calls to shutdown" do
@@ -125,7 +114,7 @@ module Punchblock
 
       describe '#register_component' do
         let(:component_id) { 'abc123' }
-        let(:component)    { mock 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }
+        let(:component)    { double 'Asterisk::Component::Asterisk::AMIAction', :id => component_id }
 
         it 'should make the component accessible by ID' do
           subject.register_component component
@@ -159,7 +148,7 @@ module Punchblock
         context "for an outgoing call which began executing but crashed" do
           let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
 
-          let(:call_id) { dial_command.response.uri }
+          let(:call_id) { dial_command.response.call_id }
 
           before do
             subject.async.should_receive(:execute_global_command)
@@ -278,7 +267,7 @@ module Punchblock
           end
 
           it 'should instruct the call to send a dial' do
-            mock_call = stub('Asterisk::Call').as_null_object
+            mock_call = double('Asterisk::Call').as_null_object
             Asterisk::Call.should_receive(:new_link).once.and_return mock_call
             mock_call.async.should_receive(:dial).once.with command
             subject.execute_global_command command
@@ -290,7 +279,7 @@ module Punchblock
             Component::Asterisk::AMI::Action.new :name => 'Status', :params => { :channel => 'foo' }
           end
 
-          let(:mock_action) { stub('Asterisk::Component::Asterisk::AMIAction').as_null_object }
+          let(:mock_action) { double('Asterisk::Component::Asterisk::AMIAction').as_null_object }
 
           it 'should create a component actor and execute it asynchronously' do
             Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject, ami_client).and_return mock_action
@@ -319,7 +308,7 @@ module Punchblock
 
       describe '#handle_pb_event' do
         it 'should forward the event to the connection' do
-          event = mock 'Punchblock::Event'
+          event = double 'Punchblock::Event'
           subject.connection.should_receive(:handle_event).once.with event
           subject.handle_pb_event event
         end
@@ -404,7 +393,7 @@ module Punchblock
           end
 
           it 'should instruct the call to send an offer' do
-            mock_call = stub('Asterisk::Call').as_null_object
+            mock_call = double('Asterisk::Call').as_null_object
             Asterisk::Call.should_receive(:new_link).once.and_return mock_call
             mock_call.async.should_receive(:send_offer).once
             subject.handle_ami_event ami_event

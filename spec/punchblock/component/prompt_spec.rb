@@ -90,7 +90,7 @@ module Punchblock
       end
 
       describe "actions" do
-        let(:mock_client) { mock 'Client' }
+        let(:mock_client) { double 'Client' }
         let(:command) { described_class.new }
 
         before do

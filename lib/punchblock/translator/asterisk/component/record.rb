@@ -27,8 +27,6 @@ module Punchblock
               component.finished
             end
 
-            send_ref
-
             if @component_node.start_beep
               @call.execute_agi_command 'STREAM FILE', 'beep', '""'
             end
@@ -39,8 +37,12 @@ module Punchblock
                 ami_client.send_action 'StopMonitor', 'Channel' => call.channel
               end
             end
+
+            send_ref
+          rescue ChannelGoneError
+            set_node_response ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
           rescue RubyAMI::Error => e
-            complete_with_error "Terminated due to AMI error '#{e.message}'"
+            with_error :platform_error, "Terminated due to AMI error '#{e.message}'"
           rescue OptionError => e
             with_error 'option error', e.message
           end

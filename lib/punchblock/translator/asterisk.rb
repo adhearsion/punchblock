@@ -8,6 +8,9 @@ module Punchblock
     class Asterisk
       include Celluloid
 
+      # Indicates that a command was executed against a channel which no longer exists
+      ChannelGoneError = Class.new Punchblock::Error
+
       extend ActiveSupport::Autoload
 
       autoload :AGICommand
@@ -15,7 +18,7 @@ module Punchblock
       autoload :Channel
       autoload :Component
 
-      attr_reader :ami_client, :connection, :media_engine, :calls
+      attr_reader :ami_client, :connection, :calls
 
       REDIRECT_CONTEXT = 'adhearsion-redirect'
       REDIRECT_EXTENSION = '1'
@@ -25,8 +28,8 @@ module Punchblock
 
       trap_exit :actor_died
 
-      def initialize(ami_client, connection, media_engine = nil)
-        @ami_client, @connection, @media_engine = ami_client, connection, media_engine
+      def initialize(ami_client, connection)
+        @ami_client, @connection = ami_client, connection
         @calls, @components, @channel_to_call_id = {}, {}, {}
       end
 

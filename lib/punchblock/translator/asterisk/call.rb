@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require 'punchblock/translator/asterisk/ami_error_converter'
+
 module Punchblock
   module Translator
     class Asterisk
@@ -112,8 +114,7 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
-            cause = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[ami_event['Cause'].to_i]
-            handle_hangup_event cause
+            handle_hangup_event ami_event['Cause'].to_i
           when 'AsyncAGI'
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
@@ -181,7 +182,7 @@ module Punchblock
             @answered = true
             command.response = true
           when Command::Hangup
-            send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => 16
+            send_hangup_command
             @hangup_cause = :hangup_command
             command.response = true
           when Command::Join
@@ -193,17 +194,16 @@ module Punchblock
             redirect_back other_call
             command.response = true
           when Command::Reject
-            rejection = case command.reason
+            case command.reason
             when :busy
-              'EXEC Busy'
+              execute_agi_command 'EXEC Busy'
             when :decline
-              'EXEC Busy'
+              send_hangup_command 21
             when :error
-              'EXEC Congestion'
+              execute_agi_command 'EXEC Congestion'
             else
-              'EXEC Congestion'
+              execute_agi_command 'EXEC Congestion'
             end
-            execute_agi_command rejection
             command.response = true
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
@@ -233,17 +233,18 @@ module Punchblock
           end
         rescue InvalidCommandError => e
           command.response = ProtocolError.new.setup :invalid_command, e.message, id
+        rescue ChannelGoneError
+          command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
         rescue RubyAMI::Error => e
-          command.response = case e.message
-          when 'No such channel'
-            ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id
-          else
-            ProtocolError.new.setup 'error', e.message, id
-          end
+          command.response = ProtocolError.new.setup 'error', e.message, id
         rescue Celluloid::DeadActorError
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
         end
 
+        #
+        # @return [Hash] AGI result
+        #
+        # @raises RubyAMI::Error, ChannelGoneError
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
           condition = Celluloid::Condition.new
@@ -254,7 +255,7 @@ module Punchblock
           event = condition.wait
           return unless event
           agi.parse_result event
-        rescue RubyAMI::Error => e
+        rescue ChannelGoneError, RubyAMI::Error => e
           abort e
         end
 
@@ -278,14 +279,15 @@ module Punchblock
           send_ami_action 'Redirect', redirect_options
         end
 
-        def handle_hangup_event(reason = :hangup)
+        def handle_hangup_event(code = 16)
+          reason = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[code]
           @block_commands = true
           @components.dup.each_pair do |id, component|
             safe_from_dead_actors do
               component.call_ended if component.alive?
             end
           end
-          send_end_event reason
+          send_end_event reason, code
         end
 
         def actor_died(actor, reason)
@@ -304,12 +306,16 @@ module Punchblock
           result['Value'] == '(null)' ? nil : result['Value']
         end
 
-        def send_ami_action(name, headers = {})
-          @ami_client.send_action name, headers
+        def send_hangup_command(cause_code = 16)
+          send_ami_action 'Hangup', 'Channel' => channel, 'Cause' => cause_code
         end
 
-        def send_end_event(reason)
-          send_pb_event Event::End.new(:reason => reason)
+        def send_ami_action(name, headers = {})
+          AMIErrorConverter.convert { @ami_client.send_action name, headers }
+        end
+
+        def send_end_event(reason, code = nil)
+          send_pb_event Event::End.new(reason: reason, platform_code: code)
           translator.deregister_call id, channel
           terminate
         end

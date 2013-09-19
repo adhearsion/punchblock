@@ -36,7 +36,11 @@ module Punchblock
       end
 
       def response=(other)
-        @target_call_id = other.uri if other.is_a?(Ref)
+        if other.is_a?(Ref)
+          @transport = other.scheme
+          @target_call_id = other.call_id
+          @domain = other.domain
+        end
         super
       end
     end

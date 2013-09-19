@@ -16,6 +16,9 @@ module Punchblock
             rescue RubyAMI::Error
               set_node_response false
               terminate
+            rescue ChannelGoneError
+              set_node_response ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+              terminate
             end
             exclusive :execute
 

@@ -18,6 +18,7 @@ module Punchblock
       def run
         pb_logger.debug "Starting the RubyFS stream"
         start_stream
+        handle_event Connection::Disconnected.new
         raise DisconnectedError
       end
 

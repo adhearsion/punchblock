@@ -13,8 +13,9 @@ module Punchblock
 
     let(:call_id)         { 'abc123' }
     let(:mock_event)      { double('Event').as_null_object }
-    let(:component_id)    { 'abc123' }
-    let(:mock_component)  { double 'Component', :component_id => component_id }
+    let(:component_id)    { 'foo456' }
+    let(:component_key)   { 'foo456abc123'}
+    let(:mock_component)  { double 'Component', :component_id => component_id, key: component_key }
     let(:mock_command)    { double 'Command' }
 
     describe '#run' do
@@ -77,7 +78,7 @@ module Punchblock
 
     it 'should be able to register and retrieve components' do
       subject.register_component mock_component
-      subject.find_component_by_id(component_id).should be mock_component
+      subject.find_component_by_key(component_key).should be mock_component
     end
 
     describe '#execute_command' do

@@ -85,8 +85,12 @@ module Punchblock
     # @return [RayoNode] the original command issued that lead to this event
     #
     def source
-      @source ||= client.find_component_by_id component_id if client && component_id
+      @source ||= client.find_component_by_key key if client && component_id
       @source ||= original_component
+    end
+
+    def key
+      "#{try(:component_id)}#{try(:target_call_id)}"
     end
 
     def rayo_attributes

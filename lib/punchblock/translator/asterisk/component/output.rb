@@ -28,7 +28,7 @@ module Punchblock
             rendering_engine = @component_node.renderer || :asterisk
 
             case rendering_engine.to_sym
-            when :asterisk
+            when :asterisk, :native_or_unimrcp
               raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
               raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on
 
@@ -52,12 +52,14 @@ module Punchblock
 
               opts = early ? "#{path},noanswer" : path
               @call.execute_agi_command 'EXEC Playback', opts
-              raise PlaybackError if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
+              if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
+                raise PlaybackError unless rendering_engine.to_sym == :native_or_unimrcp
+                render_with_unimrcp
+              end
             when :unimrcp
               @call.send_progress if early
               send_ref
-              UniMRCPApp.new('MRCPSynth', render_doc, mrcpsynth_options).execute @call
-              raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
+              render_with_unimrcp
             when :swift
               @call.send_progress if early
               send_ref
@@ -96,6 +98,11 @@ module Punchblock
             end.compact
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+          end
+
+          def render_with_unimrcp
+            UniMRCPApp.new('MRCPSynth', render_doc, mrcpsynth_options).execute @call
+            raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
           end
 
           def render_doc

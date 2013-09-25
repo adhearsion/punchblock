@@ -16,7 +16,6 @@ module Punchblock
             initial_timeout = @component_node.initial_timeout || -1
             final_timeout = @component_node.final_timeout || -1
 
-            raise OptionError, 'A start-beep value of true is unsupported.' if @component_node.start_beep
             raise OptionError, 'A start-paused value of true is unsupported.' if @component_node.start_paused
             raise OptionError, 'A max-duration value that is negative (and not -1) is invalid.' unless max_duration >= -1
 
@@ -40,6 +39,7 @@ module Punchblock
             setvar :RECORD_INITIAL_TIMEOUT_MS, initial_timeout > -1 ? initial_timeout : 0
             setvar :RECORD_FINAL_TIMEOUT_MS, final_timeout > -1 ? final_timeout : 0
 
+            call.application 'playback', "tone_stream://%(250,0,1000)" if @component_node.start_beep
             call.uuid_foo :record, record_args.join(' ')
             send_ref
           rescue OptionError => e

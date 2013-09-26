@@ -49,13 +49,13 @@ module Punchblock
 
               send_ref
 
-              filenames.each do |set|
+              filenames.each do |doc, set|
                 path = set.join '&'
                 opts = early ? "#{path},noanswer" : path
                 @call.execute_agi_command 'EXEC Playback', opts
                 if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
                   raise PlaybackError unless rendering_engine.to_sym == :native_or_unimrcp
-                  render_with_unimrcp
+                  render_with_unimrcp doc.value
                 end
               end
             when :unimrcp
@@ -98,7 +98,7 @@ module Punchblock
 
           def filenames
             @filenames ||= @component_node.render_documents.map do |doc|
-              doc.value.children.map do |node|
+              [doc, doc.value.children.map do |node|
                 case node
                 when RubySpeech::SSML::Audio
                   node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
@@ -108,14 +108,14 @@ module Punchblock
                 else
                   raise
                 end
-              end.compact
+              end.compact]
             end
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end
 
-          def render_with_unimrcp
-            UniMRCPApp.new('MRCPSynth', render_doc, mrcpsynth_options).execute @call
+          def render_with_unimrcp(doc = render_doc)
+            UniMRCPApp.new('MRCPSynth', doc, mrcpsynth_options).execute @call
             raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
           end
 

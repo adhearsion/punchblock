@@ -918,8 +918,8 @@ module Punchblock
                 mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
               end
 
-              def expect_mrcpsynth
-                mock_call.should_receive(:execute_agi_command).ordered.once.with('EXEC MRCPSynth', ["\"#{ssml_doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
+              def expect_mrcpsynth(doc = ssml_doc)
+                mock_call.should_receive(:execute_agi_command).ordered.once.with('EXEC MRCPSynth', ["\"#{doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
               end
 
               let(:audio_filename) { 'tt-monkeys' }
@@ -1165,25 +1165,44 @@ module Punchblock
                 end
 
                 context 'with multiple documents' do
-                  let(:command_opts) { { render_documents: [{value: ssml_doc}, {value: ssml_doc}] } }
+                  let :second_ssml_doc do
+                    RubySpeech::SSML.draw do
+                      audio :src => 'two.wav' do
+                        string "Bazzz"
+                      end
+                    end
+                  end
+
+                  let :third_ssml_doc do
+                    RubySpeech::SSML.draw do
+                      audio :src => 'three.wav' do
+                        string "Barrrr"
+                      end
+                    end
+                  end
+
+                  let(:command_opts) { { render_documents: [{value: ssml_doc}, {value: second_ssml_doc}, {value: third_ssml_doc}] } }
 
                   it "should render each document in turn using a Playback per document" do
                     expect_answered
-                    2.times { expect_playback }
+                    expect_playback
+                    expect_playback 'two'
+                    expect_playback 'three'
                     subject.execute
                     original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                   end
 
                   context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
                     let(:synthstatus) { 'SUCCESS' }
-                    before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'FAILED', 'SUCCESS' }
+                    before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
                     before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
                     it "should attempt to render the document via MRCP and then send a complete event" do
                       expect_answered
                       expect_playback
-                      expect_mrcpsynth
-                      expect_playback
+                      expect_playback 'two'
+                      expect_mrcpsynth second_ssml_doc
+                      expect_playback 'three'
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                     end
@@ -1194,7 +1213,8 @@ module Punchblock
                       it "should terminate playback and send an error complete event" do
                         expect_answered
                         expect_playback
-                        expect_mrcpsynth
+                        expect_playback 'two'
+                        expect_mrcpsynth second_ssml_doc
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
                         complete_reason.should be_a Punchblock::Event::Complete::Error

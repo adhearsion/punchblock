@@ -655,6 +655,30 @@ module Punchblock
                       original_command.response(0.1).should be == error
                     end
                   end
+
+                  context 'with multiple documents' do
+                    let(:command_opts) { { render_documents: [{value: ssml_doc}, {value: ssml_doc}] } }
+
+                    it "should render each document in turn using a Playback per document" do
+                      expect_answered
+                      2.times { expect_playback }
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+
+                    context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
+                      let(:playbackstatus) { 'FAILED' }
+
+                      it "should terminate playback and send an error complete event" do
+                        expect_answered
+                        mock_call.should_receive(:execute_agi_command).once.and_return code: 200, result: 1
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to playback error"
+                      end
+                    end
+                  end
                 end
 
                 describe 'start-offset' do
@@ -1137,6 +1161,46 @@ module Punchblock
                     subject.execute
                     error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
                     original_command.response(0.1).should be == error
+                  end
+                end
+
+                context 'with multiple documents' do
+                  let(:command_opts) { { render_documents: [{value: ssml_doc}, {value: ssml_doc}] } }
+
+                  it "should render each document in turn using a Playback per document" do
+                    expect_answered
+                    2.times { expect_playback }
+                    subject.execute
+                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                  end
+
+                  context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
+                    let(:synthstatus) { 'SUCCESS' }
+                    before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'FAILED', 'SUCCESS' }
+                    before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+
+                    it "should attempt to render the document via MRCP and then send a complete event" do
+                      expect_answered
+                      expect_playback
+                      expect_mrcpsynth
+                      expect_playback
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+
+                    context "and the SYNTHSTATUS variable is set to 'ERROR'" do
+                      let(:synthstatus) { 'ERROR' }
+
+                      it "should terminate playback and send an error complete event" do
+                        expect_answered
+                        expect_playback
+                        expect_mrcpsynth
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to UniMRCP error"
+                      end
+                    end
                   end
                 end
               end

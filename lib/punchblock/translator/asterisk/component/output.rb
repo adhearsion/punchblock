@@ -16,7 +16,6 @@ module Punchblock
 
           def execute
             raise OptionError, 'An SSML document is required.' unless @component_node.render_documents.first.value
-            raise OptionError, 'Only a single document is supported.' unless @component_node.render_documents.size == 1
             raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :voice
 
             [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
@@ -37,7 +36,7 @@ module Punchblock
                 interrupt = true
               end
 
-              path = filenames.join '&'
+              validate_audio_only
 
               @call.send_progress if early
 
@@ -50,17 +49,22 @@ module Punchblock
 
               send_ref
 
-              opts = early ? "#{path},noanswer" : path
-              @call.execute_agi_command 'EXEC Playback', opts
-              if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
-                raise PlaybackError unless rendering_engine.to_sym == :native_or_unimrcp
-                render_with_unimrcp
+              filenames.each do |set|
+                path = set.join '&'
+                opts = early ? "#{path},noanswer" : path
+                @call.execute_agi_command 'EXEC Playback', opts
+                if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
+                  raise PlaybackError unless rendering_engine.to_sym == :native_or_unimrcp
+                  render_with_unimrcp
+                end
               end
             when :unimrcp
+              assert_single_document
               @call.send_progress if early
               send_ref
               render_with_unimrcp
             when :swift
+              assert_single_document
               @call.send_progress if early
               send_ref
               @call.execute_agi_command 'EXEC Swift', swift_doc
@@ -84,18 +88,28 @@ module Punchblock
 
           private
 
+          def validate_audio_only
+            filenames
+          end
+
+          def assert_single_document
+            raise OptionError, 'Only a single document is supported.' unless @component_node.render_documents.size == 1
+          end
+
           def filenames
-            @filenames ||= render_doc.children.map do |node|
-              case node
-              when RubySpeech::SSML::Audio
-                node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
-              when String
-                raise if node.include?(' ')
-                node
-              else
-                raise
-              end
-            end.compact
+            @filenames ||= @component_node.render_documents.map do |doc|
+              doc.value.children.map do |node|
+                case node
+                when RubySpeech::SSML::Audio
+                  node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
+                when String
+                  raise if node.include?(' ')
+                  node
+                else
+                  raise
+                end
+              end.compact
+            end
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end

@@ -17,17 +17,19 @@ module Punchblock
           end
 
           def filenames
-            @filenames ||= @component_node.render_documents.first.value.children.map do |node|
-              case node
-              when RubySpeech::SSML::Audio
-                node.src
-              when String
-                raise if node.include?(' ')
-                node
-              else
-                raise
+            @filenames ||= @component_node.render_documents.map do |doc|
+              doc.value.children.map do |node|
+                case node
+                when RubySpeech::SSML::Audio
+                  node.src
+                when String
+                  raise if node.include?(' ')
+                  node
+                else
+                  raise
+                end
               end
-            end.compact
+            end.compact.flatten
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end

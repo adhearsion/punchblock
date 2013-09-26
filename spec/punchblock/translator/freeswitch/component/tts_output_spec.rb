@@ -34,8 +34,8 @@ module Punchblock
 
           describe '#execute' do
             before { original_command.request! }
-            def expect_playback(voice = :kal, renderer = :flite)
-              subject.wrapped_object.should_receive(:application).once.with :speak, "#{renderer}|#{voice}|#{ssml_doc}"
+            def expect_playback(voice = :kal, renderer = :flite, doc = ssml_doc)
+              subject.wrapped_object.should_receive(:application).once.with :speak, "#{renderer}|#{voice}|#{doc}"
             end
 
             let :ssml_doc do
@@ -80,11 +80,23 @@ module Punchblock
               end
 
               context 'with multiple documents' do
+                let(:audio_filename) { 'http://foo.com/bar.mp3' }
+                let :ssml_doc do
+                  RubySpeech::SSML.draw { audio :src => audio_filename }
+                end
+
+                let :expected_doc do
+                  RubySpeech::SSML.draw do
+                    audio :src => audio_filename
+                    audio :src => audio_filename
+                  end
+                end
+
                 let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
-                it "should return an error and not execute any actions" do
+
+                it "should render all audio files from all documents" do
+                  expect_playback :kal, :flite, expected_doc
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'Only a single document is supported.'
-                  original_command.response(0.1).should be == error
                 end
               end
             end

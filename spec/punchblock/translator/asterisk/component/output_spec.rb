@@ -174,6 +174,25 @@ module Punchblock
                 end
 
               end
+
+              describe "with multiple documents" do
+                let :first_ssml_doc do
+                  RubySpeech::SSML.draw do
+                    audio :src => audio_filename
+                  end
+                end
+                let :second_ssml_doc do
+                  RubySpeech::SSML.draw do
+                    say_as(:interpret_as => :cardinal) { 'FOO' }
+                  end
+                end
+                let(:command_opts) { { render_documents: [{value: first_ssml_doc}, {value: second_ssml_doc}] } }
+
+                it "executes Swift with a concatenated version of the documents" do
+                  mock_call.should_receive(:execute_agi_command).once.with 'EXEC Swift', ssml_with_options
+                  subject.execute
+                end
+              end
             end
 
             context 'with a renderer of :unimrcp' do
@@ -265,10 +284,11 @@ module Punchblock
 
                 context 'with multiple documents' do
                   let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
-                  it "should return an error and not execute any actions" do
+
+                  it "should execute MRCPSynth with multiple comma-separated documents" do
+                    param = [[ssml_doc.to_s, ssml_doc.to_s].join(',')].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('').join(',')
+                    mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
                     subject.execute
-                    error = ProtocolError.new.setup 'option error', 'Only a single document is supported.'
-                    original_command.response(0.1).should be == error
                   end
                 end
               end

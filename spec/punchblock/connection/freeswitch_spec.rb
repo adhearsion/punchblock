@@ -33,6 +33,7 @@ module Punchblock
         it 'starts a RubyFS stream' do
           # subject.should_receive(:new_fs_stream).once.with('127.0.0.1', 8021, 'test').and_return mock_stream
           subject.stream.should_receive(:run).once
+          subject.should_receive(:handle_event).with(an_instance_of(Connection::Disconnected))
           lambda { subject.run }.should raise_error(DisconnectedError)
         end
       end

@@ -3,6 +3,26 @@
 module Punchblock
   module Translator
     class DTMFRecognizer
+      class BuiltinMatcherCache
+        include Singleton
+        include MonitorMixin
+
+        def get(uri)
+          cache[uri] ||= fetch(uri)
+        end
+
+        private
+
+        def fetch(uri)
+          grammar = RubySpeech::GRXML.from_uri(uri)
+          RubySpeech::GRXML::Matcher.new(grammar)
+        end
+
+        def cache
+          @cache ||= {}
+        end
+      end
+
       def initialize(responder, grammar, initial_timeout = nil, inter_digit_timeout = nil, terminator = nil)
         @responder = responder
         self.initial_timeout = initial_timeout || -1
@@ -10,7 +30,11 @@ module Punchblock
         @terminator = terminator
         @finished = false
 
-        @matcher = RubySpeech::GRXML::Matcher.new RubySpeech::GRXML.import(grammar.to_s)
+        @matcher = if grammar.url
+          BuiltinMatcherCache.instance.get(grammar.url)
+        else
+          RubySpeech::GRXML::Matcher.new RubySpeech::GRXML.import(grammar.value.to_s)
+        end
         @buffer = ""
       end
 

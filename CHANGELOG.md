@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Support RubySpeech builtin grammars on Asterisk and FreeSWITCH
   * Bugfix: Reject commands against components which have finished on Asterisk, and garbage collect them
 
 # [v2.0.1](https://github.com/adhearsion/punchblock/compare/v2.0.0...v2.0.1) - [2013-09-17](https://rubygems.org/gems/punchblock/versions/2.0.1)

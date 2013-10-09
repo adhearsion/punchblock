@@ -109,8 +109,10 @@ module Punchblock
           end
 
           def render_with_unimrcp(*docs)
-            UniMRCPApp.new('MRCPSynth', *docs.map { |doc| doc.value.to_s }.join(','), mrcpsynth_options).execute @call
-            raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
+            docs.each do |doc|
+              UniMRCPApp.new('MRCPSynth', doc.value.to_s, mrcpsynth_options).execute @call
+              raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
+            end
           end
 
           def render_docs

@@ -285,8 +285,9 @@ module Punchblock
                 context 'with multiple documents' do
                   let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
 
-                  it "should execute MRCPSynth with multiple comma-separated documents" do
-                    param = [[ssml_doc.to_s, ssml_doc.to_s].join(',')].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('').join(',')
+                  it "should execute MRCPSynth once with each document" do
+                    param = ["\"#{ssml_doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')
+                    mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
                     mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
                     subject.execute
                   end

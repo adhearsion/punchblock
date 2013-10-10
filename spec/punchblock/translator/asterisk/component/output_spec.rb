@@ -979,7 +979,13 @@ module Punchblock
                 context 'with a single audio SSML node' do
                   let(:audio_filename) { 'tt-monkeys' }
                   let :ssml_doc do
-                    RubySpeech::SSML.draw { audio :src => audio_filename }
+                    RubySpeech::SSML.draw do
+                      audio :src => audio_filename do
+                        voice name: 'frank' do
+                          string "Hello world"
+                        end
+                      end
+                    end
                   end
 
                   it 'should playback the audio file using Playback' do
@@ -1056,10 +1062,18 @@ module Punchblock
                     let(:synthstatus) { 'SUCCESS' }
                     before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
-                    it "should attempt to render the document via MRCP and then send a complete event" do
+                    let :fallback_doc do
+                      RubySpeech::SSML.draw do
+                        voice name: 'frank' do
+                          string "Hello world"
+                        end
+                      end
+                    end
+
+                    it "should attempt to render the children of the audio tag via MRCP and then send a complete event" do
                       expect_answered
                       expect_playback
-                      expect_mrcpsynth
+                      expect_mrcpsynth fallback_doc
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                     end
@@ -1070,7 +1084,7 @@ module Punchblock
                       it "should send an error complete event" do
                         expect_answered
                         expect_playback
-                        expect_mrcpsynth
+                        expect_mrcpsynth fallback_doc
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
                         complete_reason.should be_a Punchblock::Event::Complete::Error
@@ -1171,7 +1185,7 @@ module Punchblock
                   end
                 end
 
-                context "with an SSML document containing elements other than <audio/>" do
+                context "with an SSML document containing top-level elements other than <audio/>" do
                   let :ssml_doc do
                     RubySpeech::SSML.draw do
                       string "Foo Bar"
@@ -1218,11 +1232,17 @@ module Punchblock
                     before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
                     before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
+                    let :fallback_doc do
+                      RubySpeech::SSML.draw do
+                        string "Bazzz"
+                      end
+                    end
+
                     it "should attempt to render the document via MRCP and then send a complete event" do
                       expect_answered
                       expect_playback
                       expect_playback 'two'
-                      expect_mrcpsynth second_ssml_doc
+                      expect_mrcpsynth fallback_doc
                       expect_playback 'three'
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
@@ -1235,7 +1255,7 @@ module Punchblock
                         expect_answered
                         expect_playback
                         expect_playback 'two'
-                        expect_mrcpsynth second_ssml_doc
+                        expect_mrcpsynth fallback_doc
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
                         complete_reason.should be_a Punchblock::Event::Complete::Error

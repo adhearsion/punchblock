@@ -27,35 +27,30 @@ module Punchblock
             rendering_engine = @component_node.renderer || :asterisk
 
             case rendering_engine.to_sym
-            when :asterisk, :native_or_unimrcp
-              raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
-              raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on
+            when :asterisk
+              setup_for_native early
 
-              case @component_node.interrupt_on
-              when :any, :dtmf
-                interrupt = true
-              end
-
-              validate_audio_only
-
-              @call.send_progress if early
-
-              if interrupt
-                output_component = current_actor
-                call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
-                  output_component.stop_by_redirect finish_reason
+              filenames.each do |doc, set|
+                opts = set.join '&'
+                opts << ",noanswer" if early
+                @call.execute_agi_command 'EXEC Playback', opts
+                if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
+                  raise PlaybackError
                 end
               end
-
-              send_ref
+            when :native_or_unimrcp
+              setup_for_native early
 
               filenames.each do |doc, set|
                 path = set.join '&'
                 opts = early ? "#{path},noanswer" : path
                 @call.execute_agi_command 'EXEC Playback', opts
                 if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
-                  raise PlaybackError unless rendering_engine.to_sym == :native_or_unimrcp
-                  render_with_unimrcp doc
+                  fallback_doc = RubySpeech::SSML.draw do
+                    children = doc.value.xpath("/ns:speak/ns:audio", ns: RubySpeech::SSML::SSML_NAMESPACE).children
+                    add_child Nokogiri.jruby? ? children : children.to_xml
+                  end
+                  render_with_unimrcp Punchblock::Component::Output::Document.new(value: fallback_doc)
                 end
               end
             when :unimrcp
@@ -85,6 +80,29 @@ module Punchblock
           end
 
           private
+
+          def setup_for_native(early)
+            raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
+            raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on
+
+            case @component_node.interrupt_on
+            when :any, :dtmf
+              interrupt = true
+            end
+
+            validate_audio_only
+
+            @call.send_progress if early
+
+            if interrupt
+              output_component = current_actor
+              call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
+                output_component.stop_by_redirect finish_reason
+              end
+            end
+
+            send_ref
+          end
 
           def validate_audio_only
             filenames

@@ -47,7 +47,7 @@ module Punchblock
 
             let :expected_event do
               Punchblock::Event::Complete.new target_call_id: call.id,
-                component_id: subject.id
+                component_id: subject.id, source_uri: "#{call.id}/#{subject.id}"
             end
 
             it "should send the event to the connection" do

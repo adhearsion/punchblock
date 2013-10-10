@@ -53,6 +53,7 @@ module Punchblock
           def send_event(event)
             event.component_id    = id
             event.target_call_id  = call_id
+            event.source_uri      = uri
             safe_from_dead_actors { translator.handle_pb_event event }
           end
 
@@ -70,6 +71,10 @@ module Punchblock
 
           private
 
+          def uri
+            "#{call_id}/#{id}"
+          end
+
           def translator
             call.translator
           end
@@ -79,7 +84,7 @@ module Punchblock
           end
 
           def send_ref
-            set_node_response Ref.new uri: id
+            set_node_response Ref.new uri: uri
           end
 
           def with_error(name, text)

@@ -10,13 +10,13 @@ module Punchblock
 
       def <<(component)
         @mutex.synchronize do
-          @components[component.component_id] = component
+          @components[component.key] = component
         end
       end
 
-      def find_by_id(component_id)
+      def find_by_key(key)
         @mutex.synchronize do
-          @components[component_id]
+          @components[key]
         end
       end
 

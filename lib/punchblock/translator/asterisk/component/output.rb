@@ -22,40 +22,37 @@ module Punchblock
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
             end
 
-            early = !@call.answered?
+            @early = !@call.answered?
 
             rendering_engine = @component_node.renderer || :asterisk
 
             case rendering_engine.to_sym
             when :asterisk
-              setup_for_native early
+              setup_for_native
 
               filenames.each do |doc, set|
-                opts = set.values.join '&'
-                opts << ",noanswer" if early
-                @call.execute_agi_command 'EXEC Playback', opts
+                @call.execute_agi_command 'EXEC Playback', playback_options(set.values)
                 if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
                   raise PlaybackError
                 end
               end
             when :native_or_unimrcp
-              setup_for_native early
+              setup_for_native
 
               filenames.each do |doc, set|
                 set.each do |audio_node, path|
-                  opts = early ? "#{path},noanswer" : path
-                  @call.execute_agi_command 'EXEC Playback', opts
+                  @call.execute_agi_command 'EXEC Playback', playback_options([path])
                   if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
                     render_with_unimrcp fallback_doc(doc, audio_node)
                   end
                 end
               end
             when :unimrcp
-              @call.send_progress if early
+              send_progress_if_necessary
               send_ref
               render_with_unimrcp(*render_docs)
             when :swift
-              @call.send_progress if early
+              send_progress_if_necessary
               send_ref
               @call.execute_agi_command 'EXEC Swift', swift_doc
             else
@@ -78,9 +75,9 @@ module Punchblock
 
           private
 
-          def setup_for_native(early)
+          def setup_for_native
             raise OptionError, "A voice value is unsupported on Asterisk." if @component_node.voice
-            raise OptionError, 'Interrupt digits are not allowed with early media.' if early && @component_node.interrupt_on
+            raise OptionError, 'Interrupt digits are not allowed with early media.' if @early && @component_node.interrupt_on
 
             case @component_node.interrupt_on
             when :any, :dtmf
@@ -89,7 +86,7 @@ module Punchblock
 
             validate_audio_only
 
-            @call.send_progress if early
+            send_progress_if_necessary
 
             if interrupt
               output_component = current_actor
@@ -99,6 +96,10 @@ module Punchblock
             end
 
             send_ref
+          end
+
+          def send_progress_if_necessary
+            @call.send_progress if @early
           end
 
           def validate_audio_only
@@ -123,6 +124,12 @@ module Punchblock
             end
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+          end
+
+          def playback_options(paths)
+            opts = paths.join '&'
+            opts << ",noanswer" if @early
+            opts
           end
 
           def fallback_doc(original, failed_audio_node)

@@ -1156,16 +1156,26 @@ module Punchblock
                 context 'with multiple audio SSML nodes' do
                   let(:audio_filename1) { 'foo' }
                   let(:audio_filename2) { 'bar' }
+                  let(:audio_filename3) { 'baz' }
                   let :ssml_doc do
                     RubySpeech::SSML.draw do
-                      audio :src => audio_filename1
-                      audio :src => audio_filename2
+                      audio :src => audio_filename1 do
+                        string "Fallback 1"
+                      end
+                      audio :src => audio_filename2 do
+                        string "Fallback 2"
+                      end
+                      audio :src => audio_filename3 do
+                        string "Fallback 3"
+                      end
                     end
                   end
 
                   it 'should playback all audio files using Playback' do
                     latch = CountDownLatch.new 2
-                    expect_playback [audio_filename1, audio_filename2].join('&')
+                    expect_playback audio_filename1
+                    expect_playback audio_filename2
+                    expect_playback audio_filename3
                     expect_answered
                     subject.execute
                     latch.wait 2
@@ -1174,7 +1184,9 @@ module Punchblock
 
                   it 'should send a complete event after the final file has finished playback' do
                     expect_answered
-                    expect_playback [audio_filename1, audio_filename2].join('&')
+                    expect_playback audio_filename1
+                    expect_playback audio_filename2
+                    expect_playback audio_filename3
                     latch = CountDownLatch.new 1
                     original_command.should_receive(:add_event).once.with do |e|
                       e.reason.should be_a Punchblock::Component::Output::Complete::Finish
@@ -1182,6 +1194,43 @@ module Punchblock
                     end
                     subject.execute
                     latch.wait(2).should be_true
+                  end
+
+                  context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
+                    let(:synthstatus) { 'SUCCESS' }
+                    before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
+                    before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+
+                    let :fallback_doc do
+                      RubySpeech::SSML.draw do
+                        string "Fallback 2"
+                      end
+                    end
+
+                    it "should attempt to render the document via MRCP and then send a complete event" do
+                      expect_answered
+                      expect_playback audio_filename1
+                      expect_playback audio_filename2
+                      expect_mrcpsynth fallback_doc
+                      expect_playback audio_filename3
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+
+                    context "and the SYNTHSTATUS variable is set to 'ERROR'" do
+                      let(:synthstatus) { 'ERROR' }
+
+                      it "should terminate playback and send an error complete event" do
+                        expect_answered
+                        expect_playback audio_filename1
+                        expect_playback audio_filename2
+                        expect_mrcpsynth fallback_doc
+                        subject.execute
+                        complete_reason = original_command.complete_event(0.1).reason
+                        complete_reason.should be_a Punchblock::Event::Complete::Error
+                        complete_reason.details.should == "Terminated due to UniMRCP error"
+                      end
+                    end
                   end
                 end
 

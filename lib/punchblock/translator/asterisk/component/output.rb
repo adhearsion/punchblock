@@ -31,7 +31,7 @@ module Punchblock
               setup_for_native early
 
               filenames.each do |doc, set|
-                opts = set.join '&'
+                opts = set.values.join '&'
                 opts << ",noanswer" if early
                 @call.execute_agi_command 'EXEC Playback', opts
                 if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
@@ -42,20 +42,21 @@ module Punchblock
               setup_for_native early
 
               filenames.each do |doc, set|
-                path = set.join '&'
-                opts = early ? "#{path},noanswer" : path
-                @call.execute_agi_command 'EXEC Playback', opts
-                if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
-                  fallback_doc = RubySpeech::SSML.draw do
-                    doc.value.attributes.each do |name, value|
-                      attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
-                      self.write_attr attr_name, value
-                    end
+                set.each do |audio_node, path|
+                  opts = early ? "#{path},noanswer" : path
+                  @call.execute_agi_command 'EXEC Playback', opts
+                  if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
+                    fallback_doc = RubySpeech::SSML.draw do
+                      doc.value.attributes.each do |name, value|
+                        attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
+                        self.write_attr attr_name, value
+                      end
 
-                    children = doc.value.xpath("/ns:speak/ns:audio", ns: RubySpeech::SSML::SSML_NAMESPACE).children
-                    add_child Nokogiri.jruby? ? children : children.to_xml
+                      children = audio_node.nokogiri_children
+                      add_child Nokogiri.jruby? ? children : children.to_xml
+                    end
+                    render_with_unimrcp Punchblock::Component::Output::Document.new(value: fallback_doc)
                   end
-                  render_with_unimrcp Punchblock::Component::Output::Document.new(value: fallback_doc)
                 end
               end
             when :unimrcp
@@ -115,17 +116,19 @@ module Punchblock
 
           def filenames
             @filenames ||= render_docs.map do |doc|
-              [doc, doc.value.children.map do |node|
+              names = {}
+              doc.value.children.each do |node|
                 case node
                 when RubySpeech::SSML::Audio
-                  node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
+                  names[node] = node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
                 when String
                   raise if node.include?(' ')
-                  node
+                  names[nil] = node
                 else
                   raise
                 end
-              end.compact]
+              end
+              [doc, names]
             end
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'

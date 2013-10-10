@@ -47,6 +47,11 @@ module Punchblock
                 @call.execute_agi_command 'EXEC Playback', opts
                 if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
                   fallback_doc = RubySpeech::SSML.draw do
+                    doc.value.attributes.each do |name, value|
+                      attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
+                      self.write_attr attr_name, value
+                    end
+
                     children = doc.value.xpath("/ns:speak/ns:audio", ns: RubySpeech::SSML::SSML_NAMESPACE).children
                     add_child Nokogiri.jruby? ? children : children.to_xml
                   end

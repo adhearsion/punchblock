@@ -979,7 +979,7 @@ module Punchblock
                 context 'with a single audio SSML node' do
                   let(:audio_filename) { 'tt-monkeys' }
                   let :ssml_doc do
-                    RubySpeech::SSML.draw do
+                    RubySpeech::SSML.draw language: 'pt-BR' do
                       audio :src => audio_filename do
                         voice name: 'frank' do
                           string "Hello world"
@@ -1063,7 +1063,7 @@ module Punchblock
                     before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
                     let :fallback_doc do
-                      RubySpeech::SSML.draw do
+                      RubySpeech::SSML.draw language: 'pt-BR' do
                         voice name: 'frank' do
                           string "Hello world"
                         end

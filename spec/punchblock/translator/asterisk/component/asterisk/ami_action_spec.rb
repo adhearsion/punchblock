@@ -90,7 +90,7 @@ module Punchblock
                 end
 
                 let :event_node do
-                  Punchblock::Event::Asterisk::AMI::Event.new name: 'CoreShowChannel', component_id: subject.id, headers: {
+                  Punchblock::Event::Asterisk::AMI::Event.new name: 'CoreShowChannel', component_id: subject.id, source_uri: subject.id, headers: {
                     'Channel'          => 'SIP/127.0.0.1-00000013',
                     'UniqueID'         => '1287686437.19',
                     'Context'          => 'adhearsion',

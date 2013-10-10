@@ -312,7 +312,7 @@ module Punchblock
               comp_command.request!
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
-              expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id
+              expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id, source_uri: component.id
               expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
               expected_end_event = Punchblock::Event::End.new :reason => :hangup, platform_code: cause, :target_call_id  => subject.id
 
@@ -1310,6 +1310,7 @@ module Punchblock
               let :expected_event do
                 Punchblock::Event::Complete.new target_call_id: subject.id,
                   component_id: comp_id,
+                  source_uri: comp_id,
                   reason: Punchblock::Event::Complete::Error.new
               end
 

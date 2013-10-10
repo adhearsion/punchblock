@@ -294,7 +294,7 @@ module Punchblock
           if id = @components.key(actor)
             @components.delete id
             return unless reason
-            complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
+            complete_event = Punchblock::Event::Complete.new :component_id => id, source_uri: id, :reason => Punchblock::Event::Complete::Error.new
             send_pb_event complete_event
           end
         end

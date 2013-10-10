@@ -10,7 +10,7 @@ module Blather
     def rayo_node
       @rayo_node ||= begin
         first_child = at_xpath RAYO_NODE_PATH, Punchblock::RAYO_NAMESPACES
-        Punchblock::RayoNode.from_xml first_child, nil, component_id, from.to_s if first_child
+        Punchblock::RayoNode.from_xml first_child, nil, component_id, "xmpp:#{from}" if first_child
       end
     end
 

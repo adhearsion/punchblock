@@ -6,7 +6,7 @@ module Punchblock
   class Client
     describe ComponentRegistry do
       let(:uri)       { 'abc123' }
-      let(:component) { double 'Component', uri: uri }
+      let(:component) { double 'Component', source_uri: uri }
 
       it 'should store components and allow lookup by ID' do
         subject << component

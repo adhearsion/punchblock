@@ -80,7 +80,7 @@ module Punchblock
         it "should set the component ID from the ref" do
           subject.response = ref
           subject.component_id.should be == 'abc123'
-          subject.uri.should be == uri
+          subject.source_uri.should be == uri
           subject.client.find_component_by_uri(uri).should be subject
         end
       end

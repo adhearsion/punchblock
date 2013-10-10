@@ -10,7 +10,7 @@ module Punchblock
 
       def <<(component)
         @mutex.synchronize do
-          @components[component.uri] = component
+          @components[component.source_uri] = component
         end
       end
 

@@ -15,7 +15,7 @@ module Punchblock
     let(:mock_event)      { double('Event').as_null_object }
     let(:component_id)    { 'abc123' }
     let(:component_uri)   { 'callid@server/abc123' }
-    let(:mock_component)  { double 'Component', uri: component_uri }
+    let(:mock_component)  { double 'Component', source_uri: component_uri }
     let(:mock_command)    { double 'Command' }
 
     describe '#run' do

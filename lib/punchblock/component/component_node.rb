@@ -5,8 +5,6 @@ module Punchblock
     class ComponentNode < CommandNode
       include HasGuardedHandlers
 
-      attribute :uri
-
       def initialize(*args)
         super
         @complete_event_resource = FutureResource.new
@@ -40,7 +38,7 @@ module Punchblock
       def response=(other)
         if other.is_a?(Ref)
           @component_id = other.component_id
-          @uri = other.uri.to_s
+          @source_uri = other.uri.to_s
           client.register_component self if client
         end
         super

@@ -46,16 +46,7 @@ module Punchblock
                   opts = early ? "#{path},noanswer" : path
                   @call.execute_agi_command 'EXEC Playback', opts
                   if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
-                    fallback_doc = RubySpeech::SSML.draw do
-                      doc.value.attributes.each do |name, value|
-                        attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
-                        self.write_attr attr_name, value
-                      end
-
-                      children = audio_node.nokogiri_children
-                      add_child Nokogiri.jruby? ? children : children.to_xml
-                    end
-                    render_with_unimrcp Punchblock::Component::Output::Document.new(value: fallback_doc)
+                    render_with_unimrcp fallback_doc(doc, audio_node)
                   end
                 end
               end
@@ -132,6 +123,19 @@ module Punchblock
             end
           rescue
             raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+          end
+
+          def fallback_doc(original, failed_audio_node)
+            doc = RubySpeech::SSML.draw do
+              original.value.attributes.each do |name, value|
+                attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
+                self.write_attr attr_name, value
+              end
+
+              children = failed_audio_node.nokogiri_children
+              add_child Nokogiri.jruby? ? children : children.to_xml
+            end
+            Punchblock::Component::Output::Document.new(value: doc)
           end
 
           def render_with_unimrcp(*docs)

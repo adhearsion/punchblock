@@ -71,16 +71,17 @@ module Punchblock
           subject.client = Client.new
         end
 
-        let(:component_id) { 'abc123' }
+        let(:uri) { 'xmpp:callid@server/abc123' }
 
         let :ref do
-          Ref.new uri: component_id
+          Ref.new uri: uri
         end
 
         it "should set the component ID from the ref" do
           subject.response = ref
-          subject.component_id.should be == component_id
-          subject.client.find_component_by_id(component_id).should be subject
+          subject.component_id.should be == 'abc123'
+          subject.uri.should be == uri
+          subject.client.find_component_by_uri(uri).should be subject
         end
       end
 
@@ -89,7 +90,7 @@ module Punchblock
           subject.request!
           subject.client = Client.new
           subject.response = Ref.new uri: 'abc'
-          subject.client.find_component_by_id('abc').should be subject
+          subject.client.find_component_by_uri('abc').should be subject
         end
 
         it "should set the command to executing status" do
@@ -105,7 +106,7 @@ module Punchblock
 
         it "should remove the component from the registry" do
           subject.complete_event = :foo
-          subject.client.find_component_by_id('abc').should be_nil
+          subject.client.find_component_by_uri('abc').should be_nil
         end
       end
     end # ComponentNode

@@ -31,20 +31,14 @@ module Punchblock
               setup_for_native
 
               filenames.each do |doc, set|
-                @call.execute_agi_command 'EXEC Playback', playback_options(set.values)
-                if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
-                  raise PlaybackError
-                end
+                playback(set.values) || raise(PlaybackError)
               end
             when :native_or_unimrcp
               setup_for_native
 
               filenames.each do |doc, set|
                 set.each do |audio_node, path|
-                  @call.execute_agi_command 'EXEC Playback', playback_options([path])
-                  if @call.channel_var('PLAYBACKSTATUS') == 'FAILED'
-                    render_with_unimrcp fallback_doc(doc, audio_node)
-                  end
+                  playback([path]) || render_with_unimrcp(fallback_doc(doc, audio_node))
                 end
               end
             when :unimrcp
@@ -130,6 +124,11 @@ module Punchblock
             opts = paths.join '&'
             opts << ",noanswer" if @early
             opts
+          end
+
+          def playback(paths)
+            @call.execute_agi_command 'EXEC Playback', playback_options(paths)
+            @call.channel_var('PLAYBACKSTATUS') != 'FAILED'
           end
 
           def fallback_doc(original, failed_audio_node)

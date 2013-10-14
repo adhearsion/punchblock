@@ -1241,10 +1241,13 @@ module Punchblock
                     end
                   end
 
-                  it "should return an unrenderable document error" do
+                  before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return 'SUCCESS' }
+
+                  it "should attempt to render the document via MRCP and then send a complete event" do
+                    expect_answered
+                    expect_mrcpsynth ssml_doc
                     subject.execute
-                    error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
-                    original_command.response(0.1).should be == error
+                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                   end
                 end
 

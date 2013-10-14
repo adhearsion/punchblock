@@ -28,6 +28,7 @@ module Punchblock
 
             case rendering_engine.to_sym
             when :asterisk
+              validate_audio_only
               setup_for_native
 
               filenames.each do |doc, set|
@@ -36,9 +37,13 @@ module Punchblock
             when :native_or_unimrcp
               setup_for_native
 
-              filenames.each do |doc, set|
-                set.each do |audio_node, path|
-                  playback([path]) || render_with_unimrcp(fallback_doc(doc, audio_node))
+              filenames(:skip).each do |doc, set|
+                if set.empty?
+                  render_with_unimrcp doc
+                else
+                  set.each do |audio_node, path|
+                    playback([path]) || render_with_unimrcp(fallback_doc(doc, audio_node))
+                  end
                 end
               end
             when :unimrcp
@@ -78,8 +83,6 @@ module Punchblock
               interrupt = true
             end
 
-            validate_audio_only
-
             send_progress_if_necessary
 
             if interrupt
@@ -97,10 +100,10 @@ module Punchblock
           end
 
           def validate_audio_only
-            filenames
+            filenames -> { raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.' }
           end
 
-          def filenames
+          def filenames(check_audio_only_policy = -> {})
             @filenames ||= render_docs.map do |doc|
               names = {}
               doc.value.children.each do |node|
@@ -108,16 +111,17 @@ module Punchblock
                 when RubySpeech::SSML::Audio
                   names[node] = node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
                 when String
-                  raise if node.include?(' ')
+                  if node.include?(' ')
+                    next if check_audio_only_policy == :skip
+                    check_audio_only_policy.call
+                  end
                   names[nil] = node
                 else
-                  raise
+                  check_audio_only_policy.call
                 end
               end
               [doc, names]
             end
-          rescue
-            raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
           end
 
           def playback_options(paths)

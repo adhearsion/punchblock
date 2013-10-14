@@ -72,6 +72,11 @@ module Punchblock
             with_error 'option error', e.message
           end
 
+          def stop_by_redirect(*args)
+            @stopped = true
+            super
+          end
+
           private
 
           def setup_for_native
@@ -131,6 +136,7 @@ module Punchblock
           end
 
           def playback(paths)
+            return true if @stopped
             @call.execute_agi_command 'EXEC Playback', playback_options(paths)
             @call.channel_var('PLAYBACKSTATUS') != 'FAILED'
           end
@@ -150,6 +156,7 @@ module Punchblock
 
           def render_with_unimrcp(*docs)
             docs.each do |doc|
+              return if @stopped
               UniMRCPApp.new('MRCPSynth', doc.value.to_s, mrcpsynth_options).execute @call
               raise UniMRCPError if @call.channel_var('SYNTHSTATUS') == 'ERROR'
             end

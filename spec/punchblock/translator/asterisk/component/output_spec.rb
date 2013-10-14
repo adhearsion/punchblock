@@ -291,6 +291,24 @@ module Punchblock
                     mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
                     subject.execute
                   end
+
+                  it 'should not execute further output after a stop command' do
+                    mock_call.wrapped_object.should_receive(:execute_agi_command).once.ordered.and_return do
+                      sleep 0.5
+                    end
+                    latch = CountDownLatch.new 1
+                    original_command.should_receive(:add_event).once.with do |e|
+                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      latch.countdown!
+                    end
+                    subject.future.execute
+                    sleep 0.2
+                    mock_call.async.should_receive(:redirect_back).ordered
+                    stop_command = Punchblock::Component::Stop.new
+                    stop_command.request!
+                    subject.execute_command stop_command
+                    latch.wait(2).should be_true
+                  end
                 end
               end
 
@@ -685,6 +703,25 @@ module Punchblock
                       2.times { expect_playback }
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+
+                    it 'should not execute further output after a stop command' do
+                      expect_answered
+                      mock_call.wrapped_object.should_receive(:execute_agi_command).once.ordered.and_return do
+                        sleep 0.2
+                      end
+                      latch = CountDownLatch.new 1
+                      original_command.should_receive(:add_event).once.with do |e|
+                        e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                        latch.countdown!
+                      end
+                      subject.future.execute
+                      sleep 0.1
+                      mock_call.async.should_receive(:redirect_back).ordered
+                      stop_command = Punchblock::Component::Stop.new
+                      stop_command.request!
+                      subject.execute_command stop_command
+                      latch.wait(2).should be_true
                     end
 
                     context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
@@ -1196,6 +1233,25 @@ module Punchblock
                     latch.wait(2).should be_true
                   end
 
+                  it 'should not execute further output after a stop command' do
+                    expect_answered
+                    mock_call.wrapped_object.should_receive(:execute_agi_command).once.ordered.and_return do
+                      sleep 0.2
+                    end
+                    latch = CountDownLatch.new 1
+                    original_command.should_receive(:add_event).once.with do |e|
+                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      latch.countdown!
+                    end
+                    subject.future.execute
+                    sleep 0.1
+                    mock_call.async.should_receive(:redirect_back).ordered
+                    stop_command = Punchblock::Component::Stop.new
+                    stop_command.request!
+                    subject.execute_command stop_command
+                    latch.wait(2).should be_true
+                  end
+
                   context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
                     let(:synthstatus) { 'SUCCESS' }
                     before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
@@ -1277,6 +1333,25 @@ module Punchblock
                     expect_playback 'three'
                     subject.execute
                     original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                  end
+
+                  it 'should not execute further output after a stop command' do
+                    expect_answered
+                    mock_call.wrapped_object.should_receive(:execute_agi_command).once.ordered.and_return do
+                      sleep 0.2
+                    end
+                    latch = CountDownLatch.new 1
+                    original_command.should_receive(:add_event).once.with do |e|
+                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      latch.countdown!
+                    end
+                    subject.future.execute
+                    sleep 0.1
+                    mock_call.async.should_receive(:redirect_back).ordered
+                    stop_command = Punchblock::Component::Stop.new
+                    stop_command.request!
+                    subject.execute_command stop_command
+                    latch.wait(2).should be_true
                   end
 
                   context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do

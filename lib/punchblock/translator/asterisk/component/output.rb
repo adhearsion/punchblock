@@ -122,6 +122,7 @@ module Punchblock
                   end
                   names[nil] = node
                 else
+                  next if check_audio_only_policy == :skip
                   check_audio_only_policy.call
                 end
               end

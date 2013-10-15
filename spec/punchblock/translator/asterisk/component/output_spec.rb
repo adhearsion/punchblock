@@ -1293,7 +1293,9 @@ module Punchblock
                 context "with an SSML document containing top-level elements other than <audio/>" do
                   let :ssml_doc do
                     RubySpeech::SSML.draw do
-                      string "Foo Bar"
+                      voice name: 'Paul' do
+                        string "Foo Bar"
+                      end
                     end
                   end
 

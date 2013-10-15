@@ -41,7 +41,7 @@ module Punchblock
 
           def process_dtmf(digit)
             if @component_node.barge_in && @output_incomplete
-              call.async.redirect_back
+              stop_by_redirect Punchblock::Event::Complete::Stop.new
               @barged = true
             end
             super

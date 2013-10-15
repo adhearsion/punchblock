@@ -15,15 +15,15 @@ module Punchblock
 
             @output_incomplete = true
 
-            output_component = Output.new_link(output_command, @call)
-            call.register_component output_component
-            fut = output_component.future.execute
+            @output_component = Output.new_link(output_command, @call)
+            call.register_component @output_component
+            fut = @output_component.future.execute
 
-            case output_command.response
+            case @output_command.response
             when Ref
               send_ref
             else
-              set_node_response output_command.response
+              set_node_response @output_command.response
             end
 
             if @component_node.barge_in
@@ -41,7 +41,7 @@ module Punchblock
 
           def process_dtmf(digit)
             if @component_node.barge_in && @output_incomplete
-              stop_by_redirect Punchblock::Event::Complete::Stop.new
+              @output_component.stop_by_redirect Punchblock::Event::Complete::Stop.new
               @barged = true
             end
             super

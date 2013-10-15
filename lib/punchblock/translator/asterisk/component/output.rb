@@ -143,9 +143,11 @@ module Punchblock
 
           def fallback_doc(original, failed_audio_node)
             doc = RubySpeech::SSML.draw do
-              original.value.attributes.each do |name, value|
-                attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
-                self.write_attr attr_name, value
+              unless Nokogiri.jruby?
+                original.value.attributes.each do |name, value|
+                  attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
+                  self.write_attr attr_name, value
+                end
               end
 
               children = failed_audio_node.nokogiri_children

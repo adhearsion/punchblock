@@ -1309,6 +1309,49 @@ module Punchblock
                   end
                 end
 
+                context "with mixed TTS and audio tags" do
+                  let :ssml_doc do
+                    RubySpeech::SSML.draw do
+                      voice name: 'Paul' do
+                        string "Foo Bar"
+                      end
+                      audio src: 'tt-monkeys'
+                      voice name: 'Frank' do
+                        string "Doo Dah"
+                      end
+                      string 'tt-weasels'
+                    end
+                  end
+
+                  let :first_doc do
+                    RubySpeech::SSML.draw do
+                      voice name: 'Paul' do
+                        string "Foo Bar"
+                      end
+                    end
+                  end
+
+                  let :second_doc do
+                    RubySpeech::SSML.draw do
+                      voice name: 'Frank' do
+                        string "Doo Dah"
+                      end
+                    end
+                  end
+
+                  before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return 'SUCCESS' }
+
+                  it "should attempt to render the document via MRCP and then send a complete event" do
+                    expect_answered
+                    expect_mrcpsynth first_doc
+                    expect_playback 'tt-monkeys'
+                    expect_mrcpsynth second_doc
+                    expect_playback 'tt-weasels'
+                    subject.execute
+                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                  end
+                end
+
                 context 'with multiple documents' do
                   let :second_ssml_doc do
                     RubySpeech::SSML.draw do

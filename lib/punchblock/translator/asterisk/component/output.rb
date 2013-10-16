@@ -31,18 +31,25 @@ module Punchblock
               validate_audio_only
               setup_for_native
 
-              filenames.each do |doc, set|
-                playback(set.values) || raise(PlaybackError)
+              render_docs.each do |doc|
+                playback(filenames(doc).values) || raise(PlaybackError)
               end
             when :native_or_unimrcp
               setup_for_native
 
-              filenames(:skip).each do |doc, set|
-                if set.empty?
-                  render_with_unimrcp doc
-                else
-                  set.each do |audio_node, path|
-                    playback([path]) || render_with_unimrcp(fallback_doc(doc, audio_node))
+              render_docs.each do |doc|
+                doc.value.children.each do |node|
+                  case node
+                  when RubySpeech::SSML::Audio
+                    playback([path_for_audio_node(node)]) || render_with_unimrcp(fallback_doc(doc, node))
+                  when String
+                    if node.include?(' ')
+                      render_with_unimrcp(copied_doc(doc, node))
+                    else
+                      playback([node]) || render_with_unimrcp(copied_doc(doc, node))
+                    end
+                  else
+                    render_with_unimrcp(copied_doc(doc, node))
                   end
                 end
               end
@@ -105,29 +112,29 @@ module Punchblock
           end
 
           def validate_audio_only
-            filenames -> { raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.' }
+            render_docs.each do |doc|
+              filenames doc, -> { raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.' }
+            end
           end
 
-          def filenames(check_audio_only_policy = -> {})
-            @filenames ||= render_docs.map do |doc|
-              names = {}
-              doc.value.children.each do |node|
-                case node
-                when RubySpeech::SSML::Audio
-                  names[node] = node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
-                when String
-                  if node.include?(' ')
-                    next if check_audio_only_policy == :skip
-                    check_audio_only_policy.call
-                  end
-                  names[nil] = node
-                else
-                  next if check_audio_only_policy == :skip
-                  check_audio_only_policy.call
-                end
+          def path_for_audio_node(node)
+            node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
+          end
+
+          def filenames(doc, check_audio_only_policy = -> {})
+            names = {}
+            doc.value.children.each do |node|
+              case node
+              when RubySpeech::SSML::Audio
+                names[node] = path_for_audio_node node
+              when String
+                check_audio_only_policy.call if node.include?(' ')
+                names[nil] = node
+              else
+                check_audio_only_policy.call
               end
-              [doc, names]
             end
+            names
           end
 
           def playback_options(paths)
@@ -143,6 +150,11 @@ module Punchblock
           end
 
           def fallback_doc(original, failed_audio_node)
+            children = failed_audio_node.nokogiri_children
+            copied_doc original, children
+          end
+
+          def copied_doc(original, elements)
             doc = RubySpeech::SSML.draw do
               unless Nokogiri.jruby?
                 original.value.attributes.each do |name, value|
@@ -151,8 +163,7 @@ module Punchblock
                 end
               end
 
-              children = failed_audio_node.nokogiri_children
-              add_child Nokogiri.jruby? ? children : children.to_xml
+              add_child Nokogiri.jruby? ? elements : elements.to_xml
             end
             Punchblock::Component::Output::Document.new(value: doc)
           end

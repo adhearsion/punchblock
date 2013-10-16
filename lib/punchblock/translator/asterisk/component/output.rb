@@ -49,7 +49,7 @@ module Punchblock
                       playback([node]) || render_with_unimrcp(copied_doc(doc, node))
                     end
                   else
-                    render_with_unimrcp(copied_doc(doc, node))
+                    render_with_unimrcp(copied_doc(doc, node.node))
                   end
                 end
               end

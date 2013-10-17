@@ -38,8 +38,8 @@ module Punchblock
       component_registry << component
     end
 
-    def find_component_by_id(component_id)
-      component_registry.find_by_id component_id
+    def find_component_by_uri(uri)
+      component_registry.find_by_uri uri
     end
 
     def delete_component_registration(component)

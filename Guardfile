@@ -4,6 +4,6 @@ guard 'rspec', :cli => '--format documentation' do
   watch('spec/spec_helper.rb')  { "spec/" }
 end
 
-guard 'rake', task: 'benchmark' do
+guard 'rake', task: 'benchmark', run_on_start: false do
   watch(/benchmarks\/*/)
 end

@@ -155,6 +155,7 @@ module Punchblock
                   let :expected_event do
                     Punchblock::Event::Complete.new reason: expected_reason,
                       component_id: subject.id,
+                      source_uri: subject.id,
                       target_call_id: call.id
                   end
 
@@ -215,6 +216,7 @@ module Punchblock
                 expected_reason = Punchblock::Event::Complete::Stop.new
                 expected_event = Punchblock::Event::Complete.new reason: expected_reason,
                   component_id: subject.id,
+                  source_uri: subject.id,
                   target_call_id: call.id
 
                 call.async.should_receive(:redirect_back)

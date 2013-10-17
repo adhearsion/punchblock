@@ -14,6 +14,7 @@ module Punchblock
     attribute :target_call_id
     attribute :target_mixer_name
     attribute :component_id
+    attribute :source_uri
     attribute :domain
     attribute :transport
 
@@ -48,7 +49,7 @@ module Punchblock
     # elements of the XML::Node
     # @param [XML::Node] node the node to import
     # @return the appropriate object based on the node name and namespace
-    def self.from_xml(node, call_id = nil, component_id = nil)
+    def self.from_xml(node, call_id = nil, component_id = nil, uri = nil)
       ns = (node.namespace.href if node.namespace)
       klass = class_from_registration(node.name, ns)
       if klass && klass != self
@@ -58,6 +59,7 @@ module Punchblock
       end.tap do |event|
         event.target_call_id = call_id
         event.component_id = component_id
+        event.source_uri = uri
       end
     end
 
@@ -85,7 +87,7 @@ module Punchblock
     # @return [RayoNode] the original command issued that lead to this event
     #
     def source
-      @source ||= client.find_component_by_id component_id if client && component_id
+      @source ||= client.find_component_by_uri source_uri if client && source_uri
       @source ||= original_component
     end
 

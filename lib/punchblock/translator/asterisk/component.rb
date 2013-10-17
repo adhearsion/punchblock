@@ -48,6 +48,7 @@ module Punchblock
           def send_event(event)
             event.component_id    = id
             event.target_call_id  = call_id
+            event.source_uri      = id
             safe_from_dead_actors { translator.handle_pb_event event }
           end
 

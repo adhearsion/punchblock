@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<ruby_ami>, ["~> 2.0"]
   s.add_runtime_dependency %q<ruby_fs>, ["~> 1.1"]
   s.add_runtime_dependency %q<ruby_speech>, ["~> 2.0"]
-  s.add_runtime_dependency %q<virtus>
+  s.add_runtime_dependency %q<virtus>, ["~> 0.5"]
   s.add_runtime_dependency %q<ruby_jid>, ["~> 1.0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]

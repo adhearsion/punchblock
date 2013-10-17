@@ -1,5 +1,4 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Feature: Support RubySpeech builtin grammars on Asterisk and FreeSWITCH
   * Bugfix: Reject commands against components which have finished on Asterisk, and garbage collect them
   * Bugfix: Register/lookup components by their full URI rather than component ID since the component ID may only be unique per call
 

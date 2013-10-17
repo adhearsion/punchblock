@@ -127,60 +127,6 @@ module Punchblock
                 end
               end
 
-              context 'with a builtin grammar' do
-                let(:original_command_opts) { { grammar: { url: 'builtin:dtmf/boolean' } } }
-
-                before do
-                  subject.execute
-                  expected_event
-                  send_ami_events_for_dtmf 1
-                end
-
-                let :expected_nlsml do
-                  RubySpeech::NLSML.draw do
-                    interpretation confidence: 1 do
-                      instance "true"
-                      input "1", mode: :dtmf
-                    end
-                  end
-                end
-
-                let :expected_event do
-                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
-                end
-
-                it "should use RubySpeech builtin grammar" do
-                  reason.should be == expected_event
-                end
-              end
-
-              context 'with a parameterized builtin grammar' do
-                let(:original_command_opts) { { grammar: { url: 'builtin:dtmf/boolean?n=3;y=4' } } }
-
-                before do
-                  subject.execute
-                  expected_event
-                  send_ami_events_for_dtmf 4
-                end
-
-                let :expected_nlsml do
-                  RubySpeech::NLSML.draw do
-                    interpretation confidence: 1 do
-                      instance "true"
-                      input "4", mode: :dtmf
-                    end
-                  end
-                end
-
-                let :expected_event do
-                  Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
-                end
-
-                it "should use RubySpeech builtin grammar" do
-                  reason.should be == expected_event
-                end
-              end
-
               context 'with multiple grammars' do
                 let(:original_command_opts) { { :grammars => [{:value => grammar}, {:value => grammar}] } }
                 it "should return an error and not execute any actions" do

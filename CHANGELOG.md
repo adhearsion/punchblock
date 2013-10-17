@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v2.0.2](https://github.com/adhearsion/punchblock/compare/v2.0.1...v2.0.2) - [2013-10-17](https://rubygems.org/gems/punchblock/versions/2.0.2)
   * Bugfix: Reject commands against components which have finished on Asterisk, and garbage collect them
   * Bugfix: Register/lookup components by their full URI rather than component ID since the component ID may only be unique per call
   * Bugfix: Hold back Virtus dependency to avoid API-breaking changes

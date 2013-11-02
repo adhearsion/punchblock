@@ -80,7 +80,7 @@ module Punchblock
       attribute :start_offset, Integer
 
       # @return [true, false] Indicates wether or not the component should be started in a paused state to be resumed at a later time.
-      attribute :start_paused, Boolean, default: false
+      attribute :start_paused, Boolean
 
       # @return [Integer] Indicates the duration of silence that should space repeats of the rendered document.
       attribute :repeat_interval, Integer

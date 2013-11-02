@@ -98,7 +98,7 @@ module Punchblock
         end
 
         def rayo_children(root)
-          root.cdata value
+          root.cdata value if value
         end
 
         private
@@ -106,6 +106,14 @@ module Punchblock
         def grxml?
           content_type == GRXML_CONTENT_TYPE
         end
+      end
+
+      class Signal < Event::Complete::Reason
+        register :signal, :cpa
+
+        attribute :type, String
+        attribute :duration, Integer
+        attribute :value, String
       end
 
       class Complete

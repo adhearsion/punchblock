@@ -28,7 +28,7 @@ module Punchblock
       end
 
       class Reason < RayoNode
-        attribute :name
+        attribute :name, Symbol, default: ->(node,_) { node.class.registered_name.to_sym }
 
         def inherit(xml_node)
           self.name = xml_node.name.to_sym

@@ -378,6 +378,85 @@ module Punchblock
 
         its(:name) { should be == :noinput }
       end
+
+      describe Input::Signal do
+        let :stanza do
+          <<-MESSAGE
+<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="1000" value="8000"/>
+          MESSAGE
+        end
+
+        subject { RayoNode.from_xml(parse_stanza(stanza).root) }
+
+        it { should be_instance_of Input::Signal }
+
+        its(:name)      { should be == :signal }
+        its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+        its(:duration)  { should be == 1000 }
+        its(:value)     { should be == '8000' }
+
+        describe "when creating from options" do
+          subject do
+            Input::Signal.new type: 'urn:xmpp:rayo:cpa:beep:1', duration: 1000, value: '8000'
+          end
+
+          its(:name)      { should be == :signal }
+          its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+          its(:duration)  { should be == 1000 }
+          its(:value)     { should be == '8000' }
+        end
+
+        context "when in a complete event" do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+  <signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="1000" value="8000"/>
+</complete>
+            MESSAGE
+          end
+
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Input::Signal }
+
+          its(:name)      { should be == :signal }
+          its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+          its(:duration)  { should be == 1000 }
+          its(:value)     { should be == '8000' }
+        end
+
+        describe "comparison" do
+          context "with the same options" do
+            it "should be equal" do
+              subject.should == RayoNode.from_xml(parse_stanza(stanza).root)
+            end
+          end
+
+          context "with different type" do
+            let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:ring:1" duration="1000" value="8000"/>' }
+
+            it "should not be equal" do
+              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+            end
+          end
+
+          context "with different duration" do
+            let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="100" value="8000"/>' }
+
+            it "should not be equal" do
+              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+            end
+          end
+
+          context "with different value" do
+            let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="1000" value="7000"/>' }
+
+            it "should not be equal" do
+              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+            end
+          end
+        end
+      end
     end
   end
 end # Punchblock

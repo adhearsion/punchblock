@@ -108,6 +108,14 @@ module Punchblock
         end
       end
 
+      class Signal < Event::Complete::Reason
+        register :signal, :cpa
+
+        attribute :type, String
+        attribute :duration, Integer
+        attribute :value, String
+      end
+
       class Complete
         class Match < Event::Complete::Reason
           register :match, :input_complete

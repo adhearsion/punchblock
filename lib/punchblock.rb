@@ -75,7 +75,7 @@ module Punchblock
   RAYO_VERSION            = '1'
   RAYO_NAMESPACES         = {:core => [BASE_RAYO_NAMESPACE, RAYO_VERSION].compact.join(':')}
 
-  [:ext, :record, :output, :input, :prompt].each do |ns|
+  [:ext, :record, :output, :input, :prompt, :cpa].each do |ns|
     RAYO_NAMESPACES[ns] = [BASE_RAYO_NAMESPACE, ns.to_s, RAYO_VERSION].compact.join(':')
     RAYO_NAMESPACES[:"#{ns}_complete"] = [BASE_RAYO_NAMESPACE, ns.to_s, 'complete', RAYO_VERSION].compact.join(':')
   end

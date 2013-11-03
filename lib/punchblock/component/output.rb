@@ -75,12 +75,20 @@ module Punchblock
         attribute :header, String
         attribute :pages, String
 
+        def inherit(xml_node)
+          super
+          if pages = xml_node[:pages]
+            self.pages = pages.split(',').map { |p| p.include?('-') ? Range.new(*p.split('-').map(&:to_i)) : p.to_i }
+          end
+          self
+        end
+
         def rayo_attributes
           {
             'url' => url,
             'identity' => identity,
             'header' => header,
-            'pages' => pages
+            'pages' => pages.map { |p| p.is_a?(Range) ? "#{p.min}-#{p.max}" : p }.join(',')
           }
         end
       end

@@ -92,15 +92,15 @@ module Punchblock
 
         context "with a fax document" do
           subject do
-            Output.new render_documents: [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff')]
+            Output.new render_documents: [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])]
           end
 
-          its(:render_documents) { should be == [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff')] }
+          its(:render_documents) { should be == [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])] }
 
           describe "exporting to Rayo" do
             it "should export to XML that can be understood by its parser" do
               new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
-              new_instance.render_documents.should be == [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff')]
+              new_instance.render_documents.should be == [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])]
             end
           end
         end
@@ -217,12 +217,12 @@ module Punchblock
           let :stanza do
             <<-MESSAGE
 <output xmlns='urn:xmpp:rayo:output:1'>
-  <document xmlns='urn:xmpp:rayo:fax:1' url='http://shakespere.lit/my_fax.tiff' identity='+14045555555' header='Hello world' pages='1-4'/>
+  <document xmlns='urn:xmpp:rayo:fax:1' url='http://shakespere.lit/my_fax.tiff' identity='+14045555555' header='Hello world' pages='1-4,5,7-9'/>
 </output>
             MESSAGE
           end
 
-          its(:render_documents) { should be == [Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: '1-4')] }
+          its(:render_documents) { should be == [Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])] }
         end
       end
 
@@ -287,32 +287,32 @@ module Punchblock
       end
 
       describe Output::FaxDocument do
-        subject { Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: '1-4') }
+        subject { Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9]) }
 
         its(:url)       { 'http://shakespere.lit/my_fax.tiff' }
         its(:identity)  { '+14045555555' }
         its(:header)    { 'Hello world' }
-        its(:pages)     { '1-4' }
+        its(:pages)     { [1..4,5,7..9] }
 
         describe "comparison" do
           it "should be the same with the same attributes" do
-            should be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: '1-4')
+            should be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])
           end
 
           it "should be different with a different url" do
-            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_other_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: '1-4')
+            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_other_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])
           end
 
           it "should be different with a different identity" do
-            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555556', header: 'Hello world', pages: '1-4')
+            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555556', header: 'Hello world', pages: [1..4,5,7..9])
           end
 
           it "should be different with a different header" do
-            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello Paul', pages: '1-4')
+            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello Paul', pages: [1..4,5,7..9])
           end
 
           it "should be different with a different pages" do
-            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: '1')
+            should_not be == Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,6..9])
           end
         end
       end

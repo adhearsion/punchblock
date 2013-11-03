@@ -5,7 +5,7 @@ require 'virtus'
 
 module Punchblock
   class RayoNode
-    include Virtus
+    include Virtus.model
 
     @@registrations = {}
 

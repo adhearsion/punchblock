@@ -5,7 +5,10 @@ module Punchblock
     class Output < ComponentNode
       register :output, :output
 
-      class Document < RayoNode
+      class AbstractDocument < RayoNode
+      end
+
+      class Document < AbstractDocument
         register :document, :output
 
         SSML_CONTENT_TYPE = 'application/ssml+xml'
@@ -64,9 +67,27 @@ module Punchblock
         end
       end
 
+      class FaxDocument < AbstractDocument
+        register :document, :fax
+
+        attribute :url, String
+        attribute :identity, String
+        attribute :header, String
+        attribute :pages, String
+
+        def rayo_attributes
+          {
+            'url' => url,
+            'identity' => identity,
+            'header' => header,
+            'pages' => pages
+          }
+        end
+      end
+
       def inherit(xml_node)
-        document_nodes = xml_node.xpath 'ns:document', ns: self.class.registered_ns
-        self.render_documents = document_nodes.to_a.map { |node| Document.from_xml node }
+        document_nodes = xml_node.xpath 'output_ns:document|fax_ns:document', output_ns: self.class.registered_ns, fax_ns: FaxDocument.registered_ns
+        self.render_documents = document_nodes.to_a.map { |node| RayoNode.from_xml node }
         super
       end
 
@@ -115,7 +136,15 @@ module Punchblock
       end
 
       # @return [Document] the document to render
-      attribute :render_documents, Array[Document], default: []
+      attribute :render_documents, Array[AbstractDocument], default: [], coercer: ->(value) {
+        value.map do |v|
+          if v.is_a?(FaxDocument)
+            v
+          else
+            Document.new(v)
+          end
+        end
+      }
 
       ##
       # @param [Hash] other

@@ -79,10 +79,6 @@ module Punchblock
       o.is_a?(self.class) && self.to_hash == o.to_hash
     end
 
-    def to_hash
-      get_attributes(&:public_reader?)
-    end
-
     ##
     # @return [RayoNode] the original command issued that lead to this event
     #

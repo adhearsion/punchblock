@@ -9,6 +9,7 @@ module Punchblock
     autoload :Input
     autoload :Output
     autoload :Prompt
+    autoload :ReceiveFax
     autoload :Record
     autoload :Stop
 

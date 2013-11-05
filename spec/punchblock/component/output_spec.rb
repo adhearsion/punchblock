@@ -289,10 +289,10 @@ module Punchblock
       describe Output::FaxDocument do
         subject { Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9]) }
 
-        its(:url)       { 'http://shakespere.lit/my_fax.tiff' }
-        its(:identity)  { '+14045555555' }
-        its(:header)    { 'Hello world' }
-        its(:pages)     { [1..4,5,7..9] }
+        its(:url)       { should == 'http://shakespere.lit/my_fax.tiff' }
+        its(:identity)  { should == '+14045555555' }
+        its(:header)    { should == 'Hello world' }
+        its(:pages)     { should == [1..4,5,7..9] }
 
         describe "comparison" do
           it "should be the same with the same attributes" do

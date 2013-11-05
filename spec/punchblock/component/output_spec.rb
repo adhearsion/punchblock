@@ -103,6 +103,19 @@ module Punchblock
               new_instance.render_documents.should be == [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])]
             end
           end
+
+          context "without optional attributes" do
+            subject do
+              Output.new render_documents: [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff')]
+            end
+
+            describe "exporting to Rayo" do
+              it "should export to XML that can be understood by its parser" do
+                new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
+                new_instance.render_documents.should be == [Output::FaxDocument.new(url: 'http://example.com/faxes/document.tiff')]
+              end
+            end
+          end
         end
 
         context "with a nil document" do
@@ -223,6 +236,18 @@ module Punchblock
           end
 
           its(:render_documents) { should be == [Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])] }
+
+          context "without optional attributes" do
+            let :stanza do
+              <<-MESSAGE
+<output xmlns='urn:xmpp:rayo:output:1'>
+  <document xmlns='urn:xmpp:rayo:fax:1' url='http://shakespere.lit/my_fax.tiff'/>
+</output>
+              MESSAGE
+            end
+
+            its(:render_documents) { should be == [Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff')] }
+          end
         end
       end
 
@@ -293,6 +318,15 @@ module Punchblock
         its(:identity)  { should == '+14045555555' }
         its(:header)    { should == 'Hello world' }
         its(:pages)     { should == [1..4,5,7..9] }
+
+        context "without optional attributes" do
+          subject { Output::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff') }
+
+          its(:url)       { should == 'http://shakespere.lit/my_fax.tiff' }
+          its(:identity)  { should be_nil }
+          its(:header)    { should be_nil }
+          its(:pages)     { should be_nil }
+        end
 
         describe "comparison" do
           it "should be the same with the same attributes" do

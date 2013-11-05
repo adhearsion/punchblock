@@ -88,8 +88,13 @@ module Punchblock
             'url' => url,
             'identity' => identity,
             'header' => header,
-            'pages' => pages.map { |p| p.is_a?(Range) ? "#{p.min}-#{p.max}" : p }.join(',')
+            'pages' => rayo_pages
           }
+        end
+
+      private
+        def rayo_pages
+          pages ? pages.map { |p| p.is_a?(Range) ? "#{p.min}-#{p.max}" : p }.join(',') : nil
         end
       end
 

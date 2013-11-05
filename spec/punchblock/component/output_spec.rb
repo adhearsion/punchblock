@@ -12,7 +12,7 @@ module Punchblock
       describe 'default values' do
         its(:interrupt_on)     { should be nil }
         its(:start_offset)     { should be nil }
-        its(:start_paused)     { should be false }
+        its(:start_paused)     { should be nil }
         its(:repeat_interval)  { should be nil }
         its(:repeat_times)     { should be nil }
         its(:max_time)         { should be nil }

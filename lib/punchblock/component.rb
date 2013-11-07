@@ -11,6 +11,7 @@ module Punchblock
     autoload :Prompt
     autoload :ReceiveFax
     autoload :Record
+    autoload :SendFax
     autoload :Stop
 
     InvalidActionError = Class.new StandardError

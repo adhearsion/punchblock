@@ -166,6 +166,10 @@ module Punchblock
             it { should be == grammar2 }
             it { should_not be == grammar3 }
           end
+
+          it "has children nested inside" do
+            subject.to_rayo.children.first.should be_a Nokogiri::XML::CDATA
+          end
         end
 
         describe 'with a grammar reference by URL' do
@@ -184,6 +188,14 @@ module Punchblock
             it "should be different with a different url" do
               Input::Grammar.new(:url => url).should_not be == Input::Grammar.new(:url => 'http://doo.com/dah')
             end
+          end
+        end
+
+        describe "with a CPA grammar" do
+          subject { Input::Grammar.new url: "urn:xmpp:rayo:cpa:beep:1" }
+
+          it "has no children" do
+            subject.to_rayo.children.count.should == 0
           end
         end
       end

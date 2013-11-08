@@ -98,7 +98,7 @@ module Punchblock
         end
 
         def rayo_children(root)
-          root.cdata value
+          root.cdata value if value
         end
 
         private

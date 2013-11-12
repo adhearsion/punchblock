@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v2.1.0](https://github.com/adhearsion/punchblock/compare/v2.0.2...v2.1.0) - [2013-11-12](https://rubygems.org/gems/punchblock/versions/2.1.0)
   * Feature: Support RubySpeech builtin grammars on Asterisk and FreeSWITCH
   * Update: Update to stable release of Virtus
 

@@ -188,7 +188,7 @@ module Punchblock
           when Command::Join
             other_call = translator.call_with_id command.call_uri
             @pending_joins[other_call.channel] = command
-            execute_agi_command 'EXEC Bridge', other_call.channel
+            execute_agi_command 'EXEC Bridge', "#{other_call.channel},#{options_for_join(command)}"
           when Command::Unjoin
             other_call = translator.call_with_id command.call_uri
             redirect_back other_call
@@ -355,6 +355,14 @@ module Punchblock
           variables.inject([]) do |a, (k, v)|
             a << "#{k}=#{v}"
           end.join(',')
+        end
+
+        def options_for_join(command)
+          "".tap do |options|
+            options << "H"  if command.hangup_power == :send || command.hangup_power == :duplex
+            options << "h"  if command.hangup_power == :recv || command.hangup_power == :duplex
+            options << "p"  if command.courtesy_tone
+          end
         end
       end
     end

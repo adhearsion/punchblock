@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: Allow sending string SSML docs via Rayo
+  * Bugfix: Ensure that joined calls on Asterisk do not have implicitly linked lifecycles. Previously, joinees would be hungup when the joiner exited the bridge.
 
 # [v2.1.0](https://github.com/adhearsion/punchblock/compare/v2.0.2...v2.1.0) - [2013-11-12](https://rubygems.org/gems/punchblock/versions/2.1.0)
   * Feature: Support RubySpeech builtin grammars on Asterisk and FreeSWITCH

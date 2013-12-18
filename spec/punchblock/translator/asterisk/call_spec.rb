@@ -1038,7 +1038,7 @@ module Punchblock
             before { translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call) }
 
             it "executes the proper dialplan Bridge application" do
-              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Bridge', other_channel).and_return code: 200
+              subject.wrapped_object.should_receive(:execute_agi_command).with('EXEC Bridge', "#{other_channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})").and_return code: 200
               subject.execute_command command
             end
 

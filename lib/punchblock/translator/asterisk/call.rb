@@ -188,7 +188,7 @@ module Punchblock
           when Command::Join
             other_call = translator.call_with_id command.call_uri
             @pending_joins[other_call.channel] = command
-            execute_agi_command 'EXEC Bridge', other_call.channel
+            execute_agi_command 'EXEC Bridge', "#{other_call.channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})"
           when Command::Unjoin
             other_call = translator.call_with_id command.call_uri
             redirect_back other_call

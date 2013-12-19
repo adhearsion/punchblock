@@ -15,6 +15,8 @@ module Punchblock
 
         InvalidCommandError = Class.new Punchblock::Error
 
+        OUTBOUND_CHANNEL_MATCH = /.* <(?<channel>.*)>/.freeze
+
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
@@ -70,7 +72,7 @@ module Punchblock
         def dial(dial_command)
           @direction = :outbound
           channel = dial_command.to || ''
-          channel.match(/.* <(?<channel>.*)>/) { |m| channel = m[:channel] }
+          channel.match(OUTBOUND_CHANNEL_MATCH) { |m| channel = m[:channel] }
           params = { :async       => true,
                      :application => 'AGI',
                      :data        => 'agi:async',

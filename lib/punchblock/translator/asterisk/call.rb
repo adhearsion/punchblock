@@ -74,8 +74,9 @@ module Punchblock
           channel = dial_command.to || ''
           channel.match(OUTBOUND_CHANNEL_MATCH) { |m| channel = m[:channel] }
           params = { :async       => true,
-                     :application => 'AGI',
-                     :data        => 'agi:async',
+                     :context     => REDIRECT_CONTEXT,
+                     :exten       => REDIRECT_EXTENSION,
+                     :priority    => REDIRECT_PRIORITY,
                      :channel     => channel,
                      :callerid    => dial_command.from
                    }

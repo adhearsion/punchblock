@@ -15,6 +15,8 @@ module Punchblock
 
         InvalidCommandError = Class.new Punchblock::Error
 
+        OUTBOUND_CHANNEL_MATCH = /.* <(?<channel>.*)>/.freeze
+
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
@@ -70,10 +72,11 @@ module Punchblock
         def dial(dial_command)
           @direction = :outbound
           channel = dial_command.to || ''
-          channel.match(/.* <(?<channel>.*)>/) { |m| channel = m[:channel] }
+          channel.match(OUTBOUND_CHANNEL_MATCH) { |m| channel = m[:channel] }
           params = { :async       => true,
-                     :application => 'AGI',
-                     :data        => 'agi:async',
+                     :context     => REDIRECT_CONTEXT,
+                     :exten       => REDIRECT_EXTENSION,
+                     :priority    => REDIRECT_PRIORITY,
                      :channel     => channel,
                      :callerid    => dial_command.from
                    }
@@ -188,7 +191,7 @@ module Punchblock
           when Command::Join
             other_call = translator.call_with_id command.call_uri
             @pending_joins[other_call.channel] = command
-            execute_agi_command 'EXEC Bridge', other_call.channel
+            execute_agi_command 'EXEC Bridge', "#{other_call.channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})"
           when Command::Unjoin
             other_call = translator.call_with_id command.call_uri
             redirect_back other_call

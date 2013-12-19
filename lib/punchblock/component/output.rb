@@ -47,7 +47,7 @@ module Punchblock
 
         def xml_value
           if ssml?
-            value.to_xml
+            value.to_s
           elsif urilist?
             value.to_s
           elsif

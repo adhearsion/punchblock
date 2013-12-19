@@ -182,8 +182,9 @@ module Punchblock
             expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
                                                                                :params => {
                                                                                  :async       => true,
-                                                                                 :application => 'AGI',
-                                                                                 :data        => 'agi:async',
+                                                                                 :context     => REDIRECT_CONTEXT,
+                                                                                 :exten       => REDIRECT_EXTENSION,
+                                                                                 :priority    => REDIRECT_PRIORITY,
                                                                                  :channel     => 'SIP/1234',
                                                                                  :callerid    => 'sip:foo@bar.com',
                                                                                  :variable    => "punchblock_call_id=#{subject.id}"
@@ -200,8 +201,9 @@ module Punchblock
               expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
                                                                                  :params => {
                                                                                    :async       => true,
-                                                                                   :application => 'AGI',
-                                                                                   :data        => 'agi:async',
+                                                                                   :context     => REDIRECT_CONTEXT,
+                                                                                   :exten       => REDIRECT_EXTENSION,
+                                                                                   :priority    => REDIRECT_PRIORITY,
                                                                                    :channel     => 'SIP/5678',
                                                                                    :callerid    => 'sip:foo@bar.com',
                                                                                    :variable    => "punchblock_call_id=#{subject.id}"
@@ -221,8 +223,9 @@ module Punchblock
               expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
                                                                                  :params => {
                                                                                    :async       => true,
-                                                                                   :application => 'AGI',
-                                                                                   :data        => 'agi:async',
+                                                                                   :context     => REDIRECT_CONTEXT,
+                                                                                   :exten       => REDIRECT_EXTENSION,
+                                                                                   :priority    => REDIRECT_PRIORITY,
                                                                                    :channel     => 'SIP/1234',
                                                                                    :callerid    => 'sip:foo@bar.com',
                                                                                    :variable    => "punchblock_call_id=#{subject.id}",
@@ -243,8 +246,9 @@ module Punchblock
               expected_action = Punchblock::Component::Asterisk::AMI::Action.new(:name => 'Originate',
                                                                                  :params => {
                                                                                    :async       => true,
-                                                                                   :application => 'AGI',
-                                                                                   :data        => 'agi:async',
+                                                                                   :context     => REDIRECT_CONTEXT,
+                                                                                   :exten       => REDIRECT_EXTENSION,
+                                                                                   :priority    => REDIRECT_PRIORITY,
                                                                                    :channel     => 'SIP/1234',
                                                                                    :callerid    => 'sip:foo@bar.com',
                                                                                    :variable    => "punchblock_call_id=#{subject.id},SIPADDHEADER51=\"X-foo: bar\",SIPADDHEADER52=\"X-doo: dah\""

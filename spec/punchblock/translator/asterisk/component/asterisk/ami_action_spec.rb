@@ -58,7 +58,7 @@ module Punchblock
               context 'for a non-causal action' do
                 it 'should send a complete event to the component node' do
                   ami_client.should_receive(:send_action).once.and_return response
-                  subject.wrapped_object.should_receive(:send_complete_event).once.with expected_complete_reason
+                  subject.should_receive(:send_complete_event).once.with expected_complete_reason
                   subject.execute
                 end
               end

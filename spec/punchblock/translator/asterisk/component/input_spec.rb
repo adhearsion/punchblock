@@ -96,7 +96,7 @@ module Punchblock
                 end
 
                 it "should not process further dtmf events" do
-                  subject.async.should_receive(:process_dtmf).never
+                  subject.should_receive(:process_dtmf).never
                   send_ami_events_for_dtmf 3
                 end
               end
@@ -266,7 +266,7 @@ module Punchblock
                   end
 
                   it "should not process further dtmf events" do
-                    subject.async.should_receive(:process_dtmf).never
+                    subject.should_receive(:process_dtmf).never
                     send_ami_events_for_dtmf 3
                   end
                 end
@@ -331,7 +331,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_initial_timer).never
+                  subject.should_receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -340,7 +340,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_initial_timer).never
+                  subject.should_receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -450,7 +450,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
+                  subject.should_receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end
@@ -459,7 +459,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
+                  subject.should_receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end

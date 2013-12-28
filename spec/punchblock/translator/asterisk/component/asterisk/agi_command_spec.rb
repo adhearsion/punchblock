@@ -81,7 +81,6 @@ module Punchblock
                 it 'should send the component node false' do
                   subject.execute
                   original_command.response(1).should be_false
-                  subject.should_not be_alive
                 end
 
                 context "which is 'No such channel'" do
@@ -90,7 +89,6 @@ module Punchblock
                   it "should return an :item_not_found error for the command" do
                     subject.execute
                     original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
-                    subject.should_not be_alive
                   end
                 end
 
@@ -100,7 +98,6 @@ module Punchblock
                   it "should return an :item_not_found error for the command" do
                     subject.execute
                     original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
-                    subject.should_not be_alive
                   end
                 end
               end

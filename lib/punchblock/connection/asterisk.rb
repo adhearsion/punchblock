@@ -21,7 +21,7 @@ module Punchblock
       end
 
       def stop
-        translator.async.shutdown
+        translator.terminate
         ami_client.terminate
       end
 

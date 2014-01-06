@@ -17,4 +17,6 @@ end
   unjoined
   started_speaking
   stopped_speaking
+  mixer_created
+  mixer_destroyed
 }.each { |e| require "punchblock/event/#{e}"}

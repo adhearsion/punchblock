@@ -804,7 +804,7 @@ module Punchblock
                     it "does not redirect the call" do
                       expect_answered
                       expect_playback
-                      mock_call.async.should_receive(:redirect_back).never
+                      mock_call.should_receive(:redirect_back).never
                       subject.execute
                       original_command.response(0.1).should be_a Ref
                       send_ami_events_for_dtmf 1
@@ -817,24 +817,24 @@ module Punchblock
                     before do
                       expect_answered
                       mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                      subject.wrapped_object.should_receive(:send_finish).and_return nil
+                      subject.should_receive(:send_finish).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
                       it "sends the correct complete event" do
-                        mock_call.async.should_receive :redirect_back
+                        mock_call.should_receive :redirect_back
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         original_command.should_not be_complete
                         send_ami_events_for_dtmf 1
-                        mock_call.async.process_ami_event ami_event
+                        mock_call.process_ami_event ami_event
                         sleep 0.2
                         original_command.should be_complete
                         reason.should be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do
-                        mock_call.async.should_receive(:redirect_back).once
+                        mock_call.should_receive(:redirect_back).once
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         send_ami_events_for_dtmf 1
@@ -848,24 +848,24 @@ module Punchblock
                     before do
                       expect_answered
                       mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                      subject.wrapped_object.should_receive(:send_finish).and_return nil
+                      subject.should_receive(:send_finish).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
                       it "sends the correct complete event" do
-                        mock_call.async.should_receive :redirect_back
+                        mock_call.should_receive :redirect_back
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         original_command.should_not be_complete
                         send_ami_events_for_dtmf 1
-                        mock_call.async.process_ami_event ami_event
+                        mock_call.process_ami_event ami_event
                         sleep 0.2
                         original_command.should be_complete
                         reason.should be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do
-                        mock_call.async.should_receive(:redirect_back).once
+                        mock_call.should_receive(:redirect_back).once
                         subject.execute
                         original_command.response(0.1).should be_a Ref
                         send_ami_events_for_dtmf 1
@@ -915,13 +915,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.async.should_receive(:redirect_back)
+                mock_call.should_receive(:redirect_back)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                mock_call.async.should_receive(:redirect_back)
+                mock_call.should_receive(:redirect_back)
                 subject.execute_command command
                 original_command.should_not be_complete
                 mock_call.process_ami_event ami_event
@@ -930,7 +930,7 @@ module Punchblock
               end
 
               it "redirects the call by unjoining it" do
-                mock_call.async.should_receive(:redirect_back)
+                mock_call.should_receive(:redirect_back)
                 subject.execute_command command
               end
             end

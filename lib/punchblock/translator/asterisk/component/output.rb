@@ -42,9 +42,8 @@ module Punchblock
               @call.send_progress if early
 
               if interrupt
-                output_component = current_actor
                 call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
-                  output_component.stop_by_redirect finish_reason
+                  stop_by_redirect finish_reason
                 end
               end
 

@@ -60,7 +60,7 @@ module Punchblock
         end
 
         it 'shuts down the translator' do
-          subject.translator.async.should_receive(:shutdown).once
+          subject.translator.should_receive(:terminate).once
           subject.stop
         end
       end

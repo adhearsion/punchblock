@@ -207,7 +207,7 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                call.async.should_receive(:redirect_back).once
+                call.should_receive(:redirect_back).once
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
@@ -219,7 +219,7 @@ module Punchblock
                   source_uri: subject.id,
                   target_call_id: call.id
 
-                call.async.should_receive(:redirect_back)
+                call.should_receive(:redirect_back)
                 subject.execute_command command
                 original_command.should_not be_complete
                 call.process_ami_event ami_event

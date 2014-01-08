@@ -28,6 +28,23 @@ module Punchblock
 
       trap_exit :actor_died
 
+      # Set the AMI event filter to be applied to incoming AMI events. A truthy return value will send the event via Rayo to the client (Adhearsion).
+      #
+      # @param [#[<RubyAMI::Event>]] filter
+      #
+      # @example A lambda
+      #   Punchblock::Translator::Asterisk.event_filter = ->(event) { event.name == 'AsyncAGI' }
+      #
+      def self.event_filter=(filter)
+        @event_filter = filter
+      end
+
+      def self.event_passes_filter?(event)
+        @event_filter ? !!@event_filter[event] : true
+      end
+
+      event_filter = nil
+
       def initialize(ami_client, connection)
         @ami_client, @connection = ami_client, connection
         @calls, @components, @channel_to_call_id = {}, {}, {}
@@ -72,7 +89,7 @@ module Punchblock
 
         ami_dispatch_to_or_create_call event
 
-        unless ami_event_known_call?(event)
+        if !ami_event_known_call?(event) && self.class.event_passes_filter?(event)
           handle_pb_event Event::Asterisk::AMI::Event.new(name: event.name, headers: event.headers)
         end
       end

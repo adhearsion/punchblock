@@ -274,6 +274,16 @@ module Punchblock
           subject.handle_ami_event ami_event
         end
 
+        context "when the event doesn't pass the filter" do
+          before { described_class.event_filter = ->(event) { false } }
+          after { described_class.event_filter = nil }
+
+          it 'does not send the AMI event to the connection as a PB event' do
+            subject.connection.should_receive(:handle_event).never
+            subject.handle_ami_event ami_event
+          end
+        end
+
         context 'with something that is not a RubyAMI::Event' do
           it 'does not send anything to the connection' do
             subject.connection.should_receive(:handle_event).never

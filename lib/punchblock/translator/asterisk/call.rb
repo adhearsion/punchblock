@@ -107,7 +107,9 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
-          send_pb_event Event::Asterisk::AMI::Event.new(name: ami_event.name, headers: ami_event.headers)
+          if Asterisk.event_passes_filter?(ami_event)
+            send_pb_event Event::Asterisk::AMI::Event.new(name: ami_event.name, headers: ami_event.headers)
+          end
 
           case ami_event.name
           when 'Hangup'

@@ -845,6 +845,15 @@ module Punchblock
             subject.process_ami_event ami_event
           end
 
+          context "when the event doesn't pass the filter" do
+            before { Asterisk.event_filter = ->(event) { false } }
+            after { Asterisk.event_filter = nil }
+
+            it 'does not send the AMI event to the connection as a PB event' do
+              translator.should_receive(:handle_pb_event).never
+              subject.process_ami_event ami_event
+            end
+          end
         end
 
         describe '#execute_command' do

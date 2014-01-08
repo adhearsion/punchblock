@@ -6,7 +6,6 @@ module Punchblock
 
     autoload :Asterisk
     autoload :Connected
-    autoload :Freeswitch
     autoload :GenericConnection
     autoload :XMPP
   end

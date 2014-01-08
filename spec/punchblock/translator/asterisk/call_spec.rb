@@ -334,6 +334,12 @@ module Punchblock
               component = subject.execute_command comp_command
               comp_command.response(0.1).should be_a Ref
 
+              # Give ourselves time to get both hangup event and new component in mailbox before termination takes place
+              subject.wrapped_object.should_receive(:wait).and_return do
+                sleep 1
+              end
+              subject.async.wait
+
               subject.async.process_ami_event ami_event
 
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar root="foo"><rule id="foo"/></grammar>'}, :mode => :dtmf

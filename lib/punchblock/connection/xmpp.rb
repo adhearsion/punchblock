@@ -69,6 +69,13 @@ module Punchblock
         end
       end
 
+      def send_message(call_id, domain, body, options = {})
+        jid = Blather::JID.new(call_id, domain || root_domain).to_s
+        message = Blather::Stanza::Message.new(jid, body, :normal)
+        message.subject = options[:subject]
+        client.write message
+      end
+
       ##
       # Fire up the connection
       #

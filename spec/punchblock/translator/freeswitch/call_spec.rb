@@ -366,6 +366,20 @@ module Punchblock
               translator.should_receive(:handle_pb_event).with(expected_end_event).once.ordered
               subject.handle_es_event es_event
             end
+            
+            it "should not allow commands to be executed while components are shutting down" do
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command.request!
+              component = subject.execute_command comp_command
+              comp_command.response(0.1).should be_a Ref
+
+              subject.async.handle_es_event es_event
+              
+              comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar/>'}, :mode => :dtmf
+              comp_command.request!
+              subject.execute_command comp_command
+              comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+            end
 
             [
               'NORMAL_CLEARING',

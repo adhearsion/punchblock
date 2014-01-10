@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Support RubySpeech builtin grammars on Asterisk and FreeSWITCH
+  * Feature: Output on Asterisk supports a new `:native_or_unimrcp` renderer which allows for fallback of output rendering from Asterisk native when possible, to a TTS engine when it's not.
   * Bugfix: Reject commands against components which have finished on Asterisk, and garbage collect them
 
 # [v2.0.1](https://github.com/adhearsion/punchblock/compare/v2.0.0...v2.0.1) - [2013-09-17](https://rubygems.org/gems/punchblock/versions/2.0.1)

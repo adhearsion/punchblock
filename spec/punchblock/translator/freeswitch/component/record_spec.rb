@@ -220,10 +220,9 @@ module Punchblock
                 let(:command_options) { { :start_beep => true } }
 
                 it "should return an error and not execute any actions" do
-                  mock_call.should_receive(:uuid_foo).never
+                  mock_call.should_receive(:uuid_foo).once.with(:record, /.wav$/)
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'A start-beep value of true is unsupported.'
-                  original_command.response(0.1).should be == error
+                  original_command.response(0.1).should be_a Ref
                 end
               end
             end

@@ -133,11 +133,15 @@ module Punchblock
               end
 
               context 'with multiple documents' do
+                let(:audio_filename) { 'http://foo.com/bar.mp3' }
+                let :ssml_doc do
+                  RubySpeech::SSML.draw { audio :src => audio_filename }
+                end
                 let(:command_opts) { { :render_documents => [{:value => ssml_doc}, {:value => ssml_doc}] } }
-                it "should return an error and not execute any actions" do
+
+                it "should render all audio files from all documents" do
+                  expect_playback [audio_filename, audio_filename].join('!')
                   subject.execute
-                  error = ProtocolError.new.setup 'option error', 'Only a single document is supported.'
-                  original_command.response(0.1).should be == error
                 end
               end
             end

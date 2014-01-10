@@ -7,13 +7,11 @@ module Punchblock
     class Asterisk
       class Call
         include HasGuardedHandlers
-        include Celluloid
         include DeadActorSafety
 
-        extend ActorHasGuardedHandlers
-        execute_guarded_handlers_on_receiver
-
         InvalidCommandError = Class.new Punchblock::Error
+
+        OUTBOUND_CHANNEL_MATCH = /.* <(?<channel>.*)>/.freeze
 
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
@@ -26,8 +24,6 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[21] = :reject
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
-
-        trap_exit :actor_died
 
         def initialize(channel, translator, ami_client, connection, agi_env = nil)
           @channel, @translator, @ami_client, @connection = channel, translator, ami_client, connection
@@ -45,6 +41,10 @@ module Punchblock
           @components[component.id] ||= component
         end
 
+        def deregister_component(id)
+          @components.delete id
+        end
+
         def component_with_id(component_id)
           @components[component_id]
         end
@@ -52,10 +52,6 @@ module Punchblock
         def send_offer
           @direction = :inbound
           send_pb_event offer_event
-        end
-
-        def shutdown
-          terminate
         end
 
         def channel_var(variable)
@@ -70,10 +66,11 @@ module Punchblock
         def dial(dial_command)
           @direction = :outbound
           channel = dial_command.to || ''
-          channel.match(/.* <(?<channel>.*)>/) { |m| channel = m[:channel] }
+          channel.match(OUTBOUND_CHANNEL_MATCH) { |m| channel = m[:channel] }
           params = { :async       => true,
-                     :application => 'AGI',
-                     :data        => 'agi:async',
+                     :context     => REDIRECT_CONTEXT,
+                     :exten       => REDIRECT_EXTENSION,
+                     :priority    => REDIRECT_PRIORITY,
                      :channel     => channel,
                      :callerid    => dial_command.from
                    }
@@ -110,7 +107,9 @@ module Punchblock
         end
 
         def process_ami_event(ami_event)
-          send_pb_event Event::Asterisk::AMI::Event.new(name: ami_event.name, headers: ami_event.headers)
+          if Asterisk.event_passes_filter?(ami_event)
+            send_pb_event Event::Asterisk::AMI::Event.new(name: ami_event.name, headers: ami_event.headers)
+          end
 
           case ami_event.name
           when 'Hangup'
@@ -188,7 +187,7 @@ module Punchblock
           when Command::Join
             other_call = translator.call_with_id command.call_uri
             @pending_joins[other_call.channel] = command
-            execute_agi_command 'EXEC Bridge', other_call.channel
+            execute_agi_command 'EXEC Bridge', "#{other_call.channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})"
           when Command::Unjoin
             other_call = translator.call_with_id command.call_uri
             redirect_back other_call
@@ -255,8 +254,6 @@ module Punchblock
           event = condition.wait
           return unless event
           agi.parse_result event
-        rescue ChannelGoneError, RubyAMI::Error => e
-          abort e
         end
 
         def logger_id
@@ -282,21 +279,14 @@ module Punchblock
         def handle_hangup_event(code = 16)
           reason = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[code]
           @block_commands = true
-          @components.dup.each_pair do |id, component|
-            safe_from_dead_actors do
-              component.call_ended if component.alive?
-            end
+          @components.each_pair do |id, component|
+            component.call_ended
           end
           send_end_event reason, code
         end
 
-        def actor_died(actor, reason)
-          if id = @components.key(actor)
-            @components.delete id
-            return unless reason
-            complete_event = Punchblock::Event::Complete.new :component_id => id, :reason => Punchblock::Event::Complete::Error.new
-            send_pb_event complete_event
-          end
+        def after(*args, &block)
+          translator.after(*args, &block)
         end
 
         private
@@ -317,13 +307,12 @@ module Punchblock
         def send_end_event(reason, code = nil)
           send_pb_event Event::End.new(reason: reason, platform_code: code)
           translator.deregister_call id, channel
-          terminate
         end
 
         def execute_component(type, command, options = {})
-          type.new_link(command, current_actor).tap do |component|
+          type.new(command, self).tap do |component|
             register_component component
-            component.async.execute
+            component.execute
           end
         end
 

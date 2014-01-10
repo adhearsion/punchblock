@@ -15,20 +15,16 @@ module Punchblock
               send_ref
             rescue RubyAMI::Error
               set_node_response false
-              terminate
             rescue ChannelGoneError
               set_node_response ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
-              terminate
             end
-            exclusive :execute
 
             def handle_ami_event(event)
               if event.name == 'AsyncAGI' && event['SubEvent'] == 'Exec'
-                send_complete_event success_reason(event), nil, false
+                send_complete_event success_reason(event)
                 if @component_node.name == 'ASYNCAGI BREAK' && @call.channel_var('PUNCHBLOCK_END_ON_ASYNCAGI_BREAK')
                   @call.handle_hangup_event
                 end
-                terminate
               end
             end
 

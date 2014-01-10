@@ -10,20 +10,20 @@ module Punchblock
 
       def <<(component)
         @mutex.synchronize do
-          @components[component.component_id] = component
+          @components[component.source_uri] = component
         end
       end
 
-      def find_by_id(component_id)
+      def find_by_uri(uri)
         @mutex.synchronize do
-          @components[component_id]
+          @components[uri]
         end
       end
 
       def delete(component)
         @mutex.synchronize do
-          id = @components.key component
-          @components.delete id
+          uri = @components.key component
+          @components.delete uri
         end
       end
     end

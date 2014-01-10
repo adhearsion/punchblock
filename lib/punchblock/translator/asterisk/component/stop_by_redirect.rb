@@ -18,11 +18,10 @@ module Punchblock
           end
 
           def stop_by_redirect(complete_reason)
-            component_actor = current_actor
             call.register_handler :ami, lambda { |e| e['SubEvent'] == 'Start' }, :name => 'AsyncAGI' do |event|
-              component_actor.async.send_complete_event complete_reason
+              send_complete_event complete_reason
             end
-            call.async.redirect_back
+            call.redirect_back
           end
         end
       end

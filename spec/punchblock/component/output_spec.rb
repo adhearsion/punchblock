@@ -131,6 +131,19 @@ module Punchblock
             rayo_doc = subject.to_rayo(parent)
             rayo_doc.should == parent
           end
+
+          context "with a string SSML document" do
+            let(:ssml_string) { "<speak/>" }
+
+            subject do
+              Output.new ssml: ssml_string
+            end
+
+            it "passes the string right through" do
+              content = subject.to_rayo.at_xpath('//ns:output/ns:document/text()', ns: described_class.registered_ns).content
+              content.should == ssml_string
+            end
+          end
         end
       end
 

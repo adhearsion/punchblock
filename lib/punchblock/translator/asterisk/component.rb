@@ -17,14 +17,11 @@ module Punchblock
         autoload :StopByRedirect
 
         class Component
-          include Celluloid
-          include DeadActorSafety
-
           attr_reader :id, :call, :call_id
 
           def initialize(component_node, call = nil)
             @component_node, @call = component_node, call
-            @call_id = safe_from_dead_actors { call.id } if call
+            @call_id = call.id if call
             @id = Punchblock.new_uuid
             @complete = false
             setup
@@ -37,18 +34,19 @@ module Punchblock
             command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command for component #{id}", call_id, id
           end
 
-          def send_complete_event(reason, recording = nil, should_terminate = true)
+          def send_complete_event(reason, recording = nil)
             return if @complete
             @complete = true
             event = Punchblock::Event::Complete.new reason: reason, recording: recording
             send_event event
-            terminate if should_terminate
+            call.deregister_component id if call
           end
 
           def send_event(event)
             event.component_id    = id
             event.target_call_id  = call_id
-            safe_from_dead_actors { translator.handle_pb_event event }
+            event.source_uri      = id
+            translator.handle_pb_event event
           end
 
           def logger_id

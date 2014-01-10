@@ -172,6 +172,7 @@ module Punchblock
               mock_event_handler.should_receive(:call).once.with do |event|
                 event.should be_instance_of Event::Offer
                 event.target_call_id.should be == '9f00061'
+                event.source_uri.should be == 'xmpp:9f00061@call.rayo.net'
                 event.domain.should be == 'call.rayo.net'
                 event.transport.should be == 'xmpp'
               end

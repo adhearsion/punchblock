@@ -22,9 +22,8 @@ module Punchblock
 
             @format = @component_node.format || 'wav'
 
-            component = current_actor
             call.register_tmp_handler :ami, :name => 'MonitorStop' do |event|
-              component.finished
+              finished
             end
 
             if @component_node.start_beep
@@ -33,7 +32,7 @@ module Punchblock
 
             ami_client.send_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
             unless max_duration == -1
-              after max_duration/1000 do
+              call.after max_duration/1000 do
                 ami_client.send_action 'StopMonitor', 'Channel' => call.channel
               end
             end

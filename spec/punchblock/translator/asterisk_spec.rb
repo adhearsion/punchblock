@@ -18,21 +18,6 @@ module Punchblock
 
       after { translator.terminate if translator.alive? }
 
-      describe '#shutdown' do
-        it "instructs all calls to shutdown" do
-          call = Asterisk::Call.new 'foo', subject, ami_client, connection
-          call.async.should_receive(:shutdown).once
-          subject.register_call call
-          subject.shutdown
-        end
-
-        it "terminates the actor" do
-          subject.shutdown
-          sleep 0.2
-          subject.should_not be_alive
-        end
-      end
-
       describe '#execute_command' do
         describe 'with a call command' do
           let(:command) { Command::Answer.new }
@@ -136,78 +121,31 @@ module Punchblock
           end
 
           it 'sends the command to the call for execution' do
-            call.async.should_receive(:execute_command).once.with command
+            call.should_receive(:execute_command).once.with command
             subject.execute_call_command command
+          end
+
+          context 'when it raises' do
+            before do
+              call.should_receive(:execute_command).and_raise StandardError
+            end
+
+            let(:other_command) { Command::Answer.new target_call_id: call_id }
+
+            it 'sends an error in response to the command' do
+              subject.execute_call_command command
+
+              subject.call_with_id(call_id).should be_nil
+
+              other_command.request!
+              subject.execute_call_command other_command
+              other_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+            end
           end
         end
 
         let :end_error_event do
           Punchblock::Event::End.new reason: :error, target_call_id: call_id
-        end
-
-        context "for an outgoing call which began executing but crashed" do
-          let(:dial_command) { Command::Dial.new :to => 'SIP/1234', :from => 'abc123' }
-
-          let(:call_id) { dial_command.response.call_id }
-
-          before do
-            subject.async.should_receive(:execute_global_command)
-            subject.execute_command dial_command
-          end
-
-          it 'sends an error in response to the command' do
-            call = subject.call_with_id call_id
-
-            call.wrapped_object.define_singleton_method(:oops) do
-              raise 'Woops, I died'
-            end
-
-            connection.should_receive(:handle_event).once.with end_error_event
-
-            lambda { call.oops }.should raise_error(/Woops, I died/)
-            sleep 0.1
-            call.should_not be_alive
-            subject.call_with_id(call_id).should be_nil
-
-            command.request!
-            subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
-          end
-        end
-
-        context "for an incoming call which began executing but crashed" do
-          let :ami_event do
-            RubyAMI::Event.new 'AsyncAGI',
-              'SubEvent' => "Start",
-              'Channel'  => "SIP/1234-00000000",
-              'Env'      => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
-          end
-
-          let(:call)    { subject.call_for_channel('SIP/1234-00000000') }
-          let(:call_id) { call.id }
-
-          before do
-            connection.stub :handle_event
-            subject.handle_ami_event ami_event
-            call_id
-          end
-
-          it 'sends an error in response to the command' do
-            call.wrapped_object.define_singleton_method(:oops) do
-              raise 'Woops, I died'
-            end
-
-            connection.should_receive(:handle_event).once.with end_error_event
-
-            lambda { call.oops }.should raise_error(/Woops, I died/)
-            sleep 0.1
-            call.should_not be_alive
-            subject.call_with_id(call_id).should be_nil
-
-            command.request!
-            subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
-          end
         end
 
         context "with an unknown call ID" do
@@ -236,7 +174,7 @@ module Punchblock
           end
 
           it 'sends the command to the component for execution' do
-            component.async.should_receive(:execute_command).once.with command
+            component.should_receive(:execute_command).once.with command
             subject.execute_component_command command
           end
         end
@@ -262,14 +200,14 @@ module Punchblock
 
           it 'should be able to look up the call by channel ID' do
             subject.execute_global_command command
-            call_actor = subject.call_for_channel('SIP/1234')
-            call_actor.wrapped_object.should be_a Asterisk::Call
+            call = subject.call_for_channel('SIP/1234')
+            call.should be_a Asterisk::Call
           end
 
           it 'should instruct the call to send a dial' do
             mock_call = double('Asterisk::Call').as_null_object
-            Asterisk::Call.should_receive(:new_link).once.and_return mock_call
-            mock_call.async.should_receive(:dial).once.with command
+            Asterisk::Call.should_receive(:new).once.and_return mock_call
+            mock_call.should_receive(:dial).once.with command
             subject.execute_global_command command
           end
         end
@@ -283,7 +221,7 @@ module Punchblock
 
           it 'should create a component actor and execute it asynchronously' do
             Asterisk::Component::Asterisk::AMIAction.should_receive(:new).once.with(command, subject, ami_client).and_return mock_action
-            mock_action.async.should_receive(:execute).once
+            mock_action.should_receive(:execute).once
             subject.execute_global_command command
           end
 
@@ -336,6 +274,16 @@ module Punchblock
           subject.handle_ami_event ami_event
         end
 
+        context "when the event doesn't pass the filter" do
+          before { described_class.event_filter = ->(event) { false } }
+          after { described_class.event_filter = nil }
+
+          it 'does not send the AMI event to the connection as a PB event' do
+            subject.connection.should_receive(:handle_event).never
+            subject.handle_ami_event ami_event
+          end
+        end
+
         context 'with something that is not a RubyAMI::Event' do
           it 'does not send anything to the connection' do
             subject.connection.should_receive(:handle_event).never
@@ -365,10 +313,10 @@ module Punchblock
 
           it 'should be able to look up the call by channel ID' do
             subject.handle_ami_event ami_event
-            call_actor = subject.call_for_channel('SIP/1234-00000000')
-            call_actor.should be_a Asterisk::Call
-            call_actor.agi_env.should be_a Hash
-            call_actor.agi_env.should be == {
+            call = subject.call_for_channel('SIP/1234-00000000')
+            call.should be_a Asterisk::Call
+            call.agi_env.should be_a Hash
+            call.agi_env.should be == {
               :agi_request      => 'async',
               :agi_channel      => 'SIP/1234-00000000',
               :agi_language     => 'en',
@@ -394,8 +342,8 @@ module Punchblock
 
           it 'should instruct the call to send an offer' do
             mock_call = double('Asterisk::Call').as_null_object
-            Asterisk::Call.should_receive(:new_link).once.and_return mock_call
-            mock_call.async.should_receive(:send_offer).once
+            Asterisk::Call.should_receive(:new).once.and_return mock_call
+            mock_call.should_receive(:send_offer).once
             subject.handle_ami_event ami_event
           end
 
@@ -407,7 +355,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Asterisk::Call.should_receive(:new_link).never
+              Asterisk::Call.should_receive(:new).never
               subject.handle_ami_event ami_event
             end
           end
@@ -523,7 +471,7 @@ module Punchblock
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event' do
-            call.async.should_receive(:process_ami_event).once.with ami_event
+            call.should_receive(:process_ami_event).once.with ami_event
             subject.handle_ami_event ami_event
           end
 
@@ -544,8 +492,8 @@ module Punchblock
               before { subject.register_call call2 }
 
               it 'should send the event to both calls and to the connection once as a PB event' do
-                call.async.should_receive(:process_ami_event).once.with ami_event
-                call2.async.should_receive(:process_ami_event).once.with ami_event
+                call.should_receive(:process_ami_event).once.with ami_event
+                call2.should_receive(:process_ami_event).once.with ami_event
                 subject.handle_ami_event ami_event
               end
             end
@@ -578,12 +526,12 @@ module Punchblock
           end
 
           it 'sends the AMI event to the call and to the connection as a PB event if it is an allowed event' do
-            call.async.should_receive(:process_ami_event).once.with ami_event
+            call.should_receive(:process_ami_event).once.with ami_event
             subject.handle_ami_event ami_event
           end
 
           it 'does not send the AMI event to a bridged channel if it is not allowed' do
-            call.async.should_receive(:process_ami_event).never.with ami_event2
+            call.should_receive(:process_ami_event).never.with ami_event2
             subject.handle_ami_event ami_event2
           end
 

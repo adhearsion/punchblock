@@ -58,7 +58,7 @@ module Punchblock
               context 'for a non-causal action' do
                 it 'should send a complete event to the component node' do
                   ami_client.should_receive(:send_action).once.and_return response
-                  subject.wrapped_object.should_receive(:send_complete_event).once.with expected_complete_reason
+                  subject.should_receive(:send_complete_event).once.with expected_complete_reason
                   subject.execute
                 end
               end
@@ -90,7 +90,7 @@ module Punchblock
                 end
 
                 let :event_node do
-                  Punchblock::Event::Asterisk::AMI::Event.new name: 'CoreShowChannel', component_id: subject.id, headers: {
+                  Punchblock::Event::Asterisk::AMI::Event.new name: 'CoreShowChannel', component_id: subject.id, source_uri: subject.id, headers: {
                     'Channel'          => 'SIP/127.0.0.1-00000013',
                     'UniqueID'         => '1287686437.19',
                     'Context'          => 'adhearsion',

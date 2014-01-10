@@ -28,10 +28,10 @@ module Punchblock
       # @return [Float] Indicates how sensitive the interpreter should be to loud versus quiet input. Higher values represent greater sensitivity.
       attribute :sensitivity, Float
 
-      # @return [Integer] Indicates the amount of time preceding input which may expire before a timeout is triggered.
+      # @return [Integer] Indicates the amount of time (in milliseconds) preceding input which may expire before a timeout is triggered.
       attribute :initial_timeout, Integer
 
-      # @return [Integer] Indicates (in the case of DTMF input) the amount of time between input digits which may expire before a timeout is triggered.
+      # @return [Integer] Indicates (in the case of DTMF input) the amount of time (in milliseconds) between input digits which may expire before a timeout is triggered.
       attribute :inter_digit_timeout, Integer
 
       attribute :grammars, Array, default: []

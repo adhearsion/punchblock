@@ -155,7 +155,10 @@ module Punchblock
 
           def copied_doc(original, elements)
             doc = RubySpeech::SSML.draw do
-              unless Nokogiri.jruby?
+              if Nokogiri.jruby?
+                self.write_attr 'version', original.value['version']
+                self.write_attr 'xml:lang', original.value['xml:lang']
+              else
                 original.value.attributes.each do |name, value|
                   attr_name = value.namespace && value.namespace.prefix ? [value.namespace.prefix, name].join(':') : name
                   self.write_attr attr_name, value

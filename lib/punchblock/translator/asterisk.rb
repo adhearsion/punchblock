@@ -26,6 +26,21 @@ module Punchblock
 
       EVENTS_ALLOWED_BRIDGED = %w{AGIExec AsyncAGI}
 
+      H_EXTENSION         = 'h'.freeze
+      KILL_TYPE           = 'Kill'.freeze
+      CHANNEL             = 'Channel'.freeze
+      CHANNEL1            = 'Channel1'.freeze
+      CHANNEL2            = 'Channel2'.freeze
+      ENV                 = 'Env'.freeze
+      FULLY_BOOTED        = 'FullyBooted'.freeze
+      VARSET              = 'VarSet'.freeze
+      VARIABLE            = 'Variable'.freeze
+      VALUE               = 'Value'.freeze
+      PUNCHBLOCK_CALL_ID  = 'punchblock_call_id'.freeze
+      ASYNC_AGI           = 'AsyncAGI'.freeze
+      START               = 'Start'.freeze
+      SUBEVENT            = 'SubEvent'.freeze
+
       trap_exit :actor_died
 
       # Set the AMI event filter to be applied to incoming AMI events. A truthy return value will send the event via Rayo to the client (Adhearsion).
@@ -79,7 +94,7 @@ module Punchblock
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
 
-        if event.name == 'FullyBooted'
+        if event.name == FULLY_BOOTED
           handle_pb_event Connection::Connected.new
           run_at_fully_booted
           return
@@ -180,10 +195,10 @@ module Punchblock
       end
 
       def handle_varset_ami_event(event)
-        return unless event.name == 'VarSet' && event['Variable'] == 'punchblock_call_id' && (call = call_with_id event['Value'])
+        return unless event.name == VARSET && event[VARIABLE] == PUNCHBLOCK_CALL_ID && (call = call_with_id event[VALUE])
 
         @channel_to_call_id.delete call.channel
-        call.channel = event['Channel']
+        call.channel = event[CHANNEL]
         register_call call
       end
 
@@ -199,27 +214,27 @@ module Punchblock
             next if channel.bridged? && !EVENTS_ALLOWED_BRIDGED.include?(event.name)
             call.process_ami_event event
           end
-        elsif event.name == "AsyncAGI" && event['SubEvent'] == "Start"
+        elsif event.name == ASYNC_AGI && event[SUBEVENT] == START
           handle_async_agi_start_event event
         end
       end
 
       def channels_for_ami_event(event)
-        [event['Channel'], event['Channel1'], event['Channel2']].compact.map { |channel| Channel.new(channel) }
+        [event[CHANNEL], event[CHANNEL1], event[CHANNEL2]].compact.map { |channel| Channel.new(channel) }
       end
 
       def ami_event_known_call?(event)
-        (event['Channel'] && call_for_channel(event['Channel'])) ||
-          (event['Channel1'] && call_for_channel(event['Channel1'])) ||
-          (event['Channel2'] && call_for_channel(event['Channel2']))
+        (event[CHANNEL] && call_for_channel(event[CHANNEL])) ||
+          (event[CHANNEL1] && call_for_channel(event[CHANNEL1])) ||
+          (event[CHANNEL2] && call_for_channel(event[CHANNEL2]))
       end
 
       def handle_async_agi_start_event(event)
-        env = RubyAMI::AsyncAGIEnvironmentParser.new(event['Env']).to_hash
+        env = RubyAMI::AsyncAGIEnvironmentParser.new(event[ENV]).to_hash
 
-        return if env[:agi_extension] == 'h' || env[:agi_type] == 'Kill'
+        return if env[:agi_extension] == H_EXTENSION || env[:agi_type] == KILL_TYPE
 
-        call = Call.new event['Channel'], current_actor, ami_client, connection, env
+        call = Call.new event[CHANNEL], current_actor, ami_client, connection, env
         register_call call
         call.send_offer
       end

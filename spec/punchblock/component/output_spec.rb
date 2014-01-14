@@ -12,7 +12,7 @@ module Punchblock
       describe 'default values' do
         its(:interrupt_on)     { should be nil }
         its(:start_offset)     { should be nil }
-        its(:start_paused)     { should be false }
+        its(:start_paused)     { should be nil }
         its(:repeat_interval)  { should be nil }
         its(:repeat_times)     { should be nil }
         its(:max_time)         { should be nil }
@@ -84,7 +84,6 @@ module Punchblock
 
           describe "exporting to Rayo" do
             it "should export to XML that can be understood by its parser" do
-              puts subject.to_rayo.to_xml
               new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
               new_instance.render_documents.should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])]
             end

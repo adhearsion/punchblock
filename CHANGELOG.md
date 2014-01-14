@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Support Rayo CPA and Fax specifications
   * Feature: Implement a simple filter for AMI events -> Rayo events in `Punchblock::Translator::Asterisk.event_filter=`
   * Feature: Output on Asterisk supports a new `:native_or_unimrcp` renderer which allows for fallback of output rendering from Asterisk native when possible, to a TTS engine when it's not.
   * Bugfix: Remove per-call/component actors from Asterisk translator for performance/stability super-charge

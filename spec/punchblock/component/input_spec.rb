@@ -166,6 +166,10 @@ module Punchblock
             it { should be == grammar2 }
             it { should_not be == grammar3 }
           end
+
+          it "has children nested inside" do
+            subject.to_rayo.children.first.should be_a Nokogiri::XML::CDATA
+          end
         end
 
         describe 'with a grammar reference by URL' do
@@ -184,6 +188,14 @@ module Punchblock
             it "should be different with a different url" do
               Input::Grammar.new(:url => url).should_not be == Input::Grammar.new(:url => 'http://doo.com/dah')
             end
+          end
+        end
+
+        describe "with a CPA grammar" do
+          subject { Input::Grammar.new url: "urn:xmpp:rayo:cpa:beep:1" }
+
+          it "has no children" do
+            subject.to_rayo.children.count.should == 0
           end
         end
       end
@@ -377,6 +389,85 @@ module Punchblock
         it { should be_instance_of Input::Complete::NoInput }
 
         its(:name) { should be == :noinput }
+      end
+
+      describe Input::Signal do
+        let :stanza do
+          <<-MESSAGE
+<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="1000" value="8000"/>
+          MESSAGE
+        end
+
+        subject { RayoNode.from_xml(parse_stanza(stanza).root) }
+
+        it { should be_instance_of Input::Signal }
+
+        its(:name)      { should be == :signal }
+        its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+        its(:duration)  { should be == 1000 }
+        its(:value)     { should be == '8000' }
+
+        describe "when creating from options" do
+          subject do
+            Input::Signal.new type: 'urn:xmpp:rayo:cpa:beep:1', duration: 1000, value: '8000'
+          end
+
+          its(:name)      { should be == :signal }
+          its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+          its(:duration)  { should be == 1000 }
+          its(:value)     { should be == '8000' }
+        end
+
+        context "when in a complete event" do
+          let :stanza do
+            <<-MESSAGE
+<complete xmlns='urn:xmpp:rayo:ext:1'>
+  <signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="1000" value="8000"/>
+</complete>
+            MESSAGE
+          end
+
+          subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
+
+          it { should be_instance_of Input::Signal }
+
+          its(:name)      { should be == :signal }
+          its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+          its(:duration)  { should be == 1000 }
+          its(:value)     { should be == '8000' }
+        end
+
+        describe "comparison" do
+          context "with the same options" do
+            it "should be equal" do
+              subject.should == RayoNode.from_xml(parse_stanza(stanza).root)
+            end
+          end
+
+          context "with different type" do
+            let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:ring:1" duration="1000" value="8000"/>' }
+
+            it "should not be equal" do
+              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+            end
+          end
+
+          context "with different duration" do
+            let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="100" value="8000"/>' }
+
+            it "should not be equal" do
+              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+            end
+          end
+
+          context "with different value" do
+            let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="1000" value="7000"/>' }
+
+            it "should not be equal" do
+              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+            end
+          end
+        end
       end
     end
   end

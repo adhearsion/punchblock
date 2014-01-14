@@ -392,7 +392,7 @@ module Punchblock
 
                     it "should render 10,000 the specified number of times" do
                       expect_answered
-                      10_000.times { expect_playback }
+                      1000.times { expect_mrcpsynth_with_options(//) }
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                     end
@@ -854,7 +854,7 @@ module Punchblock
 
                       it "should render 10,000 the specified number of times" do
                         expect_answered
-                        10_000.times { expect_playback }
+                        1000.times { expect_playback }
                         subject.execute
                         original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                       end
@@ -1585,7 +1585,7 @@ module Punchblock
 
                     it "should render 10,000 the specified number of times" do
                       expect_answered
-                      10_000.times { expect_playback }
+                      1000.times { expect_playback }
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                     end

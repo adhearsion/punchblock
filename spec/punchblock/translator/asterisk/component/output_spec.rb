@@ -387,6 +387,17 @@ module Punchblock
                     original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
                   end
 
+                  context 'to 0' do
+                    let(:command_opts) { { :repeat_times => 0 } }
+
+                    it "should render 10,000 the specified number of times" do
+                      expect_answered
+                      10_000.times { expect_playback }
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+                  end
+
                   it 'should not execute further output after a stop command' do
                     mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
                       sleep 0.2
@@ -836,6 +847,17 @@ module Punchblock
                       2.times { expect_playback }
                       subject.execute
                       original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
+
+                    context 'to 0' do
+                      let(:command_opts) { { :repeat_times => 0 } }
+
+                      it "should render 10,000 the specified number of times" do
+                        expect_answered
+                        10_000.times { expect_playback }
+                        subject.execute
+                        original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      end
                     end
 
                     it 'should not execute further output after a stop command' do
@@ -1556,6 +1578,17 @@ module Punchblock
                     2.times { expect_playback }
                     subject.execute
                     original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                  end
+
+                  context 'to 0' do
+                    let(:command_opts) { { :repeat_times => 0 } }
+
+                    it "should render 10,000 the specified number of times" do
+                      expect_answered
+                      10_000.times { expect_playback }
+                      subject.execute
+                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    end
                   end
 
                   it 'should not execute further output after a stop command' do

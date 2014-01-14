@@ -27,6 +27,7 @@ module Punchblock
             rendering_engine = @component_node.renderer || :asterisk
 
             repeat_times = @component_node.repeat_times || 1
+            repeat_times = 10_000 if repeat_times.zero?
 
             case rendering_engine.to_sym
             when :asterisk

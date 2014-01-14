@@ -18,7 +18,7 @@ module Punchblock
             raise OptionError, 'An SSML document is required.' unless @component_node.render_documents.first.value
             raise OptionError, 'An interrupt-on value of speech is unsupported.' if @component_node.interrupt_on == :voice
 
-            [:start_offset, :start_paused, :repeat_interval, :repeat_times, :max_time].each do |opt|
+            [:start_offset, :start_paused, :repeat_interval, :max_time].each do |opt|
               raise OptionError, "A #{opt} value is unsupported on Asterisk." if @component_node.send opt
             end
 
@@ -26,37 +26,45 @@ module Punchblock
 
             rendering_engine = @component_node.renderer || :asterisk
 
+            repeat_times = @component_node.repeat_times || 1
+
             case rendering_engine.to_sym
             when :asterisk
               validate_audio_only
               setup_for_native
 
-              render_docs.each do |doc|
-                playback(filenames(doc).values) || raise(PlaybackError)
+              repeat_times.times do
+                render_docs.each do |doc|
+                  playback(filenames(doc).values) || raise(PlaybackError)
+                end
               end
             when :native_or_unimrcp
               setup_for_native
 
-              render_docs.each do |doc|
-                doc.value.children.each do |node|
-                  case node
-                  when RubySpeech::SSML::Audio
-                    playback([path_for_audio_node(node)]) || render_with_unimrcp(fallback_doc(doc, node))
-                  when String
-                    if node.include?(' ')
-                      render_with_unimrcp(copied_doc(doc, node))
+              repeat_times.times do
+                render_docs.each do |doc|
+                  doc.value.children.each do |node|
+                    case node
+                    when RubySpeech::SSML::Audio
+                      playback([path_for_audio_node(node)]) || render_with_unimrcp(fallback_doc(doc, node))
+                    when String
+                      if node.include?(' ')
+                        render_with_unimrcp(copied_doc(doc, node))
+                      else
+                        playback([node]) || render_with_unimrcp(copied_doc(doc, node))
+                      end
                     else
-                      playback([node]) || render_with_unimrcp(copied_doc(doc, node))
+                      render_with_unimrcp(copied_doc(doc, node.node))
                     end
-                  else
-                    render_with_unimrcp(copied_doc(doc, node.node))
                   end
                 end
               end
             when :unimrcp
               send_progress_if_necessary
               send_ref
-              render_with_unimrcp(*render_docs)
+              repeat_times.times do
+                render_with_unimrcp(*render_docs)
+              end
             when :swift
               send_progress_if_necessary
               send_ref

@@ -23,6 +23,8 @@ module Punchblock
         end
       end
 
+      include Celluloid
+
       def initialize(responder, grammar, initial_timeout = nil, inter_digit_timeout = nil, terminator = nil)
         @responder = responder
         self.initial_timeout = initial_timeout || -1
@@ -66,10 +68,6 @@ module Punchblock
 
       def get_match
         @matcher.match @buffer.dup
-      end
-
-      def after(*args, &block)
-        @responder.after *args, &block
       end
 
       def initial_timeout=(other)

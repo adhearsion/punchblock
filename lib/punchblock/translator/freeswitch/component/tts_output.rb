@@ -20,7 +20,7 @@ module Punchblock
           end
 
           def document
-            @component_node.render_documents.first.value.to_s
+            concatenated_render_doc.to_s
           end
         end
       end

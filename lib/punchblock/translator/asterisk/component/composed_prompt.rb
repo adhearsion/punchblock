@@ -15,15 +15,15 @@ module Punchblock
 
             @output_incomplete = true
 
-            output_component = Output.new_link(output_command, @call)
-            call.register_component output_component
-            fut = output_component.future.execute
+            @output_component = Output.new(output_command, @call)
+            call.register_component @output_component
+            fut = Celluloid::Future.new { @output_component.execute }
 
-            case output_command.response
+            case @output_command.response
             when Ref
               send_ref
             else
-              set_node_response output_command.response
+              set_node_response @output_command.response
             end
 
             if @component_node.barge_in
@@ -41,7 +41,7 @@ module Punchblock
 
           def process_dtmf(digit)
             if @component_node.barge_in && @output_incomplete
-              call.async.redirect_back
+              @output_component.stop_by_redirect Punchblock::Event::Complete::Stop.new
               @barged = true
             end
             super
@@ -58,14 +58,13 @@ module Punchblock
           end
 
           def register_dtmf_event_handler
-            component = current_actor
             @dtmf_handler_id = call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
-              component.process_dtmf event['Digit']
+              process_dtmf event['Digit']
             end
           end
 
           def unregister_dtmf_event_handler
-            call.async.unregister_handler :ami, @dtmf_handler_id if instance_variable_defined?(:@dtmf_handler_id)
+            call.unregister_handler :ami, @dtmf_handler_id if instance_variable_defined?(:@dtmf_handler_id)
           end
         end
       end

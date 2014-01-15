@@ -133,22 +133,20 @@ module Punchblock
             context 'with multiple inline documents' do
               let(:output_command_options) { { render_documents: [{value: ssml_doc}, {value: ssml_doc}] } }
 
-              it "should return a ref and execute SynthAndRecog" do
-                param = [[ssml_doc.to_doc.to_s, ssml_doc.to_doc.to_s].join(','), grammar.to_doc].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('uer=1&b=1').join(',')
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
+              it "should return an error and not execute any actions" do
                 subject.execute
-                original_command.response(0.1).should be_a Ref
+                error = ProtocolError.new.setup 'option error', 'Only one document is allowed.'
+                original_command.response(0.1).should be == error
               end
             end
 
             context 'with multiple documents by URI' do
               let(:output_command_options) { { render_documents: [{url: 'http://example.com/doc1.ssml'}, {url: 'http://example.com/doc2.ssml'}] } }
 
-              it "should return a ref and execute SynthAndRecog" do
-                param = [['http://example.com/doc1.ssml', 'http://example.com/doc2.ssml'].join(','), grammar.to_doc].map { |o| "\"#{o.to_s.squish.gsub('"', '\"')}\"" }.push('uer=1&b=1').join(',')
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC SynthAndRecog', param).and_return code: 200, result: 1
+              it "should return an error and not execute any actions" do
                 subject.execute
-                original_command.response(0.1).should be_a Ref
+                error = ProtocolError.new.setup 'option error', 'Only one document is allowed.'
+                original_command.response(0.1).should be == error
               end
             end
 
@@ -617,13 +615,13 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.async.should_receive(:redirect_back)
+                mock_call.should_receive(:redirect_back)
                 subject.execute_command command
                 command.response(0.1).should be == true
               end
 
               it "sends the correct complete event" do
-                mock_call.async.should_receive(:redirect_back)
+                mock_call.should_receive(:redirect_back)
                 subject.execute_command command
                 original_command.should_not be_complete
                 mock_call.process_ami_event ami_event
@@ -632,7 +630,7 @@ module Punchblock
               end
 
               it "redirects the call by unjoining it" do
-                mock_call.async.should_receive(:redirect_back)
+                mock_call.should_receive(:redirect_back)
                 subject.execute_command command
               end
             end

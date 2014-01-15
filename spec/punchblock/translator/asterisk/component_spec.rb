@@ -48,21 +48,14 @@ module Punchblock
             end
 
             it "should send a complete event with the specified reason" do
-              subject.wrapped_object.should_receive(:send_event).once.with expected_event
+              subject.should_receive(:send_event).once.with expected_event
               subject.send_complete_event reason
-            end
-
-            it "should cause the actor to be shut down" do
-              subject.wrapped_object.stub(:send_event).and_return true
-              subject.send_complete_event reason
-              sleep 0.2
-              subject.should_not be_alive
             end
           end
 
           describe "#call_ended" do
             it "should send a complete event with the call hangup reason" do
-              subject.wrapped_object.should_receive(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
+              subject.should_receive(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
               subject.call_ended
             end
           end

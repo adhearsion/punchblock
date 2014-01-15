@@ -9,6 +9,9 @@ module Punchblock
 
       attribute :recording
 
+      attribute :fax
+      attribute :fax_metadata, Hash, default: {}
+
       def inherit(xml_node)
         if reason_node = xml_node.at_xpath('*')
           self.reason = RayoNode.from_xml(reason_node).tap do |reason|
@@ -24,11 +27,22 @@ module Punchblock
           end
         end
 
+        if fax_node = xml_node.at_xpath('//ns:fax', ns: RAYO_NAMESPACES[:fax_complete])
+          self.fax = RayoNode.from_xml(fax_node).tap do |fax|
+            fax.target_call_id = target_call_id
+            fax.component_id = component_id
+          end
+        end
+
+        xml_node.xpath('//ns:metadata', ns: RAYO_NAMESPACES[:fax_complete]).each do |md|
+          fax_metadata[md['name']] = md['value']
+        end
+
         super
       end
 
       class Reason < RayoNode
-        attribute :name
+        attribute :name, Symbol, default: ->(node,_) { node.class.registered_name.to_sym }
 
         def inherit(xml_node)
           self.name = xml_node.name.to_sym

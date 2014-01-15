@@ -17,7 +17,7 @@ module Punchblock
 
             @output_component = Output.new(output_command, @call)
             call.register_component @output_component
-            fut = Thread.new { @output_component.execute }
+            fut = Celluloid::Future.new { @output_component.execute }
 
             case @output_command.response
             when Ref

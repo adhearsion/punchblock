@@ -401,6 +401,7 @@ module Punchblock
         subject { RayoNode.from_xml(parse_stanza(stanza).root) }
 
         it { should be_instance_of Input::Signal }
+        it { should be_a Punchblock::Event }
 
         its(:name)      { should be == :signal }
         its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }

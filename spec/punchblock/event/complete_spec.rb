@@ -150,5 +150,11 @@ module Punchblock
         its(:details) { should be == 'Ooops' }
       end
     end
+
+    describe Complete::Reason do
+      subject { Complete::Reason.new name: "Foo" }
+
+      it { should be_a Punchblock::Event }
+    end
   end
 end # Punchblock

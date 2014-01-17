@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: `Event::Complete::Reason` now in inherits from `Event` instead of `RayoNode`
 
 # [v2.2.0](https://github.com/adhearsion/punchblock/compare/v2.1.1...v2.2.0) - [2014-01-15](https://rubygems.org/gems/punchblock/versions/2.2.0)
   * Feature: Support Rayo CPA and Fax specifications

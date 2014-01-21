@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v2.2.2](https://github.com/adhearsion/punchblock/compare/v2.2.1...v2.2.2) - [2014-01-21](https://rubygems.org/gems/punchblock/versions/2.2.2)
+  * Bugfix: Delay sending Answered event on call until AsyncAGI is invoked
+
 # [v2.2.1](https://github.com/adhearsion/punchblock/compare/v2.2.0...v2.2.1) - [2014-01-17](https://rubygems.org/gems/punchblock/versions/2.2.1)
   * Bugfix: `Punchblock::Event::Complete::Reason` is now a `Punchblock::Event`
 

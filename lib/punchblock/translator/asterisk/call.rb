@@ -118,13 +118,15 @@ module Punchblock
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
             end
+
+            if @answered == false && ami_event['SubEvent'] == 'Start'
+              @answered = true
+              send_pb_event Event::Answered.new
+            end
           when 'Newstate'
             case ami_event['ChannelState']
             when '5'
               send_pb_event Event::Ringing.new
-            when '6'
-              @answered = true
-              send_pb_event Event::Answered.new
             end
           when 'OriginateResponse'
             if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'

@@ -498,6 +498,42 @@ module Punchblock
               component.should_receive(:handle_ami_event).once.with ami_event
               subject.process_ami_event ami_event
             end
+
+            it 'should not send an answered event' do
+              translator.should_receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
+              subject.process_ami_event ami_event
+            end
+          end
+
+          context 'with an AsyncAGI Start event' do
+            let(:ami_event) do
+              RubyAMI::Event.new "AsyncAGI",
+                "SubEvent"  => "Start",
+                "Channel"   => "SIP/1234-00000000",
+                "Env"       => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2Fuserb-00000006%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201390303636.6%0Aagi_version%3A%2011.7.0%0Aagi_callerid%3A%20userb%0Aagi_calleridname%3A%20User%20B%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%20unknown%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20adhearsion-redirect%0Aagi_extension%3A%201%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%20139696536876800%0A%0A"
+            end
+
+            it 'should send an answered event' do
+              expected_answered = Punchblock::Event::Answered.new
+              expected_answered.target_call_id = subject.id
+              translator.should_receive(:handle_pb_event).with expected_answered
+              subject.process_ami_event ami_event
+            end
+
+            it '#answered? should be true' do
+              subject.process_ami_event ami_event
+              subject.answered?.should be_true
+            end
+
+            context "for a second time" do
+              it 'should only send one answered event' do
+                expected_answered = Punchblock::Event::Answered.new
+                expected_answered.target_call_id = subject.id
+                translator.should_receive(:handle_pb_event).with(expected_answered).once
+                subject.process_ami_event ami_event
+                subject.process_ami_event ami_event
+              end
+            end
           end
 
           context 'with a Newstate event' do
@@ -528,23 +564,6 @@ module Punchblock
               it '#answered? should return false' do
                 subject.process_ami_event ami_event
                 subject.answered?.should be_false
-              end
-            end
-
-            context 'up' do
-              let(:channel_state)       { '6' }
-              let(:channel_state_desc)  { 'Up' }
-
-              it 'should send a ringing event' do
-                expected_answered = Punchblock::Event::Answered.new
-                expected_answered.target_call_id = subject.id
-                translator.should_receive(:handle_pb_event).with expected_answered
-                subject.process_ami_event ami_event
-              end
-
-              it '#answered? should be true' do
-                subject.process_ami_event ami_event
-                subject.answered?.should be_true
               end
             end
           end

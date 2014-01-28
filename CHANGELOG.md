@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Ensure that max duration expiration of Asterisk recordings does not crash the translator when it extends past the call's destruction
 
 # [v2.2.2](https://github.com/adhearsion/punchblock/compare/v2.2.1...v2.2.2) - [2014-01-21](https://rubygems.org/gems/punchblock/versions/2.2.2)
   * Bugfix: Delay sending Answered event on call until AsyncAGI is invoked

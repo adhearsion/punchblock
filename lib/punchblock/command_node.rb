@@ -31,6 +31,7 @@ module Punchblock
       return if @response.set_yet?
       @response.resource = other
       execute!
+    rescue FutureResource::ResourceAlreadySetException
     end
   end # CommandNode
 end # Punchblock

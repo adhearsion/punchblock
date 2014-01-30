@@ -1,5 +1,10 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v2.3.0](https://github.com/adhearsion/punchblock/compare/v2.2.2...v2.3.0) - [2014-01-30](https://rubygems.org/gems/punchblock/versions/2.3.0)
+  * Feature: Add input-timers-started event
+  * Feature: Allow client to send XMPP messages through Blather
+  * Bugfix: Ensure that max duration expiration of Asterisk recordings does not crash the translator when it extends past the call's destruction
+
 # [v2.2.2](https://github.com/adhearsion/punchblock/compare/v2.2.1...v2.2.2) - [2014-01-21](https://rubygems.org/gems/punchblock/versions/2.2.2)
   * Bugfix: Delay sending Answered event on call until AsyncAGI is invoked
 

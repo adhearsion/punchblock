@@ -124,6 +124,36 @@ module Punchblock
         connection.not_ready!
       end
 
+      describe '#send_message' do
+        it 'should send a "normal" message to the given user and domain' do
+          client = connection.send :client
+          client.should_receive(:write).once.with do |stanza|
+            stanza.to.should be == 'someone@example.org'
+            stanza.should be_a Blather::Stanza::Message
+            stanza.type.should == :normal
+            stanza.body.should be == 'Hello World!'
+            stanza.subject.should be_nil
+          end
+          connection.send_message 'someone', 'example.org', 'Hello World!'
+        end
+
+        it 'should default to the root domain' do
+          client = connection.send :client
+          client.should_receive(:write).once.with do |stanza|
+            stanza.to.should be == 'someone@rayo.net'
+          end
+          connection.send_message "someone", nil, nil
+        end
+
+        it 'should send a message with the given subject' do
+          client = connection.send :client
+          client.should_receive(:write).once.with do |stanza|
+            stanza.subject.should be == "Important Message"
+          end
+          connection.send_message nil, nil, nil, :subject => "Important Message"
+        end
+      end
+
       describe '#handle_presence' do
         let :complete_xml do
           <<-MSG

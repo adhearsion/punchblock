@@ -33,7 +33,7 @@ module Punchblock
             ami_client.send_action 'Monitor', 'Channel' => call.channel, 'File' => filename, 'Format' => @format, 'Mix' => true
             unless max_duration == -1
               call.after max_duration/1000 do
-                ami_client.send_action 'StopMonitor', 'Channel' => call.channel
+                stop
               end
             end
 
@@ -68,6 +68,12 @@ module Punchblock
           end
 
           private
+
+          def stop
+            AMIErrorConverter.convert(nil) do
+              ami_client.send_action 'StopMonitor', 'Channel' => call.channel
+            end
+          end
 
           def filename
             File.join RECORDING_BASE_PATH, id

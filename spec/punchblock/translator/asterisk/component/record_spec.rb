@@ -297,7 +297,7 @@ module Punchblock
                   sleep 1.2
                 end
 
-                it "should not kill the translator if the channel is down", focus: true do
+                it "should not kill the translator if the channel is down" do
                   ami_client.should_receive :send_action
                   error = RubyAMI::Error.new.tap { |e| e.message = 'No such channel' }
                   ami_client.should_receive(:send_action).once.with('StopMonitor', 'Channel' => channel).and_raise error

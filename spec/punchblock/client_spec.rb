@@ -32,6 +32,14 @@ module Punchblock
       end
     end
 
+    describe '#send_message' do
+      it 'should send a message' do
+        args = [ "someone", "example.org", "Hello World!" ]
+        connection.should_receive(:send_message).with(*args).once
+        subject.send_message *args
+      end
+    end
+
     it 'should handle connection events' do
       subject.should_receive(:handle_event).with(mock_event).once
       connection.event_handler.call mock_event

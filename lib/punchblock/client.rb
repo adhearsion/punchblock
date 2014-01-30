@@ -10,7 +10,7 @@ module Punchblock
 
     attr_reader :connection, :component_registry
 
-    delegate :run, :stop, :to => :connection
+    delegate :run, :stop, :send_message, :to => :connection
 
     # @param [Hash] options
     # @option options [Connection::XMPP] :connection The Punchblock connection to use for this session

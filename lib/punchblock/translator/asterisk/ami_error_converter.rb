@@ -9,7 +9,7 @@ module Punchblock
         rescue RubyAMI::Error => e
           case e.message
           when 'No such channel', /Channel (\S+) does not exist./
-            result.call if result
+            result.call e if result
           else
             raise e
           end

@@ -19,7 +19,7 @@ module Punchblock
       end
 
       event :complete do
-        transition :executing => :complete
+        transition [:requested, :executing] => :complete
       end
     end
 

@@ -24,6 +24,11 @@ RSpec.configure do |config|
     Punchblock.logger.define_singleton_method :trace, Punchblock.logger.method(:debug)
   end
 
+  config.before do
+    @uuid = SecureRandom.uuid
+    Punchblock.stub new_request_id: @uuid
+  end
+
   config.after :each do
     if defined?(:Celluloid)
       Celluloid.shutdown

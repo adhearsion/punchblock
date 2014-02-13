@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 1.3.7") if s.respond_to? :required_rubygems_version=
 
   s.add_runtime_dependency %q<nokogiri>, ["~> 1.5", ">= 1.5.6"]
-  s.add_runtime_dependency %q<blather>, [">= 0.7.0"]
+  s.add_runtime_dependency %q<blather>, ["~> 1.0"]
   s.add_runtime_dependency %q<activesupport>, [">= 3.0.0", "< 5.0.0"]
   s.add_runtime_dependency %q<state_machine>, ["~> 1.0"]
   s.add_runtime_dependency %q<future-resource>, ["~> 1.0"]

@@ -45,6 +45,7 @@ module Punchblock
 
       def write(command, options = {})
         iq = prep_command_for_execution command, options
+        command.request!
         client.write_with_handler iq do |response|
           if response.result?
             handle_iq_result response, command
@@ -52,7 +53,6 @@ module Punchblock
             handle_error response, command
           end
         end
-        command.request!
       end
 
       def prep_command_for_execution(command, options = {})
@@ -64,7 +64,7 @@ module Punchblock
         if command.is_a?(Command::Join) && command.mixer_name
           @joined_mixers << command.mixer_name
         end
-        create_iq(jid_for_command(command)).tap do |iq|
+        create_iq(jid_for_command(command), command.request_id).tap do |iq|
           command.to_rayo(iq)
         end
       end
@@ -183,8 +183,8 @@ module Punchblock
         end
       end
 
-      def create_iq(jid = nil)
-        Blather::Stanza::Iq.new :set, jid || @call_id
+      def create_iq(jid, id)
+        Blather::Stanza::Iq.new :set, jid, id
       end
     end
   end

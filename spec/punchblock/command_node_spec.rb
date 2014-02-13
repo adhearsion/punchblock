@@ -11,6 +11,7 @@ module Punchblock
       end
 
       its(:state_name) { should be == :new }
+      its(:request_id) { should be == @uuid }
 
       describe "#new" do
         describe "with a call/component ID" do

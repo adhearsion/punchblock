@@ -53,6 +53,9 @@ module Punchblock
         client.delete_component_registration self if client
         complete!
         @complete_event_resource.resource = other
+      rescue StateMachine::InvalidTransition => e
+        e.message << " for component #{self}"
+        raise e
       end
 
       ##

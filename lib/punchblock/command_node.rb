@@ -4,6 +4,8 @@ require 'state_machine'
 module Punchblock
   class CommandNode < RayoNode
 
+    attribute :request_id, String, default: ->(*) { Punchblock.new_request_id }
+
     def initialize(*args)
       super
       @response = FutureResource.new
@@ -31,6 +33,9 @@ module Punchblock
       return if @response.set_yet?
       @response.resource = other
       execute!
+    rescue StateMachine::InvalidTransition => e
+      e.message << " for command #{self}"
+      raise e
     rescue FutureResource::ResourceAlreadySetException
     end
   end # CommandNode

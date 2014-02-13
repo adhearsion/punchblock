@@ -61,6 +61,10 @@ module Punchblock
       SecureRandom.uuid
     end
 
+    def new_request_id
+      new_uuid
+    end
+
     def jruby?
       @jruby ||= !!(RUBY_PLATFORM =~ /java/)
     end

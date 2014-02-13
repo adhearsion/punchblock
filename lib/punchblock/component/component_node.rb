@@ -8,6 +8,7 @@ module Punchblock
       def initialize(*args)
         super
         @complete_event_resource = FutureResource.new
+        @mutex = Mutex.new
         register_internal_handlers
       end
 
@@ -36,12 +37,14 @@ module Punchblock
       end
 
       def response=(other)
-        if other.is_a?(Ref)
-          @component_id = other.component_id
-          @source_uri = other.uri.to_s
-          client.register_component self if client
+        @mutex.synchronize do
+          if other.is_a?(Ref)
+            @component_id = other.component_id
+            @source_uri = other.uri.to_s
+            client.register_component self if client
+          end
+          super
         end
-        super
       end
 
       def complete_event(timeout = nil)
@@ -49,10 +52,12 @@ module Punchblock
       end
 
       def complete_event=(other)
-        return if @complete_event_resource.set_yet?
-        client.delete_component_registration self if client
-        complete!
-        @complete_event_resource.resource = other
+        @mutex.synchronize do
+          return if @complete_event_resource.set_yet?
+          client.delete_component_registration self if client
+          complete!
+          @complete_event_resource.resource = other
+        end
       rescue StateMachine::InvalidTransition => e
         e.message << " for component #{self}"
         raise e

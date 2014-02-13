@@ -4,7 +4,7 @@ require 'state_machine'
 module Punchblock
   class CommandNode < RayoNode
 
-    attribute :request_id, String, default: ->(*) { SecureRandom.uuid }
+    attribute :request_id, String, default: ->(*) { Punchblock.new_request_id }
 
     def initialize(*args)
       super

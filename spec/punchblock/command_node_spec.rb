@@ -10,11 +10,6 @@ module Punchblock
         Class.new(described_class) { register 'foo'}.new(*args)
       end
 
-      before do
-        @uuid = SecureRandom.uuid
-        SecureRandom.stub uuid: @uuid
-      end
-
       its(:state_name) { should be == :new }
       its(:request_id) { should be == @uuid }
 

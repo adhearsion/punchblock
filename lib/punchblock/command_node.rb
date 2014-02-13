@@ -33,6 +33,9 @@ module Punchblock
       return if @response.set_yet?
       @response.resource = other
       execute!
+    rescue StateMachine::InvalidTransition => e
+      e.message << " for command #{self}"
+      raise e
     rescue FutureResource::ResourceAlreadySetException
     end
   end # CommandNode

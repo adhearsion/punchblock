@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Ensure commands can be associated on the wire even before they're executed
+  * Bugfix: Ensure a command is always transitioned to is requested state prior to receiving a response
 
 # [v2.3.0](https://github.com/adhearsion/punchblock/compare/v2.2.2...v2.3.0) - [2014-01-30](https://rubygems.org/gems/punchblock/versions/2.3.0)
   * Feature: Add input-timers-started event

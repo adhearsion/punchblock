@@ -104,8 +104,35 @@ module Punchblock
         output.component_id.should be == 'fgh4590'
       end
 
+      let(:client) { connection.send :client }
+      before { client.stub :write }
+
+      describe "sending a command" do
+        let(:command) { Punchblock::Command::Answer.new request_id: 'fooobarrr', target_call_id: 'foo', domain: 'bar.com' }
+
+        it "should write an IQ containing the command to the socket" do
+          client.should_receive(:write).once.with do |stanza|
+            stanza.should be_a Blather::Stanza::Iq
+            stanza.to.should be == 'foo@bar.com'
+            stanza.type.should be == :set
+          end
+          connection.write command
+        end
+
+        it "should put the command in a requested state" do
+          connection.write command
+          command.should be_requested
+        end
+
+        it "should use the command's request_id as the ID id" do
+          client.should_receive(:write).once.with do |stanza|
+            stanza.id.should be == 'fooobarrr'
+          end
+          connection.write command
+        end
+      end
+
       it 'should send a "Chat" presence when ready' do
-        client = connection.send :client
         client.should_receive(:write).once.with do |stanza|
           stanza.to.should be == 'rayo.net'
           stanza.should be_a Blather::Stanza::Presence::Status
@@ -115,7 +142,6 @@ module Punchblock
       end
 
       it 'should send a "Do Not Disturb" presence when not_ready' do
-        client = connection.send :client
         client.should_receive(:write).once.with do |stanza|
           stanza.to.should be == 'rayo.net'
           stanza.should be_a Blather::Stanza::Presence::Status
@@ -126,7 +152,6 @@ module Punchblock
 
       describe '#send_message' do
         it 'should send a "normal" message to the given user and domain' do
-          client = connection.send :client
           client.should_receive(:write).once.with do |stanza|
             stanza.to.should be == 'someone@example.org'
             stanza.should be_a Blather::Stanza::Message
@@ -138,7 +163,6 @@ module Punchblock
         end
 
         it 'should default to the root domain' do
-          client = connection.send :client
           client.should_receive(:write).once.with do |stanza|
             stanza.to.should be == 'someone@rayo.net'
           end
@@ -146,7 +170,6 @@ module Punchblock
         end
 
         it 'should send a message with the given subject' do
-          client = connection.send :client
           client.should_receive(:write).once.with do |stanza|
             stanza.subject.should be == "Important Message"
           end
@@ -350,7 +373,7 @@ module Punchblock
       describe "receiving events from a mixer" do
         context "after joining the mixer" do
           before do
-            subject.send(:client).should_receive :write_with_handler
+            client.should_receive :write_with_handler
             subject.write Command::Join.new(:mixer_name => 'foomixer')
           end
 

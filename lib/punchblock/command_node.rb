@@ -4,6 +4,8 @@ require 'state_machine'
 module Punchblock
   class CommandNode < RayoNode
 
+    attribute :request_id, String, default: ->(*) { SecureRandom.uuid }
+
     def initialize(*args)
       super
       @response = FutureResource.new

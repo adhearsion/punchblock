@@ -64,7 +64,7 @@ module Punchblock
         if command.is_a?(Command::Join) && command.mixer_name
           @joined_mixers << command.mixer_name
         end
-        create_iq(jid_for_command(command)).tap do |iq|
+        create_iq(jid_for_command(command), command.request_id).tap do |iq|
           command.to_rayo(iq)
         end
       end
@@ -183,8 +183,8 @@ module Punchblock
         end
       end
 
-      def create_iq(jid = nil)
-        Blather::Stanza::Iq.new :set, jid || @call_id
+      def create_iq(jid, id)
+        Blather::Stanza::Iq.new :set, jid, id
       end
     end
   end

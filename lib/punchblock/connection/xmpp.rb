@@ -45,6 +45,7 @@ module Punchblock
 
       def write(command, options = {})
         iq = prep_command_for_execution command, options
+        command.request!
         client.write_with_handler iq do |response|
           if response.result?
             handle_iq_result response, command
@@ -52,7 +53,6 @@ module Punchblock
             handle_error response, command
           end
         end
-        command.request!
       end
 
       def prep_command_for_execution(command, options = {})

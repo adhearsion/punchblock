@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Support language, sensitivity and minimum confidence on UniMRCP-based ASR on Asterisk
+  * Feature: Support sending messages to calls (eg SIP MESSAGE) on Asterisk
 
 # [v2.4.1](https://github.com/adhearsion/punchblock/compare/v2.4.0...v2.4.1) - [2014-03-04](https://rubygems.org/gems/punchblock/versions/2.4.1)
   * Bugfix: Rayo events should not include their timestamp in comparison. This is not useful in applications, and makes testing more difficult.

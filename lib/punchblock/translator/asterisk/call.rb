@@ -159,6 +159,11 @@ module Punchblock
           trigger_handler :ami, ami_event
         end
 
+        def send_message(body)
+          execute_agi_command 'EXEC SendText', body
+        rescue
+        end
+
         def execute_command(command)
           if @block_commands
             command.response = ProtocolError.new.setup :item_not_found, "Could not find a call with ID #{id}", id

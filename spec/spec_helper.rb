@@ -5,6 +5,7 @@ require 'countdownlatch'
 require 'logger'
 require 'celluloid'
 require 'coveralls'
+require 'ruby_ami'
 Coveralls.wear!
 
 Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}

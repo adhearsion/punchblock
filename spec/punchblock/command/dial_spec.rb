@@ -13,10 +13,11 @@ module Punchblock
       let(:join_params) { {:call_uri => 'abc123'} }
 
       describe "when setting options in initializer" do
-        subject { described_class.new to: 'tel:+14155551212', from: 'tel:+13035551212', timeout: 30000, headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' }, join: join_params }
+        subject { described_class.new to: 'tel:+14155551212', from: 'tel:+13035551212', uri: 'xmpp:foo@bar.com', timeout: 30000, headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' }, join: join_params }
 
         its(:to)      { should be == 'tel:+14155551212' }
         its(:from)    { should be == 'tel:+13035551212' }
+        its(:uri)     { should be == 'xmpp:foo@bar.com' }
         its(:timeout) { should be == 30000 }
         its(:join)    { should be == Join.new(join_params) }
         its(:headers) { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
@@ -27,6 +28,7 @@ module Punchblock
             new_instance.should be_instance_of described_class
             new_instance.to.should == 'tel:+14155551212'
             new_instance.from.should == 'tel:+13035551212'
+            new_instance.uri.should == 'xmpp:foo@bar.com'
             new_instance.timeout.should == 30000
             new_instance.join.should == Join.new(join_params)
             new_instance.headers.should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' }
@@ -54,7 +56,7 @@ module Punchblock
       describe "from a stanza" do
         let :stanza do
           <<-MESSAGE
-<dial to='tel:+14155551212' from='tel:+13035551212' timeout='30000' xmlns='urn:xmpp:rayo:1'>
+<dial to='tel:+14155551212' from='tel:+13035551212' uri='xmpp:foo@bar.com' timeout='30000' xmlns='urn:xmpp:rayo:1'>
   <join call-uri="abc123" />
   <header name="X-skill" value="agent" />
   <header name="X-customer-id" value="8877" />
@@ -68,6 +70,7 @@ module Punchblock
 
         its(:to)      { should be == 'tel:+14155551212' }
         its(:from)    { should be == 'tel:+13035551212' }
+        its(:uri)     { should be == 'xmpp:foo@bar.com' }
         its(:timeout) { should be == 30000 }
         its(:join)    { should be == Join.new(join_params) }
         its(:headers) { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }

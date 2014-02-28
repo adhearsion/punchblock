@@ -109,6 +109,10 @@ module Punchblock
         super
       end
 
+      def new_call_uri
+        "xmpp:#{Punchblock.new_uuid}@#{root_domain}"
+      end
+
       private
 
       def jid_for_command(command)

@@ -13,6 +13,9 @@ module Punchblock
       # @return [String] the caller ID
       attribute :from
 
+      # @return [String] the requested URI for the resulting call
+      attribute :uri
+
       # @return [Integer] timeout in milliseconds
       attribute :timeout, Integer
 
@@ -27,7 +30,7 @@ module Punchblock
       end
 
       def rayo_attributes
-        {to: to, from: from, timeout: timeout}
+        {to: to, from: from, uri: uri, timeout: timeout}
       end
 
       def rayo_children(root)

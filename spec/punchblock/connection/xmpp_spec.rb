@@ -17,22 +17,42 @@ module Punchblock
       subject { connection }
 
       describe "rayo domains" do
+        before { stub_uuids 'randomcallid' }
+
         context "with no domains specified, and a JID of 1@app.rayo.net" do
           let(:options) { { :username => '1@app.rayo.net' } }
 
           its(:root_domain)   { should be == 'app.rayo.net' }
+
+          describe '#new_call_uri' do
+            it "should return an appropriate random call URI" do
+              subject.new_call_uri.should == 'xmpp:randomcallid@app.rayo.net'
+            end
+          end
         end
 
         context "with only a rayo domain set" do
           let(:options) { { :rayo_domain => 'rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
+
+          describe '#new_call_uri' do
+            it "should return an appropriate random call URI" do
+              subject.new_call_uri.should == 'xmpp:randomcallid@rayo.org'
+            end
+          end
         end
 
         context "with only a root domain set" do
           let(:options) { { :root_domain => 'rayo.org' } }
 
           its(:root_domain)   { should be == 'rayo.org' }
+
+          describe '#new_call_uri' do
+            it "should return an appropriate random call URI" do
+              subject.new_call_uri.should == 'xmpp:randomcallid@rayo.org'
+            end
+          end
         end
       end
 

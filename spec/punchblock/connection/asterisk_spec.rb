@@ -90,6 +90,13 @@ module Punchblock
           subject.handle_event offer
         end
       end
+
+      describe '#new_call_uri' do
+        it "should return a random UUID" do
+          stub_uuids 'foobar'
+          subject.new_call_uri.should == 'foobar'
+        end
+      end
     end
   end
 end

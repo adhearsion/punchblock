@@ -25,10 +25,11 @@ module Punchblock
         HANGUP_CAUSE_TO_END_REASON[22] = :reject
         HANGUP_CAUSE_TO_END_REASON[102] = :timeout
 
-        def initialize(channel, translator, ami_client, connection, agi_env = nil)
+        def initialize(channel, translator, ami_client, connection, agi_env = nil, id = nil)
           @channel, @translator, @ami_client, @connection = channel, translator, ami_client, connection
           @agi_env = agi_env || {}
-          @id, @components = Punchblock.new_uuid, {}
+          @id = id || Punchblock.new_uuid
+          @components = {}
           @answered = false
           @pending_joins = {}
           @progress_sent = false

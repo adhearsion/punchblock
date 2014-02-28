@@ -140,9 +140,13 @@ module Punchblock
           register_component component
           component.execute
         when Punchblock::Command::Dial
-          call = Call.new command.to, current_actor, ami_client, connection
-          register_call call
-          call.dial command
+          if call = call_with_id(command.uri)
+            command.response = ProtocolError.new.setup(:conflict, 'Call ID already in use')
+          else
+            call = Call.new command.to, current_actor, ami_client, connection, nil, command.uri
+            register_call call
+            call.dial command
+          end
         else
           command.response = ProtocolError.new.setup 'command-not-acceptable', "Did not understand command"
         end

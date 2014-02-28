@@ -1,5 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Feature: Add support for URI attribute to Dial command
+  * Feature: Add support for requesting calls with a specific URI
   * Feature: Allow generation of a random call URI for a client
 
 # [v2.3.1](https://github.com/adhearsion/punchblock/compare/v2.3.0...v2.3.1) - [2014-02-13](https://rubygems.org/gems/punchblock/versions/2.3.1)

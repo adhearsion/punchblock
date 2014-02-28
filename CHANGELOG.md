@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Add support for URI attribute to Dial command
 
 # [v2.3.1](https://github.com/adhearsion/punchblock/compare/v2.3.0...v2.3.1) - [2014-02-13](https://rubygems.org/gems/punchblock/versions/2.3.1)
   * Bugfix: Ensure commands can be associated on the wire even before they're executed

@@ -237,6 +237,11 @@ module Punchblock
               MSG
             end
 
+            before do
+              @now = DateTime.now
+              DateTime.stub now: @now
+            end
+
             let(:example_event) { import_stanza offer_xml }
 
             it { example_event.should be_a Blather::Stanza::Presence }
@@ -248,8 +253,27 @@ module Punchblock
                 event.source_uri.should be == 'xmpp:9f00061@call.rayo.net'
                 event.domain.should be == 'call.rayo.net'
                 event.transport.should be == 'xmpp'
+                event.timestamp.should be == @now
               end
               handle_presence
+            end
+
+            context "with a delayed delivery timestamp" do
+              let :offer_xml do
+                <<-MSG
+      <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net'>
+        <offer xmlns="urn:xmpp:rayo:1" to="sip:whatever@127.0.0.1" from="sip:ylcaomxb@192.168.1.9"/>
+        <delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25Z'/>
+      </presence>
+                MSG
+              end
+
+              it 'should stamp that time on the rayo event' do
+                mock_event_handler.should_receive(:call).once.with do |event|
+                  event.timestamp.should be == DateTime.new(2002, 9, 10, 23, 8, 25, 0)
+                end
+                handle_presence
+              end
             end
           end
 

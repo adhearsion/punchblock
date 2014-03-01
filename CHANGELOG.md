@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v2.4.0](https://github.com/adhearsion/punchblock/compare/v2.3.1...v2.4.0) - [2014-03-01](https://rubygems.org/gems/punchblock/versions/2.4.0)
   * Feature: Add support for requesting calls with a specific URI
   * Feature: Allow generation of a random call URI for a client
   * Feature: Rayo events should be timestamped with dispatch or receipt time (#213)

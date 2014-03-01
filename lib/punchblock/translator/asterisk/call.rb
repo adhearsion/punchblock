@@ -114,7 +114,7 @@ module Punchblock
 
           case ami_event.name
           when 'Hangup'
-            handle_hangup_event ami_event['Cause'].to_i
+            handle_hangup_event ami_event['Cause'].to_i, ami_event.best_time
           when 'AsyncAGI'
             if component = component_with_id(ami_event['CommandID'])
               component.handle_ami_event ami_event
@@ -122,16 +122,16 @@ module Punchblock
 
             if @answered == false && ami_event['SubEvent'] == 'Start'
               @answered = true
-              send_pb_event Event::Answered.new
+              send_pb_event Event::Answered.new(timestamp: ami_event.best_time)
             end
           when 'Newstate'
             case ami_event['ChannelState']
             when '5'
-              send_pb_event Event::Ringing.new
+              send_pb_event Event::Ringing.new(timestamp: ami_event.best_time)
             end
           when 'OriginateResponse'
             if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'
-              send_end_event :error
+              send_end_event :error, nil, ami_event.best_time
             end
           when 'BridgeExec'
             join_command   = @pending_joins.delete ami_event['Channel1']
@@ -142,16 +142,16 @@ module Punchblock
             if other_call = translator.call_for_channel(other_call_channel)
               event = case ami_event['Bridgestate']
               when 'Link'
-                Event::Joined.new call_uri: other_call.id
+                Event::Joined.new call_uri: other_call.id, timestamp: ami_event.best_time
               when 'Unlink'
-                Event::Unjoined.new call_uri: other_call.id
+                Event::Unjoined.new call_uri: other_call.id, timestamp: ami_event.best_time
               end
               send_pb_event event
             end
           when 'Unlink'
             other_call_channel = ([ami_event['Channel1'], ami_event['Channel2']] - [channel]).first
             if other_call = translator.call_for_channel(other_call_channel)
-              send_pb_event Event::Unjoined.new(call_uri: other_call.id)
+              send_pb_event Event::Unjoined.new(call_uri: other_call.id, timestamp: ami_event.best_time)
             end
           when 'VarSet'
             @channel_variables[ami_event['Variable']] = ami_event['Value']
@@ -279,13 +279,14 @@ module Punchblock
           send_ami_action 'Redirect', redirect_options
         end
 
-        def handle_hangup_event(code = 16)
+        def handle_hangup_event(code = nil, timestamp = nil)
+          code ||= 16
           reason = @hangup_cause || HANGUP_CAUSE_TO_END_REASON[code]
           @block_commands = true
           @components.each_pair do |id, component|
             component.call_ended
           end
-          send_end_event reason, code
+          send_end_event reason, code, timestamp
         end
 
         def after(*args, &block)
@@ -307,8 +308,9 @@ module Punchblock
           AMIErrorConverter.convert { @ami_client.send_action name, headers }
         end
 
-        def send_end_event(reason, code = nil)
-          send_pb_event Event::End.new(reason: reason, platform_code: code)
+        def send_end_event(reason, code = nil, timestamp = nil)
+          end_event = Event::End.new(reason: reason, platform_code: code, timestamp: timestamp)
+          send_pb_event end_event
           translator.deregister_call id, channel
         end
 

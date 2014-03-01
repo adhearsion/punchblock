@@ -40,6 +40,13 @@ module Punchblock
       end
     end
 
+    describe '#new_call_uri' do
+      it 'should return the connection-specific fresh call ID' do
+        stub_uuids 'foobar'
+        subject.new_call_uri.should == 'xmpp:foobar@call.rayo.net'
+      end
+    end
+
     it 'should handle connection events' do
       subject.should_receive(:handle_event).with(mock_event).once
       connection.event_handler.call mock_event

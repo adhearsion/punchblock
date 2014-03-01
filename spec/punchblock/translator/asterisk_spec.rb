@@ -7,7 +7,7 @@ module Punchblock
   module Translator
     describe Asterisk do
       let(:ami_client)    { double 'RubyAMI::Client' }
-      let(:connection)    { double 'Connection::Asterisk', handle_event: nil }
+      let(:connection)    { Connection::Asterisk.new }
 
       let(:translator) { Asterisk.new ami_client, connection }
 
@@ -15,6 +15,10 @@ module Punchblock
 
       its(:ami_client) { should be ami_client }
       its(:connection) { should be connection }
+
+      before do
+        connection.event_handler = ->(*) {}
+      end
 
       after { translator.terminate if translator.alive? }
 
@@ -209,6 +213,39 @@ module Punchblock
             Asterisk::Call.should_receive(:new).once.and_return mock_call
             mock_call.should_receive(:dial).once.with command
             subject.execute_global_command command
+          end
+
+          context 'when requesting a specific URI' do
+            let(:requested_uri) { connection.new_call_uri }
+
+            before do
+              command.uri = requested_uri
+            end
+
+            it "should assign the requested URI to the call" do
+              subject.execute_global_command command
+              subject.call_with_id(requested_uri).id.should == requested_uri
+            end
+
+            context 'and the requested URI already represents a known call' do
+              before do
+                earlier_command = Command::Dial.new to: 'SIP/1234', uri: requested_uri
+                earlier_command.request!
+
+                subject.execute_global_command earlier_command
+
+                @first_call = subject.call_with_id(requested_uri)
+              end
+
+              it "should set the command response to a conflict error" do
+                subject.execute_global_command command
+                command.response(0.1).should == ProtocolError.new.setup(:conflict, 'Call ID already in use')
+              end
+
+              it "should not replace the original call in the registry" do
+                subject.call_with_id(requested_uri).should be @first_call
+              end
+            end
           end
         end
 

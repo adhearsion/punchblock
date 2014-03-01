@@ -17,6 +17,7 @@ module Punchblock
     attribute :source_uri
     attribute :domain
     attribute :transport
+    attribute :timestamp, DateTime, default: ->(*) { DateTime.now }
 
     attr_accessor :connection, :client, :original_component
 
@@ -49,7 +50,7 @@ module Punchblock
     # elements of the XML::Node
     # @param [XML::Node] node the node to import
     # @return the appropriate object based on the node name and namespace
-    def self.from_xml(node, call_id = nil, component_id = nil, uri = nil)
+    def self.from_xml(node, call_id = nil, component_id = nil, uri = nil, timestamp = nil)
       ns = (node.namespace.href if node.namespace)
       klass = class_from_registration(node.name, ns)
       if klass && klass != self
@@ -60,6 +61,7 @@ module Punchblock
         event.target_call_id = call_id
         event.component_id = component_id
         event.source_uri = uri
+        event.timestamp = timestamp if timestamp
       end
     end
 

@@ -45,6 +45,10 @@ module Punchblock
         ami_client.async.run
         Celluloid::Actor.join(ami_client)
       end
+
+      def new_call_uri
+        Punchblock.new_uuid
+      end
     end
 
     class RubyAMIStreamProxy

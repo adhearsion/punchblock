@@ -168,6 +168,29 @@ module Punchblock
                       translator.should_receive(:handle_pb_event).once.with expected_end_event
                       subject.handle_ami_event ami_event
                     end
+
+                    context "when the AMI event has a timestamp" do
+                      let :ami_event do
+                        RubyAMI::Event.new 'AsyncAGI',
+                          "SubEvent"   => "Exec",
+                          "Channel"    => channel,
+                          "CommandId"  => component_id,
+                          "Command"    => "EXEC ANSWER",
+                          "Result"     => "200%20result=123%20(timeout)%0A",
+                          'Timestamp'  => '1393368380.572575'
+                      end
+
+                      it "should use the AMI timestamp for the Rayo event" do
+                        expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                                                                        platform_code: 16,
+                                                                        target_call_id: mock_call.id,
+                                                                        timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
+                        translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
+                        translator.should_receive(:handle_pb_event).once.with expected_end_event
+
+                        subject.handle_ami_event ami_event
+                      end
+                    end
                   end
                 end
               end

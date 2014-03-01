@@ -5,6 +5,7 @@ require 'countdownlatch'
 require 'logger'
 require 'celluloid'
 require 'coveralls'
+require 'ruby_ami'
 Coveralls.wear!
 
 Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
@@ -27,6 +28,9 @@ RSpec.configure do |config|
   config.before do
     @uuid = SecureRandom.uuid
     Punchblock.stub new_request_id: @uuid
+
+    @current_datetime = DateTime.now
+    DateTime.stub now: @current_datetime
   end
 
   config.after :each do

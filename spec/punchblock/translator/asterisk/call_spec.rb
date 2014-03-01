@@ -327,6 +327,27 @@ module Punchblock
               comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
             end
 
+            context "when the AMI event has a timestamp" do
+              let :ami_event do
+                RubyAMI::Event.new 'Hangup',
+                  'Uniqueid'      => "1320842458.8",
+                  'Cause'         => cause,
+                  'Cause-txt'     => cause_txt,
+                  'Channel'       => "SIP/1234-00000000",
+                  'Timestamp'     => '1393368380.572575'
+              end
+
+              it "should use the AMI timestamp for the Rayo event" do
+                expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                                                                platform_code: cause,
+                                                                target_call_id: subject.id,
+                                                                timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
+                translator.should_receive(:handle_pb_event).with expected_end_event
+
+                subject.process_ami_event ami_event
+              end
+            end
+
             context "after processing a hangup command" do
               let(:command) { Command::Hangup.new }
 
@@ -534,6 +555,24 @@ module Punchblock
                 subject.process_ami_event ami_event
               end
             end
+
+            context "when the AMI event has a timestamp" do
+              let :ami_event do
+                RubyAMI::Event.new "AsyncAGI",
+                  "SubEvent"  => "Start",
+                  "Channel"   => "SIP/1234-00000000",
+                  "Env"       => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2Fuserb-00000006%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201390303636.6%0Aagi_version%3A%2011.7.0%0Aagi_callerid%3A%20userb%0Aagi_calleridname%3A%20User%20B%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%20unknown%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20adhearsion-redirect%0Aagi_extension%3A%201%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%20139696536876800%0A%0A",
+                  'Timestamp' => '1393368380.572575'
+              end
+
+              it "should use the AMI timestamp for the Rayo event" do
+                expected_answered = Punchblock::Event::Answered.new target_call_id: subject.id,
+                                                                    timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
+                translator.should_receive(:handle_pb_event).with expected_answered
+
+                subject.process_ami_event ami_event
+              end
+            end
           end
 
           context 'with a Newstate event' do
@@ -564,6 +603,25 @@ module Punchblock
               it '#answered? should return false' do
                 subject.process_ami_event ami_event
                 subject.answered?.should be_false
+              end
+
+              context "when the AMI event has a timestamp" do
+                let :ami_event do
+                  RubyAMI::Event.new 'Newstate',
+                    'Channel'           => 'SIP/1234-00000000',
+                    'ChannelState'      => channel_state,
+                    'ChannelStateDesc'  => channel_state_desc,
+                    'Uniqueid'          => '1326194671.0',
+                    'Timestamp'         => '1393368380.572575'
+                end
+
+                it "should use the AMI timestamp for the Rayo event" do
+                  expected_ringing = Punchblock::Event::Ringing.new target_call_id: subject.id,
+                                                                    timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
+                  translator.should_receive(:handle_pb_event).with expected_ringing
+
+                  subject.process_ami_event ami_event
+                end
               end
             end
           end
@@ -612,6 +670,32 @@ module Punchblock
                                                                 :target_call_id => subject.id
                 translator.should_receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
+              end
+
+              context "when the AMI event has a timestamp" do
+                let :ami_event do
+                  RubyAMI::Event.new 'OriginateResponse',
+                    'Privilege'     => 'call,all',
+                    'ActionID'      => '9d0c1aa4-5e3b-4cae-8aef-76a6119e2909',
+                    'Response'      => response,
+                    'Channel'       => 'SIP/15557654321',
+                    'Context'       => '',
+                    'Exten'         => '',
+                    'Reason'        => '0',
+                    'Uniqueid'      => uniqueid,
+                    'CallerIDNum'   => 'sip:5551234567',
+                    'CallerIDName'  => 'Bryan 100',
+                    'Timestamp'     => '1393368380.572575'
+                end
+
+                it "should use the AMI timestamp for the Rayo event" do
+                  expected_end_event = Punchblock::Event::End.new reason: :error,
+                                                                  target_call_id: subject.id,
+                                                                  timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
+                  translator.should_receive(:handle_pb_event).with expected_end_event
+
+                  subject.process_ami_event ami_event
+                end
               end
             end
           end
@@ -749,6 +833,54 @@ module Punchblock
                 translator.should_receive(:handle_pb_event).with expected_joined
                 subject.process_ami_event switched_ami_event
               end
+
+              context "when the AMI event has a timestamp" do
+                let :ami_event do
+                  RubyAMI::Event.new 'Bridge',
+                    'Privilege'   => "call,all",
+                    'Bridgestate' => state,
+                    'Bridgetype'  => "core",
+                    'Channel1'    => channel,
+                    'Channel2'    => other_channel,
+                    'Uniqueid1'   => "1319717537.11",
+                    'Uniqueid2'   => "1319717537.10",
+                    'CallerID1'   => "1234",
+                    'CallerID2'   => "5678",
+                    'Timestamp'   => '1393368380.572575'
+                end
+
+                let :switched_ami_event do
+                  RubyAMI::Event.new 'Bridge',
+                    'Privilege'   => "call,all",
+                    'Bridgestate' => state,
+                    'Bridgetype'  => "core",
+                    'Channel1'    => other_channel,
+                    'Channel2'    => channel,
+                    'Uniqueid1'   => "1319717537.11",
+                    'Uniqueid2'   => "1319717537.10",
+                    'CallerID1'   => "1234",
+                    'CallerID2'   => "5678",
+                    'Timestamp'   => '1393368380.572575'
+                end
+
+                before { expected_joined.timestamp = DateTime.new(2014, 2, 25, 22, 46, 20) }
+
+                context "when the call is the first channel" do
+                  it "should use the AMI timestamp for the Rayo event" do
+                    translator.should_receive(:handle_pb_event).with expected_joined
+
+                    subject.process_ami_event ami_event
+                  end
+                end
+
+                context "when the call is the second channel" do
+                  it "should use the AMI timestamp for the Rayo event" do
+                    translator.should_receive(:handle_pb_event).with expected_joined
+
+                    subject.process_ami_event switched_ami_event
+                  end
+                end
+              end
             end
 
             context "of state 'Unlink'" do
@@ -767,6 +899,54 @@ module Punchblock
               it 'sends the Unjoined event when the call is the second channel' do
                 translator.should_receive(:handle_pb_event).with expected_unjoined
                 subject.process_ami_event switched_ami_event
+              end
+
+              context "when the AMI event has a timestamp" do
+                let :ami_event do
+                  RubyAMI::Event.new 'Bridge',
+                    'Privilege'   => "call,all",
+                    'Bridgestate' => state,
+                    'Bridgetype'  => "core",
+                    'Channel1'    => channel,
+                    'Channel2'    => other_channel,
+                    'Uniqueid1'   => "1319717537.11",
+                    'Uniqueid2'   => "1319717537.10",
+                    'CallerID1'   => "1234",
+                    'CallerID2'   => "5678",
+                    'Timestamp'   => '1393368380.572575'
+                end
+
+                let :switched_ami_event do
+                  RubyAMI::Event.new 'Bridge',
+                    'Privilege'   => "call,all",
+                    'Bridgestate' => state,
+                    'Bridgetype'  => "core",
+                    'Channel1'    => other_channel,
+                    'Channel2'    => channel,
+                    'Uniqueid1'   => "1319717537.11",
+                    'Uniqueid2'   => "1319717537.10",
+                    'CallerID1'   => "1234",
+                    'CallerID2'   => "5678",
+                    'Timestamp'   => '1393368380.572575'
+                end
+
+                before { expected_unjoined.timestamp = DateTime.new(2014, 2, 25, 22, 46, 20) }
+
+                context "when the call is the first channel" do
+                  it "should use the AMI timestamp for the Rayo event" do
+                    translator.should_receive(:handle_pb_event).with expected_unjoined
+
+                    subject.process_ami_event ami_event
+                  end
+                end
+
+                context "when the call is the second channel" do
+                  it "should use the AMI timestamp for the Rayo event" do
+                    translator.should_receive(:handle_pb_event).with expected_unjoined
+
+                    subject.process_ami_event switched_ami_event
+                  end
+                end
               end
             end
           end
@@ -819,6 +999,50 @@ module Punchblock
             it 'sends the Unjoined event when the call is the second channel' do
               translator.should_receive(:handle_pb_event).with expected_unjoined
               subject.process_ami_event switched_ami_event
+            end
+
+            context "when the AMI event has a timestamp" do
+              let :ami_event do
+                RubyAMI::Event.new 'Unlink',
+                  'Privilege' => "call,all",
+                  'Channel1'  => channel,
+                  'Channel2'  => other_channel,
+                  'Uniqueid1' => "1319717537.11",
+                  'Uniqueid2' => "1319717537.10",
+                  'CallerID1' => "1234",
+                  'CallerID2' => "5678",
+                  'Timestamp'   => '1393368380.572575'
+              end
+
+              let :switched_ami_event do
+                RubyAMI::Event.new 'Unlink',
+                  'Privilege' => "call,all",
+                  'Channel1'  => other_channel,
+                  'Channel2'  => channel,
+                  'Uniqueid1' => "1319717537.11",
+                  'Uniqueid2' => "1319717537.10",
+                  'CallerID1' => "1234",
+                  'CallerID2' => "5678",
+                  'Timestamp'   => '1393368380.572575'
+              end
+
+              before { expected_unjoined.timestamp = DateTime.new(2014, 2, 25, 22, 46, 20) }
+
+              context "when the call is the first channel" do
+                it "should use the AMI timestamp for the Rayo event" do
+                  translator.should_receive(:handle_pb_event).with expected_unjoined
+
+                  subject.process_ami_event ami_event
+                end
+              end
+
+              context "when the call is the second channel" do
+                it "should use the AMI timestamp for the Rayo event" do
+                  translator.should_receive(:handle_pb_event).with expected_unjoined
+
+                  subject.process_ami_event switched_ami_event
+                end
+              end
             end
           end
 

@@ -10,7 +10,7 @@ module Blather
     def rayo_node
       @rayo_node ||= begin
         first_child = at_xpath RAYO_NODE_PATH, Punchblock::RAYO_NAMESPACES
-        Punchblock::RayoNode.from_xml first_child, nil, component_id, "xmpp:#{from}" if first_child
+        Punchblock::RayoNode.from_xml first_child, nil, component_id, "xmpp:#{from}", delay_timestamp if first_child
       end
     end
 
@@ -26,6 +26,14 @@ module Blather
     #
     def component_id
       from.resource
+    end
+
+  private
+
+    def delay_timestamp
+      if delay = self.at_xpath('ns:delay', ns: 'urn:xmpp:delay')
+        DateTime.parse(delay[:stamp])
+      end
     end
   end
 end

@@ -576,11 +576,43 @@ module Punchblock
           end
 
           describe 'Input#sensitivity' do
-            pending
+            context 'a string' do
+              let(:input_command_opts) { { sensitivity: '0.2' } }
+
+              it 'should pass the sl option to MRCPRecog' do
+                expect_mrcprecog_with_options(/sl=0.2/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { sensitivity: nil } }
+
+              it 'should not pass any options to MRCPRecog' do
+                expect_mrcprecog_with_options(//)
+                subject.execute
+              end
+            end
           end
 
           describe 'Input#min-confidence' do
-            pending
+            context 'a string' do
+              let(:input_command_opts) { { min_confidence: '0.5' } }
+
+              it 'should pass the ct option to MRCPRecog' do
+                expect_mrcprecog_with_options(/ct=0.5/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { min_confidence: nil } }
+
+              it 'should not pass any options to MRCPRecog' do
+                expect_mrcprecog_with_options(//)
+                subject.execute
+              end
+            end
           end
 
           describe 'Input#max-silence' do
@@ -592,7 +624,23 @@ module Punchblock
           end
 
           describe 'Input#language' do
-            pending
+            context 'a string' do
+              let(:input_command_opts) { { language: 'en-GB' } }
+
+              it 'should pass the spl option to MRCPRecog' do
+                expect_mrcprecog_with_options(/spl=en-GB/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { language: nil } }
+
+              it 'should not pass any options to MRCPRecog' do
+                expect_mrcprecog_with_options(//)
+                subject.execute
+              end
+            end
           end
 
           describe "#execute_command" do

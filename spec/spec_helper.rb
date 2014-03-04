@@ -28,9 +28,6 @@ RSpec.configure do |config|
   config.before do
     @uuid = SecureRandom.uuid
     Punchblock.stub new_request_id: @uuid
-
-    @current_datetime = DateTime.now
-    DateTime.stub now: @current_datetime
   end
 
   config.after :each do

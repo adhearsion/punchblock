@@ -1,7 +1,9 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
-# [v2.4.1](https://github.com/adhearsion/punchblock/compare/v2.4.0...v2.4.1) - [2014-03-04](https://rubygems.org/gems/punchblock/versions/2.4.1)
+# [v2.4.2](https://github.com/adhearsion/punchblock/compare/v2.4.0...v2.4.2) - [2014-03-04](https://rubygems.org/gems/punchblock/versions/2.4.2)
   * Bugfix: Rayo events should not include their timestamp in comparison. This is not useful in applications, and makes testing more difficult.
+
+Note: 2.4.1 was not released due to a tagging mishap. Its contents was released as 2.4.2.
 
 # [v2.4.0](https://github.com/adhearsion/punchblock/compare/v2.3.1...v2.4.0) - [2014-03-01](https://rubygems.org/gems/punchblock/versions/2.4.0)
   * Feature: Add support for requesting calls with a specific URI

@@ -78,7 +78,7 @@ module Punchblock
     end
 
     def ==(o)
-      o.is_a?(self.class) && self.to_hash == o.to_hash
+      o.is_a?(self.class) && self.comparable_attributes == o.comparable_attributes
     end
 
     ##
@@ -111,5 +111,13 @@ module Punchblock
     end
 
     alias :to_s :inspect
+
+  protected
+
+    def comparable_attributes
+      to_hash.tap do |hash|
+        hash.delete :timestamp
+      end
+    end
   end
 end

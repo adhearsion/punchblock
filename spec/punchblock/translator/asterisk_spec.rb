@@ -235,10 +235,11 @@ module Punchblock
                 subject.execute_global_command earlier_command
 
                 @first_call = subject.call_with_id(requested_uri)
+
+                subject.execute_global_command command
               end
 
               it "should set the command response to a conflict error" do
-                subject.execute_global_command command
                 command.response(0.1).should == ProtocolError.new.setup(:conflict, 'Call ID already in use')
               end
 

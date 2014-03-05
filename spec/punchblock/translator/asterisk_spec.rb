@@ -59,6 +59,29 @@ module Punchblock
         end
       end
 
+      describe '#send_message' do
+        let(:call_id) { 'abc123' }
+        let(:body) { 'hello world' }
+        let(:call) { Translator::Asterisk::Call.new 'SIP/foo', subject, ami_client, connection }
+
+        before do
+          call.stub(:id).and_return call_id
+          subject.register_call call
+        end
+
+        it 'sends the command to the call for execution' do
+          call.should_receive(:send_message).once.with body
+          subject.send_message call_id, 'example.com', body, subject: 'stuff'
+        end
+
+        context "when the call doesn't exist" do
+          it "should not crash the translator" do
+            subject.send_message 'oops', 'example.com', body, subject: 'stuff'
+            subject.should be_alive
+          end
+        end
+      end
+
       describe '#register_call' do
         let(:call_id) { 'abc123' }
         let(:channel) { 'SIP/foo' }
@@ -235,10 +258,11 @@ module Punchblock
                 subject.execute_global_command earlier_command
 
                 @first_call = subject.call_with_id(requested_uri)
+
+                subject.execute_global_command command
               end
 
               it "should set the command response to a conflict error" do
-                subject.execute_global_command command
                 command.response(0.1).should == ProtocolError.new.setup(:conflict, 'Call ID already in use')
               end
 

@@ -1099,6 +1099,22 @@ module Punchblock
           end
         end
 
+        describe '#send_message' do
+          let(:body) { 'Hello world' }
+
+          it "should invoke SendText" do
+            subject.should_receive(:execute_agi_command).with('EXEC SendText', body).and_return code: 200
+            subject.send_message body
+          end
+
+          context "when an AMI error is received" do
+            it "is silently ignored" do
+              subject.should_receive(:execute_agi_command).with('EXEC SendText', body).and_raise RubyAMI::Error.new.tap { |e| e.message = 'Call not found' }
+              subject.send_message body
+            end
+          end
+        end
+
         describe '#execute_command' do
           before do
             command.request!

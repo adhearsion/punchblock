@@ -29,6 +29,10 @@ module Punchblock
         translator.async.execute_command command, options
       end
 
+      def send_message(*args)
+        translator.send_message *args
+      end
+
       def handle_event(event)
         event_handler.call event
       end

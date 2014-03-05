@@ -97,6 +97,13 @@ module Punchblock
           subject.new_call_uri.should == 'foobar'
         end
       end
+
+      describe '#send_message' do
+        it 'passes the message to the translator for dispatch' do
+          subject.translator.should_receive(:send_message).once.with(:foo)
+          subject.send_message :foo
+        end
+      end
     end
   end
 end

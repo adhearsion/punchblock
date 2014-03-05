@@ -98,6 +98,11 @@ module Punchblock
         connection.handle_event event
       end
 
+      def send_message(call_id, domain, body, options = {})
+        call = call_with_id call_id
+        call.send_message body if call
+      end
+
       def execute_command(command, options = {})
         command.request!
 

@@ -36,7 +36,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<ruby_jid>, ["~> 1.0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]
-  s.add_development_dependency %q<rspec>, ["~> 2.7"]
+  s.add_development_dependency %q<rspec>, ["~> 2.13"]
   s.add_development_dependency %q<ci_reporter>, ["~> 1.6"]
   s.add_development_dependency %q<yard>, ["~> 0.6"]
   s.add_development_dependency %q<rake>, [">= 0"]

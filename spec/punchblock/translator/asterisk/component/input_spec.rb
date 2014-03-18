@@ -99,6 +99,10 @@ module Punchblock
                   subject.should_receive(:process_dtmf).never
                   send_ami_events_for_dtmf 3
                 end
+
+                it "should not leave the recognizer running" do
+                  Celluloid::Actor.all.map { |a| a.class }.should_not include(Punchblock::Translator::DTMFRecognizer)
+                end
               end
 
               context "when the match is invalid" do

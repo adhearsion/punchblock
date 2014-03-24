@@ -212,6 +212,15 @@ module Punchblock
               execute_agi_command 'EXEC Congestion'
             end
             command.response = true
+          when Command::Redirect
+            execute_agi_command 'EXEC Transfer', command.to
+            status = channel_var 'TRANSFERSTATUS'
+            command.response = case status
+            when 'SUCCESS'
+              true
+            else
+              ProtocolError.new.setup 'error', "TRANSFERSTATUS was #{status}", id
+            end
           when Punchblock::Component::Asterisk::AGI::Command
             execute_component Component::Asterisk::AGICommand, command
           when Punchblock::Component::Output

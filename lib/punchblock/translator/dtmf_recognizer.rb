@@ -122,6 +122,7 @@ module Punchblock
           @responder.send match_type
         end
         @finished = true
+        terminate
       end
     end
   end

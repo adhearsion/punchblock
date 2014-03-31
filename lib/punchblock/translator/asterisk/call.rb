@@ -16,8 +16,8 @@ module Punchblock
         attr_reader :id, :channel, :translator, :agi_env, :direction
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
-        HANGUP_CAUSE_TO_END_REASON[0] = :hangup
-        HANGUP_CAUSE_TO_END_REASON[16] = :hangup
+        HANGUP_CAUSE_TO_END_REASON[0] = :hungup
+        HANGUP_CAUSE_TO_END_REASON[16] = :hungup
         HANGUP_CAUSE_TO_END_REASON[17] = :busy
         HANGUP_CAUSE_TO_END_REASON[18] = :timeout
         HANGUP_CAUSE_TO_END_REASON[19] = :reject

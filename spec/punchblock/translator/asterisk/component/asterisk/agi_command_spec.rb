@@ -159,8 +159,8 @@ module Punchblock
                   context "when the PUNCHBLOCK_END_ON_ASYNCAGI_BREAK channel var is set" do
                     let(:chan_var) { 'true' }
 
-                    it 'should send an end (hangup) event to the translator' do
-                      expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                    it 'should send an end (hungup) event to the translator' do
+                      expected_end_event = Punchblock::Event::End.new reason: :hungup,
                                                                       platform_code: 16,
                                                                       target_call_id: mock_call.id
 
@@ -181,7 +181,7 @@ module Punchblock
                       end
 
                       it "should use the AMI timestamp for the Rayo event" do
-                        expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                        expected_end_event = Punchblock::Event::End.new reason: :hungup,
                                                                         platform_code: 16,
                                                                         target_call_id: mock_call.id,
                                                                         timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)

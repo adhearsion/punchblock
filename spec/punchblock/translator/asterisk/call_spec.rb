@@ -303,7 +303,7 @@ module Punchblock
               comp_command.response(0.1).should be_a Ref
               expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id, source_uri: component.id
               expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
-              expected_end_event = Punchblock::Event::End.new :reason => :hangup, platform_code: cause, :target_call_id  => subject.id
+              expected_end_event = Punchblock::Event::End.new :reason => :hungup, platform_code: cause, :target_call_id  => subject.id
 
               translator.should_receive(:handle_pb_event).with(expected_complete_event).once.ordered
               translator.should_receive(:handle_pb_event).with(expected_end_event).once.ordered
@@ -338,7 +338,7 @@ module Punchblock
               end
 
               it "should use the AMI timestamp for the Rayo event" do
-                expected_end_event = Punchblock::Event::End.new reason: :hangup,
+                expected_end_event = Punchblock::Event::End.new reason: :hungup,
                                                                 platform_code: cause,
                                                                 target_call_id: subject.id,
                                                                 timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
@@ -370,8 +370,8 @@ module Punchblock
               let(:cause)     { '0' }
               let(:cause_txt) { 'Undefined' }
 
-              it 'should send an end (hangup) event to the translator' do
-                expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+              it 'should send an end (hungup) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hungup,
                                                                 platform_code: cause,
                                                                 :target_call_id  => subject.id
                 translator.should_receive(:handle_pb_event).with expected_end_event
@@ -383,8 +383,8 @@ module Punchblock
               let(:cause)     { '16' }
               let(:cause_txt) { 'Normal Clearing' }
 
-              it 'should send an end (hangup) event to the translator' do
-                expected_end_event = Punchblock::Event::End.new :reason   => :hangup,
+              it 'should send an end (hungup) event to the translator' do
+                expected_end_event = Punchblock::Event::End.new :reason   => :hungup,
                                                                 platform_code: cause,
                                                                 :target_call_id  => subject.id
                 translator.should_receive(:handle_pb_event).with expected_end_event

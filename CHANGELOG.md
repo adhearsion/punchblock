@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Bugfix: Ensure DTMF recognisers get shut down when finishing
+  * Bugfix: Hangup reason on Asterisk was `:hangup`, should be `:hungup`. See [the Rayo spec](http://xmpp.org/extensions/xep-0327.html#def-end-reason).
 
 # [v2.5.0](https://github.com/adhearsion/punchblock/compare/v2.4.2...v2.5.0) - [2014-03-05](https://rubygems.org/gems/punchblock/versions/2.5.0)
   * Feature: Support language, sensitivity and minimum confidence on UniMRCP-based ASR on Asterisk

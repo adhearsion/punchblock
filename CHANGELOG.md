@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: No longer confound start and stop beeps on record commands (#220)
 
 # [v2.5.1](https://github.com/adhearsion/punchblock/compare/v2.5.0...v2.5.1) - [2014-03-31](https://rubygems.org/gems/punchblock/versions/2.5.1)
   * Bugfix: Ensure DTMF recognisers get shut down when finishing

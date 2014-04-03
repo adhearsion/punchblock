@@ -47,7 +47,7 @@ module Punchblock
           'final-timeout' => final_timeout,
           'max-duration' => max_duration,
           'start-beep' => start_beep,
-          'stop-beep' => start_beep,
+          'stop-beep' => stop_beep,
           'start-paused' => start_paused,
           'direction' => direction,
           'mix' => mix

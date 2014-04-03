@@ -13,7 +13,7 @@ module Punchblock
         subject do
           Record.new :format          => 'WAV',
                      :start_beep      => true,
-                     :stop_beep       => true,
+                     :stop_beep       => false,
                      :start_paused    => false,
                      :max_duration    => 500000,
                      :initial_timeout => 10000,
@@ -24,7 +24,7 @@ module Punchblock
 
         its(:format)          { should be == 'WAV' }
         its(:start_beep)      { should be == true }
-        its(:stop_beep)       { should be == true }
+        its(:stop_beep)       { should be == false }
         its(:start_paused)    { should be == false }
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }
@@ -38,7 +38,7 @@ module Punchblock
             new_instance.should be_instance_of described_class
             new_instance.format.should be == 'WAV'
             new_instance.start_beep.should be == true
-            new_instance.stop_beep.should be == true
+            new_instance.stop_beep.should be == false
             new_instance.start_paused.should be == false
             new_instance.max_duration.should be == 500000
             new_instance.initial_timeout.should be == 10000
@@ -63,7 +63,7 @@ module Punchblock
 <record xmlns="urn:xmpp:rayo:record:1"
         format="WAV"
         start-beep="true"
-        stop-beep="true"
+        stop-beep="false"
         start-paused="false"
         max-duration="500000"
         initial-timeout="10000"
@@ -79,7 +79,7 @@ module Punchblock
 
         its(:format)          { should be == 'WAV' }
         its(:start_beep)      { should be == true }
-        its(:stop_beep)       { should be == true }
+        its(:stop_beep)       { should be == false }
         its(:start_paused)    { should be == false }
         its(:max_duration)    { should be == 500000 }
         its(:initial_timeout) { should be == 10000 }

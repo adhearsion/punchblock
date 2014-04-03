@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v2.5.2](https://github.com/adhearsion/punchblock/compare/v2.5.1...v2.5.2) - [2014-04-03](https://rubygems.org/gems/punchblock/versions/2.5.2)
+  * Bugfix: No longer confound start and stop beeps on record commands (#220)
+
 # [v2.5.1](https://github.com/adhearsion/punchblock/compare/v2.5.0...v2.5.1) - [2014-03-31](https://rubygems.org/gems/punchblock/versions/2.5.1)
   * Bugfix: Ensure DTMF recognisers get shut down when finishing
   * Bugfix: Hangup reason on Asterisk was `:hangup`, should be `:hungup`. See [the Rayo spec](http://xmpp.org/extensions/xep-0327.html#def-end-reason).

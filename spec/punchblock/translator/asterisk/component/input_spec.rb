@@ -136,7 +136,7 @@ module Punchblock
                   recognizer = Celluloid::Actor.all.find { |a| a.class == Punchblock::Translator::DTMFRecognizer }
                   recognizer.terminate if recognizer
                   Celluloid::Actor.all.map { |a| a.class }.should_not include(Punchblock::Translator::DTMFRecognizer)
-                  subject.process_dtmf 1
+                  subject.process_dtmf 1 # trigger failure
                   Celluloid::Actor.all.map { |a| a.class }.should include(translator.class)
                 end
               end

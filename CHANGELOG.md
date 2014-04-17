@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Prevent Asterisk translator death due to dead DTMF recognizers ([#221](https://github.com/adhearsion/punchblock/pull/221), [adhearsion/adhearsion#479](https://github.com/adhearsion/adhearsion/issues/479))
 
 # [v2.5.2](https://github.com/adhearsion/punchblock/compare/v2.5.1...v2.5.2) - [2014-04-03](https://rubygems.org/gems/punchblock/versions/2.5.2)
   * Bugfix: No longer confound start and stop beeps on record commands (#220)

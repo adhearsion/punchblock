@@ -119,6 +119,27 @@ module Punchblock
                   reason.should be == expected_event
                 end
               end
+
+              context "dtmf event received after recognizer has terminated" do
+                before do
+                  send_ami_events_for_dtmf 1
+                  send_ami_events_for_dtmf '#'
+                  subject.execute
+                end
+
+                let :expected_event do
+                  Punchblock::Component::Input::Complete::NoMatch.new
+                end
+
+                it "should not crash the translator if the recognizer is dead" do
+                  Celluloid::Actor.all.map { |a| a.class }.should include(Punchblock::Translator::DTMFRecognizer)
+                  recognizer = Celluloid::Actor.all.find { |a| a.class == Punchblock::Translator::DTMFRecognizer }
+                  recognizer.terminate if recognizer
+                  Celluloid::Actor.all.map { |a| a.class }.should_not include(Punchblock::Translator::DTMFRecognizer)
+                  subject.process_dtmf 1 # trigger failure
+                  Celluloid::Actor.all.map { |a| a.class }.should include(translator.class)
+                end
+              end
             end
 
             describe 'grammar' do

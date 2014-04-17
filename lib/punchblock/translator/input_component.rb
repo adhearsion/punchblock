@@ -14,6 +14,8 @@ module Punchblock
 
       def process_dtmf(digit)
         @recognizer << digit
+      rescue Celluloid::DeadActorError => e
+        pb_logger.error "Called a dead actor while processing a dtmf digit"
       end
 
       def execute_command(command)

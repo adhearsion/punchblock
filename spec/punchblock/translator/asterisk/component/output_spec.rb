@@ -580,6 +580,16 @@ module Punchblock
                           expect_playback 'blue.tt-monkeys'
                           subject.execute
                         end
+
+                        context "and no file extension" do
+                          let(:audio_filename) { '/var/lib/gems/1.9.1/gems/myapp-1.0.0/prompts/greeting' }
+
+                          it 'should playback the audio file using Playback' do
+                            expect_answered
+                            expect_playback '/var/lib/gems/1.9.1/gems/myapp-1.0.0/prompts/greeting'
+                            subject.execute
+                          end
+                        end
                       end
                     end
 

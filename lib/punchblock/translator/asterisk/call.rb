@@ -212,19 +212,7 @@ module Punchblock
           when Punchblock::Component::Input
             execute_component Component::Input, command
           when Punchblock::Component::Prompt
-            component_class = case command.input.recognizer
-            when 'unimrcp'
-              case command.output.renderer
-              when 'unimrcp'
-                Component::MRCPPrompt
-              when 'asterisk'
-                Component::MRCPNativePrompt
-              else
-                raise InvalidCommandError, 'Invalid recognizer/renderer combination'
-              end
-            else
-              Component::ComposedPrompt
-            end
+            component_class = determine_component_class(command)
             execute_component component_class, command
           when Punchblock::Component::Record
             execute_component Component::Record, command
@@ -239,6 +227,23 @@ module Punchblock
           command.response = ProtocolError.new.setup 'error', e.message, id
         rescue Celluloid::DeadActorError
           command.response = ProtocolError.new.setup :item_not_found, "Could not find a component with ID #{command.component_id} for call #{id}", id, command.component_id
+        end
+
+        def determine_component_class(command)
+          if command.input.recognizer === 'unimrcp'
+            case command.output.renderer
+            when 'unimrcp'
+              Component::MRCPPrompt
+            when 'native_or_unimrcp'
+              Component::MRCPPrompt
+            when 'asterisk'
+              Component::MRCPNativePrompt
+            else
+              raise InvalidCommandError, 'Invalid recognizer/renderer combination'
+            end
+          else
+            Component::ComposedPrompt
+          end
         end
 
         #

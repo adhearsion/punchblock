@@ -1231,6 +1231,17 @@ module Punchblock
               end
             end
 
+            context "when the recognizer is unimrcp and the renderer is native_or_unimrcp" do
+              let(:recognizer)  { :unimrcp }
+              let(:renderer)    { :native_or_unimrcp }
+
+              it 'should create an MRCPPrompt component and execute it asynchronously' do
+                Component::MRCPPrompt.should_receive(:new_link).once.with(command, subject).and_return mock_action
+                mock_action.async.should_receive(:execute).once
+                subject.execute_command command
+              end
+            end
+
             context "when the recognizer is unimrcp and the renderer is asterisk" do
               let(:recognizer)  { :unimrcp }
               let(:renderer)    { :asterisk }

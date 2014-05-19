@@ -93,23 +93,15 @@ module Punchblock
           end
 
           context 'with an invalid recognizer' do
-            let(:input_command_opts) { { recognizer: 'foobar' } }
+            [:asterisk, :foobar].each do |recognizer|
+              context "with a recognizer #{recognizer.inspect}" do
+                let(:input_command_opts) { { recognizer: recognizer } }
 
-            it "should return an error and not execute any actions" do
-              subject.execute
-              error = ProtocolError.new.setup 'option error', 'The recognizer foobar is unsupported.'
-              original_command.response(0.1).should be == error
-            end
-          end
-
-          [:asterisk].each do |recognizer|
-            context "with a recognizer #{recognizer.inspect}" do
-              let(:input_command_opts) { { recognizer: recognizer } }
-
-              it "should return an error and not execute any actions" do
-                subject.execute
-                error = ProtocolError.new.setup 'option error', "The recognizer #{recognizer} is unsupported."
-                original_command.response(0.1).should be == error
+                it "should return an error and not execute any actions" do
+                  subject.execute
+                  error = ProtocolError.new.setup 'option error', "The recognizer #{recognizer} is unsupported."
+                  original_command.response(0.1).should be == error
+                end
               end
             end
           end
@@ -162,7 +154,7 @@ module Punchblock
           end
 
           describe 'Output#renderer' do
-            [nil, :unimrcp].each do |renderer|
+            [nil, :unimrcp, :native_or_unimrcp].each do |renderer|
               context renderer.to_s do
                 let(:output_command_opts) { { renderer: renderer } }
 

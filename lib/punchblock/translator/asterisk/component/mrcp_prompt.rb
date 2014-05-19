@@ -11,11 +11,11 @@ module Punchblock
           private
 
           def validate
-            raise OptionError, "The renderer #{renderer} is unsupported." unless renderer == 'unimrcp'
-            raise OptionError, "The recognizer #{recognizer} is unsupported." unless recognizer == 'unimrcp'
-            raise OptionError, 'An SSML document is required.' unless output_node.render_documents.count > 0
-            raise OptionError, 'Only one document is allowed.' if output_node.render_documents.count > 1
-            raise OptionError, 'A grammar is required.' unless input_node.grammars.count > 0
+            fail OptionError, "The renderer #{renderer} is unsupported." unless renderer == 'unimrcp' || renderer == 'native_or_unimrcp'
+            fail OptionError, "The recognizer #{recognizer} is unsupported." unless recognizer == 'unimrcp' || renderer == 'native_or_unimrcp'
+            fail OptionError, 'An SSML document is required.' unless output_node.render_documents.count > 0
+            fail OptionError, 'Only one document is allowed.' if output_node.render_documents.count > 1
+            fail OptionError, 'A grammar is required.' unless input_node.grammars.count > 0
 
             super
           end

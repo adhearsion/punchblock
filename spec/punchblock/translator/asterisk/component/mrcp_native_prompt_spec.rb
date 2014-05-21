@@ -189,7 +189,7 @@ module Punchblock
                           input 'Hello', mode: :speech
                           instance 'Hello'
                         end
-                      end.root
+                      end
                     end
 
                     it 'should send a match complete event' do

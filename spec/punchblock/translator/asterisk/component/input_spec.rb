@@ -431,7 +431,7 @@ module Punchblock
                           instance "dtmf-1 dtmf-1"
                           input '11', mode: :dtmf
                         end
-                      end.root
+                      end
                     end
 
                     it "should fire a match on timeout" do

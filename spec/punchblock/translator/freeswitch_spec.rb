@@ -22,7 +22,7 @@ module Punchblock
           call = described_class::Call.new 'foo', subject
           subject.register_call call
           subject.terminate
-          call.should_not be_alive
+          expect(call.alive?).to be false
         end
       end
 
@@ -145,7 +145,7 @@ module Punchblock
 
             lambda { call.oops }.should raise_error(/Woops, I died/)
             sleep 0.1
-            call.should_not be_alive
+            expect(call.alive?).to be false
             subject.call_with_id(call_id).should be_nil
 
             command.request!
@@ -177,7 +177,7 @@ module Punchblock
 
             lambda { call.oops }.should raise_error(/Woops, I died/)
             sleep 0.1
-            call.should_not be_alive
+            expect(call.alive?).to be false
             subject.call_with_id(call_id).should be_nil
 
             command.request!

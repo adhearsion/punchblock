@@ -73,7 +73,7 @@ module Punchblock
               subject.wrapped_object.stub(:send_event).and_return true
               subject.send_complete_event reason
               sleep 0.2
-              subject.should_not be_alive
+              expect(subject.alive?).to be false
             end
           end
 

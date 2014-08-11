@@ -342,7 +342,7 @@ module Punchblock
               translator.should_receive(:handle_pb_event).once
               subject.handle_es_event es_event
               sleep 0.25
-              subject.should_not be_alive
+              expect(subject.alive?).to be false
             end
 
             it "de-registers the call from the translator" do
@@ -906,7 +906,7 @@ module Punchblock
 
                 lambda { component.oops }.should raise_error(/Woops, I died/)
                 sleep 0.1
-                component.should_not be_alive
+                expect(component.alive?).to be false
                 subject.component_with_id(comp_id).should be_nil
 
                 subsequent_command.request!

@@ -6,31 +6,49 @@ module Punchblock
   module Command
     describe Join do
       it 'registers itself' do
-        RayoNode.class_from_registration(:join, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:join, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "when setting options in initializer" do
         subject { described_class.new :call_uri => 'abc123', :mixer_name => 'blah', :direction => :duplex, :media => :bridge }
 
-        its(:call_uri)    { should be == 'abc123' }
-        its(:mixer_name)  { should be == 'blah' }
-        its(:direction)   { should be == :duplex }
-        its(:media)       { should be == :bridge }
+        describe '#call_uri' do
+          subject { super().call_uri }
+          it { should be == 'abc123' }
+        end
+
+        describe '#mixer_name' do
+          subject { super().mixer_name }
+          it { should be == 'blah' }
+        end
+
+        describe '#direction' do
+          subject { super().direction }
+          it { should be == :duplex }
+        end
+
+        describe '#media' do
+          subject { super().media }
+          it { should be == :bridge }
+        end
 
         context "with old call_id attribute" do
           subject { described_class.new call_id: 'abc123' }
 
-          its(:call_uri)  { should be == 'abc123' }
+          describe '#call_uri' do
+            subject { super().call_uri }
+            it { should be == 'abc123' }
+          end
         end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
-            new_instance.should be_instance_of described_class
-            new_instance.call_uri.should == 'abc123'
-            new_instance.mixer_name.should == 'blah'
-            new_instance.direction.should == :duplex
-            new_instance.media.should == :bridge
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.call_uri).to eq('abc123')
+            expect(new_instance.mixer_name).to eq('blah')
+            expect(new_instance.direction).to eq(:duplex)
+            expect(new_instance.media).to eq(:bridge)
           end
 
           it "should render to a parent node if supplied" do
@@ -38,15 +56,15 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
 
           context "when attributes are not set" do
             subject { described_class.new call_uri: 'abc123' }
 
             it "should not include them in the XML representation" do
-              subject.to_rayo['call-uri'].should == 'abc123'
-              subject.to_rayo['mixer-name'].should be_nil
+              expect(subject.to_rayo['call-uri']).to eq('abc123')
+              expect(subject.to_rayo['mixer-name']).to be_nil
             end
           end
         end
@@ -67,18 +85,48 @@ module Punchblock
 
         it { should be_instance_of described_class }
 
-        its(:call_uri)    { should be == 'abc123' }
-        its(:mixer_name)  { should be == 'blah' }
-        its(:direction)   { should be == :duplex }
-        its(:media)       { should be == :bridge }
+        describe '#call_uri' do
+          subject { super().call_uri }
+          it { should be == 'abc123' }
+        end
+
+        describe '#mixer_name' do
+          subject { super().mixer_name }
+          it { should be == 'blah' }
+        end
+
+        describe '#direction' do
+          subject { super().direction }
+          it { should be == :duplex }
+        end
+
+        describe '#media' do
+          subject { super().media }
+          it { should be == :bridge }
+        end
 
         context "when no attributes are set" do
           let(:stanza) { '<join xmlns="urn:xmpp:rayo:1" />' }
 
-          its(:call_uri)    { should be_nil }
-          its(:mixer_name)  { should be_nil }
-          its(:direction)   { should be_nil }
-          its(:media)       { should be_nil }
+          describe '#call_uri' do
+            subject { super().call_uri }
+            it { should be_nil }
+          end
+
+          describe '#mixer_name' do
+            subject { super().mixer_name }
+            it { should be_nil }
+          end
+
+          describe '#direction' do
+            subject { super().direction }
+            it { should be_nil }
+          end
+
+          describe '#media' do
+            subject { super().media }
+            it { should be_nil }
+          end
         end
       end
 
@@ -87,14 +135,20 @@ module Punchblock
           describe direction do
             subject { described_class.new :direction => direction }
 
-            its(:direction) { should be == direction }
+            describe '#direction' do
+              subject { super().direction }
+              it { should be == direction }
+            end
           end
         end
 
         describe "no direction" do
           subject { described_class.new }
 
-          its(:direction) { should be_nil }
+          describe '#direction' do
+            subject { super().direction }
+            it { should be_nil }
+          end
         end
 
         describe "blahblahblah" do

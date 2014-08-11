@@ -62,34 +62,49 @@ module Punchblock
 
         subject { Call.new channel, translator, ami_client, connection, agi_env }
 
-        its(:id)          { should be_a String }
-        its(:channel)     { should be == channel }
-        its(:translator)  { should be translator }
-        its(:agi_env)     { should be == agi_env }
+        describe '#id' do
+          subject { super().id }
+          it { should be_a String }
+        end
 
-        before { translator.stub :handle_pb_event }
+        describe '#channel' do
+          subject { super().channel }
+          it { should be == channel }
+        end
+
+        describe '#translator' do
+          subject { super().translator }
+          it { should be translator }
+        end
+
+        describe '#agi_env' do
+          subject { super().agi_env }
+          it { should be == agi_env }
+        end
+
+        before { allow(translator).to receive :handle_pb_event }
 
         describe '#register_component' do
           it 'should make the component accessible by ID' do
             component_id = 'abc123'
             component    = double 'Translator::Asterisk::Component', :id => component_id
             subject.register_component component
-            subject.component_with_id(component_id).should be component
+            expect(subject.component_with_id(component_id)).to be component
           end
         end
 
         describe "getting channel vars" do
           it "should do a GetVar when we don't have a cached value" do
             response = RubyAMI::Response.new 'Value' => 'thevalue'
-            ami_client.should_receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'somevariable').and_return response
-            subject.channel_var('somevariable').should == 'thevalue'
+            expect(ami_client).to receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'somevariable').and_return response
+            expect(subject.channel_var('somevariable')).to eq('thevalue')
           end
 
           context "when the value comes back from GetVar as '(null)'" do
             it "should return nil" do
               response = RubyAMI::Response.new 'Value' => '(null)'
-              ami_client.should_receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'somevariable').and_return response
-              subject.channel_var('somevariable').should be_nil
+              expect(ami_client).to receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'somevariable').and_return response
+              expect(subject.channel_var('somevariable')).to be_nil
             end
           end
         end
@@ -100,30 +115,30 @@ module Punchblock
                                                           :to       => '1000',
                                                           :from     => 'Jane Smith <SIP/5678>',
                                                           :headers  => sip_headers
-            translator.should_receive(:handle_pb_event).with expected_offer
+            expect(translator).to receive(:handle_pb_event).with expected_offer
             subject.send_offer
           end
 
           it 'should make the call identify as inbound' do
             subject.send_offer
-            subject.direction.should be == :inbound
-            subject.inbound?.should be true
-            subject.outbound?.should be false
+            expect(subject.direction).to eq(:inbound)
+            expect(subject.inbound?).to be true
+            expect(subject.outbound?).to be false
           end
         end
 
         describe '#send_progress' do
           context "with a call that is already answered" do
             it 'should not send the EXEC Progress command' do
-              subject.should_receive(:'answered?').and_return true
-              subject.should_receive(:execute_agi_command).with("EXEC Progress").never
+              expect(subject).to receive(:'answered?').and_return true
+              expect(subject).to receive(:execute_agi_command).with("EXEC Progress").never
               subject.send_progress
             end
           end
 
           context "with an unanswered call" do
             before do
-              subject.should_receive(:'answered?').at_least(:once).and_return(false)
+              expect(subject).to receive(:'answered?').at_least(:once).and_return(false)
             end
 
             context "with a call that is outbound" do
@@ -135,7 +150,7 @@ module Punchblock
               end
 
               it 'should not send the EXEC Progress command' do
-                subject.should_receive(:execute_agi_command).with("EXEC Progress").never
+                expect(subject).to receive(:execute_agi_command).with("EXEC Progress").never
                 subject.send_progress
               end
             end
@@ -146,12 +161,12 @@ module Punchblock
               end
 
               it 'should send the EXEC Progress command to a call that is inbound and not answered' do
-                subject.should_receive(:execute_agi_command).with("EXEC Progress").and_return code: 200, result: 0
+                expect(subject).to receive(:execute_agi_command).with("EXEC Progress").and_return code: 200, result: 0
                 subject.send_progress
               end
 
               it 'should send the EXEC Progress command only once if called twice' do
-                subject.should_receive(:execute_agi_command).with("EXEC Progress").once.and_return code: 200, result: 0
+                expect(subject).to receive(:execute_agi_command).with("EXEC Progress").once.and_return code: 200, result: 0
                 subject.send_progress
                 subject.send_progress
               end
@@ -182,7 +197,7 @@ module Punchblock
                                                                                  :variable    => "punchblock_call_id=#{subject.id}"
                                                                                }).tap { |a| a.request! }
 
-            translator.async.should_receive(:execute_global_command).once.with expected_action
+            expect(translator.async).to receive(:execute_global_command).once.with expected_action
             subject.dial dial_command
           end
 
@@ -201,7 +216,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id}"
                                                                                  }).tap { |a| a.request! }
 
-              translator.async.should_receive(:execute_global_command).once.with expected_action
+              expect(translator.async).to receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -224,7 +239,7 @@ module Punchblock
                                                                                    :timeout     => 10000
                                                                                  }).tap { |a| a.request! }
 
-              translator.async.should_receive(:execute_global_command).once.with expected_action
+              expect(translator.async).to receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -246,7 +261,7 @@ module Punchblock
                                                                                    :variable    => "punchblock_call_id=#{subject.id},SIPADDHEADER51=\"X-foo: bar\",SIPADDHEADER52=\"X-doo: dah\""
                                                                                  }).tap { |a| a.request! }
 
-              translator.async.should_receive(:execute_global_command).once.with expected_action
+              expect(translator.async).to receive(:execute_global_command).once.with expected_action
               subject.dial dial_command
             end
           end
@@ -254,23 +269,23 @@ module Punchblock
           it 'sends the call ID as a response to the Dial' do
             subject.dial dial_command
             dial_command.response
-            dial_command.target_call_id.should be == subject.id
+            expect(dial_command.target_call_id).to eq(subject.id)
           end
 
           it 'should make the call identify as outbound' do
             subject.dial dial_command
-            subject.direction.should be == :outbound
-            subject.outbound?.should be true
-            subject.inbound?.should be false
+            expect(subject.direction).to eq(:outbound)
+            expect(subject.outbound?).to be true
+            expect(subject.inbound?).to be false
           end
 
           it 'causes accepting the call to be a null operation' do
             subject.dial dial_command
             accept_command = Command::Accept.new
             accept_command.request!
-            subject.should_receive(:execute_agi_command).never
+            expect(subject).to receive(:execute_agi_command).never
             subject.execute_command accept_command
-            accept_command.response(0.5).should be true
+            expect(accept_command.response(0.5)).to be true
           end
         end
 
@@ -290,41 +305,41 @@ module Punchblock
             let(:cause_txt) { 'Normal Clearing' }
 
             it "de-registers the call from the translator" do
-              translator.stub :handle_pb_event
-              translator.should_receive(:deregister_call).once.with(subject.id, subject.channel)
+              allow(translator).to receive :handle_pb_event
+              expect(translator).to receive(:deregister_call).once.with(subject.id, subject.channel)
               subject.process_ami_event ami_event
             end
 
             it "should cause all components to send complete events before sending end event" do
-              subject.stub :send_progress
+              allow(subject).to receive :send_progress
               comp_command = Punchblock::Component::Input.new :grammar => {:value => RubySpeech::GRXML.draw(root: 'foo') { rule id: 'foo' }}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
-              comp_command.response(0.1).should be_a Ref
+              expect(comp_command.response(0.1)).to be_a Ref
               expected_complete_event = Punchblock::Event::Complete.new :target_call_id => subject.id, :component_id => component.id, source_uri: component.id
               expected_complete_event.reason = Punchblock::Event::Complete::Hangup.new
               expected_end_event = Punchblock::Event::End.new :reason => :hungup, platform_code: cause, :target_call_id  => subject.id
 
-              translator.should_receive(:handle_pb_event).with(expected_complete_event).once.ordered
-              translator.should_receive(:handle_pb_event).with(expected_end_event).once.ordered
+              expect(translator).to receive(:handle_pb_event).with(expected_complete_event).once.ordered
+              expect(translator).to receive(:handle_pb_event).with(expected_end_event).once.ordered
               subject.process_ami_event ami_event
             end
 
             it "should not allow commands to be executed while components are shutting down" do
               call_id = subject.id
 
-              subject.stub :send_progress
+              allow(subject).to receive :send_progress
               comp_command = Punchblock::Component::Input.new :grammar => {:value => RubySpeech::GRXML.draw(root: 'foo') { rule id: 'foo' }}, :mode => :dtmf
               comp_command.request!
               component = subject.execute_command comp_command
-              comp_command.response(0.1).should be_a Ref
+              expect(comp_command.response(0.1)).to be_a Ref
 
               subject.process_ami_event ami_event
 
               comp_command = Punchblock::Component::Input.new :grammar => {:value => '<grammar root="foo"><rule id="foo"/></grammar>'}, :mode => :dtmf
               comp_command.request!
               subject.execute_command comp_command
-              comp_command.response(0.1).should == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+              expect(comp_command.response(0.1)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id))
             end
 
             context "when the AMI event has a timestamp" do
@@ -342,7 +357,7 @@ module Punchblock
                                                                 platform_code: cause,
                                                                 target_call_id: subject.id,
                                                                 timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
-                translator.should_receive(:handle_pb_event).with expected_end_event
+                expect(translator).to receive(:handle_pb_event).with expected_end_event
 
                 subject.process_ami_event ami_event
               end
@@ -360,7 +375,7 @@ module Punchblock
                 expected_end_event = Punchblock::Event::End.new :reason   => :hangup_command,
                                                                 platform_code: cause,
                                                                 :target_call_id  => subject.id
-                translator.should_receive(:handle_pb_event).with expected_end_event
+                expect(translator).to receive(:handle_pb_event).with expected_end_event
 
                 subject.process_ami_event ami_event
               end
@@ -374,7 +389,7 @@ module Punchblock
                 expected_end_event = Punchblock::Event::End.new :reason   => :hungup,
                                                                 platform_code: cause,
                                                                 :target_call_id  => subject.id
-                translator.should_receive(:handle_pb_event).with expected_end_event
+                expect(translator).to receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -387,7 +402,7 @@ module Punchblock
                 expected_end_event = Punchblock::Event::End.new :reason   => :hungup,
                                                                 platform_code: cause,
                                                                 :target_call_id  => subject.id
-                translator.should_receive(:handle_pb_event).with expected_end_event
+                expect(translator).to receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -400,7 +415,7 @@ module Punchblock
                 expected_end_event = Punchblock::Event::End.new :reason   => :busy,
                                                                 platform_code: cause,
                                                                 :target_call_id  => subject.id
-                translator.should_receive(:handle_pb_event).with expected_end_event
+                expect(translator).to receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
             end
@@ -417,7 +432,7 @@ module Punchblock
                   expected_end_event = Punchblock::Event::End.new :reason   => :timeout,
                                                                   platform_code: cause,
                                                                   :target_call_id  => subject.id
-                  translator.should_receive(:handle_pb_event).with expected_end_event
+                  expect(translator).to receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -436,7 +451,7 @@ module Punchblock
                   expected_end_event = Punchblock::Event::End.new :reason   => :reject,
                                                                   platform_code: cause,
                                                                   :target_call_id  => subject.id
-                  translator.should_receive(:handle_pb_event).with expected_end_event
+                  expect(translator).to receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -489,7 +504,7 @@ module Punchblock
                   expected_end_event = Punchblock::Event::End.new :reason   => :error,
                                                                   platform_code: cause,
                                                                   :target_call_id  => subject.id
-                  translator.should_receive(:handle_pb_event).with expected_end_event
+                  expect(translator).to receive(:handle_pb_event).with expected_end_event
                   subject.process_ami_event ami_event
                 end
               end
@@ -516,12 +531,12 @@ module Punchblock
             end
 
             it 'should send the event to the component' do
-              component.should_receive(:handle_ami_event).once.with ami_event
+              expect(component).to receive(:handle_ami_event).once.with ami_event
               subject.process_ami_event ami_event
             end
 
             it 'should not send an answered event' do
-              translator.should_receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
+              expect(translator).to receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
               subject.process_ami_event ami_event
             end
           end
@@ -537,20 +552,20 @@ module Punchblock
             it 'should send an answered event' do
               expected_answered = Punchblock::Event::Answered.new
               expected_answered.target_call_id = subject.id
-              translator.should_receive(:handle_pb_event).with expected_answered
+              expect(translator).to receive(:handle_pb_event).with expected_answered
               subject.process_ami_event ami_event
             end
 
             it '#answered? should be true' do
               subject.process_ami_event ami_event
-              subject.answered?.should be_true
+              expect(subject.answered?).to be_true
             end
 
             context "for a second time" do
               it 'should only send one answered event' do
                 expected_answered = Punchblock::Event::Answered.new
                 expected_answered.target_call_id = subject.id
-                translator.should_receive(:handle_pb_event).with(expected_answered).once
+                expect(translator).to receive(:handle_pb_event).with(expected_answered).once
                 subject.process_ami_event ami_event
                 subject.process_ami_event ami_event
               end
@@ -568,7 +583,7 @@ module Punchblock
               it "should use the AMI timestamp for the Rayo event" do
                 expected_answered = Punchblock::Event::Answered.new target_call_id: subject.id,
                                                                     timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
-                translator.should_receive(:handle_pb_event).with expected_answered
+                expect(translator).to receive(:handle_pb_event).with expected_answered
 
                 subject.process_ami_event ami_event
               end
@@ -596,13 +611,13 @@ module Punchblock
               it 'should send a ringing event' do
                 expected_ringing = Punchblock::Event::Ringing.new
                 expected_ringing.target_call_id = subject.id
-                translator.should_receive(:handle_pb_event).with expected_ringing
+                expect(translator).to receive(:handle_pb_event).with expected_ringing
                 subject.process_ami_event ami_event
               end
 
               it '#answered? should return false' do
                 subject.process_ami_event ami_event
-                subject.answered?.should be_false
+                expect(subject.answered?).to be_false
               end
 
               context "when the AMI event has a timestamp" do
@@ -618,7 +633,7 @@ module Punchblock
                 it "should use the AMI timestamp for the Rayo event" do
                   expected_ringing = Punchblock::Event::Ringing.new target_call_id: subject.id,
                                                                     timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
-                  translator.should_receive(:handle_pb_event).with expected_ringing
+                  expect(translator).to receive(:handle_pb_event).with expected_ringing
 
                   subject.process_ami_event ami_event
                 end
@@ -646,7 +661,7 @@ module Punchblock
               let(:uniqueid)  { '<null>' }
 
               it 'should not send an end event' do
-                translator.should_receive(:handle_pb_event).once.with an_instance_of(Punchblock::Event::Asterisk::AMI::Event)
+                expect(translator).to receive(:handle_pb_event).once.with an_instance_of(Punchblock::Event::Asterisk::AMI::Event)
                 subject.process_ami_event ami_event
               end
             end
@@ -656,7 +671,7 @@ module Punchblock
               let(:uniqueid)  { '1235' }
 
               it 'should not send an end event' do
-                translator.should_receive(:handle_pb_event).once.with an_instance_of(Punchblock::Event::Asterisk::AMI::Event)
+                expect(translator).to receive(:handle_pb_event).once.with an_instance_of(Punchblock::Event::Asterisk::AMI::Event)
                 subject.process_ami_event ami_event
               end
             end
@@ -668,7 +683,7 @@ module Punchblock
               it 'should send an error end event' do
                 expected_end_event = Punchblock::Event::End.new :reason         => :error,
                                                                 :target_call_id => subject.id
-                translator.should_receive(:handle_pb_event).with expected_end_event
+                expect(translator).to receive(:handle_pb_event).with expected_end_event
                 subject.process_ami_event ami_event
               end
 
@@ -692,7 +707,7 @@ module Punchblock
                   expected_end_event = Punchblock::Event::End.new reason: :error,
                                                                   target_call_id: subject.id,
                                                                   timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
-                  translator.should_receive(:handle_pb_event).with expected_end_event
+                  expect(translator).to receive(:handle_pb_event).with expected_end_event
 
                   subject.process_ami_event ami_event
                 end
@@ -713,7 +728,7 @@ module Punchblock
             let(:response) { double 'Response' }
 
             it 'should execute the handler' do
-              response.should_receive(:call).once.with ami_event
+              expect(response).to receive(:call).once.with ami_event
               subject.register_handler :ami, :name => 'DTMF' do |event|
                 response.call event
               end
@@ -745,13 +760,13 @@ module Punchblock
               before do
                 translator.register_call other_call
                 command.request!
-                subject.should_receive(:execute_agi_command).and_return code: 200
+                expect(subject).to receive(:execute_agi_command).and_return code: 200
                 subject.execute_command command
               end
 
               it 'retrieves and sets success on the correct Join' do
                 subject.process_ami_event ami_event
-                command.response(0.5).should be == true
+                expect(command.response(0.5)).to eq(true)
               end
 
               context "with the channel names reversed" do
@@ -765,7 +780,7 @@ module Punchblock
 
                 it 'retrieves and sets success on the correct Join' do
                   subject.process_ami_event ami_event
-                  command.response(0.5).should be == true
+                  expect(command.response(0.5)).to eq(true)
                 end
               end
             end
@@ -812,8 +827,8 @@ module Punchblock
 
             before do
               translator.register_call other_call
-              translator.should_receive(:call_for_channel).with(other_channel).and_return(other_call)
-              other_call.should_receive(:id).and_return other_call_id
+              expect(translator).to receive(:call_for_channel).with(other_channel).and_return(other_call)
+              expect(other_call).to receive(:id).and_return other_call_id
             end
 
             context "of state 'Link'" do
@@ -825,12 +840,12 @@ module Punchblock
               end
 
               it 'sends the Joined event when the call is the first channel' do
-                translator.should_receive(:handle_pb_event).with expected_joined
+                expect(translator).to receive(:handle_pb_event).with expected_joined
                 subject.process_ami_event ami_event
               end
 
               it 'sends the Joined event when the call is the second channel' do
-                translator.should_receive(:handle_pb_event).with expected_joined
+                expect(translator).to receive(:handle_pb_event).with expected_joined
                 subject.process_ami_event switched_ami_event
               end
 
@@ -867,7 +882,7 @@ module Punchblock
 
                 context "when the call is the first channel" do
                   it "should use the AMI timestamp for the Rayo event" do
-                    translator.should_receive(:handle_pb_event).with expected_joined
+                    expect(translator).to receive(:handle_pb_event).with expected_joined
 
                     subject.process_ami_event ami_event
                   end
@@ -875,7 +890,7 @@ module Punchblock
 
                 context "when the call is the second channel" do
                   it "should use the AMI timestamp for the Rayo event" do
-                    translator.should_receive(:handle_pb_event).with expected_joined
+                    expect(translator).to receive(:handle_pb_event).with expected_joined
 
                     subject.process_ami_event switched_ami_event
                   end
@@ -892,12 +907,12 @@ module Punchblock
               end
 
               it 'sends the Unjoined event when the call is the first channel' do
-                translator.should_receive(:handle_pb_event).with expected_unjoined
+                expect(translator).to receive(:handle_pb_event).with expected_unjoined
                 subject.process_ami_event ami_event
               end
 
               it 'sends the Unjoined event when the call is the second channel' do
-                translator.should_receive(:handle_pb_event).with expected_unjoined
+                expect(translator).to receive(:handle_pb_event).with expected_unjoined
                 subject.process_ami_event switched_ami_event
               end
 
@@ -934,7 +949,7 @@ module Punchblock
 
                 context "when the call is the first channel" do
                   it "should use the AMI timestamp for the Rayo event" do
-                    translator.should_receive(:handle_pb_event).with expected_unjoined
+                    expect(translator).to receive(:handle_pb_event).with expected_unjoined
 
                     subject.process_ami_event ami_event
                   end
@@ -942,7 +957,7 @@ module Punchblock
 
                 context "when the call is the second channel" do
                   it "should use the AMI timestamp for the Rayo event" do
-                    translator.should_receive(:handle_pb_event).with expected_unjoined
+                    expect(translator).to receive(:handle_pb_event).with expected_unjoined
 
                     subject.process_ami_event switched_ami_event
                   end
@@ -982,8 +997,8 @@ module Punchblock
 
             before do
               translator.register_call other_call
-              translator.should_receive(:call_for_channel).with(other_channel).and_return(other_call)
-              other_call.should_receive(:id).and_return other_call_id
+              expect(translator).to receive(:call_for_channel).with(other_channel).and_return(other_call)
+              expect(other_call).to receive(:id).and_return other_call_id
             end
 
             let :expected_unjoined do
@@ -992,12 +1007,12 @@ module Punchblock
             end
 
             it 'sends the Unjoined event when the call is the first channel' do
-              translator.should_receive(:handle_pb_event).with expected_unjoined
+              expect(translator).to receive(:handle_pb_event).with expected_unjoined
               subject.process_ami_event ami_event
             end
 
             it 'sends the Unjoined event when the call is the second channel' do
-              translator.should_receive(:handle_pb_event).with expected_unjoined
+              expect(translator).to receive(:handle_pb_event).with expected_unjoined
               subject.process_ami_event switched_ami_event
             end
 
@@ -1030,7 +1045,7 @@ module Punchblock
 
               context "when the call is the first channel" do
                 it "should use the AMI timestamp for the Rayo event" do
-                  translator.should_receive(:handle_pb_event).with expected_unjoined
+                  expect(translator).to receive(:handle_pb_event).with expected_unjoined
 
                   subject.process_ami_event ami_event
                 end
@@ -1038,7 +1053,7 @@ module Punchblock
 
               context "when the call is the second channel" do
                 it "should use the AMI timestamp for the Rayo event" do
-                  translator.should_receive(:handle_pb_event).with expected_unjoined
+                  expect(translator).to receive(:handle_pb_event).with expected_unjoined
 
                   subject.process_ami_event switched_ami_event
                 end
@@ -1058,7 +1073,7 @@ module Punchblock
 
             it 'makes the variable accessible on the call' do
               subject.process_ami_event ami_event
-              subject.channel_var('foobar').should == 'abc123'
+              expect(subject.channel_var('foobar')).to eq('abc123')
             end
           end
 
@@ -1084,7 +1099,7 @@ module Punchblock
           end
 
           it 'sends the AMI event to the connection as a PB event' do
-            translator.should_receive(:handle_pb_event).with expected_pb_event
+            expect(translator).to receive(:handle_pb_event).with expected_pb_event
             subject.process_ami_event ami_event
           end
 
@@ -1093,7 +1108,7 @@ module Punchblock
             after { Asterisk.event_filter = nil }
 
             it 'does not send the AMI event to the connection as a PB event' do
-              translator.should_receive(:handle_pb_event).never
+              expect(translator).to receive(:handle_pb_event).never
               subject.process_ami_event ami_event
             end
           end
@@ -1103,13 +1118,13 @@ module Punchblock
           let(:body) { 'Hello world' }
 
           it "should invoke SendText" do
-            subject.should_receive(:execute_agi_command).with('EXEC SendText', body).and_return code: 200
+            expect(subject).to receive(:execute_agi_command).with('EXEC SendText', body).and_return code: 200
             subject.send_message body
           end
 
           context "when an AMI error is received" do
             it "is silently ignored" do
-              subject.should_receive(:execute_agi_command).with('EXEC SendText', body).and_raise RubyAMI::Error.new.tap { |e| e.message = 'Call not found' }
+              expect(subject).to receive(:execute_agi_command).with('EXEC SendText', body).and_raise RubyAMI::Error.new.tap { |e| e.message = 'Call not found' }
               subject.send_message body
             end
           end
@@ -1124,20 +1139,20 @@ module Punchblock
             let(:command) { Command::Accept.new }
 
             it "should send an EXEC RINGING AGI command and set the command's response" do
-              subject.should_receive(:execute_agi_command).with('EXEC RINGING').and_return code: 200
+              expect(subject).to receive(:execute_agi_command).with('EXEC RINGING').and_return code: 200
               subject.execute_command command
-              command.response(0.5).should be true
+              expect(command.response(0.5)).to be true
             end
 
             context "when the AMI commannd raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
-              before { subject.should_receive(:execute_agi_command).and_raise error }
+              before { expect(subject).to receive(:execute_agi_command).and_raise error }
 
               it "should return an error with the message" do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', message, subject.id))
               end
 
               context "because the channel is gone" do
@@ -1145,7 +1160,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
             end
@@ -1156,34 +1171,34 @@ module Punchblock
 
             it "with a :busy reason should send an EXEC Busy AGI command and set the command's response" do
               command.reason = :busy
-              subject.should_receive(:execute_agi_command).with('EXEC Busy').and_return code: 200
+              expect(subject).to receive(:execute_agi_command).with('EXEC Busy').and_return code: 200
               subject.execute_command command
-              command.response(0.5).should be true
+              expect(command.response(0.5)).to be true
             end
 
             it "with a :decline reason should send a Hangup AMI command (cause 21) and set the command's response" do
               command.reason = :decline
-              ami_client.should_receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 21).and_return RubyAMI::Response.new
+              expect(ami_client).to receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 21).and_return RubyAMI::Response.new
               subject.execute_command command
-              command.response(0.5).should be true
+              expect(command.response(0.5)).to be true
             end
 
             it "with an :error reason should send an EXEC Congestion AGI command and set the command's response" do
               command.reason = :error
-              subject.should_receive(:execute_agi_command).with('EXEC Congestion').and_return code: 200
+              expect(subject).to receive(:execute_agi_command).with('EXEC Congestion').and_return code: 200
               subject.execute_command command
-              command.response(0.5).should be true
+              expect(command.response(0.5)).to be true
             end
 
             context "when the AMI commannd raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
-              before { subject.should_receive(:execute_agi_command).and_raise error }
+              before { expect(subject).to receive(:execute_agi_command).and_raise error }
 
               it "should return an error with the message" do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', message, subject.id))
               end
 
               context "because the channel is gone" do
@@ -1191,7 +1206,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
             end
@@ -1201,31 +1216,31 @@ module Punchblock
             let(:command) { Command::Answer.new }
 
             it "should send an ANSWER AGI command and set the command's response" do
-              subject.should_receive(:execute_agi_command).with('ANSWER').and_return code: 200
+              expect(subject).to receive(:execute_agi_command).with('ANSWER').and_return code: 200
               subject.execute_command command
-              command.response(0.5).should be true
+              expect(command.response(0.5)).to be true
             end
 
             it "should be answered" do
-              subject.should_receive(:execute_agi_command)
+              expect(subject).to receive(:execute_agi_command)
               subject.execute_command command
-              subject.should be_answered
+              expect(subject).to be_answered
             end
 
             context "when the AMI command raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
-              before { subject.should_receive(:execute_agi_command).and_raise error }
+              before { expect(subject).to receive(:execute_agi_command).and_raise error }
 
               it "should return an error with the message" do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', message, subject.id))
               end
 
               it "should not be answered" do
                 subject.execute_command command
-                subject.should_not be_answered
+                expect(subject).not_to be_answered
               end
 
               context "because the channel is gone" do
@@ -1233,7 +1248,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
             end
@@ -1243,20 +1258,20 @@ module Punchblock
             let(:command) { Command::Hangup.new }
 
             it "should send a Hangup AMI command and set the command's response" do
-              ami_client.should_receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
+              expect(ami_client).to receive(:send_action).once.with('Hangup', 'Channel' => channel, 'Cause' => 16).and_return RubyAMI::Response.new
               subject.execute_command command
-              command.response(0.5).should be true
+              expect(command.response(0.5)).to be true
             end
 
             context "when the AMI commannd raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
-              before { ami_client.should_receive(:send_action).and_raise error }
+              before { expect(ami_client).to receive(:send_action).and_raise error }
 
               it "should return an error with the message" do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', message, subject.id))
               end
 
               context "which is 'No such channel'" do
@@ -1264,7 +1279,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
 
@@ -1273,7 +1288,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
             end
@@ -1292,10 +1307,10 @@ module Punchblock
               Punchblock::Command::Join.new call_uri: other_call_id
             end
 
-            before { translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call) }
+            before { expect(translator).to receive(:call_with_id).with(other_call_id).and_return(other_call) }
 
             it "executes the proper dialplan Bridge application" do
-              subject.should_receive(:execute_agi_command).with('EXEC Bridge', "#{other_channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})").and_return code: 200
+              expect(subject).to receive(:execute_agi_command).with('EXEC Bridge', "#{other_channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})").and_return code: 200
               subject.execute_command command
             end
 
@@ -1303,16 +1318,16 @@ module Punchblock
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
-              before { subject.should_receive(:execute_agi_command).and_raise error }
+              before { expect(subject).to receive(:execute_agi_command).and_raise error }
 
               it "should return an error with the message" do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', message, subject.id))
               end
 
               it "should not be answered" do
                 subject.execute_command command
-                subject.should_not be_answered
+                expect(subject).not_to be_answered
               end
 
               context "because the channel is gone" do
@@ -1320,7 +1335,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
             end
@@ -1339,9 +1354,9 @@ module Punchblock
             end
 
             it "executes the unjoin through redirection" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
+              expect(translator).to receive(:call_with_id).with(other_call_id).and_return(nil)
 
-              ami_client.should_receive(:send_action).once.with("Redirect",
+              expect(ami_client).to receive(:send_action).once.with("Redirect",
                 'Channel'   => channel,
                 'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1350,13 +1365,13 @@ module Punchblock
 
               subject.execute_command command
 
-              command.response(1).should be_true
+              expect(command.response(1)).to be_true
             end
 
             it "executes the unjoin through redirection, on the subject call and the other call" do
-              translator.should_receive(:call_with_id).with(other_call_id).and_return(other_call)
+              expect(translator).to receive(:call_with_id).with(other_call_id).and_return(other_call)
 
-              ami_client.should_receive(:send_action).once.with("Redirect",
+              expect(ami_client).to receive(:send_action).once.with("Redirect",
                 'Channel'       => channel,
                 'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
                 'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
@@ -1375,13 +1390,13 @@ module Punchblock
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
               before do
-                translator.should_receive(:call_with_id).with(other_call_id).and_return(nil)
-                ami_client.should_receive(:send_action).and_raise error
+                expect(translator).to receive(:call_with_id).with(other_call_id).and_return(nil)
+                expect(ami_client).to receive(:send_action).and_raise error
               end
 
               it "should return an error with the message" do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', message, subject.id))
               end
 
               context "which is 'No such channel'" do
@@ -1389,7 +1404,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
 
@@ -1398,7 +1413,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
             end
@@ -1411,8 +1426,8 @@ module Punchblock
 
             it 'should create an AGI command component actor and execute it asynchronously' do
               mock_action = Translator::Asterisk::Component::Asterisk::AGICommand.new(command, subject)
-              Component::Asterisk::AGICommand.should_receive(:new).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:execute).once
+              expect(Component::Asterisk::AGICommand).to receive(:new).once.with(command, subject).and_return mock_action
+              expect(mock_action).to receive(:execute).once
               subject.execute_command command
             end
           end
@@ -1424,8 +1439,8 @@ module Punchblock
 
             it 'should create an Output component and execute it asynchronously' do
               mock_action = Translator::Asterisk::Component::Output.new(command, subject)
-              Component::Output.should_receive(:new).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:execute).once
+              expect(Component::Output).to receive(:new).once.with(command, subject).and_return mock_action
+              expect(mock_action).to receive(:execute).once
               subject.execute_command command
             end
           end
@@ -1437,8 +1452,8 @@ module Punchblock
 
             it 'should create an Input component and execute it asynchronously' do
               mock_action = Translator::Asterisk::Component::Input.new(command, subject)
-              Component::Input.should_receive(:new).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:execute).once
+              expect(Component::Input).to receive(:new).once.with(command, subject).and_return mock_action
+              expect(mock_action).to receive(:execute).once
               subject.execute_command command
             end
           end
@@ -1481,8 +1496,8 @@ module Punchblock
               let(:renderer)    { :unimrcp }
 
               it 'should create an MRCPPrompt component and execute it asynchronously' do
-                Component::MRCPPrompt.should_receive(:new).once.with(command, subject).and_return mock_action
-                mock_action.should_receive(:execute).once
+                expect(Component::MRCPPrompt).to receive(:new).once.with(command, subject).and_return mock_action
+                expect(mock_action).to receive(:execute).once
                 subject.execute_command command
               end
             end
@@ -1492,8 +1507,8 @@ module Punchblock
               let(:renderer)    { :asterisk }
 
               it 'should create an MRCPPrompt component and execute it asynchronously' do
-                Component::MRCPNativePrompt.should_receive(:new).once.with(command, subject).and_return mock_action
-                mock_action.should_receive(:execute).once
+                expect(Component::MRCPNativePrompt).to receive(:new).once.with(command, subject).and_return mock_action
+                expect(mock_action).to receive(:execute).once
                 subject.execute_command command
               end
             end
@@ -1504,7 +1519,7 @@ module Punchblock
 
               it 'should return an error' do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup(:invalid_command, "Invalid recognizer/renderer combination", subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup(:invalid_command, "Invalid recognizer/renderer combination", subject.id))
               end
             end
 
@@ -1513,8 +1528,8 @@ module Punchblock
               let(:renderer)    { :unimrcp }
 
               it 'should create a ComposedPrompt component and execute it asynchronously' do
-                Component::ComposedPrompt.should_receive(:new).once.with(command, subject).and_return mock_action
-                mock_action.should_receive(:execute).once
+                expect(Component::ComposedPrompt).to receive(:new).once.with(command, subject).and_return mock_action
+                expect(mock_action).to receive(:execute).once
                 subject.execute_command command
               end
             end
@@ -1527,8 +1542,8 @@ module Punchblock
 
             it 'should create a Record component and execute it asynchronously' do
               mock_action = Translator::Asterisk::Component::Record.new(command, subject)
-              Component::Record.should_receive(:new).once.with(command, subject).and_return mock_action
-              mock_action.should_receive(:execute).once
+              expect(Component::Record).to receive(:new).once.with(command, subject).and_return mock_action
+              expect(mock_action).to receive(:execute).once
               subject.execute_command command
             end
           end
@@ -1548,7 +1563,7 @@ module Punchblock
               before { subject.register_component mock_component }
 
               it 'should send the command to the component for execution' do
-                mock_component.should_receive(:execute_command).once
+                expect(mock_component).to receive(:execute_command).once
                 subject.execute_command command
               end
             end
@@ -1580,11 +1595,11 @@ module Punchblock
 
                   component.send_complete_event Punchblock::Component::Asterisk::AGI::Command::Complete.new
 
-                  subject.component_with_id(comp_id).should be_nil
+                  expect(subject.component_with_id(comp_id)).to be_nil
 
                   subsequent_command.request!
                   subject.execute_command subsequent_command
-                  subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+                  expect(subsequent_command.response).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id))
                 end
               end
 
@@ -1593,11 +1608,11 @@ module Punchblock
                   it 'sends an error in response to the command' do
                     component = subject.component_with_id comp_id
 
-                    component.should_receive(:execute_command).and_raise(Celluloid::DeadActorError)
+                    expect(component).to receive(:execute_command).and_raise(Celluloid::DeadActorError)
 
                     subsequent_command.request!
                     subject.execute_command subsequent_command
-                    subsequent_command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id)
+                    expect(subsequent_command.response).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{comp_id} for call #{subject.id}", subject.id, comp_id))
                   end
                 end
               end
@@ -1606,7 +1621,7 @@ module Punchblock
             context "for an unknown component ID" do
               it 'sends an error in response to the command' do
                 subject.execute_command command
-                command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id)
+                expect(command.response).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component_id} for call #{subject.id}", subject.id, component_id))
               end
             end
           end
@@ -1618,7 +1633,7 @@ module Punchblock
 
             it 'sends an error in response to the command' do
               subject.execute_command command
-              command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id)
+              expect(command.response).to eq(ProtocolError.new.setup('command-not-acceptable', "Did not understand command for call #{subject.id}", subject.id))
             end
           end
         end#execute_command
@@ -1632,8 +1647,8 @@ module Punchblock
           end
 
           it 'should send an appropriate AsyncAGI AMI action' do
-            Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
-            ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => Punchblock.new_uuid).and_return(response)
+            expect_any_instance_of(Celluloid::Condition).to receive(:wait).and_return nil
+            expect(ami_client).to receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => Punchblock.new_uuid).and_return(response)
             subject.execute_agi_command 'EXEC ANSWER'
           end
 
@@ -1641,8 +1656,8 @@ module Punchblock
             let(:params) { [1000, 'foo'] }
 
             it 'should send the appropriate action' do
-              Celluloid::Condition.any_instance.should_receive(:wait).and_return nil
-              ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => Punchblock.new_uuid).and_return(response)
+              expect_any_instance_of(Celluloid::Condition).to receive(:wait).and_return nil
+              expect(ami_client).to receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => Punchblock.new_uuid).and_return(response)
               subject.execute_agi_command 'WAIT FOR DIGIT', *params
             end
           end
@@ -1655,7 +1670,7 @@ module Punchblock
             end
 
             it 'should raise the error' do
-              ami_client.should_receive(:send_action).once.and_raise error
+              expect(ami_client).to receive(:send_action).once.and_raise error
               expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(RubyAMI::Error, 'Action failed')
             end
 
@@ -1663,7 +1678,7 @@ module Punchblock
               let(:message) { 'No such channel' }
 
               it 'should raise ChannelGoneError' do
-                ami_client.should_receive(:send_action).once.and_raise error
+                expect(ami_client).to receive(:send_action).once.and_raise error
                 expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(ChannelGoneError, message)
               end
             end
@@ -1672,7 +1687,7 @@ module Punchblock
               let(:message) { 'Channel SIP/nosuchchannel does not exist.' }
 
               it 'should raise ChannelGoneError' do
-                ami_client.should_receive(:send_action).once.and_raise error
+                expect(ami_client).to receive(:send_action).once.and_raise error
                 expect { subject.execute_agi_command 'EXEC ANSWER' }.to raise_error(ChannelGoneError, message)
               end
             end
@@ -1696,7 +1711,7 @@ module Punchblock
 
                 subject.process_ami_event ami_event
 
-                fut.value.should == {code: 200, result: 123, data: 'timeout'}
+                expect(fut.value).to eq({code: 200, result: 123, data: 'timeout'})
               end
             end
           end
@@ -1710,7 +1725,7 @@ module Punchblock
           end
 
           it "executes the proper AMI action with only the subject call" do
-            ami_client.should_receive(:send_action).once.with 'Redirect',
+            expect(ami_client).to receive(:send_action).once.with 'Redirect',
               'Exten'     => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
               'Priority'  => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,
               'Context'   => Punchblock::Translator::Asterisk::REDIRECT_CONTEXT,
@@ -1719,7 +1734,7 @@ module Punchblock
           end
 
           it "executes the proper AMI action with another call specified" do
-            ami_client.should_receive(:send_action).once.with 'Redirect',
+            expect(ami_client).to receive(:send_action).once.with 'Redirect',
               'Channel'       => channel,
               'Exten'         => Punchblock::Translator::Asterisk::REDIRECT_EXTENSION,
               'Priority'      => Punchblock::Translator::Asterisk::REDIRECT_PRIORITY,

@@ -90,7 +90,7 @@ module Punchblock
               'RECOG_COMPLETION_CAUSE' => recog_completion_cause,
               'RECOG_RESULT' => recog_result
             }.each do |var, val|
-              mock_call.stub(:channel_var).with(var).and_return val
+              allow(mock_call).to receive(:channel_var).with(var).and_return val
             end
           end
 
@@ -100,7 +100,7 @@ module Punchblock
             it "should return an error and not execute any actions" do
               subject.execute
               error = ProtocolError.new.setup 'option error', 'The recognizer foobar is unsupported.'
-              original_command.response(0.1).should be == error
+              expect(original_command.response(0.1)).to eq(error)
             end
           end
 
@@ -111,7 +111,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', "The recognizer #{recognizer} is unsupported."
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -121,10 +121,10 @@ module Punchblock
           end
 
           def expect_app_with_options(app, options)
-            mock_call.should_receive(:execute_agi_command).once.with do |*args|
-              args[0].should be == "EXEC #{app}"
-              args[1].should match options
-            end.and_return code: 200, result: 1
+            expect(mock_call).to receive(:execute_agi_command).once.with { |*args|
+              expect(args[0]).to eq("EXEC #{app}")
+              expect(args[1]).to match options
+            }.and_return code: 200, result: 1
           end
 
           describe 'Output#document' do
@@ -134,7 +134,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'Only one document is allowed.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
 
@@ -144,7 +144,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'Only inline documents are allowed.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
 
@@ -154,7 +154,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'Only one audio file is allowed.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
 
@@ -164,7 +164,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A document is required.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -176,9 +176,9 @@ module Punchblock
 
                 it "should return a ref and execute MRCPRecog" do
                   param = ["\"#{grammar.to_doc.to_s.squish.gsub('"', '\"')}\"", "uer=1&b=1&f=#{audio_filename}"].join(',')
-                  mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
+                  expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
                   subject.execute
-                  original_command.response(0.1).should be_a Ref
+                  expect(original_command.response(0.1)).to be_a Ref
                 end
 
                 context "when MRCPRecog completes" do
@@ -195,9 +195,9 @@ module Punchblock
                     it 'should send a match complete event' do
                       expected_complete_reason = Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
 
-                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
-                      original_command.complete_event(0.1).reason.should == expected_complete_reason
+                      expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
                     end
                   end
 
@@ -206,9 +206,9 @@ module Punchblock
 
                     it 'should send a nomatch complete event' do
                       expected_complete_reason = Punchblock::Component::Input::Complete::NoMatch.new
-                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
-                      original_command.complete_event(0.1).reason.should == expected_complete_reason
+                      expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
                     end
                   end
 
@@ -217,9 +217,9 @@ module Punchblock
 
                     it 'should send a nomatch complete event' do
                       expected_complete_reason = Punchblock::Component::Input::Complete::NoInput.new
-                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
-                      original_command.complete_event(0.1).reason.should == expected_complete_reason
+                      expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
                     end
                   end
 
@@ -227,11 +227,11 @@ module Punchblock
                     let(:recog_status) { 'ERROR' }
 
                     it "should send an error complete event" do
-                      mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                      expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
                       complete_reason = original_command.complete_event(0.1).reason
-                      complete_reason.should be_a Punchblock::Event::Complete::Error
-                      complete_reason.details.should == "Terminated due to UniMRCP error"
+                      expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                      expect(complete_reason.details).to eq("Terminated due to UniMRCP error")
                     end
                   end
                 end
@@ -239,21 +239,21 @@ module Punchblock
                 context "when we get a RubyAMI Error" do
                   it "should send an error complete event" do
                     error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-                    mock_call.should_receive(:execute_agi_command).and_raise error
+                    expect(mock_call).to receive(:execute_agi_command).and_raise error
                     subject.execute
                     complete_reason = original_command.complete_event(0.1).reason
-                    complete_reason.should be_a Punchblock::Event::Complete::Error
-                    complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                    expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                    expect(complete_reason.details).to eq("Terminated due to AMI error 'FooBar'")
                   end
                 end
 
                 context "when the channel is gone" do
                   it "should send an error complete event" do
                     error = ChannelGoneError.new 'FooBar'
-                    mock_call.should_receive(:execute_agi_command).and_raise error
+                    expect(mock_call).to receive(:execute_agi_command).and_raise error
                     subject.execute
                     complete_reason = original_command.complete_event(0.1).reason
-                    complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                    expect(complete_reason).to be_a Punchblock::Event::Complete::Hangup
                   end
                 end
               end
@@ -266,7 +266,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', "The renderer #{renderer} is unsupported."
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -335,7 +335,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -354,7 +354,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -373,7 +373,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -392,7 +392,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported on Asterisk.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -411,7 +411,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -430,7 +430,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A interrupt_on value is unsupported on Asterisk.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -441,9 +441,9 @@ module Punchblock
 
               it "should return a ref and execute MRCPRecog" do
                 param = ["\"#{[voice_grammar.to_doc.to_s, dtmf_grammar.to_doc.to_s].join(',').squish.gsub('"', '\"')}\"", "uer=1&b=1&f=#{audio_filename}"].join(',')
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
+                expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
                 subject.execute
-                original_command.response(0.1).should be_a Ref
+                expect(original_command.response(0.1)).to be_a Ref
               end
             end
 
@@ -452,9 +452,9 @@ module Punchblock
 
               it "should return a ref and execute MRCPRecog" do
                 param = ["\"#{"http://example.com/grammar1.grxml,http://example.com/grammar2.grxml".squish.gsub('"', '\"')}\"", "uer=1&b=1&f=#{audio_filename}"].join(',')
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
+                expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
                 subject.execute
-                original_command.response(0.1).should be_a Ref
+                expect(original_command.response(0.1)).to be_a Ref
               end
             end
 
@@ -464,7 +464,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'A grammar is required.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -503,7 +503,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'An initial-timeout value must be -1 or a positive integer.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -542,7 +542,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'An inter-digit-timeout value must be -1 or a positive integer.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
           end
@@ -650,7 +650,7 @@ module Punchblock
               before { command.request! }
               it "returns a ProtocolError response" do
                 subject.execute_command command
-                command.response(0.1).should be_a ProtocolError
+                expect(command.response(0.1)).to be_a ProtocolError
               end
             end
 
@@ -671,22 +671,22 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.should_receive(:redirect_back)
+                expect(mock_call).to receive(:redirect_back)
                 subject.execute_command command
-                command.response(0.1).should be == true
+                expect(command.response(0.1)).to eq(true)
               end
 
               it "sends the correct complete event" do
-                mock_call.should_receive(:redirect_back)
+                expect(mock_call).to receive(:redirect_back)
                 subject.execute_command command
-                original_command.should_not be_complete
+                expect(original_command).not_to be_complete
                 mock_call.process_ami_event ami_event
-                reason.should be_a Punchblock::Event::Complete::Stop
-                original_command.should be_complete
+                expect(reason).to be_a Punchblock::Event::Complete::Stop
+                expect(original_command).to be_complete
               end
 
               it "redirects the call by unjoining it" do
-                mock_call.should_receive(:redirect_back)
+                expect(mock_call).to receive(:redirect_back)
                 subject.execute_command command
               end
             end

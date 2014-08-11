@@ -6,11 +6,11 @@ module Punchblock
   module Component
     describe Record do
       it 'registers itself' do
-        RayoNode.class_from_registration(:record, 'urn:xmpp:rayo:record:1').should be == described_class
+        expect(RayoNode.class_from_registration(:record, 'urn:xmpp:rayo:record:1')).to eq(described_class)
       end
 
       describe "when setting options in initializer" do
-        subject do
+        subject(:command) do
           Record.new :format          => 'WAV',
                      :start_beep      => true,
                      :stop_beep       => false,
@@ -22,29 +22,64 @@ module Punchblock
                      :mix             => true
         end
 
-        its(:format)          { should be == 'WAV' }
-        its(:start_beep)      { should be == true }
-        its(:stop_beep)       { should be == false }
-        its(:start_paused)    { should be == false }
-        its(:max_duration)    { should be == 500000 }
-        its(:initial_timeout) { should be == 10000 }
-        its(:final_timeout)   { should be == 30000 }
-        its(:direction)       { should be == :duplex }
-        its(:mix)             { should be == true }
+        describe '#format' do
+          subject { super().format }
+          it { should be == 'WAV' }
+        end
+
+        describe '#start_beep' do
+          subject { super().start_beep }
+          it { should be == true }
+        end
+
+        describe '#stop_beep' do
+          subject { super().stop_beep }
+          it { should be == false }
+        end
+
+        describe '#start_paused' do
+          subject { super().start_paused }
+          it { should be == false }
+        end
+
+        describe '#max_duration' do
+          subject { super().max_duration }
+          it { should be == 500000 }
+        end
+
+        describe '#initial_timeout' do
+          subject { super().initial_timeout }
+          it { should be == 10000 }
+        end
+
+        describe '#final_timeout' do
+          subject { super().final_timeout }
+          it { should be == 30000 }
+        end
+
+        describe '#direction' do
+          subject { super().direction }
+          it { should be == :duplex }
+        end
+
+        describe '#mix' do
+          subject { super().mix }
+          it { should be == true }
+        end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
-            new_instance.should be_instance_of described_class
-            new_instance.format.should be == 'WAV'
-            new_instance.start_beep.should be == true
-            new_instance.stop_beep.should be == false
-            new_instance.start_paused.should be == false
-            new_instance.max_duration.should be == 500000
-            new_instance.initial_timeout.should be == 10000
-            new_instance.final_timeout.should be == 30000
-            new_instance.direction.should be == :duplex
-            new_instance.mix.should be == true
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.format).to eq('WAV')
+            expect(new_instance.start_beep).to eq(true)
+            expect(new_instance.stop_beep).to eq(false)
+            expect(new_instance.start_paused).to eq(false)
+            expect(new_instance.max_duration).to eq(500000)
+            expect(new_instance.initial_timeout).to eq(10000)
+            expect(new_instance.final_timeout).to eq(30000)
+            expect(new_instance.direction).to eq(:duplex)
+            expect(new_instance.mix).to eq(true)
           end
 
           it "should render to a parent node if supplied" do
@@ -52,7 +87,7 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
         end
       end
@@ -77,15 +112,50 @@ module Punchblock
 
         it { should be_instance_of Record }
 
-        its(:format)          { should be == 'WAV' }
-        its(:start_beep)      { should be == true }
-        its(:stop_beep)       { should be == false }
-        its(:start_paused)    { should be == false }
-        its(:max_duration)    { should be == 500000 }
-        its(:initial_timeout) { should be == 10000 }
-        its(:final_timeout)   { should be == 30000 }
-        its(:direction)       { should be == :duplex }
-        its(:mix)             { should be == true }
+        describe '#format' do
+          subject { super().format }
+          it { should be == 'WAV' }
+        end
+
+        describe '#start_beep' do
+          subject { super().start_beep }
+          it { should be == true }
+        end
+
+        describe '#stop_beep' do
+          subject { super().stop_beep }
+          it { should be == false }
+        end
+
+        describe '#start_paused' do
+          subject { super().start_paused }
+          it { should be == false }
+        end
+
+        describe '#max_duration' do
+          subject { super().max_duration }
+          it { should be == 500000 }
+        end
+
+        describe '#initial_timeout' do
+          subject { super().initial_timeout }
+          it { should be == 10000 }
+        end
+
+        describe '#final_timeout' do
+          subject { super().final_timeout }
+          it { should be == 30000 }
+        end
+
+        describe '#direction' do
+          subject { super().direction }
+          it { should be == :duplex }
+        end
+
+        describe '#mix' do
+          subject { super().mix }
+          it { should be == true }
+        end
       end
 
       describe "with a direction" do
@@ -93,14 +163,20 @@ module Punchblock
           describe direction do
             subject { described_class.new :direction => direction }
 
-            its(:direction) { should be == direction }
+            describe '#direction' do
+              subject { super().direction }
+              it { should be == direction }
+            end
           end
         end
 
         describe "no direction" do
           subject { Record.new }
 
-          its(:direction) { should be_nil }
+          describe '#direction' do
+            subject { super().direction }
+            it { should be_nil }
+          end
         end
 
         describe "blahblahblah" do
@@ -123,9 +199,20 @@ module Punchblock
         describe '#pause_action' do
           subject { command.pause_action }
 
-          its(:to_xml) { should be == '<pause xmlns="urn:xmpp:rayo:record:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<pause xmlns="urn:xmpp:rayo:record:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#pause!' do
@@ -136,39 +223,53 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.pause_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-              command.should_receive :paused!
+              expect(mock_client).to receive(:execute_command).with(command.pause_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+              expect(command).to receive :paused!
               command.pause!
             end
           end
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.pause! }.should raise_error(InvalidActionError, "Cannot pause a Record that is not executing")
+              expect { command.pause! }.to raise_error(InvalidActionError, "Cannot pause a Record that is not executing")
             end
           end
         end
 
         describe "#paused!" do
           before do
-            subject.request!
-            subject.execute!
-            subject.paused!
+            command.request!
+            command.execute!
+            command.paused!
           end
 
-          its(:state_name) { should be == :paused }
+          describe '#state_name' do
+            subject { command.state_name }
+            it { should be == :paused }
+          end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
-            lambda { subject.paused! }.should raise_error(StateMachine::InvalidTransition)
+            expect { subject.paused! }.to raise_error(StateMachine::InvalidTransition)
           end
         end
 
         describe '#resume_action' do
           subject { command.resume_action }
 
-          its(:to_xml) { should be == '<resume xmlns="urn:xmpp:rayo:record:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<resume xmlns="urn:xmpp:rayo:record:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#resume!' do
@@ -180,31 +281,34 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.resume_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-              command.should_receive :resumed!
+              expect(mock_client).to receive(:execute_command).with(command.resume_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+              expect(command).to receive :resumed!
               command.resume!
             end
           end
 
           describe "when the command is not paused" do
             it "should raise an error" do
-              lambda { command.resume! }.should raise_error(InvalidActionError, "Cannot resume a Record that is not paused.")
+              expect { command.resume! }.to raise_error(InvalidActionError, "Cannot resume a Record that is not paused.")
             end
           end
         end
 
         describe "#resumed!" do
           before do
-            subject.request!
-            subject.execute!
-            subject.paused!
-            subject.resumed!
+            command.request!
+            command.execute!
+            command.paused!
+            command.resumed!
           end
 
-          its(:state_name) { should be == :executing }
+          describe '#state_name' do
+            subject { command.state_name }
+            it { should be == :executing }
+          end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
-            lambda { subject.resumed! }.should raise_error(StateMachine::InvalidTransition)
+            expect { subject.resumed! }.to raise_error(StateMachine::InvalidTransition)
           end
         end
 
@@ -227,13 +331,13 @@ module Punchblock
 
             describe "#recording" do
               it "should be a Punchblock::Component::Record::Recording" do
-                subject.recording.should be_a Punchblock::Component::Record::Recording
+                expect(subject.recording).to be_a Punchblock::Component::Record::Recording
               end
             end
 
             describe "#recording_uri" do
               it "should be the recording URI set earlier" do
-                subject.recording_uri.should be == "file:/tmp/rayo7451601434771683422.mp3"
+                expect(subject.recording_uri).to eq("file:/tmp/rayo7451601434771683422.mp3")
               end
             end
           end
@@ -241,9 +345,20 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#stop!' do
@@ -254,14 +369,14 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
+              expect(mock_client).to receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
               command.stop!
             end
           end
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Record that is new")
+              expect { command.stop! }.to raise_error(InvalidActionError, "Cannot stop a Record that is new")
             end
           end
         end
@@ -287,16 +402,31 @@ module Punchblock
 
             it { should be_instance_of klass }
 
-            its(:name)  { should be == element_name }
+            describe '#name' do
+              subject { super().name }
+              it { should be == element_name }
+            end
           end
 
           describe "#recording" do
             subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
             it { should be_instance_of Record::Recording }
-            its(:uri)       { should be == "file:/tmp/rayo7451601434771683422.mp3" }
-            its(:duration)  { should be == 34000 }
-            its(:size)      { should be == 23450 }
+
+            describe '#uri' do
+              subject { super().uri }
+              it { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+            end
+
+            describe '#duration' do
+              subject { super().duration }
+              it { should be == 34000 }
+            end
+
+            describe '#size' do
+              subject { super().size }
+              it { should be == 23450 }
+            end
           end
         end
       end
@@ -316,14 +446,21 @@ module Punchblock
 
           it { should be_instance_of Event::Complete::Stop }
 
-          its(:name)  { should be == :stop }
+          describe '#name' do
+            subject { super().name }
+            it { should be == :stop }
+          end
         end
 
         describe "#recording" do
           subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
-          its(:uri) { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+
+          describe '#uri' do
+            subject { super().uri }
+            it { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+          end
         end
       end
 
@@ -342,14 +479,21 @@ module Punchblock
 
           it { should be_instance_of Event::Complete::Hangup }
 
-          its(:name)  { should be == :hangup }
+          describe '#name' do
+            subject { super().name }
+            it { should be == :hangup }
+          end
         end
 
         describe "#recording" do
           subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
           it { should be_instance_of Record::Recording }
-          its(:uri) { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+
+          describe '#uri' do
+            subject { super().uri }
+            it { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+          end
         end
       end
     end

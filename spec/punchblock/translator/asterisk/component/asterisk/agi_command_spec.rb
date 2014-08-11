@@ -32,7 +32,7 @@ module Punchblock
               before { original_command.request! }
 
               it 'should send the appropriate action' do
-                ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => component_id).and_return(response)
+                expect(ami_client).to receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => component_id).and_return(response)
                 subject.execute
               end
 
@@ -44,7 +44,7 @@ module Punchblock
                 end
 
                 it 'should send the appropriate action' do
-                  ami_client.should_receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id).and_return(response)
+                  expect(ami_client).to receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => component_id).and_return(response)
                   subject.execute
                 end
               end
@@ -65,9 +65,9 @@ module Punchblock
               end
 
               it 'should send the component node a ref with the action ID' do
-                ami_client.should_receive(:send_action).once.and_return response
+                expect(ami_client).to receive(:send_action).once.and_return response
                 subject.execute
-                original_command.response(1).should == expected_response
+                expect(original_command.response(1)).to eq(expected_response)
               end
 
               context 'with an error' do
@@ -76,11 +76,11 @@ module Punchblock
                   RubyAMI::Error.new.tap { |e| e.message = message }
                 end
 
-                before { ami_client.should_receive(:send_action).once.and_raise response }
+                before { expect(ami_client).to receive(:send_action).once.and_raise response }
 
                 it 'should send the component node false' do
                   subject.execute
-                  original_command.response(1).should be_false
+                  expect(original_command.response(1)).to be_false
                 end
 
                 context "which is 'No such channel'" do
@@ -88,7 +88,7 @@ module Punchblock
 
                   it "should return an :item_not_found error for the command" do
                     subject.execute
-                    original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
+                    expect(original_command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id))
                   end
                 end
 
@@ -97,7 +97,7 @@ module Punchblock
 
                   it "should return an :item_not_found error for the command" do
                     subject.execute
-                    original_command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id)
+                    expect(original_command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{mock_call.id}", mock_call.id))
                   end
                 end
               end
@@ -132,10 +132,10 @@ module Punchblock
 
                   complete_event = original_command.complete_event 0.5
 
-                  original_command.should be_complete
+                  expect(original_command).to be_complete
 
-                  complete_event.component_id.should be == component_id.to_s
-                  complete_event.reason.should be == expected_complete_reason
+                  expect(complete_event.component_id).to eq(component_id.to_s)
+                  expect(complete_event.reason).to eq(expected_complete_reason)
                 end
 
                 context "when the command was ASYNCAGI BREAK" do
@@ -147,12 +147,12 @@ module Punchblock
 
                   before do
                     response = RubyAMI::Response.new 'Value' => chan_var
-                    ami_client.should_receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'PUNCHBLOCK_END_ON_ASYNCAGI_BREAK').and_return response
+                    expect(ami_client).to receive(:send_action).once.with('GetVar', 'Channel' => channel, 'Variable' => 'PUNCHBLOCK_END_ON_ASYNCAGI_BREAK').and_return response
                   end
 
                   it 'should not send an end (hangup) event to the translator' do
-                    translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
-                    translator.should_receive(:handle_pb_event).never.with kind_of(Punchblock::Event::End)
+                    expect(translator).to receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
+                    expect(translator).to receive(:handle_pb_event).never.with kind_of(Punchblock::Event::End)
                     subject.handle_ami_event ami_event
                   end
 
@@ -164,8 +164,8 @@ module Punchblock
                                                                       platform_code: 16,
                                                                       target_call_id: mock_call.id
 
-                      translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
-                      translator.should_receive(:handle_pb_event).once.with expected_end_event
+                      expect(translator).to receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
+                      expect(translator).to receive(:handle_pb_event).once.with expected_end_event
                       subject.handle_ami_event ami_event
                     end
 
@@ -185,8 +185,8 @@ module Punchblock
                                                                         platform_code: 16,
                                                                         target_call_id: mock_call.id,
                                                                         timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
-                        translator.should_receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
-                        translator.should_receive(:handle_pb_event).once.with expected_end_event
+                        expect(translator).to receive(:handle_pb_event).once.with kind_of(Punchblock::Event::Complete)
+                        expect(translator).to receive(:handle_pb_event).once.with expected_end_event
 
                         subject.handle_ami_event ami_event
                       end

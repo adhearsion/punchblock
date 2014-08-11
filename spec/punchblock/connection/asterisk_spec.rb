@@ -16,59 +16,69 @@ module Punchblock
 
       let(:mock_event_handler) { double('Event Handler').as_null_object }
 
-      let(:connection) { Asterisk.new options }
-
-      subject { connection }
+      subject(:connection) { Asterisk.new options }
 
       before do
-        subject.event_handler = mock_event_handler
+        connection.event_handler = mock_event_handler
       end
 
-      its(:ami_client) { should be_a RubyAMIStreamProxy }
-      its('ami_client.stream') { should be_a RubyAMI::Stream }
+      describe '#ami_client' do
+        subject { connection.ami_client }
+
+        it { should be_a RubyAMIStreamProxy }
+      end
+
+      describe '#ami_client' do
+        describe '#stream' do
+          subject { connection.ami_client.stream }
+
+          it { should be_a RubyAMI::Stream }
+        end
+      end
 
       it 'should set the connection on the translator' do
-        subject.translator.connection.should be subject
+        expect(subject.translator.connection).to be subject
       end
 
       describe '#run' do
         it 'starts the RubyAMI::Stream' do
-          subject.ami_client.async.should_receive(:run).once do
+          expect(subject.ami_client.async).to receive(:run).once do
             subject.ami_client.terminate
           end
-          lambda { subject.run }.should raise_error DisconnectedError
+          expect { subject.run }.to raise_error DisconnectedError
         end
 
         it 'rebuilds the RubyAMI::Stream if dead' do
-          subject.ami_client.async.should_receive(:run).once do
+          pending
+          expect(subject.ami_client.async).to receive(:run).once do
             subject.ami_client.terminate
           end
-          lambda { subject.run }.should raise_error DisconnectedError
-          subject.ami_client.alive?.should be_false
-          subject.should_receive(:new_ami_stream).once do
-            subject.ami_client.alive?.should be_true
-            subject.ami_client.async.should_receive(:run).once
+          expect { subject.run }.to raise_error DisconnectedError
+          expect(subject.ami_client.alive?).to be_false
+          expect(subject).to receive(:new_ami_stream).once.and_return do
+            expect(subject.ami_client.alive?).to be true
+            expect(subject.ami_client.async).to receive(:run).once
           end
-          lambda { subject.run }.should_not raise_error DisconnectedError
+          expect { subject.run }.not_to raise_error
         end
       end
 
       describe '#stop' do
         it 'stops the RubyAMI::Stream' do
-          subject.ami_client.should_receive(:terminate).once
+          expect(subject.ami_client).to receive(:terminate).once
           subject.stop
         end
 
         it 'shuts down the translator' do
-          subject.translator.should_receive(:terminate).once
+          expect(subject.translator).to receive(:terminate).once
           subject.stop
         end
       end
 
       it 'sends events from RubyAMI to the translator' do
         event = RubyAMI::Event.new 'FullyBooted'
-        subject.translator.async.should_receive(:handle_ami_event).once.with event
-        subject.translator.async.should_receive(:handle_ami_event).once.with RubyAMI::Stream::Disconnected.new
+        expect(subject.translator.async).to receive(:handle_ami_event).once.with event
+        expect(subject.translator.async).to receive(:handle_ami_event).once.with RubyAMI::Stream::Disconnected.new
         subject.ami_client.message_received event
       end
 
@@ -76,7 +86,7 @@ module Punchblock
         it 'sends a command to the translator' do
           command = double 'Command'
           options = {:foo => :bar}
-          subject.translator.async.should_receive(:execute_command).once.with command, options
+          expect(subject.translator.async).to receive(:execute_command).once.with command, options
           subject.write command, options
         end
       end
@@ -86,7 +96,7 @@ module Punchblock
           offer = Event::Offer.new
           offer.target_call_id = '9f00061'
 
-          mock_event_handler.should_receive(:call).once.with offer
+          expect(mock_event_handler).to receive(:call).once.with offer
           subject.handle_event offer
         end
       end
@@ -94,13 +104,13 @@ module Punchblock
       describe '#new_call_uri' do
         it "should return a random UUID" do
           stub_uuids 'foobar'
-          subject.new_call_uri.should == 'foobar'
+          expect(subject.new_call_uri).to eq('foobar')
         end
       end
 
       describe '#send_message' do
         it 'passes the message to the translator for dispatch' do
-          subject.translator.should_receive(:send_message).once.with(:foo)
+          expect(subject.translator).to receive(:send_message).once.with(:foo)
           subject.send_message :foo
         end
       end

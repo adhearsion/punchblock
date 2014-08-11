@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe Unjoined do
       it 'registers itself' do
-        RayoNode.class_from_registration(:unjoined, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:unjoined, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "from a stanza" do
@@ -18,16 +18,34 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:call_uri)    { should be == 'b' }
-        its(:call_id)     { should be == 'b' }
-        its(:mixer_name)  { should be == 'm' }
+        describe '#call_uri' do
+          subject { super().call_uri }
+          it { should be == 'b' }
+        end
+
+        describe '#call_id' do
+          subject { super().call_id }
+          it { should be == 'b' }
+        end
+
+        describe '#mixer_name' do
+          subject { super().mixer_name }
+          it { should be == 'm' }
+        end
       end
 
       describe "when setting options in initializer" do
         subject { described_class.new :call_uri => 'abc123', :mixer_name => 'blah' }
 
-        its(:call_id)     { should be == 'abc123' }
-        its(:mixer_name)  { should be == 'blah' }
+        describe '#call_id' do
+          subject { super().call_id }
+          it { should be == 'abc123' }
+        end
+
+        describe '#mixer_name' do
+          subject { super().mixer_name }
+          it { should be == 'blah' }
+        end
       end
     end
   end

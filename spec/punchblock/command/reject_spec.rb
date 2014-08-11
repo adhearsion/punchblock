@@ -6,21 +6,28 @@ module Punchblock
   module Command
     describe Reject do
       it 'registers itself' do
-        RayoNode.class_from_registration(:reject, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:reject, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "when setting options in initializer" do
         subject { described_class.new reason: :busy, headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
 
-        its(:reason) { should be == :busy }
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#reason' do
+          subject { super().reason }
+          it { should be == :busy }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
-            new_instance.should be_instance_of described_class
-            new_instance.reason.should == :busy
-            new_instance.headers.should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' }
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.reason).to eq(:busy)
+            expect(new_instance.headers).to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' })
           end
 
           it "should render to a parent node if supplied" do
@@ -28,14 +35,14 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
 
           context "when attributes are not set" do
             subject { described_class.new }
 
             it "should not include them in the XML representation" do
-              subject.to_rayo.children.count.should == 0
+              expect(subject.to_rayo.children.count).to eq(0)
             end
           end
         end
@@ -57,14 +64,28 @@ module Punchblock
 
         it { should be_instance_of described_class }
 
-        its(:reason) { should be == :busy }
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#reason' do
+          subject { super().reason }
+          it { should be == :busy }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         context "with no headers or reason provided" do
           let(:stanza) { '<reject xmlns="urn:xmpp:rayo:1"/>' }
 
-          its(:reason) { should be_nil }
-          its(:headers) { should == {} }
+          describe '#reason' do
+            subject { super().reason }
+            it { should be_nil }
+          end
+
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {} }
+          end
         end
       end
 
@@ -73,14 +94,20 @@ module Punchblock
           describe reason do
             subject { described_class.new :reason => reason }
 
-            its(:reason) { should be == reason }
+            describe '#reason' do
+              subject { super().reason }
+              it { should be == reason }
+            end
           end
         end
 
         describe "no reason" do
           subject { described_class.new }
 
-          its(:reason) { should be_nil }
+          describe '#reason' do
+            subject { super().reason }
+            it { should be_nil }
+          end
         end
 
         describe "blahblahblah" do

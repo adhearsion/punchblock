@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe InputTimersStarted do
       it 'registers itself' do
-        RayoNode.class_from_registration(:'input-timers-started', 'urn:xmpp:rayo:prompt:1').should be == described_class
+        expect(RayoNode.class_from_registration(:'input-timers-started', 'urn:xmpp:rayo:prompt:1')).to eq(described_class)
       end
 
       describe "from a stanza" do

@@ -10,14 +10,14 @@ module Punchblock
 
       it 'should store components and allow lookup by ID' do
         subject << component
-        subject.find_by_uri(uri).should be component
+        expect(subject.find_by_uri(uri)).to be component
       end
 
       it 'should allow deletion of components' do
         subject << component
-        subject.find_by_uri(uri).should be component
+        expect(subject.find_by_uri(uri)).to be component
         subject.delete component
-        subject.find_by_uri(uri).should be_nil
+        expect(subject.find_by_uri(uri)).to be_nil
       end
     end
   end

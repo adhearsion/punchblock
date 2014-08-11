@@ -6,7 +6,7 @@ module Punchblock
   module Component
     describe Input do
       it 'registers itself' do
-        RayoNode.class_from_registration(:input, 'urn:xmpp:rayo:input:1').should be == described_class
+        expect(RayoNode.class_from_registration(:input, 'urn:xmpp:rayo:input:1')).to eq(described_class)
       end
 
       describe "when setting options in initializer" do
@@ -23,16 +23,55 @@ module Punchblock
                     :min_confidence       => 0.5
         end
 
-        its(:grammars)            { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom')] }
-        its(:mode)                { should be == :voice }
-        its(:terminator)          { should be == '#' }
-        its(:max_silence)         { should be == 1000 }
-        its(:recognizer)          { should be == 'default' }
-        its(:language)            { should be == 'en-US' }
-        its(:initial_timeout)     { should be == 2000 }
-        its(:inter_digit_timeout) { should be == 2000 }
-        its(:sensitivity)         { should be == 0.5 }
-        its(:min_confidence)      { should be == 0.5 }
+        describe '#grammars' do
+          subject { super().grammars }
+          it { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom')] }
+        end
+
+        describe '#mode' do
+          subject { super().mode }
+          it { should be == :voice }
+        end
+
+        describe '#terminator' do
+          subject { super().terminator }
+          it { should be == '#' }
+        end
+
+        describe '#max_silence' do
+          subject { super().max_silence }
+          it { should be == 1000 }
+        end
+
+        describe '#recognizer' do
+          subject { super().recognizer }
+          it { should be == 'default' }
+        end
+
+        describe '#language' do
+          subject { super().language }
+          it { should be == 'en-US' }
+        end
+
+        describe '#initial_timeout' do
+          subject { super().initial_timeout }
+          it { should be == 2000 }
+        end
+
+        describe '#inter_digit_timeout' do
+          subject { super().inter_digit_timeout }
+          it { should be == 2000 }
+        end
+
+        describe '#sensitivity' do
+          subject { super().sensitivity }
+          it { should be == 0.5 }
+        end
+
+        describe '#min_confidence' do
+          subject { super().min_confidence }
+          it { should be == 0.5 }
+        end
 
         context "with multiple grammars" do
           subject do
@@ -42,44 +81,50 @@ module Punchblock
             ]
           end
 
-          its(:grammars) { should be == [
+          describe '#grammars' do
+            subject { super().grammars }
+            it { should be == [
             Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'),
             Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')
           ]}
+          end
         end
 
         context "with a nil grammar" do
           it "removes all grammars" do
             subject.grammar = nil
-            subject.grammars.should == []
+            expect(subject.grammars).to eq([])
           end
         end
 
         context "without any grammars" do
           subject { described_class.new }
 
-          its(:grammars) { should == [] }
+          describe '#grammars' do
+            subject { super().grammars }
+            it { should == [] }
+          end
         end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
-            new_instance.should be_instance_of described_class
-            new_instance.grammars.should be == [Input::Grammar.new(value: '[5 DIGITS]', content_type: 'application/grammar+custom')]
-            new_instance.mode.should be == :voice
-            new_instance.terminator.should be == '#'
-            new_instance.max_silence.should be == 1000
-            new_instance.recognizer.should be == 'default'
-            new_instance.language.should be == 'en-US'
-            new_instance.initial_timeout.should be == 2000
-            new_instance.inter_digit_timeout.should be == 2000
-            new_instance.sensitivity.should be == 0.5
-            new_instance.min_confidence.should be == 0.5
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.grammars).to eq([Input::Grammar.new(value: '[5 DIGITS]', content_type: 'application/grammar+custom')])
+            expect(new_instance.mode).to eq(:voice)
+            expect(new_instance.terminator).to eq('#')
+            expect(new_instance.max_silence).to eq(1000)
+            expect(new_instance.recognizer).to eq('default')
+            expect(new_instance.language).to eq('en-US')
+            expect(new_instance.initial_timeout).to eq(2000)
+            expect(new_instance.inter_digit_timeout).to eq(2000)
+            expect(new_instance.sensitivity).to eq(0.5)
+            expect(new_instance.min_confidence).to eq(0.5)
           end
 
           it "should wrap the grammar value in CDATA" do
             grammar_node = subject.to_rayo.at_xpath('ns:grammar', ns: described_class.registered_ns)
-            grammar_node.children.first.should be_a Nokogiri::XML::CDATA
+            expect(grammar_node.children.first).to be_a Nokogiri::XML::CDATA
           end
 
           it "should render to a parent node if supplied" do
@@ -87,7 +132,7 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
         end
       end
@@ -119,20 +164,63 @@ module Punchblock
 
         it { should be_instance_of Input }
 
-        its(:grammars)            { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'), Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')] }
-        its(:mode)                { should be == :voice }
-        its(:terminator)          { should be == '#' }
-        its(:max_silence)         { should be == 1000 }
-        its(:recognizer)          { should be == 'default' }
-        its(:language)            { should be == 'en-US' }
-        its(:initial_timeout)     { should be == 2000 }
-        its(:inter_digit_timeout) { should be == 2000 }
-        its(:sensitivity)         { should be == 0.5 }
-        its(:min_confidence)      { should be == 0.5 }
+        describe '#grammars' do
+          subject { super().grammars }
+          it { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'), Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')] }
+        end
+
+        describe '#mode' do
+          subject { super().mode }
+          it { should be == :voice }
+        end
+
+        describe '#terminator' do
+          subject { super().terminator }
+          it { should be == '#' }
+        end
+
+        describe '#max_silence' do
+          subject { super().max_silence }
+          it { should be == 1000 }
+        end
+
+        describe '#recognizer' do
+          subject { super().recognizer }
+          it { should be == 'default' }
+        end
+
+        describe '#language' do
+          subject { super().language }
+          it { should be == 'en-US' }
+        end
+
+        describe '#initial_timeout' do
+          subject { super().initial_timeout }
+          it { should be == 2000 }
+        end
+
+        describe '#inter_digit_timeout' do
+          subject { super().inter_digit_timeout }
+          it { should be == 2000 }
+        end
+
+        describe '#sensitivity' do
+          subject { super().sensitivity }
+          it { should be == 0.5 }
+        end
+
+        describe '#min_confidence' do
+          subject { super().min_confidence }
+          it { should be == 0.5 }
+        end
 
         context "without any grammars" do
           let(:stanza) { '<input xmlns="urn:xmpp:rayo:input:1"/>' }
-          its(:grammars) { should be == [] }
+
+          describe '#grammars' do
+            subject { super().grammars }
+            it { should be == [] }
+          end
         end
       end
 
@@ -149,15 +237,25 @@ module Punchblock
       describe Input::Grammar do
         describe "when not passing a content type" do
           subject { Input::Grammar.new :value => grxml_doc }
-          its(:content_type) { should be == 'application/srgs+xml' }
+
+          describe '#content_type' do
+            subject { super().content_type }
+            it { should be == 'application/srgs+xml' }
+          end
         end
 
         describe 'with a GRXML grammar' do
           subject { Input::Grammar.new :value => grxml_doc, :content_type => 'application/srgs+xml' }
 
-          its(:content_type) { should be == 'application/srgs+xml' }
+          describe '#content_type' do
+            subject { super().content_type }
+            it { should be == 'application/srgs+xml' }
+          end
 
-          its(:value) { should be == grxml_doc }
+          describe '#value' do
+            subject { super().value }
+            it { should be == grxml_doc }
+          end
 
           describe "comparison" do
             let(:grammar2) { Input::Grammar.new :value => grxml_doc }
@@ -168,7 +266,7 @@ module Punchblock
           end
 
           it "has children nested inside" do
-            subject.to_rayo.children.first.should be_a Nokogiri::XML::CDATA
+            expect(subject.to_rayo.children.first).to be_a Nokogiri::XML::CDATA
           end
         end
 
@@ -177,16 +275,23 @@ module Punchblock
 
           subject { Input::Grammar.new :url => url }
 
-          its(:url)           { should be == url }
-          its(:content_type)  { should be nil}
+          describe '#url' do
+            subject { super().url }
+            it { should be == url }
+          end
+
+          describe '#content_type' do
+            subject { super().content_type }
+            it { should be nil}
+          end
 
           describe "comparison" do
             it "should be the same with the same url" do
-              Input::Grammar.new(:url => url).should be == Input::Grammar.new(:url => url)
+              expect(Input::Grammar.new(:url => url)).to eq(Input::Grammar.new(:url => url))
             end
 
             it "should be different with a different url" do
-              Input::Grammar.new(:url => url).should_not be == Input::Grammar.new(:url => 'http://doo.com/dah')
+              expect(Input::Grammar.new(:url => url)).not_to eq(Input::Grammar.new(:url => 'http://doo.com/dah'))
             end
           end
         end
@@ -195,7 +300,7 @@ module Punchblock
           subject { Input::Grammar.new url: "urn:xmpp:rayo:cpa:beep:1" }
 
           it "has no children" do
-            subject.to_rayo.children.count.should == 0
+            expect(subject.to_rayo.children.count).to eq(0)
           end
         end
       end
@@ -213,9 +318,20 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#stop!' do
@@ -226,14 +342,14 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
+              expect(mock_client).to receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
               command.stop!
             end
           end
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Input that is new")
+              expect { command.stop! }.to raise_error(InvalidActionError, "Cannot stop a Input that is new")
             end
           end
         end
@@ -281,25 +397,75 @@ module Punchblock
 
         it { should be_instance_of Input::Complete::Match }
 
-        its(:name)            { should be == :match }
-        its(:content_type)    { should be == 'application/nlsml+xml' }
-        its(:nlsml)           { should be == expected_nlsml }
-        its(:mode)            { should be == :voice }
-        its(:confidence)      { should be == 0.6 }
-        its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
-        its(:utterance)       { should be == 'I want to go to Pittsburgh' }
+        describe '#name' do
+          subject { super().name }
+          it { should be == :match }
+        end
+
+        describe '#content_type' do
+          subject { super().content_type }
+          it { should be == 'application/nlsml+xml' }
+        end
+
+        describe '#nlsml' do
+          subject { super().nlsml }
+          it { should be == expected_nlsml }
+        end
+
+        describe '#mode' do
+          subject { super().mode }
+          it { should be == :voice }
+        end
+
+        describe '#confidence' do
+          subject { super().confidence }
+          it { should be == 0.6 }
+        end
+
+        describe '#interpretation' do
+          subject { super().interpretation }
+          it { should be == { airline: { to_city: 'Pittsburgh' } } }
+        end
+
+        describe '#utterance' do
+          subject { super().utterance }
+          it { should be == 'I want to go to Pittsburgh' }
+        end
 
         describe "when creating from an NLSML document" do
           subject do
             Input::Complete::Match.new :nlsml => expected_nlsml
           end
 
-          its(:content_type)    { should be == 'application/nlsml+xml' }
-          its(:nlsml)           { should be == expected_nlsml }
-          its(:mode)            { should be == :voice }
-          its(:confidence)      { should be == 0.6 }
-          its(:interpretation)  { should be == { airline: { to_city: 'Pittsburgh' } } }
-          its(:utterance)       { should be == 'I want to go to Pittsburgh' }
+          describe '#content_type' do
+            subject { super().content_type }
+            it { should be == 'application/nlsml+xml' }
+          end
+
+          describe '#nlsml' do
+            subject { super().nlsml }
+            it { should be == expected_nlsml }
+          end
+
+          describe '#mode' do
+            subject { super().mode }
+            it { should be == :voice }
+          end
+
+          describe '#confidence' do
+            subject { super().confidence }
+            it { should be == 0.6 }
+          end
+
+          describe '#interpretation' do
+            subject { super().interpretation }
+            it { should be == { airline: { to_city: 'Pittsburgh' } } }
+          end
+
+          describe '#utterance' do
+            subject { super().utterance }
+            it { should be == 'I want to go to Pittsburgh' }
+          end
         end
 
         context "when not enclosed in CDATA, but escaped" do
@@ -314,7 +480,7 @@ module Punchblock
           end
 
           it "should parse the NLSML correctly" do
-            subject.nlsml.grammar.should == "http://flight"
+            expect(subject.nlsml.grammar).to eq("http://flight")
           end
         end
 
@@ -330,14 +496,14 @@ module Punchblock
           end
 
           it "should parse the NLSML correctly" do
-            subject.nlsml.grammar.should == "http://flight"
+            expect(subject.nlsml.grammar).to eq("http://flight")
           end
         end
 
         describe "comparison" do
           context "with the same nlsml" do
             it "should be equal" do
-              subject.should == RayoNode.from_xml(parse_stanza(stanza).root).reason
+              expect(subject).to eq(RayoNode.from_xml(parse_stanza(stanza).root).reason)
             end
           end
 
@@ -353,7 +519,7 @@ module Punchblock
             end
 
             it "should not be equal" do
-              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root).reason
+              expect(subject).not_to eq(RayoNode.from_xml(parse_stanza(other_stanza).root).reason)
             end
           end
         end
@@ -372,7 +538,10 @@ module Punchblock
 
         it { should be_instance_of Input::Complete::NoMatch }
 
-        its(:name) { should be == :nomatch }
+        describe '#name' do
+          subject { super().name }
+          it { should be == :nomatch }
+        end
       end
 
       describe Input::Complete::NoInput do
@@ -388,7 +557,10 @@ module Punchblock
 
         it { should be_instance_of Input::Complete::NoInput }
 
-        its(:name) { should be == :noinput }
+        describe '#name' do
+          subject { super().name }
+          it { should be == :noinput }
+        end
       end
 
       describe Input::Signal do
@@ -403,20 +575,50 @@ module Punchblock
         it { should be_instance_of Input::Signal }
         it { should be_a Punchblock::Event }
 
-        its(:name)      { should be == :signal }
-        its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
-        its(:duration)  { should be == 1000 }
-        its(:value)     { should be == '8000' }
+        describe '#name' do
+          subject { super().name }
+          it { should be == :signal }
+        end
+
+        describe '#type' do
+          subject { super().type }
+          it { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+        end
+
+        describe '#duration' do
+          subject { super().duration }
+          it { should be == 1000 }
+        end
+
+        describe '#value' do
+          subject { super().value }
+          it { should be == '8000' }
+        end
 
         describe "when creating from options" do
           subject do
             Input::Signal.new type: 'urn:xmpp:rayo:cpa:beep:1', duration: 1000, value: '8000'
           end
 
-          its(:name)      { should be == :signal }
-          its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
-          its(:duration)  { should be == 1000 }
-          its(:value)     { should be == '8000' }
+          describe '#name' do
+            subject { super().name }
+            it { should be == :signal }
+          end
+
+          describe '#type' do
+            subject { super().type }
+            it { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+          end
+
+          describe '#duration' do
+            subject { super().duration }
+            it { should be == 1000 }
+          end
+
+          describe '#value' do
+            subject { super().value }
+            it { should be == '8000' }
+          end
         end
 
         context "when in a complete event" do
@@ -432,16 +634,31 @@ module Punchblock
 
           it { should be_instance_of Input::Signal }
 
-          its(:name)      { should be == :signal }
-          its(:type)      { should be == 'urn:xmpp:rayo:cpa:beep:1' }
-          its(:duration)  { should be == 1000 }
-          its(:value)     { should be == '8000' }
+          describe '#name' do
+            subject { super().name }
+            it { should be == :signal }
+          end
+
+          describe '#type' do
+            subject { super().type }
+            it { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+          end
+
+          describe '#duration' do
+            subject { super().duration }
+            it { should be == 1000 }
+          end
+
+          describe '#value' do
+            subject { super().value }
+            it { should be == '8000' }
+          end
         end
 
         describe "comparison" do
           context "with the same options" do
             it "should be equal" do
-              subject.should == RayoNode.from_xml(parse_stanza(stanza).root)
+              expect(subject).to eq(RayoNode.from_xml(parse_stanza(stanza).root))
             end
           end
 
@@ -449,7 +666,7 @@ module Punchblock
             let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:ring:1" duration="1000" value="8000"/>' }
 
             it "should not be equal" do
-              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+              expect(subject).not_to eq(RayoNode.from_xml(parse_stanza(other_stanza).root))
             end
           end
 
@@ -457,7 +674,7 @@ module Punchblock
             let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="100" value="8000"/>' }
 
             it "should not be equal" do
-              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+              expect(subject).not_to eq(RayoNode.from_xml(parse_stanza(other_stanza).root))
             end
           end
 
@@ -465,7 +682,7 @@ module Punchblock
             let(:other_stanza) { '<signal xmlns="urn:xmpp:rayo:cpa:1" type="urn:xmpp:rayo:cpa:beep:1" duration="1000" value="7000"/>' }
 
             it "should not be equal" do
-              subject.should_not == RayoNode.from_xml(parse_stanza(other_stanza).root)
+              expect(subject).not_to eq(RayoNode.from_xml(parse_stanza(other_stanza).root))
             end
           end
         end

@@ -8,7 +8,7 @@ module Punchblock
       module AMI
         describe Action do
           it 'registers itself' do
-            RayoNode.class_from_registration(:action, 'urn:xmpp:rayo:asterisk:ami:1').should be == described_class
+            expect(RayoNode.class_from_registration(:action, 'urn:xmpp:rayo:asterisk:ami:1')).to eq(described_class)
           end
 
           describe "from a stanza" do
@@ -33,8 +33,14 @@ module Punchblock
 
             it_should_behave_like 'event'
 
-            its(:name)    { should be == 'Originate' }
-            its(:params)  { should be == { 'Channel'   => 'SIP/101test',
+            describe '#name' do
+              subject { super().name }
+              it { should be == 'Originate' }
+            end
+
+            describe '#params' do
+              subject { super().params }
+              it { should be == { 'Channel'   => 'SIP/101test',
                                            'Context'   => 'default',
                                            'Exten'     => '8135551212',
                                            'Priority'  => '1',
@@ -42,24 +48,25 @@ module Punchblock
                                            'Timeout'   => '30000',
                                            'Variable'  => 'var1=23|var2=24|var3=25',
                                            'Async'     => '1'} }
+            end
           end
 
           describe "testing equality" do
             context "with the same name and params" do
               it "should be equal" do
-                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' }).should be == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+                expect(Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })).to eq(Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' }))
               end
             end
 
             context "with the same name and different params" do
               it "should be equal" do
-                Action.new(:name => 'Originate', :params => { :channel => 'SIP/101' }).should_not be == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+                expect(Action.new(:name => 'Originate', :params => { :channel => 'SIP/101' })).not_to eq(Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' }))
               end
             end
 
             context "with a different name and the same params" do
               it "should be equal" do
-                Action.new(:name => 'Hangup', :params => { :channel => 'SIP/101test' }).should_not be == Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' })
+                expect(Action.new(:name => 'Hangup', :params => { :channel => 'SIP/101test' })).not_to eq(Action.new(:name => 'Originate', :params => { :channel => 'SIP/101test' }))
               end
             end
           end
@@ -70,15 +77,22 @@ module Punchblock
                                   :params => { 'Channel' => 'SIP/101test' }
             end
 
-            its(:name)    { should be == 'Originate' }
-            its(:params)  { should be == { 'Channel' => 'SIP/101test' } }
+            describe '#name' do
+              subject { super().name }
+              it { should be == 'Originate' }
+            end
+
+            describe '#params' do
+              subject { super().params }
+              it { should be == { 'Channel' => 'SIP/101test' } }
+            end
 
             describe "exporting to Rayo" do
               it "should export to XML that can be understood by its parser" do
                 new_instance = RayoNode.from_xml subject.to_rayo
-                new_instance.should be_instance_of described_class
-                new_instance.name.should == 'Originate'
-                new_instance.params.should == { 'Channel' => 'SIP/101test' }
+                expect(new_instance).to be_instance_of described_class
+                expect(new_instance.name).to eq('Originate')
+                expect(new_instance.params).to eq({ 'Channel' => 'SIP/101test' })
               end
 
               it "should render to a parent node if supplied" do
@@ -86,7 +100,7 @@ module Punchblock
                 parent = Nokogiri::XML::Node.new 'foo', doc
                 doc.root = parent
                 rayo_doc = subject.to_rayo(parent)
-                rayo_doc.should == parent
+                expect(rayo_doc).to eq(parent)
               end
             end
           end
@@ -111,21 +125,55 @@ module Punchblock
 
                 it { should be_instance_of described_class }
 
-                its(:name)    { should be == :success }
-                its(:message) { should be == "Originate successfully queued" }
-                its(:text_body) { should be == 'Some thing happened' }
-                its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
-                its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
+                describe '#name' do
+                  subject { super().name }
+                  it { should be == :success }
+                end
+
+                describe '#message' do
+                  subject { super().message }
+                  it { should be == "Originate successfully queued" }
+                end
+
+                describe '#text_body' do
+                  subject { super().text_body }
+                  it { should be == 'Some thing happened' }
+                end
+
+                describe '#headers' do
+                  subject { super().headers }
+                  it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                end
+
+                describe '#attributes' do
+                  subject { super().attributes }
+                  it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                end # For BC
 
                 describe "when setting options in initializer" do
                   subject do
                     described_class.new message: 'Originate successfully queued', text_body: 'Some thing happened', headers: {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
                   end
 
-                  its(:message) { should be == 'Originate successfully queued' }
-                  its(:text_body) { should be == 'Some thing happened' }
-                  its(:headers) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
-                  its(:attributes) { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} } # For BC
+                  describe '#message' do
+                    subject { super().message }
+                    it { should be == 'Originate successfully queued' }
+                  end
+
+                  describe '#text_body' do
+                    subject { super().text_body }
+                    it { should be == 'Some thing happened' }
+                  end
+
+                  describe '#headers' do
+                    subject { super().headers }
+                    it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                  end
+
+                  describe '#attributes' do
+                    subject { super().attributes }
+                    it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                  end # For BC
                 end
               end
             end

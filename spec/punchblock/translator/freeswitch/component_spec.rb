@@ -29,7 +29,7 @@ module Punchblock
               let(:response) { double 'Response' }
 
               it 'should execute the handler' do
-                response.should_receive(:call).once.with es_event
+                expect(response).to receive(:call).once.with es_event
                 subject.register_handler :es, :event_name => 'CHANNEL_EXECUTE' do |event|
                   response.call event
                 end
@@ -51,7 +51,7 @@ module Punchblock
             end
 
             it "should send the event to the connection" do
-              connection.should_receive(:handle_event).once.with expected_event
+              expect(connection).to receive(:handle_event).once.with expected_event
               subject.send_event event
             end
           end
@@ -65,12 +65,12 @@ module Punchblock
             end
 
             it "should send a complete event with the specified reason" do
-              subject.wrapped_object.should_receive(:send_event).once.with expected_event
+              expect(subject.wrapped_object).to receive(:send_event).once.with expected_event
               subject.send_complete_event reason
             end
 
             it "should cause the actor to be shut down" do
-              subject.wrapped_object.stub(:send_event).and_return true
+              allow(subject.wrapped_object).to receive(:send_event).and_return true
               subject.send_complete_event reason
               sleep 0.2
               expect(subject.alive?).to be false
@@ -79,14 +79,14 @@ module Punchblock
 
           describe "#call_ended" do
             it "should send a complete event with the call hangup reason" do
-              subject.wrapped_object.should_receive(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
+              expect(subject.wrapped_object).to receive(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
               subject.call_ended
             end
           end
 
           describe "#application" do
             it "should execute a FS application on the current call" do
-              call.should_receive(:application).once.with('appname', "%[punchblock_component_id=#{subject.id}]options")
+              expect(call).to receive(:application).once.with('appname', "%[punchblock_component_id=#{subject.id}]options")
               subject.application 'appname', 'options'
             end
           end
@@ -103,7 +103,7 @@ module Punchblock
 
               it 'sends an error in response to the command' do
                 subject.execute_command component_command
-                component_command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command for component #{subject.id}", call.id, subject.id)
+                expect(component_command.response).to eq(ProtocolError.new.setup('command-not-acceptable', "Did not understand command for component #{subject.id}", call.id, subject.id))
               end
             end
           end

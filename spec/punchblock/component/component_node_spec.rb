@@ -24,11 +24,11 @@ module Punchblock
         describe "with a complete event" do
           it "should set the complete event resource" do
             add_event
-            subject.complete_event(0.5).should be == event
+            expect(subject.complete_event(0.5)).to eq(event)
           end
 
           it "should call #complete!" do
-            subject.should_receive(:complete!).once
+            expect(subject).to receive(:complete!).once
             add_event
           end
         end
@@ -38,7 +38,7 @@ module Punchblock
 
           it "should not set the complete event resource" do
             add_event
-            subject.should_not be_complete
+            expect(subject).not_to be_complete
           end
         end
       end # #add_event
@@ -55,7 +55,7 @@ module Punchblock
           let(:handler) { double 'Response' }
 
           before do
-            handler.should_receive(:call).once.with(event)
+            expect(handler).to receive(:call).once.with(event)
             subject.register_event_handler { |event| handler.call event }
           end
 
@@ -79,9 +79,9 @@ module Punchblock
 
         it "should set the component ID from the ref" do
           subject.response = ref
-          subject.component_id.should be == 'abc123'
-          subject.source_uri.should be == uri
-          subject.client.find_component_by_uri(uri).should be subject
+          expect(subject.component_id).to eq('abc123')
+          expect(subject.source_uri).to eq(uri)
+          expect(subject.client.find_component_by_uri(uri)).to be subject
         end
       end
 
@@ -90,23 +90,23 @@ module Punchblock
           subject.request!
           subject.client = Client.new
           subject.response = Ref.new uri: 'abc'
-          subject.client.find_component_by_uri('abc').should be subject
+          expect(subject.client.find_component_by_uri('abc')).to be subject
         end
 
         it "should set the command to executing status" do
           subject.complete_event = :foo
-          subject.should be_complete
+          expect(subject).to be_complete
         end
 
         it "should be a no-op if the response has already been set" do
           subject.complete_event = :foo
-          lambda { subject.complete_event = :bar }.should_not raise_error
-          subject.complete_event(0.5).should be == :foo
+          expect { subject.complete_event = :bar }.not_to raise_error
+          expect(subject.complete_event(0.5)).to eq(:foo)
         end
 
         it "should remove the component from the registry" do
           subject.complete_event = :foo
-          subject.client.find_component_by_uri('abc').should be_nil
+          expect(subject.client.find_component_by_uri('abc')).to be_nil
         end
       end
     end # ComponentNode

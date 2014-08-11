@@ -72,7 +72,7 @@ module Punchblock
 
           before do
             call.stub answered?: true, execute_agi_command: true
-            call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus
+            allow(call).to receive(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus
             original_command.request!
           end
 
@@ -92,9 +92,9 @@ module Punchblock
             context '#barge_in' do
               context 'true' do
                 it "should execute an output component on the call and return a ref" do
-                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'tt-monkeys')
+                  expect(call).to receive(:execute_agi_command).once.with('EXEC Playback', 'tt-monkeys')
                   subject.execute
-                  original_command.response(0.1).should be_a Ref
+                  expect(original_command.response(0.1)).to be_a Ref
                 end
 
                 context "if output fails to start" do
@@ -116,9 +116,9 @@ module Punchblock
 
               context 'false' do
                 it "should execute an output component on the call" do
-                  call.should_receive(:execute_agi_command).once.with('EXEC Playback', 'tt-monkeys')
+                  expect(call).to receive(:execute_agi_command).once.with('EXEC Playback', 'tt-monkeys')
                   subject.execute
-                  original_command.response(0.1).should be_a Ref
+                  expect(original_command.response(0.1)).to be_a Ref
                 end
 
                 context "if output fails to start" do
@@ -132,7 +132,7 @@ module Punchblock
 
                   it "should return the error returned by output" do
                     subject.execute
-                    original_command.response(0.1).should == output_response
+                    expect(original_command.response(0.1)).to eq(output_response)
                   end
                 end
 
@@ -166,10 +166,10 @@ module Punchblock
                   it "should return a match complete event" do
                     expected_event
                     subject.execute
-                    original_command.response(0.1).should be_a Ref
+                    expect(original_command.response(0.1)).to be_a Ref
                     send_ami_events_for_dtmf 1
 
-                    connection.events.should include(expected_event)
+                    expect(connection.events).to include(expected_event)
                   end
                 end
 
@@ -187,7 +187,7 @@ module Punchblock
               before { command.request! }
               it "returns a ProtocolError response" do
                 subject.execute_command command
-                command.response(0.1).should be_a ProtocolError
+                expect(command.response(0.1)).to be_a ProtocolError
               end
             end
 
@@ -207,9 +207,9 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                call.should_receive(:redirect_back).once
+                expect(call).to receive(:redirect_back).once
                 subject.execute_command command
-                command.response(0.1).should be == true
+                expect(command.response(0.1)).to eq(true)
               end
 
               it "sends the correct complete event" do
@@ -219,14 +219,14 @@ module Punchblock
                   source_uri: subject.id,
                   target_call_id: call.id
 
-                call.should_receive(:redirect_back)
+                expect(call).to receive(:redirect_back)
                 subject.execute_command command
-                original_command.should_not be_complete
+                expect(original_command).not_to be_complete
                 call.process_ami_event ami_event
 
                 sleep 0.2
 
-                connection.events.should include(expected_event)
+                expect(connection.events).to include(expected_event)
               end
             end
           end

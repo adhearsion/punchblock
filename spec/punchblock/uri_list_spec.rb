@@ -3,23 +3,47 @@
 require 'spec_helper'
 
 describe Punchblock::URIList do
-  its(:size) { should == 0 }
+  describe '#size' do
+    subject { super().size }
+    it { should == 0 }
+  end
 
   context "created with a set of entries" do
     subject { described_class.new 'http://example.com/hello.mp3', 'http://example.com/goodbye.mp3' }
 
-    its(:size) { should == 2 }
-    its(:to_ary) { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+    describe '#size' do
+      subject { super().size }
+      it { should == 2 }
+    end
 
-    its(:to_s) { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+    describe '#to_ary' do
+      subject { super().to_ary }
+      it { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+    end
+
+    describe '#to_s' do
+      subject { super().to_s }
+      it { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+    end
   end
 
   context "created with an array of entries" do
     subject { described_class.new ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
 
-    its(:size) { should == 2 }
-    its(:to_ary) { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
-    its(:to_s) { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+    describe '#size' do
+      subject { super().size }
+      it { should == 2 }
+    end
+
+    describe '#to_ary' do
+      subject { super().to_ary }
+      it { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+    end
+
+    describe '#to_s' do
+      subject { super().to_s }
+      it { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+    end
   end
 
   context "imported from a string" do
@@ -32,9 +56,20 @@ describe Punchblock::URIList do
 
     subject { described_class.import string }
 
-    its(:size) { should == 2 }
-    its(:to_ary) { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
-    its(:to_s) { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+    describe '#size' do
+      subject { super().size }
+      it { should == 2 }
+    end
+
+    describe '#to_ary' do
+      subject { super().to_ary }
+      it { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+    end
+
+    describe '#to_s' do
+      subject { super().to_s }
+      it { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+    end
   end
 
   describe "comparisons" do

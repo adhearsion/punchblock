@@ -7,7 +7,7 @@ module Punchblock
     describe Dial do
 
       it 'registers itself' do
-        RayoNode.class_from_registration(:dial, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:dial, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       let(:join_params) { {:call_uri => 'abc123'} }
@@ -15,23 +15,46 @@ module Punchblock
       describe "when setting options in initializer" do
         subject { described_class.new to: 'tel:+14155551212', from: 'tel:+13035551212', uri: 'xmpp:foo@bar.com', timeout: 30000, headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' }, join: join_params }
 
-        its(:to)      { should be == 'tel:+14155551212' }
-        its(:from)    { should be == 'tel:+13035551212' }
-        its(:uri)     { should be == 'xmpp:foo@bar.com' }
-        its(:timeout) { should be == 30000 }
-        its(:join)    { should be == Join.new(join_params) }
-        its(:headers) { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#to' do
+          subject { super().to }
+          it { should be == 'tel:+14155551212' }
+        end
+
+        describe '#from' do
+          subject { super().from }
+          it { should be == 'tel:+13035551212' }
+        end
+
+        describe '#uri' do
+          subject { super().uri }
+          it { should be == 'xmpp:foo@bar.com' }
+        end
+
+        describe '#timeout' do
+          subject { super().timeout }
+          it { should be == 30000 }
+        end
+
+        describe '#join' do
+          subject { super().join }
+          it { should be == Join.new(join_params) }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
-            new_instance.should be_instance_of described_class
-            new_instance.to.should == 'tel:+14155551212'
-            new_instance.from.should == 'tel:+13035551212'
-            new_instance.uri.should == 'xmpp:foo@bar.com'
-            new_instance.timeout.should == 30000
-            new_instance.join.should == Join.new(join_params)
-            new_instance.headers.should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' }
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.to).to eq('tel:+14155551212')
+            expect(new_instance.from).to eq('tel:+13035551212')
+            expect(new_instance.uri).to eq('xmpp:foo@bar.com')
+            expect(new_instance.timeout).to eq(30000)
+            expect(new_instance.join).to eq(Join.new(join_params))
+            expect(new_instance.headers).to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' })
           end
 
           it "should render to a parent node if supplied" do
@@ -39,15 +62,15 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
 
           context "when attributes are not set" do
             subject { described_class.new to: 'abc123' }
 
             it "should not include them in the XML representation" do
-              subject.to_rayo['to'].should == 'abc123'
-              subject.to_rayo['from'].should be_nil
+              expect(subject.to_rayo['to']).to eq('abc123')
+              expect(subject.to_rayo['from']).to be_nil
             end
           end
         end
@@ -68,17 +91,43 @@ module Punchblock
 
         it { should be_instance_of described_class }
 
-        its(:to)      { should be == 'tel:+14155551212' }
-        its(:from)    { should be == 'tel:+13035551212' }
-        its(:uri)     { should be == 'xmpp:foo@bar.com' }
-        its(:timeout) { should be == 30000 }
-        its(:join)    { should be == Join.new(join_params) }
-        its(:headers) { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#to' do
+          subject { super().to }
+          it { should be == 'tel:+14155551212' }
+        end
+
+        describe '#from' do
+          subject { super().from }
+          it { should be == 'tel:+13035551212' }
+        end
+
+        describe '#uri' do
+          subject { super().uri }
+          it { should be == 'xmpp:foo@bar.com' }
+        end
+
+        describe '#timeout' do
+          subject { super().timeout }
+          it { should be == 30000 }
+        end
+
+        describe '#join' do
+          subject { super().join }
+          it { should be == Join.new(join_params) }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         context "with no headers provided" do
           let(:stanza) { '<dial xmlns="urn:xmpp:rayo:1"/>' }
 
-          its(:headers) { should == {} }
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {} }
+          end
         end
       end
 
@@ -94,17 +143,17 @@ module Punchblock
 
         it "should set the transport from the ref" do
           subject.response = ref
-          subject.transport.should be == 'xmpp'
+          expect(subject.transport).to eq('xmpp')
         end
 
         it "should set the call ID from the ref" do
           subject.response = ref
-          subject.target_call_id.should be == call_id
+          expect(subject.target_call_id).to eq(call_id)
         end
 
         it "should set the domain from the ref" do
           subject.response = ref
-          subject.domain.should be == domain
+          expect(subject.domain).to eq(domain)
         end
       end
     end

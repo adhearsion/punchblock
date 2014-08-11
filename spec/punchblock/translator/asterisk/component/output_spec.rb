@@ -33,14 +33,14 @@ module Punchblock
           subject { Output.new original_command, mock_call }
 
           def expect_answered(value = true)
-            mock_call.stub(:answered?).and_return(value)
+            allow(mock_call).to receive(:answered?).and_return(value)
           end
 
           def expect_mrcpsynth_with_options(options)
-            mock_call.should_receive(:execute_agi_command).once.with do |*args|
-              args[0].should be == 'EXEC MRCPSynth'
-              args[1].should match options
-            end.and_return code: 200, result: 1
+            expect(mock_call).to receive(:execute_agi_command).once.with { |*args|
+              expect(args[0]).to eq('EXEC MRCPSynth')
+              expect(args[1]).to match options
+            }.and_return code: 200, result: 1
           end
 
           describe '#execute' do
@@ -52,7 +52,7 @@ module Punchblock
               it "should return an error and not execute any actions" do
                 subject.execute
                 error = ProtocolError.new.setup 'option error', 'The renderer foobar is unsupported.'
-                original_command.response(0.1).should be == error
+                expect(original_command.response(0.1)).to eq(error)
               end
             end
 
@@ -80,34 +80,34 @@ module Punchblock
               before { expect_answered }
 
               it "should execute Swift" do
-                mock_call.should_receive(:execute_agi_command).once.with 'EXEC Swift', ssml_with_options
+                expect(mock_call).to receive(:execute_agi_command).once.with 'EXEC Swift', ssml_with_options
                 subject.execute
               end
 
               it 'should send a complete event when Swift completes' do
-                mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                 subject.execute
-                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
               end
 
               context "when we get a RubyAMI Error" do
                 it "should send an error complete event" do
                   error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  expect(mock_call).to receive(:execute_agi_command).and_raise error
                   subject.execute
                   complete_reason = original_command.complete_event(0.1).reason
-                  complete_reason.should be_a Punchblock::Event::Complete::Error
-                  complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                  expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                  expect(complete_reason.details).to eq("Terminated due to AMI error 'FooBar'")
                 end
               end
 
               context "when the channel is gone" do
                 it "should send an error complete event" do
                   error = ChannelGoneError.new 'FooBar'
-                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  expect(mock_call).to receive(:execute_agi_command).and_raise error
                   subject.execute
                   complete_reason = original_command.complete_event(0.1).reason
-                  complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                  expect(complete_reason).to be_a Punchblock::Event::Complete::Hangup
                 end
               end
 
@@ -115,8 +115,8 @@ module Punchblock
                 before { expect_answered false }
 
                 it "should send progress" do
-                  mock_call.should_receive(:send_progress)
-                  mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                  expect(mock_call).to receive(:send_progress)
+                  expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                   subject.execute
                 end
               end
@@ -125,7 +125,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :interrupt_on => nil } }
                   it "should not add interrupt arguments" do
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options).and_return code: 200, result: 1
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -133,7 +133,7 @@ module Punchblock
                 context "set to :any" do
                   let(:command_opts) { { :interrupt_on => :any } }
                   it "should add the interrupt options to the argument" do
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -141,7 +141,7 @@ module Punchblock
                 context "set to :dtmf" do
                   let(:command_opts) { { :interrupt_on => :dtmf } }
                   it "should add the interrupt options to the argument" do
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('', '|1|1')).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -151,7 +151,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -160,7 +160,7 @@ module Punchblock
                 context "set to nil" do
                   let(:command_opts) { { :voice => nil } }
                   it "should not add a voice at the beginning of the argument" do
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options).and_return code: 200, result: 1
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -168,7 +168,7 @@ module Punchblock
                 context "set to Leonard" do
                   let(:command_opts) { { :voice => "Leonard" } }
                   it "should add a voice at the beginning of the argument" do
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('Leonard^', '')).and_return code: 200, result: 1
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Swift', ssml_with_options('Leonard^', '')).and_return code: 200, result: 1
                     subject.execute
                   end
                 end
@@ -189,7 +189,7 @@ module Punchblock
                 let(:command_opts) { { render_documents: [{value: first_ssml_doc}, {value: second_ssml_doc}] } }
 
                 it "executes Swift with a concatenated version of the documents" do
-                  mock_call.should_receive(:execute_agi_command).once.with 'EXEC Swift', ssml_with_options
+                  expect(mock_call).to receive(:execute_agi_command).once.with 'EXEC Swift', ssml_with_options
                   subject.execute
                 end
               end
@@ -214,39 +214,39 @@ module Punchblock
               end
 
               let(:synthstatus) { 'OK' }
-              before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+              before { allow(mock_call).to receive(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
               before { expect_answered }
 
               it "should execute MRCPSynth" do
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', ["\"#{ssml_doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
+                expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPSynth', ["\"#{ssml_doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
                 subject.execute
               end
 
               it 'should send a complete event when MRCPSynth completes' do
-                mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                 subject.execute
-                original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
               end
 
               context "when we get a RubyAMI Error" do
                 it "should send an error complete event" do
                   error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  expect(mock_call).to receive(:execute_agi_command).and_raise error
                   subject.execute
                   complete_reason = original_command.complete_event(0.1).reason
-                  complete_reason.should be_a Punchblock::Event::Complete::Error
-                  complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                  expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                  expect(complete_reason.details).to eq("Terminated due to AMI error 'FooBar'")
                 end
               end
 
               context "when the channel is gone" do
                 it "should send an error complete event" do
                   error = ChannelGoneError.new 'FooBar'
-                  mock_call.should_receive(:execute_agi_command).and_raise error
+                  expect(mock_call).to receive(:execute_agi_command).and_raise error
                   subject.execute
                   complete_reason = original_command.complete_event(0.1).reason
-                  complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                  expect(complete_reason).to be_a Punchblock::Event::Complete::Hangup
                 end
               end
 
@@ -254,8 +254,8 @@ module Punchblock
                 before { expect_answered false }
 
                 it "should send progress" do
-                  mock_call.should_receive(:send_progress)
-                  mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                  expect(mock_call).to receive(:send_progress)
+                  expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                   subject.execute
                 end
               end
@@ -264,11 +264,11 @@ module Punchblock
                 let(:synthstatus) { 'ERROR' }
 
                 it "should send an error complete event" do
-                  mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                  expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                   subject.execute
                   complete_reason = original_command.complete_event(0.1).reason
-                  complete_reason.should be_a Punchblock::Event::Complete::Error
-                  complete_reason.details.should == "Terminated due to UniMRCP error"
+                  expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                  expect(complete_reason.details).to eq("Terminated due to UniMRCP error")
                 end
               end
 
@@ -278,7 +278,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
 
@@ -287,27 +287,27 @@ module Punchblock
 
                   it "should execute MRCPSynth once with each document" do
                     param = ["\"#{ssml_doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPSynth', param).and_return code: 200, result: 1
                     subject.execute
                   end
 
                   it 'should not execute further output after a stop command' do
-                    mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
+                    expect(mock_call).to receive(:execute_agi_command).once.ordered do
                       sleep 0.5
                     end
                     latch = CountDownLatch.new 1
-                    original_command.should_receive(:add_event).once.with do |e|
-                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
-                    end
+                    }
                     Celluloid::Future.new { subject.execute }
                     sleep 0.2
-                    mock_call.should_receive(:redirect_back).ordered
+                    expect(mock_call).to receive(:redirect_back).ordered
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    latch.wait(2).should be_true
+                    expect(latch.wait(2)).to be_true
                   end
                 end
               end
@@ -326,7 +326,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -345,7 +345,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -364,7 +364,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -384,7 +384,7 @@ module Punchblock
                   it "should render the specified number of times" do
                     2.times { expect_mrcpsynth_with_options(//) }
                     subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                   end
 
                   context 'to 0' do
@@ -394,26 +394,26 @@ module Punchblock
                       expect_answered
                       1000.times { expect_mrcpsynth_with_options(//) }
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
                   end
 
                   it 'should not execute further output after a stop command' do
-                    mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
+                    expect(mock_call).to receive(:execute_agi_command).once.ordered do
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    original_command.should_receive(:add_event).once.with do |e|
-                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
-                    end
+                    }
                     Celluloid::Future.new { subject.execute }
                     sleep 0.1
-                    mock_call.should_receive(:redirect_back).ordered
+                    expect(mock_call).to receive(:redirect_back).ordered
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    latch.wait(2).should be_true
+                    expect(latch.wait(2)).to be_true
                   end
                 end
               end
@@ -432,7 +432,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -485,7 +485,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -494,11 +494,11 @@ module Punchblock
             [:asterisk, nil].each do |renderer|
               context "with a renderer of #{renderer.inspect}" do
                 def expect_playback(filename = audio_filename)
-                  mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', filename).and_return code: 200
+                  expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', filename).and_return code: 200
                 end
 
                 def expect_playback_noanswer
-                  mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
+                  expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
                 end
 
                 let(:audio_filename) { 'tt-monkeys' }
@@ -520,7 +520,7 @@ module Punchblock
                 end
 
                 let(:playbackstatus) { 'SUCCESS' }
-                before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
+                before { allow(mock_call).to receive(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
 
                 describe 'ssml' do
                   context 'unset' do
@@ -528,7 +528,7 @@ module Punchblock
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
 
@@ -550,7 +550,7 @@ module Punchblock
                       end
                       expect_playback
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context "when the audio filename is prefixed by file://" do
@@ -597,11 +597,11 @@ module Punchblock
                       it "should send an error complete event" do
                         expect_answered
                         error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        expect(mock_call).to receive(:execute_agi_command).and_raise error
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Error
-                        complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                        expect(complete_reason.details).to eq("Terminated due to AMI error 'FooBar'")
                       end
                     end
 
@@ -609,10 +609,10 @@ module Punchblock
                       it "should send an error complete event" do
                         expect_answered
                         error = ChannelGoneError.new 'FooBar'
-                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        expect(mock_call).to receive(:execute_agi_command).and_raise error
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Hangup
                       end
                     end
 
@@ -621,11 +621,11 @@ module Punchblock
 
                       it "should send an error complete event" do
                         expect_answered
-                        mock_call.should_receive(:execute_agi_command).and_return code: 200, result: 1
+                        expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Error
-                        complete_reason.details.should == "Terminated due to playback error"
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                        expect(complete_reason.details).to eq("Terminated due to playback error")
                       end
                     end
                   end
@@ -646,18 +646,18 @@ module Punchblock
                       expect_answered
                       expect_playback
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context "when we get a RubyAMI Error" do
                       it "should send an error complete event" do
                         expect_answered
                         error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-                        mock_call.should_receive(:execute_agi_command).and_raise error
+                        expect(mock_call).to receive(:execute_agi_command).and_raise error
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Error
-                        complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                        expect(complete_reason.details).to eq("Terminated due to AMI error 'FooBar'")
                       end
                     end
 
@@ -665,7 +665,7 @@ module Punchblock
                       it "should play the file with Playback" do
                         expect_answered false
                         expect_playback_noanswer
-                        mock_call.should_receive(:send_progress)
+                        expect(mock_call).to receive(:send_progress)
                         subject.execute
                       end
 
@@ -683,7 +683,7 @@ module Punchblock
                           expect_answered false
                           error = ProtocolError.new.setup 'option error', 'Interrupt digits are not allowed with early media.'
                           subject.execute
-                          original_command.response(0.1).should be == error
+                          expect(original_command.response(0.1)).to eq(error)
                         end
                       end
                     end
@@ -712,12 +712,12 @@ module Punchblock
                       expect_answered
                       expect_playback [audio_filename1, audio_filename2].join('&')
                       latch = CountDownLatch.new 1
-                      original_command.should_receive(:add_event).once.with do |e|
-                        e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command).to receive(:add_event).once.with { |e|
+                        expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
-                      end
+                      }
                       subject.execute
-                      latch.wait(2).should be_true
+                      expect(latch.wait(2)).to be_true
                     end
                   end
 
@@ -731,7 +731,7 @@ module Punchblock
                     it "should return an unrenderable document error" do
                       subject.execute
                       error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
 
@@ -742,26 +742,26 @@ module Punchblock
                       expect_answered
                       2.times { expect_playback }
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     it 'should not execute further output after a stop command' do
                       expect_answered
-                      mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
+                      expect(mock_call).to receive(:execute_agi_command).once.ordered do
                         sleep 0.2
                       end
                       latch = CountDownLatch.new 1
-                      original_command.should_receive(:add_event).once.with do |e|
-                        e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command).to receive(:add_event).once.with { |e|
+                        expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
-                      end
+                      }
                       Celluloid::Future.new { subject.execute }
                       sleep 0.1
-                      mock_call.should_receive(:redirect_back).ordered
+                      expect(mock_call).to receive(:redirect_back).ordered
                       stop_command = Punchblock::Component::Stop.new
                       stop_command.request!
                       subject.execute_command stop_command
-                      latch.wait(2).should be_true
+                      expect(latch.wait(2)).to be_true
                     end
 
                     context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
@@ -769,11 +769,11 @@ module Punchblock
 
                       it "should terminate playback and send an error complete event" do
                         expect_answered
-                        mock_call.should_receive(:execute_agi_command).once.and_return code: 200, result: 1
+                        expect(mock_call).to receive(:execute_agi_command).once.and_return code: 200, result: 1
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Error
-                        complete_reason.details.should == "Terminated due to playback error"
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                        expect(complete_reason.details).to eq("Terminated due to playback error")
                       end
                     end
                   end
@@ -794,7 +794,7 @@ module Punchblock
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
                 end
@@ -814,7 +814,7 @@ module Punchblock
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
                 end
@@ -834,7 +834,7 @@ module Punchblock
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
                 end
@@ -856,7 +856,7 @@ module Punchblock
                       expect_answered
                       2.times { expect_playback }
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context 'to 0' do
@@ -866,27 +866,27 @@ module Punchblock
                         expect_answered
                         1000.times { expect_playback }
                         subject.execute
-                        original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                        expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                       end
                     end
 
                     it 'should not execute further output after a stop command' do
                       expect_answered
-                      mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
+                      expect(mock_call).to receive(:execute_agi_command).once.ordered do
                         sleep 0.2
                       end
                       latch = CountDownLatch.new 1
-                      original_command.should_receive(:add_event).once.with do |e|
-                        e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command).to receive(:add_event).once.with { |e|
+                        expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
-                      end
+                      }
                       Celluloid::Future.new { subject.execute }
                       sleep 0.1
-                      mock_call.should_receive(:redirect_back).ordered
+                      expect(mock_call).to receive(:redirect_back).ordered
                       stop_command = Punchblock::Component::Stop.new
                       stop_command.request!
                       subject.execute_command stop_command
-                      latch.wait(2).should be_true
+                      expect(latch.wait(2)).to be_true
                     end
                   end
                 end
@@ -906,7 +906,7 @@ module Punchblock
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
                 end
@@ -926,7 +926,7 @@ module Punchblock
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'A voice value is unsupported on Asterisk.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
                 end
@@ -958,9 +958,9 @@ module Punchblock
                     it "does not redirect the call" do
                       expect_answered
                       expect_playback
-                      mock_call.should_receive(:redirect_back).never
+                      expect(mock_call).to receive(:redirect_back).never
                       subject.execute
-                      original_command.response(0.1).should be_a Ref
+                      expect(original_command.response(0.1)).to be_a Ref
                       send_ami_events_for_dtmf 1
                     end
                   end
@@ -970,27 +970,27 @@ module Punchblock
 
                     before do
                       expect_answered
-                      mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                      subject.should_receive(:send_finish).and_return nil
+                      expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
+                      expect(subject).to receive(:send_finish).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
                       it "sends the correct complete event" do
-                        mock_call.should_receive :redirect_back
+                        expect(mock_call).to receive :redirect_back
                         subject.execute
-                        original_command.response(0.1).should be_a Ref
-                        original_command.should_not be_complete
+                        expect(original_command.response(0.1)).to be_a Ref
+                        expect(original_command).not_to be_complete
                         send_ami_events_for_dtmf 1
                         mock_call.process_ami_event ami_event
                         sleep 0.2
-                        original_command.should be_complete
-                        reason.should be_a Punchblock::Component::Output::Complete::Finish
+                        expect(original_command).to be_complete
+                        expect(reason).to be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do
-                        mock_call.should_receive(:redirect_back).once
+                        expect(mock_call).to receive(:redirect_back).once
                         subject.execute
-                        original_command.response(0.1).should be_a Ref
+                        expect(original_command.response(0.1)).to be_a Ref
                         send_ami_events_for_dtmf 1
                       end
                     end
@@ -1001,27 +1001,27 @@ module Punchblock
 
                     before do
                       expect_answered
-                      mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                      subject.should_receive(:send_finish).and_return nil
+                      expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
+                      expect(subject).to receive(:send_finish).and_return nil
                     end
 
                     context "when a DTMF digit is received" do
                       it "sends the correct complete event" do
-                        mock_call.should_receive :redirect_back
+                        expect(mock_call).to receive :redirect_back
                         subject.execute
-                        original_command.response(0.1).should be_a Ref
-                        original_command.should_not be_complete
+                        expect(original_command.response(0.1)).to be_a Ref
+                        expect(original_command).not_to be_complete
                         send_ami_events_for_dtmf 1
                         mock_call.process_ami_event ami_event
                         sleep 0.2
-                        original_command.should be_complete
-                        reason.should be_a Punchblock::Component::Output::Complete::Finish
+                        expect(original_command).to be_complete
+                        expect(reason).to be_a Punchblock::Component::Output::Complete::Finish
                       end
 
                       it "redirects the call back to async AGI" do
-                        mock_call.should_receive(:redirect_back).once
+                        expect(mock_call).to receive(:redirect_back).once
                         subject.execute
-                        original_command.response(0.1).should be_a Ref
+                        expect(original_command.response(0.1)).to be_a Ref
                         send_ami_events_for_dtmf 1
                       end
                     end
@@ -1032,7 +1032,7 @@ module Punchblock
                     it "should return an error and not execute any actions" do
                       subject.execute
                       error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
-                      original_command.response(0.1).should be == error
+                      expect(original_command.response(0.1)).to eq(error)
                     end
                   end
                 end
@@ -1041,15 +1041,15 @@ module Punchblock
 
             context "with a renderer of :native_or_unimrcp" do
               def expect_playback(filename = audio_filename)
-                mock_call.should_receive(:execute_agi_command).ordered.once.with('EXEC Playback', filename).and_return code: 200
+                expect(mock_call).to receive(:execute_agi_command).ordered.once.with('EXEC Playback', filename).and_return code: 200
               end
 
               def expect_playback_noanswer
-                mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
+                expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
               end
 
               def expect_mrcpsynth(doc = ssml_doc)
-                mock_call.should_receive(:execute_agi_command).ordered.once.with('EXEC MRCPSynth', ["\"#{doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
+                expect(mock_call).to receive(:execute_agi_command).ordered.once.with('EXEC MRCPSynth', ["\"#{doc.to_s.squish.gsub('"', '\"')}\"", ''].join(',')).and_return code: 200, result: 1
               end
 
               let(:audio_filename) { 'tt-monkeys' }
@@ -1073,7 +1073,7 @@ module Punchblock
               end
 
               let(:playbackstatus) { 'SUCCESS' }
-              before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
+              before { allow(mock_call).to receive(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus }
 
               describe 'ssml' do
                 context 'unset' do
@@ -1081,7 +1081,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
 
@@ -1109,7 +1109,7 @@ module Punchblock
                     end
                     expect_playback
                     subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                   end
 
                   context "when the audio filename is prefixed by file://" do
@@ -1146,11 +1146,11 @@ module Punchblock
                     it "should send an error complete event" do
                       expect_answered
                       error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-                      mock_call.should_receive(:execute_agi_command).and_raise error
+                      expect(mock_call).to receive(:execute_agi_command).and_raise error
                       subject.execute
                       complete_reason = original_command.complete_event(0.1).reason
-                      complete_reason.should be_a Punchblock::Event::Complete::Error
-                      complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                      expect(complete_reason.details).to eq("Terminated due to AMI error 'FooBar'")
                     end
                   end
 
@@ -1158,10 +1158,10 @@ module Punchblock
                     it "should send an error complete event" do
                       expect_answered
                       error = ChannelGoneError.new 'FooBar'
-                      mock_call.should_receive(:execute_agi_command).and_raise error
+                      expect(mock_call).to receive(:execute_agi_command).and_raise error
                       subject.execute
                       complete_reason = original_command.complete_event(0.1).reason
-                      complete_reason.should be_a Punchblock::Event::Complete::Hangup
+                      expect(complete_reason).to be_a Punchblock::Event::Complete::Hangup
                     end
                   end
 
@@ -1169,7 +1169,7 @@ module Punchblock
                     let(:playbackstatus) { 'FAILED' }
 
                     let(:synthstatus) { 'SUCCESS' }
-                    before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+                    before { allow(mock_call).to receive(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
                     let :fallback_doc do
                       RubySpeech::SSML.draw language: 'pt-BR' do
@@ -1184,7 +1184,7 @@ module Punchblock
                       expect_playback
                       expect_mrcpsynth fallback_doc
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context "and the SYNTHSTATUS variable is set to 'ERROR'" do
@@ -1196,8 +1196,8 @@ module Punchblock
                         expect_mrcpsynth fallback_doc
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Error
-                        complete_reason.details.should == "Terminated due to UniMRCP error"
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                        expect(complete_reason.details).to eq("Terminated due to UniMRCP error")
                       end
                     end
                   end
@@ -1219,18 +1219,18 @@ module Punchblock
                     expect_answered
                     expect_playback
                     subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                   end
 
                   context "when we get a RubyAMI Error" do
                     it "should send an error complete event" do
                       expect_answered
                       error = RubyAMI::Error.new.tap { |e| e.message = 'FooBar' }
-                      mock_call.should_receive(:execute_agi_command).and_raise error
+                      expect(mock_call).to receive(:execute_agi_command).and_raise error
                       subject.execute
                       complete_reason = original_command.complete_event(0.1).reason
-                      complete_reason.should be_a Punchblock::Event::Complete::Error
-                      complete_reason.details.should == "Terminated due to AMI error 'FooBar'"
+                      expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                      expect(complete_reason.details).to eq("Terminated due to AMI error 'FooBar'")
                     end
                   end
 
@@ -1238,7 +1238,7 @@ module Punchblock
                     it "should play the file with Playback" do
                       expect_answered false
                       expect_playback_noanswer
-                      mock_call.should_receive(:send_progress)
+                      expect(mock_call).to receive(:send_progress)
                       subject.execute
                     end
 
@@ -1256,7 +1256,7 @@ module Punchblock
                         expect_answered false
                         error = ProtocolError.new.setup 'option error', 'Interrupt digits are not allowed with early media.'
                         subject.execute
-                        original_command.response(0.1).should be == error
+                        expect(original_command.response(0.1)).to eq(error)
                       end
                     end
                   end
@@ -1297,37 +1297,37 @@ module Punchblock
                     expect_playback audio_filename2
                     expect_playback audio_filename3
                     latch = CountDownLatch.new 1
-                    original_command.should_receive(:add_event).once.with do |e|
-                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
-                    end
+                    }
                     subject.execute
-                    latch.wait(2).should be_true
+                    expect(latch.wait(2)).to be_true
                   end
 
                   it 'should not execute further output after a stop command' do
                     expect_answered
-                    mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
+                    expect(mock_call).to receive(:execute_agi_command).once.ordered do
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    original_command.should_receive(:add_event).once.with do |e|
-                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
-                    end
+                    }
                     Celluloid::Future.new { subject.execute }
                     sleep 0.1
-                    mock_call.should_receive(:redirect_back).ordered
+                    expect(mock_call).to receive(:redirect_back).ordered
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    latch.wait(2).should be_true
+                    expect(latch.wait(2)).to be_true
                   end
 
                   context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
                     let(:synthstatus) { 'SUCCESS' }
-                    before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
-                    before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+                    before { allow(mock_call).to receive(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
+                    before { allow(mock_call).to receive(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
                     let :fallback_doc do
                       RubySpeech::SSML.draw do
@@ -1342,7 +1342,7 @@ module Punchblock
                       expect_mrcpsynth fallback_doc
                       expect_playback audio_filename3
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context "and the SYNTHSTATUS variable is set to 'ERROR'" do
@@ -1355,8 +1355,8 @@ module Punchblock
                         expect_mrcpsynth fallback_doc
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Error
-                        complete_reason.details.should == "Terminated due to UniMRCP error"
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                        expect(complete_reason.details).to eq("Terminated due to UniMRCP error")
                       end
                     end
                   end
@@ -1371,13 +1371,13 @@ module Punchblock
                     end
                   end
 
-                  before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return 'SUCCESS' }
+                  before { allow(mock_call).to receive(:channel_var).with('SYNTHSTATUS').and_return 'SUCCESS' }
 
                   it "should attempt to render the document via MRCP and then send a complete event" do
                     expect_answered
                     expect_mrcpsynth ssml_doc
                     subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                   end
                 end
 
@@ -1411,7 +1411,7 @@ module Punchblock
                     end
                   end
 
-                  before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return 'SUCCESS' }
+                  before { allow(mock_call).to receive(:channel_var).with('SYNTHSTATUS').and_return 'SUCCESS' }
 
                   it "should attempt to render the document via MRCP and then send a complete event" do
                     expect_answered
@@ -1420,7 +1420,7 @@ module Punchblock
                     expect_mrcpsynth second_doc
                     expect_playback 'tt-weasels'
                     subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                   end
                 end
 
@@ -1449,32 +1449,32 @@ module Punchblock
                     expect_playback 'two'
                     expect_playback 'three'
                     subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                   end
 
                   it 'should not execute further output after a stop command' do
                     expect_answered
-                    mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
+                    expect(mock_call).to receive(:execute_agi_command).once.ordered do
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    original_command.should_receive(:add_event).once.with do |e|
-                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
-                    end
+                    }
                     Celluloid::Future.new { subject.execute }
                     sleep 0.1
-                    mock_call.should_receive(:redirect_back).ordered
+                    expect(mock_call).to receive(:redirect_back).ordered
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    latch.wait(2).should be_true
+                    expect(latch.wait(2)).to be_true
                   end
 
                   context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
                     let(:synthstatus) { 'SUCCESS' }
-                    before { mock_call.stub(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
-                    before { mock_call.stub(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
+                    before { allow(mock_call).to receive(:channel_var).with('PLAYBACKSTATUS').and_return 'SUCCESS', 'FAILED', 'SUCCESS' }
+                    before { allow(mock_call).to receive(:channel_var).with('SYNTHSTATUS').and_return synthstatus }
 
                     let :fallback_doc do
                       RubySpeech::SSML.draw do
@@ -1489,7 +1489,7 @@ module Punchblock
                       expect_mrcpsynth fallback_doc
                       expect_playback 'three'
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     context "and the SYNTHSTATUS variable is set to 'ERROR'" do
@@ -1502,8 +1502,8 @@ module Punchblock
                         expect_mrcpsynth fallback_doc
                         subject.execute
                         complete_reason = original_command.complete_event(0.1).reason
-                        complete_reason.should be_a Punchblock::Event::Complete::Error
-                        complete_reason.details.should == "Terminated due to UniMRCP error"
+                        expect(complete_reason).to be_a Punchblock::Event::Complete::Error
+                        expect(complete_reason.details).to eq("Terminated due to UniMRCP error")
                       end
                     end
                   end
@@ -1525,7 +1525,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -1545,7 +1545,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -1565,7 +1565,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -1587,7 +1587,7 @@ module Punchblock
                     expect_answered
                     2.times { expect_playback }
                     subject.execute
-                    original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                   end
 
                   context 'to 0' do
@@ -1597,27 +1597,27 @@ module Punchblock
                       expect_answered
                       1000.times { expect_playback }
                       subject.execute
-                      original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
                   end
 
                   it 'should not execute further output after a stop command' do
                     expect_answered
-                    mock_call.should_receive(:execute_agi_command).once.ordered.and_return do
+                    expect(mock_call).to receive(:execute_agi_command).once.ordered do
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    original_command.should_receive(:add_event).once.with do |e|
-                      e.reason.should be_a Punchblock::Component::Output::Complete::Finish
+                    expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
-                    end
+                    }
                     Celluloid::Future.new { subject.execute }
                     sleep 0.1
-                    mock_call.should_receive(:redirect_back).ordered
+                    expect(mock_call).to receive(:redirect_back).ordered
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    latch.wait(2).should be_true
+                    expect(latch.wait(2)).to be_true
                   end
                 end
               end
@@ -1637,7 +1637,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -1657,7 +1657,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'A voice value is unsupported on Asterisk.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -1689,9 +1689,9 @@ module Punchblock
                   it "does not redirect the call" do
                     expect_answered
                     expect_playback
-                    mock_call.should_receive(:redirect_back).never
+                    expect(mock_call).to receive(:redirect_back).never
                     subject.execute
-                    original_command.response(0.1).should be_a Ref
+                    expect(original_command.response(0.1)).to be_a Ref
                     send_ami_events_for_dtmf 1
                   end
                 end
@@ -1701,27 +1701,27 @@ module Punchblock
 
                   before do
                     expect_answered
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                    subject.should_receive(:send_finish).and_return nil
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
+                    expect(subject).to receive(:send_finish).and_return nil
                   end
 
                   context "when a DTMF digit is received" do
                     it "sends the correct complete event" do
-                      mock_call.should_receive :redirect_back
+                      expect(mock_call).to receive :redirect_back
                       subject.execute
-                      original_command.response(0.1).should be_a Ref
-                      original_command.should_not be_complete
+                      expect(original_command.response(0.1)).to be_a Ref
+                      expect(original_command).not_to be_complete
                       send_ami_events_for_dtmf 1
                       mock_call.process_ami_event ami_event
                       sleep 0.2
-                      original_command.should be_complete
-                      reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command).to be_complete
+                      expect(reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     it "redirects the call back to async AGI" do
-                      mock_call.should_receive(:redirect_back).once
+                      expect(mock_call).to receive(:redirect_back).once
                       subject.execute
-                      original_command.response(0.1).should be_a Ref
+                      expect(original_command.response(0.1)).to be_a Ref
                       send_ami_events_for_dtmf 1
                     end
                   end
@@ -1732,27 +1732,27 @@ module Punchblock
 
                   before do
                     expect_answered
-                    mock_call.should_receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
-                    subject.should_receive(:send_finish).and_return nil
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', audio_filename)
+                    expect(subject).to receive(:send_finish).and_return nil
                   end
 
                   context "when a DTMF digit is received" do
                     it "sends the correct complete event" do
-                      mock_call.should_receive :redirect_back
+                      expect(mock_call).to receive :redirect_back
                       subject.execute
-                      original_command.response(0.1).should be_a Ref
-                      original_command.should_not be_complete
+                      expect(original_command.response(0.1)).to be_a Ref
+                      expect(original_command).not_to be_complete
                       send_ami_events_for_dtmf 1
                       mock_call.process_ami_event ami_event
                       sleep 0.2
-                      original_command.should be_complete
-                      reason.should be_a Punchblock::Component::Output::Complete::Finish
+                      expect(original_command).to be_complete
+                      expect(reason).to be_a Punchblock::Component::Output::Complete::Finish
                     end
 
                     it "redirects the call back to async AGI" do
-                      mock_call.should_receive(:redirect_back).once
+                      expect(mock_call).to receive(:redirect_back).once
                       subject.execute
-                      original_command.response(0.1).should be_a Ref
+                      expect(original_command.response(0.1)).to be_a Ref
                       send_ami_events_for_dtmf 1
                     end
                   end
@@ -1763,7 +1763,7 @@ module Punchblock
                   it "should return an error and not execute any actions" do
                     subject.execute
                     error = ProtocolError.new.setup 'option error', 'An interrupt-on value of speech is unsupported.'
-                    original_command.response(0.1).should be == error
+                    expect(original_command.response(0.1)).to eq(error)
                   end
                 end
               end
@@ -1777,7 +1777,7 @@ module Punchblock
               before { command.request! }
               it "returns a ProtocolError response" do
                 subject.execute_command command
-                command.response(0.1).should be_a ProtocolError
+                expect(command.response(0.1)).to be_a ProtocolError
               end
             end
 
@@ -1799,22 +1799,22 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                mock_call.should_receive(:redirect_back)
+                expect(mock_call).to receive(:redirect_back)
                 subject.execute_command command
-                command.response(0.1).should be == true
+                expect(command.response(0.1)).to eq(true)
               end
 
               it "sends the correct complete event" do
-                mock_call.should_receive(:redirect_back)
+                expect(mock_call).to receive(:redirect_back)
                 subject.execute_command command
-                original_command.should_not be_complete
+                expect(original_command).not_to be_complete
                 mock_call.process_ami_event ami_event
-                reason.should be_a Punchblock::Event::Complete::Stop
-                original_command.should be_complete
+                expect(reason).to be_a Punchblock::Event::Complete::Stop
+                expect(original_command).to be_complete
               end
 
               it "redirects the call by unjoining it" do
-                mock_call.should_receive(:redirect_back)
+                expect(mock_call).to receive(:redirect_back)
                 subject.execute_command command
               end
             end

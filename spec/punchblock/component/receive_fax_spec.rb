@@ -6,13 +6,13 @@ module Punchblock
   module Component
     describe ReceiveFax do
       it 'registers itself' do
-        RayoNode.class_from_registration(:receivefax, 'urn:xmpp:rayo:fax:1').should be == described_class
+        expect(RayoNode.class_from_registration(:receivefax, 'urn:xmpp:rayo:fax:1')).to eq(described_class)
       end
 
       describe "exporting to Rayo" do
         it "should export to XML that can be understood by its parser" do
           new_instance = RayoNode.from_xml subject.to_rayo
-          new_instance.should be_instance_of described_class
+          expect(new_instance).to be_instance_of described_class
         end
 
         it "should render to a parent node if supplied" do
@@ -20,7 +20,7 @@ module Punchblock
           parent = Nokogiri::XML::Node.new 'foo', doc
           doc.root = parent
           rayo_doc = subject.to_rayo(parent)
-          rayo_doc.should == parent
+          expect(rayo_doc).to eq(parent)
         end
       end
 
@@ -49,9 +49,20 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#stop!' do
@@ -62,14 +73,14 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
+              expect(mock_client).to receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
               command.stop!
             end
           end
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a ReceiveFax that is new")
+              expect { command.stop! }.to raise_error(InvalidActionError, "Cannot stop a ReceiveFax that is new")
             end
           end
         end
@@ -90,7 +101,7 @@ module Punchblock
         subject(:complete_node) { RayoNode.from_xml(parse_stanza(stanza).root) }
 
         it "should understand a finish reason" do
-          subject.reason.should be_instance_of ReceiveFax::Complete::Finish
+          expect(subject.reason).to be_instance_of ReceiveFax::Complete::Finish
         end
 
         describe "should make the fax data available" do
@@ -98,13 +109,31 @@ module Punchblock
 
           it { should be_instance_of ReceiveFax::Fax }
 
-          its(:url)         { should be == 'http://shakespere.lit/faxes/fax1.tiff' }
-          its(:resolution)  { should be == '595x841' }
-          its(:pages)       { should be == 3 }
-          its(:size)        { should be == 12287492817 }
+          describe '#url' do
+            subject { super().url }
+            it { should be == 'http://shakespere.lit/faxes/fax1.tiff' }
+          end
+
+          describe '#resolution' do
+            subject { super().resolution }
+            it { should be == '595x841' }
+          end
+
+          describe '#pages' do
+            subject { super().pages }
+            it { should be == 3 }
+          end
+
+          describe '#size' do
+            subject { super().size }
+            it { should be == 12287492817 }
+          end
         end
 
-        its(:fax_metadata) { should == {'fax-transfer-rate' => '10000', 'foo' => 'true'} }
+        describe '#fax_metadata' do
+          subject { super().fax_metadata }
+          it { should == {'fax-transfer-rate' => '10000', 'foo' => 'true'} }
+        end
       end
     end
   end

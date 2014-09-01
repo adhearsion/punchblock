@@ -39,4 +39,4 @@ The best available usage documentation available for Punchblock is by example, i
 
 ## Copyright
 
-Copyright (c) 2013 Adhearsion Foundation Inc. MIT licence (see LICENSE for details).
+Copyright (c) 2014 Adhearsion Foundation Inc. MIT licence (see LICENSE for details).

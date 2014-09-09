@@ -20,6 +20,7 @@ module Punchblock
                     :initial_timeout      => 2000,
                     :inter_digit_timeout  => 2000,
                     :recognition_timeout  => 0,
+                    :dtmf_term_timeout    => 0,
                     :sensitivity          => 0.5,
                     :min_confidence       => 0.5
         end
@@ -66,6 +67,11 @@ module Punchblock
 
         describe '#recognition_timeout' do
           subject { super().recognition_timeout }
+          it { should be == 0 }
+        end
+
+        describe '#dtmf_term_timeout' do
+          subject { super().dtmf_term_timeout }
           it { should be == 0 }
         end
 
@@ -125,6 +131,7 @@ module Punchblock
             expect(new_instance.initial_timeout).to eq(2000)
             expect(new_instance.inter_digit_timeout).to eq(2000)
             expect(new_instance.recognition_timeout).to eq(0)
+            expect(new_instance.dtmf_term_timeout).to eq(0)
             expect(new_instance.sensitivity).to eq(0.5)
             expect(new_instance.min_confidence).to eq(0.5)
           end
@@ -156,6 +163,7 @@ module Punchblock
        initial-timeout="2000"
        inter-digit-timeout="2000"
        recognition-timeout="0"
+       dtmf-term-timeout="0"
        sensitivity="0.5"
        min-confidence="0.5">
   <grammar content-type="application/grammar+custom">

@@ -35,6 +35,7 @@ module Punchblock
             raise OptionError, "An initial-timeout value must be -1 or a positive integer." if @initial_timeout < -1
             raise OptionError, "An inter-digit-timeout value must be -1 or a positive integer." if @inter_digit_timeout < -1
             raise OptionError, "A recognition-timeout value must be -1, 0, or a positive integer." if @recognition_timeout < -1
+            raise OptionError, "A dtmf-term-timeout value must be -1, 0, or a positive integer." if @dtmf_term_timeout < -1
           end
 
           def execute_app(app, *args)
@@ -50,6 +51,7 @@ module Punchblock
               opts[:ct] = input_node.min_confidence if input_node.min_confidence
               opts[:sl] = input_node.sensitivity if input_node.sensitivity
               opts[:t]  = input_node.recognition_timeout if @recognition_timeout > -1
+              opts[:dtt] = input_node.dtmf_term_timeout if @dtmf_term_timeout > -1
               yield opts
             end
           end
@@ -58,6 +60,7 @@ module Punchblock
             @initial_timeout = input_node.initial_timeout || -1
             @inter_digit_timeout = input_node.inter_digit_timeout || -1
             @recognition_timeout = input_node.recognition_timeout || -1
+            @dtmf_term_timeout = input_node.dtmf_term_timeout || -1
           end
 
           def grammars

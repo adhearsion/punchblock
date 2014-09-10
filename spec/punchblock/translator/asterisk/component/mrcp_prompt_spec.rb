@@ -215,6 +215,17 @@ module Punchblock
                     end
                   end
 
+                  context "when the RECOG_STATUS variable is set to 'INTERRUPTED' after a successful recognition" do
+                    let(:recog_status) { 'INTERRUPTED' }
+
+                    it "should send an error complete event" do
+                      expected_complete_reason = Punchblock::Component::Input::Complete::NoMatch.new
+                      expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
+                      subject.execute
+                      expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
+                    end
+                  end
+
                   context "when the RECOG_STATUS variable is set to 'ERROR'" do
                     let(:recog_status) { 'ERROR' }
 

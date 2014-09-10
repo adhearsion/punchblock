@@ -38,7 +38,6 @@ module Punchblock
 
           def execute_app(app, *args)
             UniMRCPApp.new(app, *args, unimrcp_app_options).execute @call
-            raise UniMRCPError if @call.channel_var('RECOG_STATUS') == 'ERROR'
           end
 
           def unimrcp_app_options
@@ -85,14 +84,22 @@ module Punchblock
           end
 
           def complete
-            send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
-            when '000'
-              nlsml = RubySpeech.parse URI.decode(@call.channel_var('RECOG_RESULT'))
-              Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
-            when '001'
-              Punchblock::Component::Input::Complete::NoMatch.new
-            when '002'
-              Punchblock::Component::Input::Complete::NoInput.new
+            recog_status = @call.channel_var('RECOG_STATUS')
+
+            raise UniMRCPError if recog_status == 'ERROR'
+
+            if recog_status == 'INTERRUPTED'
+              send_complete_event Punchblock::Component::Input::Complete::NoMatch.new
+            else
+              send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
+              when '000'
+                nlsml = RubySpeech.parse URI.decode(@call.channel_var('RECOG_RESULT'))
+                Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
+              when '001'
+                Punchblock::Component::Input::Complete::NoMatch.new
+              when '002'
+                Punchblock::Component::Input::Complete::NoInput.new
+              end
             end
           end
         end

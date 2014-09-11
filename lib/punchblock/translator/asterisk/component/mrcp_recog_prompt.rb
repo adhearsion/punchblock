@@ -84,13 +84,12 @@ module Punchblock
           end
 
           def complete
-            recog_status = @call.channel_var('RECOG_STATUS')
-
-            raise UniMRCPError if recog_status == 'ERROR'
-
-            if recog_status == 'INTERRUPTED'
+            case @call.channel_var('RECOG_STATUS') 
+            when 'INTERRUPTED'
               send_complete_event Punchblock::Component::Input::Complete::NoMatch.new
-            else
+            when 'ERROR'
+              raise UniMRCPError
+            else 
               send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
               when '000'
                 nlsml = RubySpeech.parse URI.decode(@call.channel_var('RECOG_RESULT'))

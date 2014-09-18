@@ -254,12 +254,12 @@ module Punchblock
         # @raises RubyAMI::Error, ChannelGoneError
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
-          condition = Celluloid::Condition.new
+          response = Celluloid::Future.new
           register_tmp_handler :ami, name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec', [:[], 'CommandID'] => agi.id do |event|
-            condition.signal event
+            response.signal Celluloid::SuccessResponse.new(nil, event)
           end
           agi.execute @ami_client
-          event = condition.wait
+          event = response.value
           return unless event
           agi.parse_result event
         end

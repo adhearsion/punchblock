@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v2.5.3](https://github.com/adhearsion/punchblock/compare/v2.5.2...v2.5.3) - [2014-09-22](https://rubygems.org/gems/punchblock/versions/2.5.3)
   * Bugfix: Prevent Asterisk translator death due to dead DTMF recognizers ([#221](https://github.com/adhearsion/punchblock/pull/221), [adhearsion/adhearsion#479](https://github.com/adhearsion/adhearsion/issues/479))
   * Bugfix: Be more intelligent about only stripping true file extensions off filenames for playback on Asterisk ([adhearsion/adhearsion#482](https://github.com/adhearsion/adhearsion/issues/482))
   * Bugfix: Handle a corner case crash where a recognition request is interrupted directly after a successful recognition has completed

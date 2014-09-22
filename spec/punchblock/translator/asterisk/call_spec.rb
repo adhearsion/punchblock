@@ -1647,7 +1647,7 @@ module Punchblock
           end
 
           it 'should send an appropriate AsyncAGI AMI action' do
-            expect_any_instance_of(Celluloid::Condition).to receive(:wait).and_return nil
+            expect_any_instance_of(Celluloid::Future).to receive(:value).and_return nil
             expect(ami_client).to receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'EXEC ANSWER', 'CommandID' => Punchblock.new_uuid).and_return(response)
             subject.execute_agi_command 'EXEC ANSWER'
           end
@@ -1656,7 +1656,7 @@ module Punchblock
             let(:params) { [1000, 'foo'] }
 
             it 'should send the appropriate action' do
-              expect_any_instance_of(Celluloid::Condition).to receive(:wait).and_return nil
+              expect_any_instance_of(Celluloid::Future).to receive(:value).and_return nil
               expect(ami_client).to receive(:send_action).once.with('AGI', 'Channel' => channel, 'Command' => 'WAIT FOR DIGIT "1000" "foo"', 'CommandID' => Punchblock.new_uuid).and_return(response)
               subject.execute_agi_command 'WAIT FOR DIGIT', *params
             end

@@ -33,9 +33,9 @@ module Punchblock
               before { stub_uuids component_id }
 
               it 'should send the appropriate RubyAMI::Action and send the component node a ref' do
-                ami_client.should_receive(:send_action).once.with('ExtensionStatus', 'Context' => 'default', 'Exten' => 'idonno').and_return(RubyAMI::Response.new)
+                expect(ami_client).to receive(:send_action).once.with('ExtensionStatus', 'Context' => 'default', 'Exten' => 'idonno').and_return(RubyAMI::Response.new)
                 subject.execute
-                original_command.response(1).should == expected_response
+                expect(original_command.response(1)).to eq(expected_response)
               end
             end
 
@@ -57,8 +57,8 @@ module Punchblock
 
               context 'for a non-causal action' do
                 it 'should send a complete event to the component node' do
-                  ami_client.should_receive(:send_action).once.and_return response
-                  subject.should_receive(:send_complete_event).once.with expected_complete_reason
+                  expect(ami_client).to receive(:send_action).once.and_return response
+                  expect(subject).to receive(:send_complete_event).once.with expected_complete_reason
                   subject.execute
                 end
               end
@@ -105,7 +105,7 @@ module Punchblock
                   Punchblock::Component::Asterisk::AMI::Action::Complete::Success.new message: 'Channel status will follow', text_body: 'Some text body', headers: {'Exten' => "idonno", 'Context' => "default", 'Hint' => "", 'Status' => "-1", 'EventList' => 'Complete', 'ListItems' => '3'}
                 end
 
-                before { ami_client.should_receive(:send_action).once.and_return response }
+                before { expect(ami_client).to receive(:send_action).once.and_return response }
 
                 it 'should send events to the component node' do
                   event_node
@@ -114,7 +114,7 @@ module Punchblock
                   end
                   response.events << event << terminating_event
                   subject.execute
-                  @event.should be == event_node
+                  expect(@event).to eq(event_node)
                 end
 
                 it 'should send a complete event to the component node' do
@@ -122,7 +122,7 @@ module Punchblock
 
                   subject.execute
 
-                  original_command.complete_event(0.5).reason.should be == expected_complete_reason
+                  expect(original_command.complete_event(0.5).reason).to eq(expected_complete_reason)
                 end
               end
 
@@ -136,10 +136,10 @@ module Punchblock
                 end
 
                 it 'should send a complete event to the component node' do
-                  ami_client.should_receive(:send_action).once.and_raise error
+                  expect(ami_client).to receive(:send_action).once.and_raise error
                   expected_complete_reason
                   subject.execute
-                  original_command.complete_event(0.5).reason.should be == expected_complete_reason
+                  expect(original_command.complete_event(0.5).reason).to eq(expected_complete_reason)
                 end
               end
             end

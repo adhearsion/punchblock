@@ -10,19 +10,26 @@ module Punchblock
       let(:translator)  { described_class.new connection }
       let(:stream)      { double 'RubyFS::Stream' }
 
-      before { connection.should_receive(:stream).at_most(:once).and_return stream }
+      before { expect(connection).to receive(:stream).at_most(:once).and_return stream }
 
       subject { translator }
 
-      its(:connection)  { should be connection }
-      its(:stream)      { should be stream }
+      describe '#connection' do
+        subject { super().connection }
+        it { should be connection }
+      end
+
+      describe '#stream' do
+        subject { super().stream }
+        it { should be stream }
+      end
 
       describe '#terminate' do
         it "terminates all calls" do
           call = described_class::Call.new 'foo', subject
           subject.register_call call
           subject.terminate
-          call.should_not be_alive
+          expect(call.alive?).to be false
         end
       end
 
@@ -32,10 +39,10 @@ module Punchblock
           let(:call_id) { 'abc123' }
 
           it 'executes the call command' do
-            subject.wrapped_object.should_receive(:execute_call_command).with do |c|
-              c.should be command
-              c.target_call_id.should be == call_id
-            end
+            expect(subject.wrapped_object).to receive(:execute_call_command).with { |c|
+              expect(c).to be command
+              expect(c.target_call_id).to eq(call_id)
+            }
             subject.execute_command command, :call_id => call_id
           end
         end
@@ -45,10 +52,10 @@ module Punchblock
           let(:component_id)  { '123abc' }
 
           it 'executes the component command' do
-            subject.wrapped_object.should_receive(:execute_component_command).with do |c|
-              c.should be command
-              c.component_id.should be == component_id
-            end
+            expect(subject.wrapped_object).to receive(:execute_component_command).with { |c|
+              expect(c).to be command
+              expect(c.component_id).to eq(component_id)
+            }
             subject.execute_command command, :component_id => component_id
           end
         end
@@ -57,7 +64,7 @@ module Punchblock
           let(:command) { Command::Dial.new }
 
           it 'executes the command directly' do
-            subject.wrapped_object.should_receive(:execute_global_command).with command
+            expect(subject.wrapped_object).to receive(:execute_global_command).with command
             subject.execute_command command
           end
         end
@@ -72,7 +79,7 @@ module Punchblock
         end
 
         it 'should make the call accessible by ID' do
-          subject.call_with_id(call_id).should be call
+          expect(subject.call_with_id(call_id)).to be call
         end
       end
 
@@ -85,9 +92,9 @@ module Punchblock
         end
 
         it 'should make the call inaccessible by ID' do
-          subject.call_with_id(call_id).should be call
+          expect(subject.call_with_id(call_id)).to be call
           subject.deregister_call call_id
-          subject.call_with_id(call_id).should be_nil
+          expect(subject.call_with_id(call_id)).to be_nil
         end
       end
 
@@ -97,7 +104,7 @@ module Punchblock
 
         it 'should make the component accessible by ID' do
           subject.register_component component
-          subject.component_with_id(component_id).should be component
+          expect(subject.component_with_id(component_id)).to be component
         end
       end
 
@@ -110,12 +117,12 @@ module Punchblock
 
           before do
             command.request!
-            call.stub(:id).and_return call_id
+            allow(call).to receive(:id).and_return call_id
             subject.register_call call
           end
 
           it 'sends the command to the call for execution' do
-            call.async.should_receive(:execute_command).once.with command
+            expect(call.async).to receive(:execute_command).once.with command
             subject.execute_call_command command
           end
         end
@@ -141,16 +148,16 @@ module Punchblock
               raise 'Woops, I died'
             end
 
-            connection.should_receive(:handle_event).once.with end_error_event
+            expect(connection).to receive(:handle_event).once.with end_error_event
 
-            lambda { call.oops }.should raise_error(/Woops, I died/)
+            expect { call.oops }.to raise_error(/Woops, I died/)
             sleep 0.1
-            call.should_not be_alive
-            subject.call_with_id(call_id).should be_nil
+            expect(call.alive?).to be false
+            expect(subject.call_with_id(call_id)).to be_nil
 
             command.request!
             subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+            expect(command.response).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id))
           end
         end
 
@@ -163,7 +170,7 @@ module Punchblock
           let(:call_id) { call.id }
 
           before do
-            connection.stub :handle_event
+            allow(connection).to receive :handle_event
             subject.handle_es_event es_event
             call_id
           end
@@ -173,16 +180,16 @@ module Punchblock
               raise 'Woops, I died'
             end
 
-            connection.should_receive(:handle_event).once.with end_error_event
+            expect(connection).to receive(:handle_event).once.with end_error_event
 
-            lambda { call.oops }.should raise_error(/Woops, I died/)
+            expect { call.oops }.to raise_error(/Woops, I died/)
             sleep 0.1
-            call.should_not be_alive
-            subject.call_with_id(call_id).should be_nil
+            expect(call.alive?).to be false
+            expect(subject.call_with_id(call_id)).to be_nil
 
             command.request!
             subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id)
+            expect(command.response).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id))
           end
         end
 
@@ -190,7 +197,7 @@ module Punchblock
           it 'sends an error in response to the command' do
             command.request!
             subject.execute_call_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id, nil)
+            expect(command.response).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id, nil))
           end
         end
       end
@@ -212,7 +219,7 @@ module Punchblock
           end
 
           it 'sends the command to the component for execution' do
-            component.async.should_receive(:execute_command).once.with command
+            expect(component.async).to receive(:execute_command).once.with command
             subject.execute_component_command command
           end
         end
@@ -220,7 +227,7 @@ module Punchblock
         context "with an unknown component ID" do
           it 'sends an error in response to the command' do
             subject.execute_component_command command
-            command.response.should be == ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component.id}", nil, component.id)
+            expect(command.response).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a component with ID #{component.id}", nil, component.id))
           end
         end
       end
@@ -235,7 +242,7 @@ module Punchblock
 
           before do
             id
-            Punchblock.should_receive(:new_uuid).once.and_return id
+            expect(Punchblock).to receive(:new_uuid).once.and_return id
             command.request!
             stream.as_null_object
           end
@@ -243,15 +250,15 @@ module Punchblock
           it 'should be able to look up the call by ID' do
             subject.execute_global_command command
             call = subject.call_with_id id
-            call.should be_a Freeswitch::Call
-            call.translator.should be subject
-            call.stream.should be stream
+            expect(call).to be_a Freeswitch::Call
+            expect(call.translator).to be subject
+            expect(call.stream).to be stream
           end
 
           it 'should instruct the call to send a dial' do
             mock_call = double('Freeswitch::Call').as_null_object
-            Freeswitch::Call.should_receive(:new_link).once.and_return mock_call
-            mock_call.async.should_receive(:dial).once.with command
+            expect(Freeswitch::Call).to receive(:new_link).once.and_return mock_call
+            expect(mock_call.async).to receive(:dial).once.with command
             subject.execute_global_command command
           end
         end
@@ -263,7 +270,7 @@ module Punchblock
 
           it 'sends an error in response to the command' do
             subject.execute_command command
-            command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command")
+            expect(command.response).to eq(ProtocolError.new.setup('command-not-acceptable', "Did not understand command"))
           end
         end
       end
@@ -271,13 +278,13 @@ module Punchblock
       describe '#handle_pb_event' do
         it 'should forward the event to the connection' do
           event = double 'Punchblock::Event'
-          subject.connection.should_receive(:handle_event).once.with event
+          expect(subject.connection).to receive(:handle_event).once.with event
           subject.handle_pb_event event
         end
       end
 
       describe '#handle_es_event' do
-        before { subject.wrapped_object.stub :handle_pb_event }
+        before { allow(subject.wrapped_object).to receive :handle_pb_event }
 
         let(:unique_id) { "3f0e1e18-c056-11e1-b099-fffeda3ce54f" }
 
@@ -423,10 +430,10 @@ module Punchblock
         it 'should be able to look up the call by ID' do
           subject.handle_es_event es_event
           call = subject.call_with_id unique_id
-          call.should be_a Freeswitch::Call
-          call.translator.should be subject
-          call.stream.should be stream
-          call.es_env.should be ==  {
+          expect(call).to be_a Freeswitch::Call
+          expect(call.translator).to be subject
+          expect(call.stream).to be stream
+          expect(call.es_env).to eq({
             :variable_direction                   => "inbound",
             :variable_uuid                        => "3f0e1e18-c056-11e1-b099-fffeda3ce54f",
             :variable_session_id                  => "1",
@@ -499,14 +506,14 @@ module Punchblock
             :variable_rfc2822_date                => "Wed, 27 Jun 2012 13:47:25 +0100",
             :variable_export_vars                 => "RFC2822_DATE",
             :variable_current_application         => "park"
-          }
+          })
         end
 
         describe "with a RubyFS::Stream::Connected" do
           let(:es_event) { RubyFS::Stream::Connected.new }
 
           it "should send a Punchblock::Connection::Connected event" do
-            subject.wrapped_object.should_receive(:handle_pb_event).once.with(Punchblock::Connection::Connected.new)
+            expect(subject.wrapped_object).to receive(:handle_pb_event).once.with(Punchblock::Connection::Connected.new)
             subject.handle_es_event es_event
           end
         end
@@ -522,9 +529,9 @@ module Punchblock
         describe 'with a CHANNEL_PARK event' do
           it 'should instruct the call to send an offer' do
             mock_call = double('Freeswitch::Call').as_null_object
-            Freeswitch::Call.should_receive(:new).once.and_return mock_call
-            subject.wrapped_object.should_receive(:link)
-            mock_call.async.should_receive(:send_offer).once
+            expect(Freeswitch::Call).to receive(:new).once.and_return mock_call
+            expect(subject.wrapped_object).to receive(:link)
+            expect(mock_call.async).to receive(:send_offer).once
             subject.handle_es_event es_event
           end
 
@@ -536,7 +543,7 @@ module Punchblock
             end
 
             it "should not create a new call" do
-              Freeswitch::Call.should_receive(:new).never
+              expect(Freeswitch::Call).to receive(:new).never
               subject.handle_es_event es_event
             end
           end
@@ -561,12 +568,12 @@ module Punchblock
             end
 
             it "is delivered to the bridging leg" do
-              call_a.async.should_receive(:handle_es_event).once.with es_event
+              expect(call_a.async).to receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
 
             it "is delivered to the other leg" do
-              call_b.async.should_receive(:handle_es_event).once.with es_event
+              expect(call_b.async).to receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
           end
@@ -591,12 +598,12 @@ module Punchblock
             end
 
             it "is delivered to the bridging leg" do
-              call_a.async.should_receive(:handle_es_event).once.with es_event
+              expect(call_a.async).to receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
 
             it "is delivered to the other leg" do
-              call_b.async.should_receive(:handle_es_event).once.with es_event
+              expect(call_b.async).to receive(:handle_es_event).once.with es_event
               subject.handle_es_event es_event
             end
           end
@@ -619,8 +626,8 @@ module Punchblock
           end
 
           it "is delivered only to the primary leg" do
-            call_a.async.should_receive(:handle_es_event).once.with es_event
-            call_b.async.should_receive(:handle_es_event).never
+            expect(call_a.async).to receive(:handle_es_event).once.with es_event
+            expect(call_b.async).to receive(:handle_es_event).never
             subject.handle_es_event es_event
           end
         end
@@ -635,7 +642,7 @@ module Punchblock
           end
 
           it 'sends the ES event to the call' do
-            call.async.should_receive(:handle_es_event).once.with es_event
+            expect(call.async).to receive(:handle_es_event).once.with es_event
             subject.handle_es_event es_event
           end
         end

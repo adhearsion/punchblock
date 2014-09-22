@@ -22,11 +22,14 @@ module Punchblock
         context "with no domains specified, and a JID of 1@app.rayo.net" do
           let(:options) { { :username => '1@app.rayo.net' } }
 
-          its(:root_domain)   { should be == 'app.rayo.net' }
+          describe '#root_domain' do
+            subject { super().root_domain }
+            it { should be == 'app.rayo.net' }
+          end
 
           describe '#new_call_uri' do
             it "should return an appropriate random call URI" do
-              subject.new_call_uri.should == 'xmpp:randomcallid@app.rayo.net'
+              expect(subject.new_call_uri).to eq('xmpp:randomcallid@app.rayo.net')
             end
           end
         end
@@ -34,11 +37,14 @@ module Punchblock
         context "with only a rayo domain set" do
           let(:options) { { :rayo_domain => 'rayo.org' } }
 
-          its(:root_domain)   { should be == 'rayo.org' }
+          describe '#root_domain' do
+            subject { super().root_domain }
+            it { should be == 'rayo.org' }
+          end
 
           describe '#new_call_uri' do
             it "should return an appropriate random call URI" do
-              subject.new_call_uri.should == 'xmpp:randomcallid@rayo.org'
+              expect(subject.new_call_uri).to eq('xmpp:randomcallid@rayo.org')
             end
           end
         end
@@ -46,11 +52,14 @@ module Punchblock
         context "with only a root domain set" do
           let(:options) { { :root_domain => 'rayo.org' } }
 
-          its(:root_domain)   { should be == 'rayo.org' }
+          describe '#root_domain' do
+            subject { super().root_domain }
+            it { should be == 'rayo.org' }
+          end
 
           describe '#new_call_uri' do
             it "should return an appropriate random call URI" do
-              subject.new_call_uri.should == 'xmpp:randomcallid@rayo.org'
+              expect(subject.new_call_uri).to eq('xmpp:randomcallid@rayo.org')
             end
           end
         end
@@ -65,7 +74,7 @@ module Punchblock
         old_logger = Punchblock.logger
         Punchblock.logger = :foo
         XMPP.new :username => '1@call.rayo.net', :password => 1
-        Blather.logger.should be :foo
+        expect(Blather.logger).to be :foo
         Punchblock.logger = old_logger
       end
 
@@ -86,9 +95,9 @@ module Punchblock
 </output>
         MSG
         output = RayoNode.import parse_stanza(output).root
-        connection.should_receive(:write_to_stream).once.and_return true
+        expect(connection).to receive(:write_to_stream).once.and_return true
         iq = Blather::Stanza::Iq.new :set, '9f00061@call.rayo.net'
-        connection.should_receive(:create_iq).and_return iq
+        expect(connection).to receive(:create_iq).and_return iq
 
         write_thread = Thread.new do
           connection.write offer.call_id, output
@@ -106,9 +115,9 @@ module Punchblock
 
         write_thread.join
 
-        output.state_name.should be == :executing
+        expect(output.state_name).to eq(:executing)
 
-        connection.original_component_from_id('fgh4590').should be == output
+        expect(connection.original_component_from_id('fgh4590')).to eq(output)
 
         example_complete = import_stanza <<-MSG
 <presence to='16577@app.rayo.net/1' from='9f00061@call.rayo.net/fgh4590'>
@@ -119,80 +128,80 @@ module Punchblock
         MSG
 
         connection.__send__ :handle_presence, example_complete
-        output.complete_event(0.5).source.should be == output
+        expect(output.complete_event(0.5).source).to eq(output)
 
-        output.component_id.should be == 'fgh4590'
+        expect(output.component_id).to eq('fgh4590')
       end
 
       let(:client) { connection.send :client }
-      before { client.stub :write }
+      before { allow(client).to receive :write }
 
       describe "sending a command" do
         let(:command) { Punchblock::Command::Answer.new request_id: 'fooobarrr', target_call_id: 'foo', domain: 'bar.com' }
 
         it "should write an IQ containing the command to the socket" do
-          client.should_receive(:write).once.with do |stanza|
-            stanza.should be_a Blather::Stanza::Iq
-            stanza.to.should be == 'foo@bar.com'
-            stanza.type.should be == :set
-          end
+          expect(client).to receive(:write).once.with { |stanza|
+            expect(stanza).to be_a Blather::Stanza::Iq
+            expect(stanza.to).to eq('foo@bar.com')
+            expect(stanza.type).to eq(:set)
+          }
           connection.write command
         end
 
         it "should put the command in a requested state" do
           connection.write command
-          command.should be_requested
+          expect(command).to be_requested
         end
 
         it "should use the command's request_id as the ID id" do
-          client.should_receive(:write).once.with do |stanza|
-            stanza.id.should be == 'fooobarrr'
-          end
+          expect(client).to receive(:write).once.with { |stanza|
+            expect(stanza.id).to eq('fooobarrr')
+          }
           connection.write command
         end
       end
 
       it 'should send a "Chat" presence when ready' do
-        client.should_receive(:write).once.with do |stanza|
-          stanza.to.should be == 'rayo.net'
-          stanza.should be_a Blather::Stanza::Presence::Status
-          stanza.chat?.should be true
-        end
+        expect(client).to receive(:write).once.with { |stanza|
+          expect(stanza.to).to eq('rayo.net')
+          expect(stanza).to be_a Blather::Stanza::Presence::Status
+          expect(stanza.chat?).to be true
+        }
         connection.ready!
       end
 
       it 'should send a "Do Not Disturb" presence when not_ready' do
-        client.should_receive(:write).once.with do |stanza|
-          stanza.to.should be == 'rayo.net'
-          stanza.should be_a Blather::Stanza::Presence::Status
-          stanza.dnd?.should be true
-        end
+        expect(client).to receive(:write).once.with { |stanza|
+          expect(stanza.to).to eq('rayo.net')
+          expect(stanza).to be_a Blather::Stanza::Presence::Status
+          expect(stanza.dnd?).to be true
+        }
         connection.not_ready!
       end
 
       describe '#send_message' do
         it 'should send a "normal" message to the given user and domain' do
-          client.should_receive(:write).once.with do |stanza|
-            stanza.to.should be == 'someone@example.org'
-            stanza.should be_a Blather::Stanza::Message
-            stanza.type.should == :normal
-            stanza.body.should be == 'Hello World!'
-            stanza.subject.should be_nil
-          end
+          expect(client).to receive(:write).once.with { |stanza|
+            expect(stanza.to).to eq('someone@example.org')
+            expect(stanza).to be_a Blather::Stanza::Message
+            expect(stanza.type).to eq(:normal)
+            expect(stanza.body).to eq('Hello World!')
+            expect(stanza.subject).to be_nil
+          }
           connection.send_message 'someone', 'example.org', 'Hello World!'
         end
 
         it 'should default to the root domain' do
-          client.should_receive(:write).once.with do |stanza|
-            stanza.to.should be == 'someone@rayo.net'
-          end
+          expect(client).to receive(:write).once.with { |stanza|
+            expect(stanza.to).to eq('someone@rayo.net')
+          }
           connection.send_message "someone", nil, nil
         end
 
         it 'should send a message with the given subject' do
-          client.should_receive(:write).once.with do |stanza|
-            stanza.subject.should be == "Important Message"
-          end
+          expect(client).to receive(:write).once.with { |stanza|
+            expect(stanza.subject).to eq("Important Message")
+          }
           connection.send_message nil, nil, nil, :subject => "Important Message"
         end
       end
@@ -210,15 +219,15 @@ module Punchblock
 
         let(:example_complete) { import_stanza complete_xml }
 
-        it { example_complete.should be_a Blather::Stanza::Presence }
+        it { expect(example_complete).to be_a Blather::Stanza::Presence }
 
         describe "accessing the rayo node for a presence stanza" do
           it "should import the rayo node" do
-            example_complete.rayo_node.should be_a Punchblock::Event::Complete
+            expect(example_complete.rayo_node).to be_a Punchblock::Event::Complete
           end
 
           it "should be memoized" do
-            example_complete.rayo_node.should be example_complete.rayo_node
+            expect(example_complete.rayo_node).to be example_complete.rayo_node
           end
         end
 
@@ -244,17 +253,17 @@ module Punchblock
 
             let(:example_event) { import_stanza offer_xml }
 
-            it { example_event.should be_a Blather::Stanza::Presence }
+            it { expect(example_event).to be_a Blather::Stanza::Presence }
 
             it 'should call the event handler with the event' do
-              mock_event_handler.should_receive(:call).once.with do |event|
-                event.should be_instance_of Event::Offer
-                event.target_call_id.should be == '9f00061'
-                event.source_uri.should be == 'xmpp:9f00061@call.rayo.net'
-                event.domain.should be == 'call.rayo.net'
-                event.transport.should be == 'xmpp'
-                event.timestamp.should be == @now
-              end
+              expect(mock_event_handler).to receive(:call).once.with { |event|
+                expect(event).to be_instance_of Event::Offer
+                expect(event.target_call_id).to eq('9f00061')
+                expect(event.source_uri).to eq('xmpp:9f00061@call.rayo.net')
+                expect(event.domain).to eq('call.rayo.net')
+                expect(event.transport).to eq('xmpp')
+                expect(event.timestamp).to eq(@now)
+              }
               handle_presence
             end
 
@@ -269,9 +278,9 @@ module Punchblock
               end
 
               it 'should stamp that time on the rayo event' do
-                mock_event_handler.should_receive(:call).once.with do |event|
-                  event.timestamp.should be == DateTime.new(2002, 9, 10, 23, 8, 25, 0)
-                end
+                expect(mock_event_handler).to receive(:call).once.with { |event|
+                  expect(event.timestamp).to eq(DateTime.new(2002, 9, 10, 23, 8, 25, 0))
+                }
                 handle_presence
               end
             end
@@ -289,16 +298,16 @@ module Punchblock
             let(:example_event) { import_stanza irrelevant_xml }
 
             it 'should not be considered to be a rayo event' do
-              example_event.rayo_event?.should be_false
+              expect(example_event.rayo_event?).to be_false
             end
 
             it 'should have a nil rayo_node' do
-              example_event.rayo_node.should be_nil
+              expect(example_event.rayo_node).to be_nil
             end
 
             it 'should not handle the event' do
-              mock_event_handler.should_receive(:call).never
-              lambda { handle_presence }.should throw_symbol(:pass)
+              expect(mock_event_handler).to receive(:call).never
+              expect { handle_presence }.to throw_symbol(:pass)
             end
           end
         end
@@ -330,19 +339,19 @@ module Punchblock
         subject { cmd.response }
 
         it "should have the correct call ID" do
-          subject.call_id.should be == call_id
+          expect(subject.call_id).to eq(call_id)
         end
 
         it "should have the correct component ID" do
-          subject.component_id.should be == component_id
+          expect(subject.component_id).to eq(component_id)
         end
 
         it "should have the correct name" do
-          subject.name.should be == :item_not_found
+          expect(subject.name).to eq(:item_not_found)
         end
 
         it "should have the correct text" do
-          subject.text.should be == 'Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]'
+          expect(subject.text).to eq('Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]')
         end
       end
 
@@ -355,7 +364,7 @@ module Punchblock
 
           it "should use the correct JID" do
             stanza = subject.prep_command_for_execution command
-            stanza.to.should be == expected_jid
+            expect(stanza.to).to eq(expected_jid)
           end
         end
 
@@ -364,7 +373,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@rayo.net' }
 
           it "should use the correct JID" do
-            stanza.to.should be == expected_jid
+            expect(stanza.to).to eq(expected_jid)
           end
 
           context "with a domain specified" do
@@ -372,7 +381,7 @@ module Punchblock
 
             it "should use the specified domain in the JID" do
               stanza = subject.prep_command_for_execution command, domain: 'calls.rayo.net'
-              stanza.to.should be == expected_jid
+              expect(stanza.to).to eq(expected_jid)
             end
           end
         end
@@ -382,7 +391,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@rayo.net' }
 
           it "should use the correct JID" do
-            stanza.to.should be == expected_jid
+            expect(stanza.to).to eq(expected_jid)
           end
         end
 
@@ -391,7 +400,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@rayo.net/foobar' }
 
           it "should use the correct JID" do
-            stanza.to.should be == expected_jid
+            expect(stanza.to).to eq(expected_jid)
           end
         end
 
@@ -400,7 +409,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@rayo.net' }
 
           it "should use the correct JID" do
-            stanza.to.should be == expected_jid
+            expect(stanza.to).to eq(expected_jid)
           end
         end
 
@@ -409,7 +418,7 @@ module Punchblock
           let(:expected_jid)  { 'abc123@rayo.net/foobar' }
 
           it "should use the correct JID" do
-            stanza.to.should be == expected_jid
+            expect(stanza.to).to eq(expected_jid)
           end
         end
       end
@@ -417,7 +426,7 @@ module Punchblock
       describe "receiving events from a mixer" do
         context "after joining the mixer" do
           before do
-            client.should_receive :write_with_handler
+            expect(client).to receive :write_with_handler
             subject.write Command::Join.new(:mixer_name => 'foomixer')
           end
 
@@ -432,12 +441,12 @@ module Punchblock
           let(:active_speaker_event) { import_stanza active_speaker_xml }
 
           it "should tag those events with a mixer name, rather than a call ID" do
-            mock_event_handler.should_receive(:call).once.with do |event|
-              event.should be_instance_of Event::StartedSpeaking
-              event.target_mixer_name.should be == 'foomixer'
-              event.target_call_id.should be nil
-              event.domain.should be == 'rayo.net'
-            end
+            expect(mock_event_handler).to receive(:call).once.with { |event|
+              expect(event).to be_instance_of Event::StartedSpeaking
+              expect(event.target_mixer_name).to eq('foomixer')
+              expect(event.target_call_id).to be nil
+              expect(event.domain).to eq('rayo.net')
+            }
             connection.__send__ :handle_presence, active_speaker_event
           end
         end

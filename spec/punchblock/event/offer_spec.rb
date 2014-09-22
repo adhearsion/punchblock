@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe Offer do
       it 'registers itself' do
-        RayoNode.class_from_registration(:offer, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:offer, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "from a stanza" do
@@ -28,14 +28,28 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:to)      { should be == 'tel:+18003211212' }
-        its(:from)    { should be == 'tel:+13058881212' }
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#to' do
+          subject { super().to }
+          it { should be == 'tel:+18003211212' }
+        end
+
+        describe '#from' do
+          subject { super().from }
+          it { should be == 'tel:+13058881212' }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         context "with no headers provided" do
           let(:stanza) { '<offer xmlns="urn:xmpp:rayo:1"/>' }
 
-          its(:headers) { should == {} }
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {} }
+          end
         end
 
         context "with multiple headers of the same name" do
@@ -51,7 +65,10 @@ module Punchblock
             MESSAGE
           end
 
-          its(:headers) { should == {'X-skill' => ['sales', 'complaints']} }
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {'X-skill' => ['sales', 'complaints']} }
+          end
         end
       end
 
@@ -62,16 +79,30 @@ module Punchblock
                               headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' }
         end
 
-        its(:to)    { should be == 'tel:+18003211212' }
-        its(:from)  { should be == 'tel:+13058881212' }
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#to' do
+          subject { super().to }
+          it { should be == 'tel:+18003211212' }
+        end
+
+        describe '#from' do
+          subject { super().from }
+          it { should be == 'tel:+13058881212' }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         context "with headers set to nil" do
           subject do
             described_class.new headers: nil
           end
 
-          its(:headers) { should == {} }
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {} }
+          end
         end
       end
     end

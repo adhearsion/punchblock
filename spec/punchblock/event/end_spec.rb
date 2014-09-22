@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe End do
       it 'registers itself' do
-        RayoNode.class_from_registration(:end, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:end, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "from a stanza" do
@@ -27,16 +27,38 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:reason) { should be == :timeout }
-        its(:platform_code) { should be == '18' }
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#reason' do
+          subject { super().reason }
+          it { should be == :timeout }
+        end
+
+        describe '#platform_code' do
+          subject { super().platform_code }
+          it { should be == '18' }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         context "with no headers or reason provided" do
           let(:stanza) { '<end xmlns="urn:xmpp:rayo:1"/>' }
 
-          its(:reason) { should be_nil}
-          its(:platform_code) { should be_nil }
-          its(:headers) { should == {} }
+          describe '#reason' do
+            subject { super().reason }
+            it { should be_nil}
+          end
+
+          describe '#platform_code' do
+            subject { super().platform_code }
+            it { should be_nil }
+          end
+
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {} }
+          end
         end
       end
 
@@ -47,9 +69,20 @@ module Punchblock
                               headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' }
         end
 
-        its(:reason) { should be == :hangup }
-        its(:platform_code) { should be == '18' }
-        its(:headers) { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#reason' do
+          subject { super().reason }
+          it { should be == :hangup }
+        end
+
+        describe '#platform_code' do
+          subject { super().platform_code }
+          it { should be == '18' }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
       end
     end
   end

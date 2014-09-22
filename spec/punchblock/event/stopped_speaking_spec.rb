@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe StoppedSpeaking do
       it 'registers itself' do
-        RayoNode.class_from_registration(:'stopped-speaking', 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:'stopped-speaking', 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "from a stanza" do
@@ -20,7 +20,10 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:call_id) { should be == "x0yz4ye-lx7-6ai9njwvw8nsb" }
+        describe '#call_id' do
+          subject { super().call_id }
+          it { should be == "x0yz4ye-lx7-6ai9njwvw8nsb" }
+        end
       end
 
       describe "when setting options in initializer" do
@@ -28,7 +31,10 @@ module Punchblock
           described_class.new :call_id => 'abc123'
         end
 
-        its(:call_id) { should be == 'abc123' }
+        describe '#call_id' do
+          subject { super().call_id }
+          it { should be == 'abc123' }
+        end
       end
     end
   end

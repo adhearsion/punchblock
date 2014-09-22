@@ -8,7 +8,7 @@ module Punchblock
       module AGI
         describe Command do
           it 'registers itself' do
-            RayoNode.class_from_registration(:command, 'urn:xmpp:rayo:asterisk:agi:1').should be == described_class
+            expect(RayoNode.class_from_registration(:command, 'urn:xmpp:rayo:asterisk:agi:1')).to eq(described_class)
           end
 
           describe "from a stanza" do
@@ -26,8 +26,15 @@ module Punchblock
 
             it_should_behave_like 'event'
 
-            its(:name)    { should be == 'GET VARIABLE' }
-            its(:params)  { should be == ['UNIQUEID'] }
+            describe '#name' do
+              subject { super().name }
+              it { should be == 'GET VARIABLE' }
+            end
+
+            describe '#params' do
+              subject { super().params }
+              it { should be == ['UNIQUEID'] }
+            end
           end
 
           describe "when setting options in initializer" do
@@ -36,8 +43,15 @@ module Punchblock
                                   params: ['UNIQUEID']
             end
 
-            its(:name)    { should be == 'GET VARIABLE' }
-            its(:params)  { should be == ['UNIQUEID'] }
+            describe '#name' do
+              subject { super().name }
+              it { should be == 'GET VARIABLE' }
+            end
+
+            describe '#params' do
+              subject { super().params }
+              it { should be == ['UNIQUEID'] }
+            end
           end
 
           class Command
@@ -58,19 +72,45 @@ module Punchblock
 
               it { should be_instance_of described_class }
 
-              its(:name)    { should be == :success }
-              its(:code)    { should be == 200 }
-              its(:result)  { should be == 0 }
-              its(:data)    { should be == '1187188485.0' }
+              describe '#name' do
+                subject { super().name }
+                it { should be == :success }
+              end
+
+              describe '#code' do
+                subject { super().code }
+                it { should be == 200 }
+              end
+
+              describe '#result' do
+                subject { super().result }
+                it { should be == 0 }
+              end
+
+              describe '#data' do
+                subject { super().data }
+                it { should be == '1187188485.0' }
+              end
 
               describe "when setting options in initializer" do
                 subject do
                   Complete::Success.new code: 200, result: 0, data: '1187188485.0'
                 end
 
-                its(:code)    { should be == 200 }
-                its(:result)  { should be == 0 }
-                its(:data)    { should be == '1187188485.0' }
+                describe '#code' do
+                  subject { super().code }
+                  it { should be == 200 }
+                end
+
+                describe '#result' do
+                  subject { super().result }
+                  it { should be == 0 }
+                end
+
+                describe '#data' do
+                  subject { super().data }
+                  it { should be == '1187188485.0' }
+                end
               end
             end
           end

@@ -14,6 +14,8 @@ module Punchblock
 
       def process_dtmf(digit)
         @recognizer << digit
+      rescue Celluloid::DeadActorError
+        pb_logger.warn 'DTMF digit received into a dead recognizer. Dropping digit.'
       end
 
       def execute_command(command)

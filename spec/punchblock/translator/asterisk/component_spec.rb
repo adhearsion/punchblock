@@ -34,7 +34,7 @@ module Punchblock
             end
 
             it "should send the event to the connection" do
-              connection.should_receive(:handle_event).once.with expected_event
+              expect(connection).to receive(:handle_event).once.with expected_event
               subject.send_event event
             end
           end
@@ -48,14 +48,14 @@ module Punchblock
             end
 
             it "should send a complete event with the specified reason" do
-              subject.should_receive(:send_event).once.with expected_event
+              expect(subject).to receive(:send_event).once.with expected_event
               subject.send_complete_event reason
             end
           end
 
           describe "#call_ended" do
             it "should send a complete event with the call hangup reason" do
-              subject.should_receive(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
+              expect(subject).to receive(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
               subject.call_ended
             end
           end
@@ -72,7 +72,7 @@ module Punchblock
 
               it 'sends an error in response to the command' do
                 subject.execute_command component_command
-                component_command.response.should be == ProtocolError.new.setup('command-not-acceptable', "Did not understand command for component #{subject.id}", call.id, subject.id)
+                expect(component_command.response).to eq(ProtocolError.new.setup('command-not-acceptable', "Did not understand command for component #{subject.id}", call.id, subject.id))
               end
             end
           end

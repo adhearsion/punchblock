@@ -6,7 +6,7 @@ module Punchblock
   module Component
     describe Prompt do
       it 'registers itself' do
-        RayoNode.class_from_registration(:prompt, 'urn:xmpp:rayo:prompt:1').should be == described_class
+        expect(RayoNode.class_from_registration(:prompt, 'urn:xmpp:rayo:prompt:1')).to eq(described_class)
       end
 
       describe "when setting options in initializer" do
@@ -14,30 +14,51 @@ module Punchblock
         let(:input)   { Input.new :mode => :voice }
         subject       { described_class.new output, input, :barge_in => true }
 
-        its(:output)    { should be == output }
-        its(:input)     { should be == input }
-        its(:barge_in)  { should be_true }
+        describe '#output' do
+          subject { super().output }
+          it { should be == output }
+        end
+
+        describe '#input' do
+          subject { super().input }
+          it { should be == input }
+        end
+
+        describe '#barge_in' do
+          subject { super().barge_in }
+          it { should be_true }
+        end
 
         context "with barge-in unset" do
           subject { described_class.new output, input }
 
-          its(:barge_in) { should be_nil }
+          describe '#barge_in' do
+            subject { super().barge_in }
+            it { should be_nil }
+          end
         end
 
         context "with options for sub-components" do
           subject { described_class.new({renderer: :foo}, {recognizer: :bar}) }
 
-          its(:output)  { should be == Output.new(renderer: :foo) }
-          its(:input)   { should be == Input.new(recognizer: :bar) }
+          describe '#output' do
+            subject { super().output }
+            it { should be == Output.new(renderer: :foo) }
+          end
+
+          describe '#input' do
+            subject { super().input }
+            it { should be == Input.new(recognizer: :bar) }
+          end
         end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
-            new_instance.should be_instance_of described_class
-            new_instance.output.should be == output
-            new_instance.input.should be == input
-            new_instance.barge_in.should be_true
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.output).to eq(output)
+            expect(new_instance.input).to eq(input)
+            expect(new_instance.barge_in).to be_true
           end
 
           it "should render to a parent node if supplied" do
@@ -45,7 +66,7 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
         end
       end
@@ -84,9 +105,20 @@ module Punchblock
 
         it { should be_instance_of described_class }
 
-        its(:barge_in)  { should be_true }
-        its(:output)    { should be == Output.new(:voice => 'allison', :render_document => {:value => ssml}) }
-        its(:input)     { should be == Input.new(:mode => :voice, :grammar => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'}) }
+        describe '#barge_in' do
+          subject { super().barge_in }
+          it { should be_true }
+        end
+
+        describe '#output' do
+          subject { super().output }
+          it { should be == Output.new(:voice => 'allison', :render_document => {:value => ssml}) }
+        end
+
+        describe '#input' do
+          subject { super().input }
+          it { should be == Input.new(:mode => :voice, :grammar => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'}) }
+        end
       end
 
       describe "actions" do
@@ -102,9 +134,20 @@ module Punchblock
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#stop!' do
@@ -115,14 +158,14 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
+              expect(mock_client).to receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
               command.stop!
             end
           end
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Prompt that is new")
+              expect { command.stop! }.to raise_error(InvalidActionError, "Cannot stop a Prompt that is new")
             end
           end
         end

@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe Answered do
       it 'registers itself' do
-        RayoNode.class_from_registration(:answered, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:answered, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "from a stanza" do
@@ -25,19 +25,29 @@ module Punchblock
         it { should be_instance_of described_class }
 
         it_should_behave_like 'event'
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         context "with no headers provided" do
           let(:stanza) { '<answered xmlns="urn:xmpp:rayo:1"/>' }
 
-          its(:headers) { should == {} }
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {} }
+          end
         end
       end
 
       describe "when setting options in initializer" do
         subject { described_class.new headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
 
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
       end
     end
   end

@@ -6,19 +6,22 @@ module Punchblock
   module Component
     describe SendFax do
       it 'registers itself' do
-        RayoNode.class_from_registration(:sendfax, 'urn:xmpp:rayo:fax:1').should be == described_class
+        expect(RayoNode.class_from_registration(:sendfax, 'urn:xmpp:rayo:fax:1')).to eq(described_class)
       end
 
       subject do
         SendFax.new render_documents: [SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])]
       end
 
-      its(:render_documents) { should be == [SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])] }
+      describe '#render_documents' do
+        subject { super().render_documents }
+        it { should be == [SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])] }
+      end
 
       describe "exporting to Rayo" do
         it "should export to XML that can be understood by its parser" do
           new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
-          new_instance.render_documents.should be == [SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])]
+          expect(new_instance.render_documents).to eq([SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])])
         end
       end
 
@@ -30,7 +33,7 @@ module Punchblock
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
-            new_instance.render_documents.should be == [SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff')]
+            expect(new_instance.render_documents).to eq([SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff')])
           end
         end
       end
@@ -47,7 +50,10 @@ module Punchblock
             MESSAGE
         end
 
-        its(:render_documents) { should be == [SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])] }
+        describe '#render_documents' do
+          subject { super().render_documents }
+          it { should be == [SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])] }
+        end
 
         context "without optional attributes" do
           let :stanza do
@@ -58,30 +64,63 @@ module Punchblock
               MESSAGE
           end
 
-          its(:render_documents) { should be == [SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff')] }
+          describe '#render_documents' do
+            subject { super().render_documents }
+            it { should be == [SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff')] }
+          end
         end
       end
     end
 
     describe SendFax::FaxDocument do
       it "registers itself" do
-        RayoNode.class_from_registration(:document, 'urn:xmpp:rayo:fax:1').should be == described_class
+        expect(RayoNode.class_from_registration(:document, 'urn:xmpp:rayo:fax:1')).to eq(described_class)
       end
 
       subject { SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9]) }
 
-      its(:url)       { should == 'http://shakespere.lit/my_fax.tiff' }
-      its(:identity)  { should == '+14045555555' }
-      its(:header)    { should == 'Hello world' }
-      its(:pages)     { should == [1..4,5,7..9] }
+      describe '#url' do
+        subject { super().url }
+        it { should == 'http://shakespere.lit/my_fax.tiff' }
+      end
+
+      describe '#identity' do
+        subject { super().identity }
+        it { should == '+14045555555' }
+      end
+
+      describe '#header' do
+        subject { super().header }
+        it { should == 'Hello world' }
+      end
+
+      describe '#pages' do
+        subject { super().pages }
+        it { should == [1..4,5,7..9] }
+      end
 
       context "without optional attributes" do
         subject { SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff') }
 
-        its(:url)       { should == 'http://shakespere.lit/my_fax.tiff' }
-        its(:identity)  { should be_nil }
-        its(:header)    { should be_nil }
-        its(:pages)     { should be_nil }
+        describe '#url' do
+          subject { super().url }
+          it { should == 'http://shakespere.lit/my_fax.tiff' }
+        end
+
+        describe '#identity' do
+          subject { super().identity }
+          it { should be_nil }
+        end
+
+        describe '#header' do
+          subject { super().header }
+          it { should be_nil }
+        end
+
+        describe '#pages' do
+          subject { super().pages }
+          it { should be_nil }
+        end
       end
 
       describe "comparison" do

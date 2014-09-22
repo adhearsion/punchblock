@@ -6,17 +6,18 @@ module Punchblock
   class Event
     describe Complete do
       it 'registers itself' do
-        RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1').should be == described_class
+        expect(RayoNode.class_from_registration(:complete, 'urn:xmpp:rayo:ext:1')).to eq(described_class)
       end
 
       describe "setting a reason" do
         let(:reason) { Complete::Stop.new }
 
-        subject { described_class.new }
-
-        before { subject.reason = reason }
-
-        its(:reason) { should == reason }
+        describe '#reason' do
+          it "should set the reason" do
+            subject.reason = reason
+            subject.reason.should == reason
+          end
+        end
       end
 
       describe "comparing for equality" do
@@ -38,7 +39,7 @@ module Punchblock
           let(:component_id)  { 'abcd' }
 
           it "should be equal" do
-            subject.should be == other_complete
+            expect(subject).to eq(other_complete)
           end
         end
 
@@ -48,7 +49,7 @@ module Punchblock
           let(:component_id)  { 'abcd' }
 
           it "should not be equal" do
-            subject.should_not be == other_complete
+            expect(subject).not_to eq(other_complete)
           end
         end
 
@@ -58,7 +59,7 @@ module Punchblock
           let(:component_id)  { 'abcd' }
 
           it "should not be equal" do
-            subject.should_not be == other_complete
+            expect(subject).not_to eq(other_complete)
           end
         end
 
@@ -68,7 +69,7 @@ module Punchblock
           let(:component_id)  { 'efgh' }
 
           it "should not be equal" do
-            subject.should_not be == other_complete
+            expect(subject).not_to eq(other_complete)
           end
         end
       end
@@ -88,7 +89,10 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:reason) { should be_instance_of Complete::Stop }
+        describe '#reason' do
+          subject { super().reason }
+          it { should be_instance_of Complete::Stop }
+        end
       end
     end
 
@@ -105,7 +109,10 @@ module Punchblock
 
       it { should be_instance_of Complete::Stop }
 
-      its(:name) { should be == :stop }
+      describe '#name' do
+        subject { super().name }
+        it { should be == :stop }
+      end
     end
 
     describe Complete::Hangup do
@@ -121,7 +128,10 @@ module Punchblock
 
       it { should be_instance_of Complete::Hangup }
 
-      its(:name) { should be == :hangup }
+      describe '#name' do
+        subject { super().name }
+        it { should be == :hangup }
+      end
     end
 
     describe Complete::Error do
@@ -139,15 +149,25 @@ module Punchblock
 
       it { should be_instance_of Complete::Error }
 
-      its(:name) { should be == :error }
-      its(:details) { should be == "Something really bad happened" }
+      describe '#name' do
+        subject { super().name }
+        it { should be == :error }
+      end
+
+      describe '#details' do
+        subject { super().details }
+        it { should be == "Something really bad happened" }
+      end
 
       describe "when setting options in initializer" do
         subject do
           Complete::Error.new :details => 'Ooops'
         end
 
-        its(:details) { should be == 'Ooops' }
+        describe '#details' do
+          subject { super().details }
+          it { should be == 'Ooops' }
+        end
       end
     end
 

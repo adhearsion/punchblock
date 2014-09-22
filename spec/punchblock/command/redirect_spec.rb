@@ -6,21 +6,28 @@ module Punchblock
   module Command
     describe Redirect do
       it 'registers itself' do
-        RayoNode.class_from_registration(:redirect, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:redirect, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "when setting options in initializer" do
         subject { described_class.new to: 'tel:+14045551234', headers: { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
 
-        its(:to) { should be == 'tel:+14045551234' }
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#to' do
+          subject { super().to }
+          it { should be == 'tel:+14045551234' }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
-            new_instance.should be_instance_of described_class
-            new_instance.to.should == 'tel:+14045551234'
-            new_instance.headers.should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' }
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.to).to eq('tel:+14045551234')
+            expect(new_instance.headers).to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' })
           end
 
           it "should render to a parent node if supplied" do
@@ -28,14 +35,14 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
 
           context "when attributes are not set" do
             subject { described_class.new }
 
             it "should not include them in the XML representation" do
-              subject.to_rayo['to'].should be_nil
+              expect(subject.to_rayo['to']).to be_nil
             end
           end
         end
@@ -57,14 +64,28 @@ module Punchblock
 
         it { should be_instance_of described_class }
 
-        its(:to) { should be == 'tel:+14045551234' }
-        its(:headers) { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        describe '#to' do
+          subject { super().to }
+          it { should be == 'tel:+14045551234' }
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+        end
 
         context "with no headers or to provided" do
           let(:stanza) { '<redirect xmlns="urn:xmpp:rayo:1"/>' }
 
-          its(:to) { should be_nil }
-          its(:headers) { should == {} }
+          describe '#to' do
+            subject { super().to }
+            it { should be_nil }
+          end
+
+          describe '#headers' do
+            subject { super().headers }
+            it { should == {} }
+          end
         end
       end
     end # Redirect

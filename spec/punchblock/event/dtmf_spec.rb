@@ -6,7 +6,7 @@ module Punchblock
   class Event
     describe DTMF do
       it 'registers itself' do
-        RayoNode.class_from_registration(:dtmf, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:dtmf, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "from a stanza" do
@@ -18,7 +18,10 @@ module Punchblock
 
         it_should_behave_like 'event'
 
-        its(:signal) { should be == '#' }
+        describe '#signal' do
+          subject { super().signal }
+          it { should be == '#' }
+        end
       end
 
       describe "when setting options in initializer" do
@@ -26,7 +29,10 @@ module Punchblock
           described_class.new :signal => '#'
         end
 
-        its(:signal) { should be == '#' }
+        describe '#signal' do
+          subject { super().signal }
+          it { should be == '#' }
+        end
       end
     end
   end

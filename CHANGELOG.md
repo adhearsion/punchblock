@@ -1,5 +1,11 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v2.5.3](https://github.com/adhearsion/punchblock/compare/v2.5.2...v2.5.3) - [2014-09-22](https://rubygems.org/gems/punchblock/versions/2.5.3)
+  * Bugfix: Prevent Asterisk translator death due to dead DTMF recognizers ([#221](https://github.com/adhearsion/punchblock/pull/221), [adhearsion/adhearsion#479](https://github.com/adhearsion/adhearsion/issues/479))
+  * Bugfix: Be more intelligent about only stripping true file extensions off filenames for playback on Asterisk ([adhearsion/adhearsion#482](https://github.com/adhearsion/adhearsion/issues/482))
+  * Bugfix: Handle a corner case crash where a recognition request is interrupted directly after a successful recognition has completed
+  * Bugfix: Avoid cases where executing AGI commands (reported as sending SIP messages) might block indefinitely due to a race condition in fetching their response value
+
 # [v2.5.2](https://github.com/adhearsion/punchblock/compare/v2.5.1...v2.5.2) - [2014-04-03](https://rubygems.org/gems/punchblock/versions/2.5.2)
   * Bugfix: No longer confound start and stop beeps on record commands (#220)
 

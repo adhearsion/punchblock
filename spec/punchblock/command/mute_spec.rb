@@ -6,7 +6,7 @@ module Punchblock
   module Command
     describe Mute do
       it 'registers itself' do
-        RayoNode.class_from_registration(:mute, 'urn:xmpp:rayo:1').should be == described_class
+        expect(RayoNode.class_from_registration(:mute, 'urn:xmpp:rayo:1')).to eq(described_class)
       end
 
       describe "from a stanza" do
@@ -20,7 +20,7 @@ module Punchblock
       describe "exporting to Rayo" do
         it "should export to XML that can be understood by its parser" do
           new_instance = RayoNode.from_xml subject.to_rayo
-          new_instance.should be_instance_of described_class
+          expect(new_instance).to be_instance_of described_class
         end
 
         it "should render to a parent node if supplied" do
@@ -28,7 +28,7 @@ module Punchblock
           parent = Nokogiri::XML::Node.new 'foo', doc
           doc.root = parent
           rayo_doc = subject.to_rayo(parent)
-          rayo_doc.should == parent
+          expect(rayo_doc).to eq(parent)
         end
       end
     end

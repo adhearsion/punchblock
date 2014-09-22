@@ -8,8 +8,15 @@ module Punchblock
 
     subject { Client.new :connection => connection }
 
-    its(:connection)          { should be connection }
-    its(:component_registry)  { should be_a Client::ComponentRegistry }
+    describe '#connection' do
+      subject { super().connection }
+      it { should be connection }
+    end
+
+    describe '#component_registry' do
+      subject { super().component_registry }
+      it { should be_a Client::ComponentRegistry }
+    end
 
     let(:call_id)         { 'abc123' }
     let(:mock_event)      { double('Event').as_null_object }
@@ -20,14 +27,14 @@ module Punchblock
 
     describe '#run' do
       it 'should start up the connection' do
-        connection.should_receive(:run).once
+        expect(connection).to receive(:run).once
         subject.run
       end
     end
 
     describe '#stop' do
       it 'should stop the connection' do
-        connection.should_receive(:stop).once
+        expect(connection).to receive(:stop).once
         subject.stop
       end
     end
@@ -35,7 +42,7 @@ module Punchblock
     describe '#send_message' do
       it 'should send a message' do
         args = [ "someone", "example.org", "Hello World!" ]
-        connection.should_receive(:send_message).with(*args).once
+        expect(connection).to receive(:send_message).with(*args).once
         subject.send_message *args
       end
     end
@@ -43,12 +50,12 @@ module Punchblock
     describe '#new_call_uri' do
       it 'should return the connection-specific fresh call ID' do
         stub_uuids 'foobar'
-        subject.new_call_uri.should == 'xmpp:foobar@call.rayo.net'
+        expect(subject.new_call_uri).to eq('xmpp:foobar@call.rayo.net')
       end
     end
 
     it 'should handle connection events' do
-      subject.should_receive(:handle_event).with(mock_event).once
+      expect(subject).to receive(:handle_event).with(mock_event).once
       connection.event_handler.call mock_event
     end
 
@@ -56,18 +63,18 @@ module Punchblock
       it "sets the event's client" do
         event = Event::Offer.new
         subject.handle_event event
-        event.client.should be subject
+        expect(event.client).to be subject
       end
 
       context 'if the event can be associated with a source component' do
         before do
           mock_event.stub :source => mock_component
-          mock_component.should_receive(:add_event).with mock_event
+          expect(mock_component).to receive(:add_event).with mock_event
         end
 
         it 'should not call event handlers' do
           handler = double 'handler'
-          handler.should_receive(:call).never
+          expect(handler).to receive(:call).never
           subject.register_event_handler do |event|
             handler.call event
           end
@@ -82,7 +89,7 @@ module Punchblock
 
         it 'should call registered event handlers' do
           handler = double 'handler'
-          handler.should_receive(:call).once.with mock_event
+          expect(handler).to receive(:call).once.with mock_event
           subject.register_event_handler do |event|
             handler.call event
           end
@@ -93,7 +100,7 @@ module Punchblock
 
     it 'should be able to register and retrieve components' do
       subject.register_component mock_component
-      subject.find_component_by_uri(component_uri).should be mock_component
+      expect(subject.find_component_by_uri(component_uri)).to be mock_component
     end
 
     describe '#execute_command' do
@@ -101,7 +108,7 @@ module Punchblock
       let(:event)     { Event::Complete.new }
 
       before do
-        connection.should_receive(:write).once.with component, :call_id => call_id
+        expect(connection).to receive(:write).once.with component, :call_id => call_id
       end
 
       let :execute_command do
@@ -114,11 +121,11 @@ module Punchblock
 
       it "should set the command's client" do
         execute_command
-        component.client.should be subject
+        expect(component.client).to be subject
       end
 
       it "should handle a component's events" do
-        subject.should_receive(:trigger_handler).with(:event, event).once
+        expect(subject).to receive(:trigger_handler).with(:event, event).once
         execute_command
         component.request!
         component.execute!

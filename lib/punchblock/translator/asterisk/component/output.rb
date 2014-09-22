@@ -126,7 +126,14 @@ module Punchblock
           end
 
           def path_for_audio_node(node)
-            node.src.sub('file://', '').gsub(/\.[^\.]*$/, '')
+            path = node.src.sub('file://', '')
+            dir = File.dirname(path)
+            basename = File.basename(path, '.*')
+            if dir == '.'
+              basename
+            else
+              File.join(dir, basename)
+            end
           end
 
           def filenames(doc, check_audio_only_policy = -> {})

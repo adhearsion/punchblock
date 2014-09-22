@@ -88,11 +88,11 @@ module Punchblock
                 end
 
                 it "should send a success complete event with the relevant data" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
                 end
 
                 it "should not process further dtmf events" do
-                  subject.async.should_receive(:process_dtmf).never
+                  expect(subject.async).to receive(:process_dtmf).never
                   send_dtmf 3
                 end
               end
@@ -108,7 +108,7 @@ module Punchblock
                 end
 
                 it "should send a nomatch complete event" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
                 end
               end
             end
@@ -119,7 +119,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A grammar document is required.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -146,7 +146,7 @@ module Punchblock
                 end
 
                 it "should use RubySpeech builtin grammar" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
                 end
               end
 
@@ -173,7 +173,7 @@ module Punchblock
                 end
 
                 it "should use RubySpeech builtin grammar" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
                 end
               end
 
@@ -183,7 +183,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'foobar is an invalid builtin grammar'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -192,7 +192,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'Only a single grammar is supported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -203,7 +203,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -212,7 +212,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -221,7 +221,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -243,7 +243,7 @@ module Punchblock
                   send_dtmf 1
                   sleep 1.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Match
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoInput complete event to be sent after the timeout" do
@@ -251,7 +251,7 @@ module Punchblock
                   sleep 1.5
                   send_dtmf 1
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::NoInput
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::NoInput
                 end
               end
 
@@ -259,7 +259,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_initial_timer).never
+                  expect(subject.wrapped_object).to receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -268,7 +268,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_initial_timer).never
+                  expect(subject.wrapped_object).to receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -279,7 +279,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An initial timeout value that is negative (and not -1) is invalid.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -294,7 +294,7 @@ module Punchblock
                   send_dtmf 1
                   sleep 0.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Match
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a InterDigitTimeout complete event to be sent after the timeout" do
@@ -303,7 +303,7 @@ module Punchblock
                   send_dtmf 1
                   sleep 1.5
                   send_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::NoMatch
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::NoMatch
                 end
               end
 
@@ -311,7 +311,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
+                  expect(subject.wrapped_object).to receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end
@@ -320,7 +320,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.wrapped_object.should_receive(:begin_inter_digit_timer).never
+                  expect(subject.wrapped_object).to receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end
@@ -331,7 +331,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An inter-digit timeout value that is negative (and not -1) is invalid.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -357,7 +357,7 @@ module Punchblock
 
               it "returns a ProtocolError response" do
                 subject.execute_command command
-                command.response(0.1).should be_a ProtocolError
+                expect(command.response(0.1)).to be_a ProtocolError
               end
             end
 
@@ -373,8 +373,8 @@ module Punchblock
 
               it "sets the command response to true" do
                 subject.execute_command command
-                command.response(0.1).should be == true
-                reason.should be_a Punchblock::Event::Complete::Stop
+                expect(command.response(0.1)).to eq(true)
+                expect(reason).to be_a Punchblock::Event::Complete::Stop
               end
             end
           end

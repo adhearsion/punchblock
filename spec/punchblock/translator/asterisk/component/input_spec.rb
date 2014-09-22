@@ -40,11 +40,11 @@ module Punchblock
             before { original_command.request! }
 
             it "calls send_progress on the call" do
-              call.should_receive(:send_progress)
+              expect(call).to receive(:send_progress)
               subject.execute
             end
 
-            before { call.stub :send_progress }
+            before { allow(call).to receive :send_progress }
 
             let(:original_command_opts) { {} }
 
@@ -92,16 +92,16 @@ module Punchblock
                 end
 
                 it "should send a success complete event with the relevant data" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
                 end
 
                 it "should not process further dtmf events" do
-                  subject.should_receive(:process_dtmf).never
+                  expect(subject).to receive(:process_dtmf).never
                   send_ami_events_for_dtmf 3
                 end
 
                 it "should not leave the recognizer running" do
-                  Celluloid::Actor.all.map { |a| a.class }.should_not include(Punchblock::Translator::DTMFRecognizer)
+                  expect(Celluloid::Actor.all.map { |a| a.class }).not_to include(Punchblock::Translator::DTMFRecognizer)
                 end
               end
 
@@ -116,7 +116,28 @@ module Punchblock
                 end
 
                 it "should send a nomatch complete event" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
+                end
+              end
+
+              context "dtmf event received after recognizer has terminated" do
+                before do
+                  send_ami_events_for_dtmf 1
+                  send_ami_events_for_dtmf '#'
+                  subject.execute
+                end
+
+                let :expected_event do
+                  Punchblock::Component::Input::Complete::NoMatch.new
+                end
+
+                it "should not crash the translator if the recognizer is dead" do
+                  expect(Celluloid::Actor.all.map { |a| a.class }).to include(Punchblock::Translator::DTMFRecognizer)
+                  recognizer = Celluloid::Actor.all.find { |a| a.class == Punchblock::Translator::DTMFRecognizer }
+                  recognizer.terminate if recognizer
+                  expect(Celluloid::Actor.all.map { |a| a.class }).not_to include(Punchblock::Translator::DTMFRecognizer)
+                  subject.process_dtmf 1 # trigger failure
+                  expect(Celluloid::Actor.all.map { |a| a.class }).to include(translator.class)
                 end
               end
             end
@@ -127,7 +148,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A grammar document is required.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -154,7 +175,7 @@ module Punchblock
                 end
 
                 it "should use RubySpeech builtin grammar" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
                 end
               end
 
@@ -181,7 +202,7 @@ module Punchblock
                 end
 
                 it "should use RubySpeech builtin grammar" do
-                  reason.should be == expected_event
+                  expect(reason).to eq(expected_event)
                 end
               end
 
@@ -190,7 +211,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'Only a single grammar is supported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -201,7 +222,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -210,7 +231,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -219,7 +240,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'A mode value other than DTMF is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -266,11 +287,11 @@ module Punchblock
                   end
 
                   it "should send a match complete event with the relevant data" do
-                    reason.should be == expected_event
+                    expect(reason).to eq(expected_event)
                   end
 
                   it "should not process further dtmf events" do
-                    subject.should_receive(:process_dtmf).never
+                    expect(subject).to receive(:process_dtmf).never
                     send_ami_events_for_dtmf 3
                   end
                 end
@@ -285,7 +306,7 @@ module Punchblock
                   end
 
                   it "should send a nomatch complete event with the relevant data" do
-                    reason.should be == expected_event
+                    expect(reason).to eq(expected_event)
                   end
                 end
 
@@ -300,7 +321,7 @@ module Punchblock
                   end
 
                   it "should send a nomatch complete event with the relevant data" do
-                    reason.should be == expected_event
+                    expect(reason).to eq(expected_event)
                   end
                 end
               end
@@ -319,7 +340,7 @@ module Punchblock
                   send_ami_events_for_dtmf 1
                   sleep 1.5
                   send_ami_events_for_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Match
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoInput complete event to be sent after the timeout" do
@@ -327,7 +348,7 @@ module Punchblock
                   sleep 1.5
                   send_ami_events_for_dtmf 1
                   send_ami_events_for_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::NoInput
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::NoInput
                 end
               end
 
@@ -335,7 +356,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.should_receive(:begin_initial_timer).never
+                  expect(subject).to receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -344,7 +365,7 @@ module Punchblock
                 let(:original_command_opts) { { :initial_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.should_receive(:begin_initial_timer).never
+                  expect(subject).to receive(:begin_initial_timer).never
                   subject.execute
                 end
               end
@@ -355,7 +376,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An initial timeout value that is negative (and not -1) is invalid.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -370,7 +391,7 @@ module Punchblock
                   send_ami_events_for_dtmf 1
                   sleep 0.5
                   send_ami_events_for_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::Match
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::Match
                 end
 
                 it "should cause a NoMatch complete event to be sent after the timeout" do
@@ -379,7 +400,7 @@ module Punchblock
                   send_ami_events_for_dtmf 1
                   sleep 1.5
                   send_ami_events_for_dtmf 2
-                  reason.should be_a Punchblock::Component::Input::Complete::NoMatch
+                  expect(reason).to be_a Punchblock::Component::Input::Complete::NoMatch
                 end
 
                 context "with a trailing range repeat" do
@@ -399,7 +420,7 @@ module Punchblock
                       sleep 1.5
                       send_ami_events_for_dtmf 1
                       sleep 1.5
-                      reason.should be_a Punchblock::Component::Input::Complete::NoMatch
+                      expect(reason).to be_a Punchblock::Component::Input::Complete::NoMatch
                     end
                   end
 
@@ -410,7 +431,7 @@ module Punchblock
                           instance "dtmf-1 dtmf-1"
                           input '11', mode: :dtmf
                         end
-                      end.root
+                      end
                     end
 
                     it "should fire a match on timeout" do
@@ -420,8 +441,8 @@ module Punchblock
                       sleep 0.5
                       send_ami_events_for_dtmf 1
                       sleep 1.5
-                      reason.should be_a Punchblock::Component::Input::Complete::Match
-                      reason.nlsml.should == expected_nlsml
+                      expect(reason).to be_a Punchblock::Component::Input::Complete::Match
+                      expect(reason.nlsml).to eq(expected_nlsml)
                     end
 
                     context "on the first keypress" do
@@ -442,8 +463,8 @@ module Punchblock
                         sleep 0.5
                         send_ami_events_for_dtmf 1
                         sleep 1.5
-                        reason.should be_a Punchblock::Component::Input::Complete::Match
-                        reason.nlsml.should == expected_nlsml
+                        expect(reason).to be_a Punchblock::Component::Input::Complete::Match
+                        expect(reason.nlsml).to eq(expected_nlsml)
                       end
                     end
                   end
@@ -454,7 +475,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => -1 } }
 
                 it "should not start a timer" do
-                  subject.should_receive(:begin_inter_digit_timer).never
+                  expect(subject).to receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end
@@ -463,7 +484,7 @@ module Punchblock
                 let(:original_command_opts) { { :inter_digit_timeout => nil } }
 
                 it "should not start a timer" do
-                  subject.should_receive(:begin_inter_digit_timer).never
+                  expect(subject).to receive(:begin_inter_digit_timer).never
                   subject.execute
                 end
               end
@@ -474,7 +495,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   subject.execute
                   error = ProtocolError.new.setup 'option error', 'An inter-digit timeout value that is negative (and not -1) is invalid.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -500,7 +521,7 @@ module Punchblock
 
               it "returns a ProtocolError response" do
                 subject.execute_command command
-                command.response(0.1).should be_a ProtocolError
+                expect(command.response(0.1)).to be_a ProtocolError
               end
             end
 
@@ -516,8 +537,8 @@ module Punchblock
 
               it "sets the command response to true" do
                 subject.execute_command command
-                command.response(0.1).should be == true
-                reason.should be_a Punchblock::Event::Complete::Stop
+                expect(command.response(0.1)).to eq(true)
+                expect(reason).to be_a Punchblock::Event::Complete::Stop
               end
             end
           end

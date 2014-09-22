@@ -6,19 +6,54 @@ module Punchblock
   module Component
     describe Output do
       it 'registers itself' do
-        RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1').should be == described_class
+        expect(RayoNode.class_from_registration(:output, 'urn:xmpp:rayo:output:1')).to eq(described_class)
       end
 
       describe 'default values' do
-        its(:interrupt_on)     { should be nil }
-        its(:start_offset)     { should be nil }
-        its(:start_paused)     { should be nil }
-        its(:repeat_interval)  { should be nil }
-        its(:repeat_times)     { should be nil }
-        its(:max_time)         { should be nil }
-        its(:voice)            { should be nil }
-        its(:renderer)         { should be nil }
-        its(:render_documents) { should be == [] }
+        describe '#interrupt_on' do
+          subject { super().interrupt_on }
+          it { should be nil }
+        end
+
+        describe '#start_offset' do
+          subject { super().start_offset }
+          it { should be nil }
+        end
+
+        describe '#start_paused' do
+          subject { super().start_paused }
+          it { should be nil }
+        end
+
+        describe '#repeat_interval' do
+          subject { super().repeat_interval }
+          it { should be nil }
+        end
+
+        describe '#repeat_times' do
+          subject { super().repeat_times }
+          it { should be nil }
+        end
+
+        describe '#max_time' do
+          subject { super().max_time }
+          it { should be nil }
+        end
+
+        describe '#voice' do
+          subject { super().voice }
+          it { should be nil }
+        end
+
+        describe '#renderer' do
+          subject { super().renderer }
+          it { should be nil }
+        end
+
+        describe '#render_documents' do
+          subject { super().render_documents }
+          it { should be == [] }
+        end
       end
 
       def ssml_doc(mode = :ordinal)
@@ -28,7 +63,7 @@ module Punchblock
       end
 
       describe "when setting options in initializer" do
-        subject do
+        subject(:command) do
           Output.new  :interrupt_on     => :voice,
                       :start_offset     => 2000,
                       :start_paused     => false,
@@ -40,22 +75,60 @@ module Punchblock
                       :render_document  => {:value => ssml_doc}
         end
 
-        its(:interrupt_on)     { should be == :voice }
-        its(:start_offset)     { should be == 2000 }
-        its(:start_paused)     { should be == false }
-        its(:repeat_interval)  { should be == 2000 }
-        its(:repeat_times)     { should be == 10 }
-        its(:max_time)         { should be == 30000 }
-        its(:voice)            { should be == 'allison' }
-        its(:renderer)         { should be == 'swift' }
-        its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc)] }
+        describe '#interrupt_on' do
+          subject { super().interrupt_on }
+          it { should be == :voice }
+        end
+
+        describe '#start_offset' do
+          subject { super().start_offset }
+          it { should be == 2000 }
+        end
+
+        describe '#start_paused' do
+          subject { super().start_paused }
+          it { should be == false }
+        end
+
+        describe '#repeat_interval' do
+          subject { super().repeat_interval }
+          it { should be == 2000 }
+        end
+
+        describe '#repeat_times' do
+          subject { super().repeat_times }
+          it { should be == 10 }
+        end
+
+        describe '#max_time' do
+          subject { super().max_time }
+          it { should be == 30000 }
+        end
+
+        describe '#voice' do
+          subject { super().voice }
+          it { should be == 'allison' }
+        end
+
+        describe '#renderer' do
+          subject { super().renderer }
+          it { should be == 'swift' }
+        end
+
+        describe '#render_documents' do
+          subject { super().render_documents }
+          it { should be == [Output::Document.new(:value => ssml_doc)] }
+        end
 
         context "using #ssml=" do
           subject do
             Output.new :ssml => ssml_doc
           end
 
-          its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc)] }
+          describe '#render_documents' do
+            subject { super().render_documents }
+            it { should be == [Output::Document.new(:value => ssml_doc)] }
+          end
         end
 
         context "with multiple documents" do
@@ -66,10 +139,13 @@ module Punchblock
             ]
           end
 
-          its(:render_documents) { should be == [
+          describe '#render_documents' do
+            subject { super().render_documents }
+            it { should be == [
             Output::Document.new(:value => ssml_doc),
             Output::Document.new(:value => ssml_doc(:cardinal))
           ]}
+          end
         end
 
         context "with a urilist" do
@@ -80,12 +156,15 @@ module Punchblock
             }
           end
 
-          its(:render_documents) { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])] }
+          describe '#render_documents' do
+            subject { super().render_documents }
+            it { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])] }
+          end
 
           describe "exporting to Rayo" do
             it "should export to XML that can be understood by its parser" do
               new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
-              new_instance.render_documents.should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])]
+              expect(new_instance.render_documents).to eq([Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])])
             end
           end
         end
@@ -93,34 +172,37 @@ module Punchblock
         context "with a nil document" do
           it "removes all documents" do
             subject.render_document = nil
-            subject.render_documents.should == []
+            expect(subject.render_documents).to eq([])
           end
         end
 
         context "without any documents" do
           subject { described_class.new }
 
-          its(:render_documents) { should == [] }
+          describe '#render_documents' do
+            subject { super().render_documents }
+            it { should == [] }
+          end
         end
 
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
-            new_instance.should be_instance_of described_class
-            new_instance.interrupt_on.should be == :voice
-            new_instance.start_offset.should be == 2000
-            new_instance.start_paused.should be == false
-            new_instance.repeat_interval.should be == 2000
-            new_instance.repeat_times.should be == 10
-            new_instance.max_time.should be == 30000
-            new_instance.voice.should be == 'allison'
-            new_instance.renderer.should be == 'swift'
-            new_instance.render_documents.should be == [Output::Document.new(:value => ssml_doc)]
+            expect(new_instance).to be_instance_of described_class
+            expect(new_instance.interrupt_on).to eq(:voice)
+            expect(new_instance.start_offset).to eq(2000)
+            expect(new_instance.start_paused).to eq(false)
+            expect(new_instance.repeat_interval).to eq(2000)
+            expect(new_instance.repeat_times).to eq(10)
+            expect(new_instance.max_time).to eq(30000)
+            expect(new_instance.voice).to eq('allison')
+            expect(new_instance.renderer).to eq('swift')
+            expect(new_instance.render_documents).to eq([Output::Document.new(:value => ssml_doc)])
           end
 
           it "should wrap the document value in CDATA" do
             grammar_node = subject.to_rayo.at_xpath('ns:document', ns: described_class.registered_ns)
-            grammar_node.children.first.should be_a Nokogiri::XML::CDATA
+            expect(grammar_node.children.first).to be_a Nokogiri::XML::CDATA
           end
 
           it "should render to a parent node if supplied" do
@@ -128,7 +210,7 @@ module Punchblock
             parent = Nokogiri::XML::Node.new 'foo', doc
             doc.root = parent
             rayo_doc = subject.to_rayo(parent)
-            rayo_doc.should == parent
+            expect(rayo_doc).to eq(parent)
           end
 
           context "with a string SSML document" do
@@ -140,7 +222,7 @@ module Punchblock
 
             it "passes the string right through" do
               content = subject.to_rayo.at_xpath('//ns:output/ns:document/text()', ns: described_class.registered_ns).content
-              content.should == ssml_string
+              expect(content).to eq(ssml_string)
             end
           end
         end
@@ -184,15 +266,50 @@ module Punchblock
 
         it { should be_instance_of Output }
 
-        its(:interrupt_on)     { should be == :voice }
-        its(:start_offset)     { should be == 2000 }
-        its(:start_paused)     { should be == false }
-        its(:repeat_interval)  { should be == 2000 }
-        its(:repeat_times)     { should be == 10 }
-        its(:max_time)         { should be == 30000 }
-        its(:voice)            { should be == 'allison' }
-        its(:renderer)         { should be == 'swift' }
-        its(:render_documents) { should be == [Output::Document.new(:value => ssml_doc), Output::Document.new(:value => ssml_doc)] }
+        describe '#interrupt_on' do
+          subject { super().interrupt_on }
+          it { should be == :voice }
+        end
+
+        describe '#start_offset' do
+          subject { super().start_offset }
+          it { should be == 2000 }
+        end
+
+        describe '#start_paused' do
+          subject { super().start_paused }
+          it { should be == false }
+        end
+
+        describe '#repeat_interval' do
+          subject { super().repeat_interval }
+          it { should be == 2000 }
+        end
+
+        describe '#repeat_times' do
+          subject { super().repeat_times }
+          it { should be == 10 }
+        end
+
+        describe '#max_time' do
+          subject { super().max_time }
+          it { should be == 30000 }
+        end
+
+        describe '#voice' do
+          subject { super().voice }
+          it { should be == 'allison' }
+        end
+
+        describe '#renderer' do
+          subject { super().renderer }
+          it { should be == 'swift' }
+        end
+
+        describe '#render_documents' do
+          subject { super().render_documents }
+          it { should be == [Output::Document.new(:value => ssml_doc), Output::Document.new(:value => ssml_doc)] }
+        end
 
         context "with a urilist" do
           let :stanza do
@@ -208,22 +325,35 @@ module Punchblock
             MESSAGE
           end
 
-          its(:render_documents) { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'])] }
+          describe '#render_documents' do
+            subject { super().render_documents }
+            it { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'])] }
+          end
         end
       end
 
       describe Output::Document do
         describe "when not passing a content type" do
           subject { Output::Document.new :value => ssml_doc }
-          its(:content_type) { should be == 'application/ssml+xml' }
+
+          describe '#content_type' do
+            subject { super().content_type }
+            it { should be == 'application/ssml+xml' }
+          end
         end
 
         describe 'with an SSML document' do
           subject { Output::Document.new :value => ssml_doc, :content_type => 'application/ssml+xml' }
 
-          its(:content_type) { should be == 'application/ssml+xml' }
+          describe '#content_type' do
+            subject { super().content_type }
+            it { should be == 'application/ssml+xml' }
+          end
 
-          its(:value) { should be == ssml_doc }
+          describe '#value' do
+            subject { super().value }
+            it { should be == ssml_doc }
+          end
 
           describe "comparison" do
             let(:document2) { Output::Document.new :value => ssml_doc }
@@ -237,7 +367,10 @@ module Punchblock
         describe 'with a urilist' do
           subject { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
 
-          its(:value) { should be == Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
+          describe '#value' do
+            subject { super().value }
+            it { should be == Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
+          end
 
           describe "comparison" do
             let(:document2) { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
@@ -257,16 +390,23 @@ module Punchblock
 
           subject { Output::Document.new :url => url }
 
-          its(:url)           { should be == url }
-          its(:content_type)  { should be nil}
+          describe '#url' do
+            subject { super().url }
+            it { should be == url }
+          end
+
+          describe '#content_type' do
+            subject { super().content_type }
+            it { should be nil}
+          end
 
           describe "comparison" do
             it "should be the same with the same url" do
-              Output::Document.new(:url => url).should be == Output::Document.new(:url => url)
+              expect(Output::Document.new(:url => url)).to eq(Output::Document.new(:url => url))
             end
 
             it "should be different with a different url" do
-              Output::Document.new(:url => url).should_not be == Output::Document.new(:url => 'http://doo.com/dah')
+              expect(Output::Document.new(:url => url)).not_to eq(Output::Document.new(:url => 'http://doo.com/dah'))
             end
           end
         end
@@ -285,9 +425,20 @@ module Punchblock
         describe '#pause_action' do
           subject { command.pause_action }
 
-          its(:to_xml) { should be == '<pause xmlns="urn:xmpp:rayo:output:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<pause xmlns="urn:xmpp:rayo:output:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#pause!' do
@@ -298,39 +449,53 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.pause_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-              command.should_receive :paused!
+              expect(mock_client).to receive(:execute_command).with(command.pause_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+              expect(command).to receive :paused!
               command.pause!
             end
           end
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.pause! }.should raise_error(InvalidActionError, "Cannot pause a Output that is not executing")
+              expect { command.pause! }.to raise_error(InvalidActionError, "Cannot pause a Output that is not executing")
             end
           end
         end
 
         describe "#paused!" do
           before do
-            subject.request!
-            subject.execute!
-            subject.paused!
+            command.request!
+            command.execute!
+            command.paused!
           end
 
-          its(:state_name) { should be == :paused }
+          describe '#state_name' do
+            subject { command.state_name }
+            it { should be == :paused }
+          end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
-            lambda { subject.paused! }.should raise_error(StateMachine::InvalidTransition)
+            expect { command.paused! }.to raise_error(StateMachine::InvalidTransition)
           end
         end
 
         describe '#resume_action' do
           subject { command.resume_action }
 
-          its(:to_xml) { should be == '<resume xmlns="urn:xmpp:rayo:output:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<resume xmlns="urn:xmpp:rayo:output:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#resume!' do
@@ -342,40 +507,54 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.resume_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-              command.should_receive :resumed!
+              expect(mock_client).to receive(:execute_command).with(command.resume_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+              expect(command).to receive :resumed!
               command.resume!
             end
           end
 
           describe "when the command is not paused" do
             it "should raise an error" do
-              lambda { command.resume! }.should raise_error(InvalidActionError, "Cannot resume a Output that is not paused.")
+              expect { command.resume! }.to raise_error(InvalidActionError, "Cannot resume a Output that is not paused.")
             end
           end
         end
 
         describe "#resumed!" do
           before do
-            subject.request!
-            subject.execute!
-            subject.paused!
-            subject.resumed!
+            command.request!
+            command.execute!
+            command.paused!
+            command.resumed!
           end
 
-          its(:state_name) { should be == :executing }
+          describe '#state_name' do
+            subject { command.state_name }
+            it { should be == :executing }
+          end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
-            lambda { subject.resumed! }.should raise_error(StateMachine::InvalidTransition)
+            expect { command.resumed! }.to raise_error(StateMachine::InvalidTransition)
           end
         end
 
         describe '#stop_action' do
           subject { command.stop_action }
 
-          its(:to_xml) { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
-          its(:component_id) { should be == 'abc123' }
-          its(:target_call_id) { should be == '123abc' }
+          describe '#to_xml' do
+            subject { super().to_xml }
+            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == 'abc123' }
+          end
+
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == '123abc' }
+          end
         end
 
         describe '#stop!' do
@@ -386,14 +565,14 @@ module Punchblock
             end
 
             it "should send its command properly" do
-              mock_client.should_receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
+              expect(mock_client).to receive(:execute_command).with(command.stop_action, :target_call_id => '123abc', :component_id => 'abc123')
               command.stop!
             end
           end
 
           describe "when the command is not executing" do
             it "should raise an error" do
-              lambda { command.stop! }.should raise_error(InvalidActionError, "Cannot stop a Output that is new")
+              expect { command.stop! }.to raise_error(InvalidActionError, "Cannot stop a Output that is new")
             end
           end
         end # #stop!
@@ -404,9 +583,20 @@ module Punchblock
           describe '#seek_action' do
             subject { command.seek_action seek_options }
 
-            its(:to_xml) { should be == Nokogiri::XML('<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>').root.to_xml }
-            its(:component_id) { should be == 'abc123' }
-            its(:target_call_id) { should be == '123abc' }
+            describe '#to_xml' do
+              subject { super().to_xml }
+              it { should be == Nokogiri::XML('<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>').root.to_xml }
+            end
+
+            describe '#component_id' do
+              subject { super().component_id }
+              it { should be == 'abc123' }
+            end
+
+            describe '#target_call_id' do
+              subject { super().target_call_id }
+              it { should be == '123abc' }
+            end
           end
 
           describe '#seek!' do
@@ -418,10 +608,10 @@ module Punchblock
 
               it "should send its command properly" do
                 seek_action = command.seek_action seek_options
-                command.stub(:seek_action).and_return seek_action
-                mock_client.should_receive(:execute_command).with(seek_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-                command.should_receive :seeking!
-                command.should_receive :stopped_seeking!
+                allow(command).to receive(:seek_action).and_return seek_action
+                expect(mock_client).to receive(:execute_command).with(seek_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+                expect(command).to receive :seeking!
+                expect(command).to receive :stopped_seeking!
                 command.seek! seek_options
                 seek_action.request!
                 seek_action.execute!
@@ -432,37 +622,43 @@ module Punchblock
               before { command.seeking! }
 
               it "should raise an error" do
-                lambda { command.seek! }.should raise_error(InvalidActionError, "Cannot seek an Output that is already seeking.")
+                expect { command.seek! }.to raise_error(InvalidActionError, "Cannot seek an Output that is already seeking.")
               end
             end
           end
 
           describe "#seeking!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.seeking!
+              command.request!
+              command.execute!
+              command.seeking!
             end
 
-            its(:seek_status_name) { should be == :seeking }
+            describe '#seek_status_name' do
+              subject { command.seek_status_name }
+              it { should be == :seeking }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.seeking! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.seeking! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
 
           describe "#stopped_seeking!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.seeking!
-              subject.stopped_seeking!
+              command.request!
+              command.execute!
+              command.seeking!
+              command.stopped_seeking!
             end
 
-            its(:seek_status_name) { should be == :not_seeking }
+            describe '#seek_status_name' do
+              subject { super().seek_status_name }
+              it { should be == :not_seeking }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.stopped_seeking! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.stopped_seeking! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
         end
@@ -471,9 +667,20 @@ module Punchblock
           describe '#speed_up_action' do
             subject { command.speed_up_action }
 
-            its(:to_xml) { should be == '<speed-up xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should be == 'abc123' }
-            its(:target_call_id) { should be == '123abc' }
+            describe '#to_xml' do
+              subject { super().to_xml }
+              it { should be == '<speed-up xmlns="urn:xmpp:rayo:output:1"/>' }
+            end
+
+            describe '#component_id' do
+              subject { super().component_id }
+              it { should be == 'abc123' }
+            end
+
+            describe '#target_call_id' do
+              subject { super().target_call_id }
+              it { should be == '123abc' }
+            end
           end
 
           describe '#speed_up!' do
@@ -485,10 +692,10 @@ module Punchblock
 
               it "should send its command properly" do
                 speed_up_action = command.speed_up_action
-                command.stub(:speed_up_action).and_return speed_up_action
-                mock_client.should_receive(:execute_command).with(speed_up_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-                command.should_receive :speeding_up!
-                command.should_receive :stopped_speeding!
+                allow(command).to receive(:speed_up_action).and_return speed_up_action
+                expect(mock_client).to receive(:execute_command).with(speed_up_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+                expect(command).to receive :speeding_up!
+                expect(command).to receive :stopped_speeding!
                 command.speed_up!
                 speed_up_action.request!
                 speed_up_action.execute!
@@ -499,7 +706,7 @@ module Punchblock
               before { command.speeding_up! }
 
               it "should raise an error" do
-                lambda { command.speed_up! }.should raise_error(InvalidActionError, "Cannot speed up an Output that is already speeding.")
+                expect { command.speed_up! }.to raise_error(InvalidActionError, "Cannot speed up an Output that is already speeding.")
               end
             end
 
@@ -507,31 +714,45 @@ module Punchblock
               before { command.slowing_down! }
 
               it "should raise an error" do
-                lambda { command.speed_up! }.should raise_error(InvalidActionError, "Cannot speed up an Output that is already speeding.")
+                expect { command.speed_up! }.to raise_error(InvalidActionError, "Cannot speed up an Output that is already speeding.")
               end
             end
           end
 
           describe "#speeding_up!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.speeding_up!
+              command.request!
+              command.execute!
+              command.speeding_up!
             end
 
-            its(:speed_status_name) { should be == :speeding_up }
+            describe '#speed_status_name' do
+              subject { command.speed_status_name }
+              it { should be == :speeding_up }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.speeding_up! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.speeding_up! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
 
           describe '#slow_down_action' do
             subject { command.slow_down_action }
 
-            its(:to_xml) { should be == '<speed-down xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should be == 'abc123' }
-            its(:target_call_id) { should be == '123abc' }
+            describe '#to_xml' do
+              subject { super().to_xml }
+              it { should be == '<speed-down xmlns="urn:xmpp:rayo:output:1"/>' }
+            end
+
+            describe '#component_id' do
+              subject { super().component_id }
+              it { should be == 'abc123' }
+            end
+
+            describe '#target_call_id' do
+              subject { super().target_call_id }
+              it { should be == '123abc' }
+            end
           end
 
           describe '#slow_down!' do
@@ -543,10 +764,10 @@ module Punchblock
 
               it "should send its command properly" do
                 slow_down_action = command.slow_down_action
-                command.stub(:slow_down_action).and_return slow_down_action
-                mock_client.should_receive(:execute_command).with(slow_down_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-                command.should_receive :slowing_down!
-                command.should_receive :stopped_speeding!
+                allow(command).to receive(:slow_down_action).and_return slow_down_action
+                expect(mock_client).to receive(:execute_command).with(slow_down_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+                expect(command).to receive :slowing_down!
+                expect(command).to receive :stopped_speeding!
                 command.slow_down!
                 slow_down_action.request!
                 slow_down_action.execute!
@@ -557,7 +778,7 @@ module Punchblock
               before { command.speeding_up! }
 
               it "should raise an error" do
-                lambda { command.slow_down! }.should raise_error(InvalidActionError, "Cannot slow down an Output that is already speeding.")
+                expect { command.slow_down! }.to raise_error(InvalidActionError, "Cannot slow down an Output that is already speeding.")
               end
             end
 
@@ -565,37 +786,43 @@ module Punchblock
               before { command.slowing_down! }
 
               it "should raise an error" do
-                lambda { command.slow_down! }.should raise_error(InvalidActionError, "Cannot slow down an Output that is already speeding.")
+                expect { command.slow_down! }.to raise_error(InvalidActionError, "Cannot slow down an Output that is already speeding.")
               end
             end
           end
 
           describe "#slowing_down!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.slowing_down!
+              command.request!
+              command.execute!
+              command.slowing_down!
             end
 
-            its(:speed_status_name) { should be == :slowing_down }
+            describe '#speed_status_name' do
+              subject { command.speed_status_name }
+              it { should be == :slowing_down }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.slowing_down! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.slowing_down! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
 
           describe "#stopped_speeding!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.speeding_up!
-              subject.stopped_speeding!
+              command.request!
+              command.execute!
+              command.speeding_up!
+              command.stopped_speeding!
             end
 
-            its(:speed_status_name) { should be == :not_speeding }
+            describe '#speed_status_name' do
+              subject { command.speed_status_name }
+              it { should be == :not_speeding }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.stopped_speeding! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.stopped_speeding! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
         end
@@ -604,9 +831,20 @@ module Punchblock
           describe '#volume_up_action' do
             subject { command.volume_up_action }
 
-            its(:to_xml) { should be == '<volume-up xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should be == 'abc123' }
-            its(:target_call_id) { should be == '123abc' }
+            describe '#to_xml' do
+              subject { super().to_xml }
+              it { should be == '<volume-up xmlns="urn:xmpp:rayo:output:1"/>' }
+            end
+
+            describe '#component_id' do
+              subject { super().component_id }
+              it { should be == 'abc123' }
+            end
+
+            describe '#target_call_id' do
+              subject { super().target_call_id }
+              it { should be == '123abc' }
+            end
           end
 
           describe '#volume_up!' do
@@ -618,10 +856,10 @@ module Punchblock
 
               it "should send its command properly" do
                 volume_up_action = command.volume_up_action
-                command.stub(:volume_up_action).and_return volume_up_action
-                mock_client.should_receive(:execute_command).with(volume_up_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-                command.should_receive :voluming_up!
-                command.should_receive :stopped_voluming!
+                allow(command).to receive(:volume_up_action).and_return volume_up_action
+                expect(mock_client).to receive(:execute_command).with(volume_up_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+                expect(command).to receive :voluming_up!
+                expect(command).to receive :stopped_voluming!
                 command.volume_up!
                 volume_up_action.request!
                 volume_up_action.execute!
@@ -632,7 +870,7 @@ module Punchblock
               before { command.voluming_up! }
 
               it "should raise an error" do
-                lambda { command.volume_up! }.should raise_error(InvalidActionError, "Cannot volume up an Output that is already voluming.")
+                expect { command.volume_up! }.to raise_error(InvalidActionError, "Cannot volume up an Output that is already voluming.")
               end
             end
 
@@ -640,31 +878,45 @@ module Punchblock
               before { command.voluming_down! }
 
               it "should raise an error" do
-                lambda { command.volume_up! }.should raise_error(InvalidActionError, "Cannot volume up an Output that is already voluming.")
+                expect { command.volume_up! }.to raise_error(InvalidActionError, "Cannot volume up an Output that is already voluming.")
               end
             end
           end
 
           describe "#voluming_up!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.voluming_up!
+              command.request!
+              command.execute!
+              command.voluming_up!
             end
 
-            its(:volume_status_name) { should be == :voluming_up }
+            describe '#volume_status_name' do
+              subject { command.volume_status_name }
+              it { should be == :voluming_up }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.voluming_up! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.voluming_up! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
 
           describe '#volume_down_action' do
             subject { command.volume_down_action }
 
-            its(:to_xml) { should be == '<volume-down xmlns="urn:xmpp:rayo:output:1"/>' }
-            its(:component_id) { should be == 'abc123' }
-            its(:target_call_id) { should be == '123abc' }
+            describe '#to_xml' do
+              subject { super().to_xml }
+              it { should be == '<volume-down xmlns="urn:xmpp:rayo:output:1"/>' }
+            end
+
+            describe '#component_id' do
+              subject { super().component_id }
+              it { should be == 'abc123' }
+            end
+
+            describe '#target_call_id' do
+              subject { super().target_call_id }
+              it { should be == '123abc' }
+            end
           end
 
           describe '#volume_down!' do
@@ -676,10 +928,10 @@ module Punchblock
 
               it "should send its command properly" do
                 volume_down_action = command.volume_down_action
-                command.stub(:volume_down_action).and_return volume_down_action
-                mock_client.should_receive(:execute_command).with(volume_down_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
-                command.should_receive :voluming_down!
-                command.should_receive :stopped_voluming!
+                allow(command).to receive(:volume_down_action).and_return volume_down_action
+                expect(mock_client).to receive(:execute_command).with(volume_down_action, :target_call_id => '123abc', :component_id => 'abc123').and_return true
+                expect(command).to receive :voluming_down!
+                expect(command).to receive :stopped_voluming!
                 command.volume_down!
                 volume_down_action.request!
                 volume_down_action.execute!
@@ -690,7 +942,7 @@ module Punchblock
               before { command.voluming_up! }
 
               it "should raise an error" do
-                lambda { command.volume_down! }.should raise_error(InvalidActionError, "Cannot volume down an Output that is already voluming.")
+                expect { command.volume_down! }.to raise_error(InvalidActionError, "Cannot volume down an Output that is already voluming.")
               end
             end
 
@@ -698,37 +950,43 @@ module Punchblock
               before { command.voluming_down! }
 
               it "should raise an error" do
-                lambda { command.volume_down! }.should raise_error(InvalidActionError, "Cannot volume down an Output that is already voluming.")
+                expect { command.volume_down! }.to raise_error(InvalidActionError, "Cannot volume down an Output that is already voluming.")
               end
             end
           end
 
           describe "#voluming_down!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.voluming_down!
+              command.request!
+              command.execute!
+              command.voluming_down!
             end
 
-            its(:volume_status_name) { should be == :voluming_down }
+            describe '#volume_status_name' do
+              subject { command.volume_status_name }
+              it { should be == :voluming_down }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.voluming_down! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.voluming_down! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
 
           describe "#stopped_voluming!" do
             before do
-              subject.request!
-              subject.execute!
-              subject.voluming_up!
-              subject.stopped_voluming!
+              command.request!
+              command.execute!
+              command.voluming_up!
+              command.stopped_voluming!
             end
 
-            its(:volume_status_name) { should be == :not_voluming }
+            describe '#volume_status_name' do
+              subject { command.volume_status_name }
+              it { should be == :not_voluming }
+            end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
-              lambda { subject.stopped_voluming! }.should raise_error(StateMachine::InvalidTransition)
+              expect { command.stopped_voluming! }.to raise_error(StateMachine::InvalidTransition)
             end
           end
         end
@@ -752,7 +1010,10 @@ module Punchblock
 
         it { should be_instance_of klass }
 
-        its(:name) { should be == element_name }
+        describe '#name' do
+          subject { super().name }
+          it { should be == element_name }
+        end
       end
     end
   end

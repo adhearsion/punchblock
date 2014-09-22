@@ -53,8 +53,15 @@ end
 
 # FIXME: change this to rayo_event?  It can be ambigous
 shared_examples_for 'event' do
-  its(:target_call_id)  { should be == '9f00061' }
-  its(:component_id)    { should be == '1' }
+  describe '#target_call_id' do
+    subject { super().target_call_id }
+    it { should be == '9f00061' }
+  end
+
+  describe '#component_id' do
+    subject { super().component_id }
+    it { should be == '1' }
+  end
 end
 
 shared_examples_for 'command_headers' do
@@ -67,28 +74,28 @@ shared_examples_for 'key_value_pairs' do
   it 'will auto-inherit nodes' do
     n = parse_stanza "<#{element_name} name='boo' value='bah' />"
     h = described_class.new n.root
-    h.name.should be == 'boo'
-    h.value.should be == 'bah'
+    expect(h.name).to eq('boo')
+    expect(h.value).to eq('bah')
   end
 
   it 'has a name attribute' do
     n = described_class.new :boo, 'bah'
-    n.name.should be == 'boo'
+    expect(n.name).to eq('boo')
     n.name = :foo
-    n.name.should be == 'foo'
+    expect(n.name).to eq('foo')
   end
 
   it 'has a value param' do
     n = described_class.new :boo, 'en'
-    n.value.should be == 'en'
+    expect(n.value).to eq('en')
     n.value = 'de'
-    n.value.should be == 'de'
+    expect(n.value).to eq('de')
   end
 
   it 'can determine equality' do
     a = described_class.new :boo, 'bah'
-    a.should be == described_class.new(:boo, 'bah')
-    a.should_not be == described_class.new(:bah, 'bah')
-    a.should_not be == described_class.new(:boo, 'boo')
+    expect(a).to eq(described_class.new(:boo, 'bah'))
+    expect(a).not_to eq(described_class.new(:bah, 'bah'))
+    expect(a).not_to eq(described_class.new(:boo, 'boo'))
   end
 end

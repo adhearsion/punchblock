@@ -35,7 +35,7 @@ module Punchblock
           describe '#execute' do
             before { original_command.request! }
             def expect_playback(voice = :kal, doc = "FOO")
-              subject.wrapped_object.should_receive(:application).once.with :speak, "flite|#{voice}|#{doc}"
+              expect(subject.wrapped_object).to receive(:application).once.with :speak, "flite|#{voice}|#{doc}"
             end
 
             let(:command_opts) { {} }
@@ -54,7 +54,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'An SSML document is required.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -68,7 +68,7 @@ module Punchblock
                   expect_playback
                   execute
                   subject.handle_es_event RubyFS::Event.new(nil, :event_name => "CHANNEL_EXECUTE_COMPLETE")
-                  original_command.complete_event(0.1).reason.should be_a Punchblock::Component::Output::Complete::Finish
+                  expect(original_command.complete_event(0.1).reason).to be_a Punchblock::Component::Output::Complete::Finish
                 end
               end
 
@@ -96,7 +96,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'A start_offset value is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -115,7 +115,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'A start_paused value is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -134,7 +134,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'A repeat_interval value is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -153,7 +153,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'A repeat_times value is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -172,7 +172,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'A max_time value is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -209,7 +209,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of any is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -218,7 +218,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of dtmf is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
 
@@ -227,7 +227,7 @@ module Punchblock
                 it "should return an error and not execute any actions" do
                   execute
                   error = ProtocolError.new.setup 'option error', 'An interrupt-on value of voice is unsupported.'
-                  original_command.response(0.1).should be == error
+                  expect(original_command.response(0.1)).to eq(error)
                 end
               end
             end
@@ -241,7 +241,7 @@ module Punchblock
 
               it "returns a ProtocolError response" do
                 subject.execute_command command
-                command.response(0.1).should be_a ProtocolError
+                expect(command.response(0.1)).to be_a ProtocolError
               end
             end
 
@@ -256,21 +256,21 @@ module Punchblock
               end
 
               it "sets the command response to true" do
-                subject.wrapped_object.should_receive(:application)
+                expect(subject.wrapped_object).to receive(:application)
                 subject.execute_command command
-                command.response(0.1).should be == true
+                expect(command.response(0.1)).to eq(true)
               end
 
               it "sends the correct complete event" do
-                subject.wrapped_object.should_receive(:application)
-                original_command.should_not be_complete
+                expect(subject.wrapped_object).to receive(:application)
+                expect(original_command).not_to be_complete
                 subject.execute_command command
-                reason.should be_a Punchblock::Event::Complete::Stop
-                original_command.should be_complete
+                expect(reason).to be_a Punchblock::Event::Complete::Stop
+                expect(original_command).to be_complete
               end
 
               it "breaks the current dialplan application" do
-                subject.wrapped_object.should_receive(:application).once.with 'break'
+                expect(subject.wrapped_object).to receive(:application).once.with 'break'
                 subject.execute_command command
               end
             end

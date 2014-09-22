@@ -6,12 +6,19 @@ module Punchblock
   module Command
     describe CommandNode do
       let(:args) { [] }
-      subject do
+      subject(:command) do
         Class.new(described_class) { register 'foo'}.new(*args)
       end
 
-      its(:state_name) { should be == :new }
-      its(:request_id) { should be == @uuid }
+      describe '#state_name' do
+        subject { super().state_name }
+        it { should be == :new }
+      end
+
+      describe '#request_id' do
+        subject { super().request_id }
+        it { should be == @uuid }
+      end
 
       describe "#new" do
         describe "with a call/component ID" do
@@ -19,62 +26,78 @@ module Punchblock
           let(:component_id)  { 'abc123' }
           let(:args)          { [{:target_call_id => call_id, :component_id => component_id}] }
 
-          its(:target_call_id)  { should be == call_id }
-          its(:component_id)    { should be == component_id }
+          describe '#target_call_id' do
+            subject { super().target_call_id }
+            it { should be == call_id }
+          end
+
+          describe '#component_id' do
+            subject { super().component_id }
+            it { should be == component_id }
+          end
         end
       end
 
       describe "#request!" do
-        before { subject.request! }
+        before { command.request! }
 
-        its(:state_name) { should be == :requested }
+        describe '#state_name' do
+          subject { command.state_name }
+          it { should be == :requested }
+        end
 
         it "should raise a StateMachine::InvalidTransition when received a second time" do
-          lambda { subject.request! }.should raise_error(StateMachine::InvalidTransition)
+          expect { command.request! }.to raise_error(StateMachine::InvalidTransition)
         end
       end
 
       describe "#execute!" do
         describe "without sending" do
           it "should raise a StateMachine::InvalidTransition" do
-            lambda { subject.execute! }.should raise_error(StateMachine::InvalidTransition)
+            expect { subject.execute! }.to raise_error(StateMachine::InvalidTransition)
           end
         end
 
         describe "after sending" do
           before do
-            subject.request!
-            subject.execute!
+            command.request!
+            command.execute!
           end
 
-          its(:state_name) { should be == :executing }
+          describe '#state_name' do
+            subject { super().state_name }
+            it { should be == :executing }
+          end
         end
       end
 
       describe "#complete!" do
         before do
-          subject.request!
-          subject.execute!
-          subject.complete!
+          command.request!
+          command.execute!
+          command.complete!
         end
 
-        its(:state_name) { should be == :complete }
+        describe '#state_name' do
+          subject { super().state_name }
+          it { should be == :complete }
+        end
 
         it "should raise a StateMachine::InvalidTransition when received a second time" do
-          lambda { subject.complete! }.should raise_error(StateMachine::InvalidTransition)
+          expect { subject.complete! }.to raise_error(StateMachine::InvalidTransition)
         end
       end # #complete!
 
       describe "#response=" do
         it "should set the command to executing status" do
-          subject.should_receive(:execute!).once
+          expect(subject).to receive(:execute!).once
           subject.response = :foo
         end
 
         it "should be a no-op if the response has already been set" do
-          subject.should_receive(:execute!).once
+          expect(subject).to receive(:execute!).once
           subject.response = :foo
-          lambda { subject.response = :bar }.should_not raise_error
+          expect { subject.response = :bar }.not_to raise_error
         end
       end
     end # CommandNode

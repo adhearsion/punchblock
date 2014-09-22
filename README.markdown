@@ -3,6 +3,7 @@
 [![Dependency Status](https://gemnasium.com/adhearsion/punchblock.png?travis)](https://gemnasium.com/adhearsion/punchblock)
 [![Code Climate](https://codeclimate.com/github/adhearsion/punchblock.png)](https://codeclimate.com/github/adhearsion/punchblock)
 [![Coverage Status](https://coveralls.io/repos/adhearsion/punchblock/badge.png?branch=develop)](https://coveralls.io/r/adhearsion/punchblock)
+[![Inline docs](http://inch-ci.org/github/adhearsion/punchblock.png?branch=develop)](http://inch-ci.org/github/adhearsion/punchblock)
 
 # Punchblock
 Punchblock is a middleware library for telephony applications. Like Rack is to Rails and Sinatra, Punchblock provides a consistent API on top of several underlying third-party call control protocols.
@@ -38,4 +39,4 @@ The best available usage documentation available for Punchblock is by example, i
 
 ## Copyright
 
-Copyright (c) 2013 Adhearsion Foundation Inc. MIT licence (see LICENSE for details).
+Copyright (c) 2014 Adhearsion Foundation Inc. MIT licence (see LICENSE for details).

@@ -94,13 +94,15 @@ module Punchblock
               raise UniMRCPError
             else 
               send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
-              when '000'
+              when '000', '008', '012'
                 nlsml = RubySpeech.parse URI.decode(@call.channel_var('RECOG_RESULT'))
                 Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
-              when '001'
+              when '001', '003', '013', '014', '015'
                 Punchblock::Component::Input::Complete::NoMatch.new
-              when '002'
+              when '002', '011'
                 Punchblock::Component::Input::Complete::NoInput.new
+              when '004', '005', '006', '007', '009', '010', '016'
+                raise UniMRCPError
               end
             end
           end

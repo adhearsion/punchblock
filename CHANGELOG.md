@@ -1,6 +1,7 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Support recognition-timeout settings on UniMRCP-based ASR on Asterisk
   * Feature: Implement redirect command on Asterisk
+  * Bugfix: Complete 1-to-1 mapping of UniMRCP RECOG_COMPLETION_CAUSE values to Punchblock::Complete events
 
 # [v2.5.3](https://github.com/adhearsion/punchblock/compare/v2.5.2...v2.5.3) - [2014-09-22](https://rubygems.org/gems/punchblock/versions/2.5.3)
   * Bugfix: Prevent Asterisk translator death due to dead DTMF recognizers ([#221](https://github.com/adhearsion/punchblock/pull/221), [adhearsion/adhearsion#479](https://github.com/adhearsion/adhearsion/issues/479))

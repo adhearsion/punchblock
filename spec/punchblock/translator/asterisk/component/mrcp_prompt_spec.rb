@@ -511,6 +511,45 @@ module Punchblock
             end
           end
 
+          describe 'Input#recognition-timeout' do
+            context 'a positive number' do
+              let(:input_command_opts) { { recognition_timeout: 1000 } }
+
+              it 'should pass the t option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/t=1000/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { recognition_timeout: 0 } }
+
+              it 'should pass the t option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/t=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { recognition_timeout: -1000 } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A recognition-timeout value must be -1, 0, or a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { recognition_timeout: nil } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
           describe 'Input#inter-digit-timeout' do
             context 'a positive number' do
               let(:input_command_opts) { { inter_digit_timeout: 1000 } }

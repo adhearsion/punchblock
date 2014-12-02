@@ -21,7 +21,8 @@ module Punchblock
                     :inter_digit_timeout  => 2000,
                     :recognition_timeout  => 0,
                     :sensitivity          => 0.5,
-                    :min_confidence       => 0.5
+                    :min_confidence       => 0.5,
+                    :headers              => { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' }
         end
 
         describe '#grammars' do
@@ -112,6 +113,11 @@ module Punchblock
           end
         end
 
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' } }
+        end
+
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
@@ -127,6 +133,7 @@ module Punchblock
             expect(new_instance.recognition_timeout).to eq(0)
             expect(new_instance.sensitivity).to eq(0.5)
             expect(new_instance.min_confidence).to eq(0.5)
+            expect(new_instance.headers).to eq({ 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' })
           end
 
           it "should wrap the grammar value in CDATA" do
@@ -164,6 +171,8 @@ module Punchblock
   <grammar content-type="application/grammar+custom">
     <![CDATA[ [10 DIGITS] ]]>
   </grammar>
+  <header xmlns='urn:xmpp:rayo:1' name="Confidence-Threshold" value="0.5" />
+  <header xmlns='urn:xmpp:rayo:1' name="Sensitivity-Level" value="0.2" />
 </input>
           MESSAGE
         end
@@ -234,6 +243,11 @@ module Punchblock
             subject { super().grammars }
             it { should be == [] }
           end
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' } }
         end
       end
 

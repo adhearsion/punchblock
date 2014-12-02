@@ -11,7 +11,7 @@ module Punchblock
     end
 
     def inherit(xml_node)
-      xml_node.xpath('//ns:header', ns: self.class.registered_ns).to_a.each do |header|
+      xml_node.xpath('//ns:header', ns: RAYO_NAMESPACES[:core]).to_a.each do |header|
         if headers.has_key?(header[:name])
           headers[header[:name]] = [headers[header[:name]]]
           headers[header[:name]] << header[:value]
@@ -26,7 +26,7 @@ module Punchblock
       super
       headers.each do |name, value|
         Array(value).each do |v|
-          root.header name: name, value: v
+          root.header name: name, value: v, xmlns: RAYO_NAMESPACES[:core]
         end
       end
     end

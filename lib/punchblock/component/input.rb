@@ -3,6 +3,9 @@
 module Punchblock
   module Component
     class Input < ComponentNode
+
+      include HasHeaders
+
       NLSML_NAMESPACE = 'http://www.ietf.org/xml/ns/mrcpv2'
 
       register :input, :input

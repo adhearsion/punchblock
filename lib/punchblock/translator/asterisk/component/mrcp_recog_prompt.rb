@@ -103,6 +103,8 @@ module Punchblock
                 Punchblock::Component::Input::Complete::NoInput.new
               when '004', '005', '006', '007', '009', '010', '016'
                 raise UniMRCPError
+              else
+                raise UniMRCPError
               end
             end
           end

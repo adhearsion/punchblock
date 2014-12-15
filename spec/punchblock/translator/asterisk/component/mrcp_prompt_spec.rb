@@ -252,6 +252,11 @@ module Punchblock
                     end
                   end
 
+                  context 'with an invalid cause' do
+                    let(:recog_completion_cause) { '999' }
+                    it_behaves_like 'should send an error complete event'
+                  end
+
                   context "when the RECOG_STATUS variable is set to 'ERROR'" do
                     let(:recog_status) { 'ERROR' }
                     it_behaves_like 'should send an error complete event'

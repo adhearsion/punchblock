@@ -9,6 +9,16 @@ module Punchblock
         module MRCPRecogPrompt
           UniMRCPError = Class.new Punchblock::Error
 
+          MRCP_ERRORS = {
+            '004' => 'RECOGNIZE failed due to grammar load failure.',
+            '005' => 'RECOGNIZE failed due to grammar compilation failure.',
+            '006' => 'RECOGNIZE request terminated prematurely due to a recognizer error.',
+            '007' => 'RECOGNIZE request terminated because speech was too early.',
+            '009' => 'Failure accessing a URI.',
+            '010' => 'Language not supported.',
+            '016' => 'Any DEFINE-GRAMMAR error other than grammar-load-failure and grammar-compilation-failure.',
+          }
+
           def execute
             setup_defaults
             validate
@@ -17,8 +27,8 @@ module Punchblock
             complete
           rescue ChannelGoneError
             call_ended
-          rescue UniMRCPError
-            complete_with_error 'Terminated due to UniMRCP error'
+          rescue UniMRCPError => e
+            complete_with_error e.message
           rescue RubyAMI::Error => e
             complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue OptionError => e
@@ -93,7 +103,7 @@ module Punchblock
             when 'ERROR'
               raise UniMRCPError
             else
-              send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
+              send_complete_event case cause = @call.channel_var('RECOG_COMPLETION_CAUSE')
               when '000', '008', '012'
                 nlsml = RubySpeech.parse URI.decode(@call.channel_var('RECOG_RESULT'))
                 Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
@@ -101,8 +111,8 @@ module Punchblock
                 Punchblock::Component::Input::Complete::NoMatch.new
               when '002', '011'
                 Punchblock::Component::Input::Complete::NoInput.new
-              when '004', '005', '006', '007', '009', '010', '016'
-                raise UniMRCPError
+              when *MRCP_ERRORS.keys
+                raise UniMRCPError, MRCP_ERRORS[cause]
               else
                 raise UniMRCPError
               end

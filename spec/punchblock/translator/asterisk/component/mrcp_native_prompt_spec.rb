@@ -247,7 +247,6 @@ module Punchblock
                       subject.execute
                       complete_reason = original_command.complete_event(0.1).reason
                       expect(complete_reason).to be_a Punchblock::Event::Complete::Error
-                      expect(complete_reason.details).to eq("Terminated due to UniMRCP error")
                     end
                   end
 

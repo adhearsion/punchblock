@@ -12,16 +12,17 @@ module Punchblock
       describe "when setting options in initializer" do
         subject do
           described_class.new grammar: {value: '[5 DIGITS]', content_type: 'application/grammar+custom'},
-                    :mode                 => :voice,
-                    :terminator           => '#',
-                    :max_silence          => 1000,
-                    :recognizer           => 'default',
-                    :language             => 'en-US',
-                    :initial_timeout      => 2000,
-                    :inter_digit_timeout  => 2000,
-                    :recognition_timeout  => 0,
-                    :sensitivity          => 0.5,
-                    :min_confidence       => 0.5
+                    :mode                    => :voice,
+                    :terminator              => '#',
+                    :max_silence             => 1000,
+                    :recognizer              => 'default',
+                    :language                => 'en-US',
+                    :initial_timeout         => 2000,
+                    :inter_digit_timeout     => 2000,
+                    :recognition_timeout     => 0,
+                    :speech_complete_timeout => 0,
+                    :sensitivity             => 0.5,
+                    :min_confidence          => 0.5
         end
 
         describe '#grammars' do
@@ -66,6 +67,11 @@ module Punchblock
 
         describe '#recognition_timeout' do
           subject { super().recognition_timeout }
+          it { should be == 0 }
+        end
+
+        describe '#speech_complete_timeout' do
+          subject { super().speech_complete_timeout }
           it { should be == 0 }
         end
 
@@ -156,6 +162,7 @@ module Punchblock
        initial-timeout="2000"
        inter-digit-timeout="2000"
        recognition-timeout="0"
+       speech-complete-timeout="0"
        sensitivity="0.5"
        min-confidence="0.5">
   <grammar content-type="application/grammar+custom">

@@ -182,7 +182,7 @@ module Punchblock
                 end
 
                 context "when MRCPRecog completes" do
-                  context "with a match" do
+                  shared_context "with a match" do
                     let :expected_nlsml do
                       RubySpeech::NLSML.draw do
                         interpretation grammar: 'session:grammar-0', confidence: 0.43 do
@@ -201,38 +201,72 @@ module Punchblock
                     end
                   end
 
-                  context "with a nomatch cause" do
-                    let(:recog_completion_cause) { '001' }
+                  context "with a  match cause" do
+                    %w{000 008 012}.each do |code|
+                      context "when the MRCP recognition response code is #{code}" do
+                        let(:recog_completion_cause) { code }
 
-                    it 'should send a nomatch complete event' do
-                      expected_complete_reason = Punchblock::Component::Input::Complete::NoMatch.new
-                      expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
-                      subject.execute
-                      expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
+                        it_behaves_like 'with a match'
+                      end
+                    end
+                  end
+
+                  context "with a nomatch cause" do
+                    %w{001 003 013 014 015}.each do |code|
+                      context "with value #{code}" do
+                        let(:recog_completion_cause) { code }
+
+                        it 'should send a nomatch complete event' do
+                          expected_complete_reason = Punchblock::Component::Input::Complete::NoMatch.new
+                          expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
+                          subject.execute
+                          expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
+                        end
+                      end
                     end
                   end
 
                   context "with a noinput cause" do
-                    let(:recog_completion_cause) { '002' }
+                    %w{002 011}.each do |code|
+                      context "with value #{code}" do
+                        let(:recog_completion_cause) { code }
 
-                    it 'should send a nomatch complete event' do
-                      expected_complete_reason = Punchblock::Component::Input::Complete::NoInput.new
-                      expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
-                      subject.execute
-                      expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
+                        specify do
+                          expected_complete_reason = Punchblock::Component::Input::Complete::NoInput.new
+                          expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
+                          subject.execute
+                          expect(original_command.complete_event(0.1).reason).to eq(expected_complete_reason)
+                        end
+                      end
                     end
                   end
 
-                  context "when the RECOG_STATUS variable is set to 'ERROR'" do
-                    let(:recog_status) { 'ERROR' }
-
-                    it "should send an error complete event" do
+                  shared_context 'should send an error complete event' do
+                    specify do
                       expect(mock_call).to receive(:execute_agi_command).and_return code: 200, result: 1
                       subject.execute
                       complete_reason = original_command.complete_event(0.1).reason
                       expect(complete_reason).to be_a Punchblock::Event::Complete::Error
-                      expect(complete_reason.details).to eq("Terminated due to UniMRCP error")
                     end
+                  end
+
+                  context 'with an error cause' do
+                    %w{004 005 006 007 009 010 016}.each do |code|
+                      context "when the MRCP recognition response code is #{code}" do
+                        let(:recog_completion_cause) { code }
+                        it_behaves_like 'should send an error complete event'
+                      end
+                    end
+                  end
+
+                  context 'with an invalid cause' do
+                    let(:recog_completion_cause) { '999' }
+                    it_behaves_like 'should send an error complete event'
+                  end
+
+                  context "when the RECOG_STATUS variable is set to 'ERROR'" do
+                    let(:recog_status) { 'ERROR' }
+                    it_behaves_like 'should send an error complete event'
                   end
                 end
 

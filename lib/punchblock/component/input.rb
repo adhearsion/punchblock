@@ -3,6 +3,9 @@
 module Punchblock
   module Component
     class Input < ComponentNode
+
+      include HasHeaders
+
       NLSML_NAMESPACE = 'http://www.ietf.org/xml/ns/mrcpv2'
 
       register :input, :input
@@ -33,6 +36,9 @@ module Punchblock
 
       # @return [Integer] Indicates (in the case of DTMF input) the amount of time (in milliseconds) between input digits which may expire before a timeout is triggered.
       attribute :inter_digit_timeout, Integer
+
+      # @return [Integer] Indicates the amount of time during input that recognition will occur before a timeout is triggered.
+      attribute :recognition_timeout, Integer
 
       attribute :grammars, Array, default: []
       def grammars=(others)
@@ -65,7 +71,8 @@ module Punchblock
           'terminator' => terminator,
           'sensitivity' => sensitivity,
           'initial-timeout' => initial_timeout,
-          'inter-digit-timeout' => inter_digit_timeout
+          'inter-digit-timeout' => inter_digit_timeout,
+          'recognition-timeout' => recognition_timeout
         }
       end
 

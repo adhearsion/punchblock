@@ -1166,6 +1166,71 @@ module Punchblock
             end
           end
 
+          context 'with a redirect command' do
+            let(:command) { Command::Redirect.new to: 'other@place.com' }
+
+            let(:transferstatus) { 'SUCCESS' }
+            let :status_event do
+              RubyAMI::Event.new 'VarSet',
+                "Privilege" => "dialplan,all",
+                "Channel"   => "SIP/1234-00000000",
+                "Variable"  => "TRANSFERSTATUS",
+                "Value"     => transferstatus,
+                "Uniqueid"  => "1326210224.0"
+            end
+
+            before do
+              subject.process_ami_event status_event
+            end
+
+            it "should send an EXEC Transfer AGI command" do
+              subject.should_receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
+              subject.execute_command command
+              command.response(0.5).should be true
+            end
+
+            context "when TRANSFERSTATUS is 'FAILURE'" do
+              let(:transferstatus) { 'FAILURE' }
+
+              it "should return an error" do
+                subject.should_receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', 'TRANSFERSTATUS was FAILURE', subject.id)
+              end
+            end
+
+            context "when TRANSFERSTATUS is 'UNSUPPORTED'" do
+              let(:transferstatus) { 'UNSUPPORTED' }
+
+              it "should return an error" do
+                subject.should_receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', 'TRANSFERSTATUS was UNSUPPORTED', subject.id)
+              end
+            end
+
+            context "when the AMI commannd raises an error" do
+              let(:message) { 'Some error' }
+              let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
+
+              before { subject.should_receive(:execute_agi_command).and_raise error }
+
+              it "should return an error with the message" do
+                subject.execute_command command
+                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+              end
+
+              context "because the channel is gone" do
+                let(:error) { ChannelGoneError }
+
+                it "should return an :item_not_found event for the call" do
+                  subject.execute_command command
+                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                end
+              end
+            end
+          end
+
           context 'with a reject command' do
             let(:command) { Command::Reject.new }
 

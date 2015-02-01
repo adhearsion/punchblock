@@ -19,8 +19,10 @@ module Punchblock
                     :language             => 'en-US',
                     :initial_timeout      => 2000,
                     :inter_digit_timeout  => 2000,
+                    :recognition_timeout  => 0,
                     :sensitivity          => 0.5,
-                    :min_confidence       => 0.5
+                    :min_confidence       => 0.5,
+                    :headers              => { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' }
         end
 
         describe '#grammars' do
@@ -61,6 +63,11 @@ module Punchblock
         describe '#inter_digit_timeout' do
           subject { super().inter_digit_timeout }
           it { should be == 2000 }
+        end
+
+        describe '#recognition_timeout' do
+          subject { super().recognition_timeout }
+          it { should be == 0 }
         end
 
         describe '#sensitivity' do
@@ -106,6 +113,11 @@ module Punchblock
           end
         end
 
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' } }
+        end
+
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml subject.to_rayo
@@ -118,8 +130,10 @@ module Punchblock
             expect(new_instance.language).to eq('en-US')
             expect(new_instance.initial_timeout).to eq(2000)
             expect(new_instance.inter_digit_timeout).to eq(2000)
+            expect(new_instance.recognition_timeout).to eq(0)
             expect(new_instance.sensitivity).to eq(0.5)
             expect(new_instance.min_confidence).to eq(0.5)
+            expect(new_instance.headers).to eq({ 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' })
           end
 
           it "should wrap the grammar value in CDATA" do
@@ -148,6 +162,7 @@ module Punchblock
        language="en-US"
        initial-timeout="2000"
        inter-digit-timeout="2000"
+       recognition-timeout="0"
        sensitivity="0.5"
        min-confidence="0.5">
   <grammar content-type="application/grammar+custom">
@@ -156,6 +171,8 @@ module Punchblock
   <grammar content-type="application/grammar+custom">
     <![CDATA[ [10 DIGITS] ]]>
   </grammar>
+  <header xmlns='urn:xmpp:rayo:1' name="Confidence-Threshold" value="0.5" />
+  <header xmlns='urn:xmpp:rayo:1' name="Sensitivity-Level" value="0.2" />
 </input>
           MESSAGE
         end
@@ -204,6 +221,11 @@ module Punchblock
           it { should be == 2000 }
         end
 
+        describe '#recognition_timeout' do
+          subject { super().recognition_timeout }
+          it { should be == 0 }
+        end
+
         describe '#sensitivity' do
           subject { super().sensitivity }
           it { should be == 0.5 }
@@ -221,6 +243,11 @@ module Punchblock
             subject { super().grammars }
             it { should be == [] }
           end
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' } }
         end
       end
 

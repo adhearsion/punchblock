@@ -72,7 +72,8 @@ module Punchblock
                       :max_time         => 30000,
                       :voice            => 'allison',
                       :renderer         => 'swift',
-                      :render_document  => {:value => ssml_doc}
+                      :render_document  => {:value => ssml_doc},
+                      :headers          => { 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' }
         end
 
         describe '#interrupt_on' do
@@ -185,6 +186,11 @@ module Punchblock
           end
         end
 
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' } }
+        end
+
         describe "exporting to Rayo" do
           it "should export to XML that can be understood by its parser" do
             new_instance = RayoNode.from_xml Nokogiri::XML(subject.to_rayo.to_xml, nil, nil, Nokogiri::XML::ParseOptions::NOBLANKS).root
@@ -198,6 +204,7 @@ module Punchblock
             expect(new_instance.voice).to eq('allison')
             expect(new_instance.renderer).to eq('swift')
             expect(new_instance.render_documents).to eq([Output::Document.new(:value => ssml_doc)])
+            expect(new_instance.headers).to eq({ 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' })
           end
 
           it "should wrap the document value in CDATA" do
@@ -258,6 +265,8 @@ module Punchblock
       </speak>
     ]]>
   </document>
+  <header xmlns='urn:xmpp:rayo:1' name="Jump-Size" value="2" />
+  <header xmlns='urn:xmpp:rayo:1' name="Kill-On-Barge-In" value="false" />
 </output>
           MESSAGE
         end
@@ -329,6 +338,11 @@ module Punchblock
             subject { super().render_documents }
             it { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'])] }
           end
+        end
+
+        describe '#headers' do
+          subject { super().headers }
+          it { should be == { 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' } }
         end
       end
 

@@ -9,6 +9,16 @@ module Punchblock
         module MRCPRecogPrompt
           UniMRCPError = Class.new Punchblock::Error
 
+          MRCP_ERRORS = {
+            '004' => 'RECOGNIZE failed due to grammar load failure.',
+            '005' => 'RECOGNIZE failed due to grammar compilation failure.',
+            '006' => 'RECOGNIZE request terminated prematurely due to a recognizer error.',
+            '007' => 'RECOGNIZE request terminated because speech was too early.',
+            '009' => 'Failure accessing a URI.',
+            '010' => 'Language not supported.',
+            '016' => 'Any DEFINE-GRAMMAR error other than grammar-load-failure and grammar-compilation-failure.',
+          }
+
           def execute
             setup_defaults
             validate
@@ -17,8 +27,8 @@ module Punchblock
             complete
           rescue ChannelGoneError
             call_ended
-          rescue UniMRCPError
-            complete_with_error 'Terminated due to UniMRCP error'
+          rescue UniMRCPError => e
+            complete_with_error e.message
           rescue RubyAMI::Error => e
             complete_with_error "Terminated due to AMI error '#{e.message}'"
           rescue OptionError => e
@@ -34,6 +44,7 @@ module Punchblock
 
             raise OptionError, "An initial-timeout value must be -1 or a positive integer." if @initial_timeout < -1
             raise OptionError, "An inter-digit-timeout value must be -1 or a positive integer." if @inter_digit_timeout < -1
+            raise OptionError, "A recognition-timeout value must be -1, 0, or a positive integer." if @recognition_timeout < -1
           end
 
           def execute_app(app, *args)
@@ -48,6 +59,7 @@ module Punchblock
               opts[:spl] = input_node.language if input_node.language
               opts[:ct] = input_node.min_confidence if input_node.min_confidence
               opts[:sl] = input_node.sensitivity if input_node.sensitivity
+              opts[:t]  = input_node.recognition_timeout if @recognition_timeout > -1
               yield opts
             end
           end
@@ -55,6 +67,7 @@ module Punchblock
           def setup_defaults
             @initial_timeout = input_node.initial_timeout || -1
             @inter_digit_timeout = input_node.inter_digit_timeout || -1
+            @recognition_timeout = input_node.recognition_timeout || -1
           end
 
           def grammars
@@ -84,20 +97,24 @@ module Punchblock
           end
 
           def complete
-            case @call.channel_var('RECOG_STATUS') 
+            case @call.channel_var('RECOG_STATUS')
             when 'INTERRUPTED'
               send_complete_event Punchblock::Component::Input::Complete::NoMatch.new
             when 'ERROR'
               raise UniMRCPError
-            else 
-              send_complete_event case @call.channel_var('RECOG_COMPLETION_CAUSE')
-              when '000'
+            else
+              send_complete_event case cause = @call.channel_var('RECOG_COMPLETION_CAUSE')
+              when '000', '008', '012'
                 nlsml = RubySpeech.parse URI.decode(@call.channel_var('RECOG_RESULT'))
                 Punchblock::Component::Input::Complete::Match.new nlsml: nlsml
-              when '001'
+              when '001', '003', '013', '014', '015'
                 Punchblock::Component::Input::Complete::NoMatch.new
-              when '002'
+              when '002', '011'
                 Punchblock::Component::Input::Complete::NoInput.new
+              when *MRCP_ERRORS.keys
+                raise UniMRCPError, MRCP_ERRORS[cause]
+              else
+                raise UniMRCPError
               end
             end
           end

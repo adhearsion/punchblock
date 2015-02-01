@@ -3,6 +3,9 @@
 module Punchblock
   module Component
     class Output < ComponentNode
+
+      include HasHeaders
+
       register :output, :output
 
       class Document < RayoNode

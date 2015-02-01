@@ -1,6 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Feature: Support recognition-timeout settings on UniMRCP-based ASR on Asterisk
-  * Feature: Implement redirect command on Asterisk
+
+# [v2.6.0](https://github.com/adhearsion/punchblock/compare/v2.5.3...v2.6.0) - [2015-02-01](https://rubygems.org/gems/punchblock/versions/2.6.0)
+  * Feature: Support recognition-timeout settings on UniMRCP-based ASR on Asterisk ([#228](https://github.com/adhearsion/punchblock/pull/228))
+  * Feature: Implement redirect command on Asterisk ([#219](https://github.com/adhearsion/punchblock/pull/219))
   * Feature: Allow arbitrary media headers ([#237](https://github.com/adhearsion/punchblock/pull/237))
   * Bugfix: Complete 1-to-1 mapping of UniMRCP RECOG_COMPLETION_CAUSE values to Punchblock::Complete events
 

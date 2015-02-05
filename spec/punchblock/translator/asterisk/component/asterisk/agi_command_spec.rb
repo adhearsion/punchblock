@@ -112,13 +112,14 @@ module Punchblock
               context 'of type start'
 
               context 'of type Exec' do
+                let (:ami_event_result) { "200%20result=123%20(timeout)%0A" }
                 let(:ami_event) do
                   RubyAMI::Event.new 'AsyncAGI',
                     "SubEvent"   => "Exec",
                     "Channel"    => channel,
                     "CommandId"  => component_id,
                     "Command"    => "EXEC ANSWER",
-                    "Result"     => "200%20result=123%20(timeout)%0A"
+                    "Result"     => ami_event_result
                 end
 
                 let :expected_complete_reason do
@@ -136,6 +137,25 @@ module Punchblock
 
                   expect(complete_event.component_id).to eq(component_id.to_s)
                   expect(complete_event.reason).to eq(expected_complete_reason)
+                end
+
+                context 'when the result contains illegal characters in the AGI response' do
+                  let (:ami_event_result) { '$' }
+                  let :expected_complete_reason do
+                    Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code    => -1,
+                                                                                         :result  => nil,
+                                                                                         :data    => nil
+                  end
+                  it 'treats it as a failure with code -1' do
+                    subject.handle_ami_event ami_event
+
+                    complete_event = original_command.complete_event 0.5
+
+                    expect(original_command).to be_complete
+
+                    expect(complete_event.component_id).to eq(component_id.to_s)
+                    expect(complete_event.reason).to eq(expected_complete_reason)
+                  end
                 end
 
                 context "when the command was ASYNCAGI BREAK" do

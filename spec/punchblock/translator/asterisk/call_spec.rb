@@ -1379,6 +1379,15 @@ module Punchblock
               subject.execute_command command
             end
 
+            context "when the other call doesn't exist" do
+              let(:other_call) { nil }
+
+              it "returns an error" do
+                subject.execute_command command
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup(:service_unavailable, "Could not find join party with address #{other_call_id}", subject.id))
+              end
+            end
+
             context "when the AMI command raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }

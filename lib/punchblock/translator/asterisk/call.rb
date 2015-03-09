@@ -194,8 +194,12 @@ module Punchblock
             command.response = true
           when Command::Join
             other_call = translator.call_with_id command.call_uri
-            @pending_joins[other_call.channel] = command
-            execute_agi_command 'EXEC Bridge', "#{other_call.channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})"
+            if other_call
+              @pending_joins[other_call.channel] = command
+              execute_agi_command 'EXEC Bridge', "#{other_call.channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})"
+            else
+              command.response = ProtocolError.new.setup :service_unavailable, "Could not find join party with address #{command.call_uri}", id
+            end
           when Command::Unjoin
             other_call = translator.call_with_id command.call_uri
             redirect_back other_call

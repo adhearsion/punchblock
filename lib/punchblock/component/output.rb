@@ -46,6 +46,18 @@ module Punchblock
           super
         end
 
+        def size
+          if ssml?
+            value.children.count
+          else
+            value.size
+          end
+        end
+
+        def ssml?
+          content_type == SSML_CONTENT_TYPE
+        end
+
         private
 
         def xml_value
@@ -56,10 +68,6 @@ module Punchblock
           elsif
             value
           end
-        end
-
-        def ssml?
-          content_type == SSML_CONTENT_TYPE
         end
 
         def urilist?

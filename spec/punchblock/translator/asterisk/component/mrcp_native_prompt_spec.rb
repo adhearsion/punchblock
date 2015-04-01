@@ -158,6 +158,23 @@ module Punchblock
               end
             end
 
+            context 'with multiple audio tags in SSML' do
+              let :ssml_doc do
+                RubySpeech::SSML.draw do
+                  audio(src: audio_filename)
+                  audio(src: audio_filename)
+                end
+              end
+
+              let(:output_command_options) { { render_documents: [{value: ssml_doc}] } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'Only one audio file is allowed.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
             context 'unset' do
               let(:output_command_options) { {} }
 
@@ -179,6 +196,28 @@ module Punchblock
                   expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
                   subject.execute
                   expect(original_command.response(0.1)).to be_a Ref
+                end
+
+                context "when the render document is SSML" do
+                  let :ssml_doc do
+                    RubySpeech::SSML.draw do
+                      audio(src: audio_filename)
+                    end
+                  end
+
+                  let(:output_command_opts) do
+                    {
+                      renderer: renderer,
+                      render_document: {value: ssml_doc}
+                    }
+                  end
+
+                  it "should return a ref and execute MRCPRecog" do
+                    param = ["\"#{grammar.to_doc.to_s.squish.gsub('"', '\"')}\"", "uer=1&b=1&f=#{audio_filename}"].join(',')
+                    expect(mock_call).to receive(:execute_agi_command).once.with('EXEC MRCPRecog', param).and_return code: 200, result: 1
+                    subject.execute
+                    expect(original_command.response(0.1)).to be_a Ref
+                  end
                 end
 
                 context "when MRCPRecog completes" do

@@ -51,10 +51,11 @@ module Punchblock
 
           let(:output_command_opts) { {} }
 
-          let(:audio_filename) { 'http://example.com/hello.mp3' }
+          let(:audio_filename) { '/var/foo' }
+          let(:audio_path) { "file://#{audio_filename}.wav" }
 
           let :output_command_options do
-            { render_document: {value: [audio_filename], content_type: 'text/uri-list'} }.merge(output_command_opts)
+            { render_document: {value: [audio_path], content_type: 'text/uri-list'} }.merge(output_command_opts)
           end
 
           let(:input_command_opts) { {} }
@@ -161,8 +162,8 @@ module Punchblock
             context 'with multiple audio tags in SSML' do
               let :ssml_doc do
                 RubySpeech::SSML.draw do
-                  audio(src: audio_filename)
-                  audio(src: audio_filename)
+                  audio(src: audio_path)
+                  audio(src: audio_path)
                 end
               end
 
@@ -201,7 +202,7 @@ module Punchblock
                 context "when the render document is SSML" do
                   let :ssml_doc do
                     RubySpeech::SSML.draw do
-                      audio(src: audio_filename)
+                      audio(src: audio_path)
                     end
                   end
 

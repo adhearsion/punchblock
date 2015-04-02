@@ -41,10 +41,18 @@ module Punchblock
           end
 
           def audio_filename
-            if first_doc.ssml?
+            path = if first_doc.ssml?
               first_doc.value.children.first.src
             else
               first_doc.value.first
+            end.sub('file://', '')
+
+            dir = File.dirname(path)
+            basename = File.basename(path, '.*')
+            if dir == '.'
+              basename
+            else
+              File.join(dir, basename)
             end
           end
 

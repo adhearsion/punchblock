@@ -612,6 +612,46 @@ module Punchblock
             end
           end
 
+          describe 'Input#max-silence' do
+            context 'a positive number' do
+              let(:input_command_opts) { { max_silence: 1000 } }
+
+              it 'should pass the sint option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sint=1000/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { max_silence: 0 } }
+
+              it 'should pass the sint option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sint=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { max_silence: -1000 } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A max-silence value must be -1, 0, or a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { max_silence: nil } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+
           describe 'Input#mode' do
             pending
           end

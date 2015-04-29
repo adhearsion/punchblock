@@ -46,6 +46,7 @@ module Punchblock
             raise OptionError, "An inter-digit-timeout value must be -1 or a positive integer." if @inter_digit_timeout < -1
             raise OptionError, "A recognition-timeout value must be -1, 0, or a positive integer." if @recognition_timeout < -1
             raise OptionError, "A max-silence value must be -1, 0, or a positive integer." if @max_silence < -1
+            raise OptionError, "A speech-complete-timeout value must be -1, 0, or a positive integer." if @speech_complete_timeout < -1
           end
 
           def execute_app(app, *args)
@@ -62,6 +63,7 @@ module Punchblock
               opts[:sl] = input_node.sensitivity if input_node.sensitivity
               opts[:t]  = input_node.recognition_timeout if @recognition_timeout > -1
               opts[:sint]  = input_node.max_silence if @max_silence > -1
+              opts[:sct]  = @speech_complete_timeout if @speech_complete_timeout > -1
               yield opts
             end
           end
@@ -71,6 +73,7 @@ module Punchblock
             @inter_digit_timeout = input_node.inter_digit_timeout || -1
             @recognition_timeout = input_node.recognition_timeout || -1
             @max_silence = input_node.max_silence || -1
+            @speech_complete_timeout = input_node.headers['Speech-Complete-Timeout'] || -1
           end
 
           def grammars

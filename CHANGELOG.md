@@ -2,6 +2,7 @@
   * Bugfix: Handle an illegal AMI response by Asterisk as a failure with code -1
   * Bugfix: Ensure a useful error is raised when attempting to join to a call which doesn't exist [#529](https://github.com/adhearsion/adhearsion/issues/529)
   * Feature: Added max_silence support to Asterisk MRCP ASR
+  * Feature: Added speech-complete-timeout support to Asterisk MRCP ASR
 
 # [v2.6.0](https://github.com/adhearsion/punchblock/compare/v2.5.3...v2.6.0) - [2015-02-01](https://rubygems.org/gems/punchblock/versions/2.6.0)
   * Feature: Support recognition-timeout settings on UniMRCP-based ASR on Asterisk ([#228](https://github.com/adhearsion/punchblock/pull/228))

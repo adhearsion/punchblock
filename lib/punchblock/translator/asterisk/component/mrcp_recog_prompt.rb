@@ -47,6 +47,11 @@ module Punchblock
             raise OptionError, "A recognition-timeout value must be -1, 0, or a positive integer." if @recognition_timeout < -1
             raise OptionError, "A max-silence value must be -1, 0, or a positive integer." if @max_silence < -1
             raise OptionError, "A speech-complete-timeout value must be -1, 0, or a positive integer." if @speech_complete_timeout < -1
+            raise OptionError, "A hotword-max-duration value must be -1, 0, or a positive integer." if @hotword_max_duration < -1
+            raise OptionError, "A hotword-min-duration value must be -1, 0, or a positive integer." if @hotword_min_duration < -1
+            raise OptionError, "A dtmf-terminate-timeout value must be -1, 0, or a positive integer." if @dtmf_terminate_timeout < -1
+            raise OptionError, "An n-best-list-length value must be a positive integer." if @n_best_list_length && @n_best_list_length < 1
+            raise OptionError, "A speed-vs-accuracy value must be a positive integer." if @speed_vs_accuracy && @speed_vs_accuracy < 0
           end
 
           def execute_app(app, *args)
@@ -64,6 +69,21 @@ module Punchblock
               opts[:t]  = input_node.recognition_timeout if @recognition_timeout > -1
               opts[:sint]  = input_node.max_silence if @max_silence > -1
               opts[:sct]  = @speech_complete_timeout if @speech_complete_timeout > -1
+
+              opts[:sva] = @speed_vs_accuracy if @speed_vs_accuracy
+              opts[:nb] = @n_best_list_length if @n_best_list_length
+              opts[:sit] = @start_input_timers unless @start_input_timers.nil?
+              opts[:dtt] = @dtmf_terminate_timeout if @dtmf_terminate_timeout > -1
+              opts[:sw] = @save_waveform unless @save_waveform.nil?
+              opts[:nac] = @new_audio_channel unless @new_audio_channel.nil?
+              opts[:rm] = @recognition_mode if @recognition_mode
+              opts[:hmaxd] = @hotword_max_duration if @hotword_max_duration > -1
+              opts[:hmind] = @hotword_min_duration if @hotword_min_duration > -1
+              opts[:cdb] = @clear_dtmf_buffer unless @clear_dtmf_buffer.nil?
+              opts[:enm] = @early_no_match unless @early_no_match.nil?
+              opts[:iwu] = @input_waveform_uri if @input_waveform_uri
+              opts[:mt] = @media_type if @media_type
+
               yield opts
             end
           end
@@ -74,6 +94,19 @@ module Punchblock
             @recognition_timeout = input_node.recognition_timeout || -1
             @max_silence = input_node.max_silence || -1
             @speech_complete_timeout = input_node.headers['Speech-Complete-Timeout'] || -1
+            @speed_vs_accuracy = input_node.headers['Speed-Vs-Accuracy']
+            @n_best_list_length = input_node.headers['N-Best-List-Length']
+            @start_input_timers = input_node.headers['Start-Input-Timers']
+            @dtmf_terminate_timeout = input_node.headers['DTMF-Terminate-Timeout'] || -1
+            @save_waveform = input_node.headers['Save-Waveform']
+            @new_audio_channel = input_node.headers['New-Audio-Channel']
+            @recognition_mode = input_node.headers['Recognition-Mode']
+            @hotword_max_duration = input_node.headers['Hotword-Max-Duration'] || -1
+            @hotword_min_duration = input_node.headers['Hotword-Min-Duration'] || -1
+            @clear_dtmf_buffer = input_node.headers['Clear-DTMF-Buffer']
+            @early_no_match = input_node.headers['Early-No-Match']
+            @input_waveform_uri = input_node.headers['Input-Waveform-URI']
+            @media_type = input_node.headers['Media-Type']
           end
 
           def grammars

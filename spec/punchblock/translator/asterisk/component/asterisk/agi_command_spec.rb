@@ -122,13 +122,21 @@ module Punchblock
                     "Result"     => ami_event_result
                 end
 
+                let(:ami_event_ast13) do
+                  RubyAMI::Event.new 'AsyncAGIExec',
+                    "Channel"    => channel,
+                    "CommandId"  => component_id,
+                    "Command"    => "EXEC ANSWER",
+                    "Result"     => ami_event_result
+                  end
+
                 let :expected_complete_reason do
                   Punchblock::Component::Asterisk::AGI::Command::Complete::Success.new :code    => 200,
                                                                                        :result  => 123,
                                                                                        :data    => 'timeout'
                 end
 
-                it 'should send a complete event' do
+                def should_send_complete_event
                   subject.handle_ami_event ami_event
 
                   complete_event = original_command.complete_event 0.5
@@ -139,6 +147,18 @@ module Punchblock
                   expect(complete_event.reason).to eq(expected_complete_reason)
                 end
 
+                it 'should send a complete event' do
+                  should_send_complete_event
+                end
+
+                context 'with an AsyncAGIExec event' do
+                  let(:ami_event) { ami_event_ast13 }
+
+                  it 'should send a complete event' do
+                    should_send_complete_event
+                  end
+                end
+
                 context 'when the result contains illegal characters in the AGI response' do
                   let (:ami_event_result) { '$' }
                   let :expected_complete_reason do
@@ -146,7 +166,8 @@ module Punchblock
                                                                                          :result  => nil,
                                                                                          :data    => nil
                   end
-                  it 'treats it as a failure with code -1' do
+
+                  def treat_as_failure
                     subject.handle_ami_event ami_event
 
                     complete_event = original_command.complete_event 0.5
@@ -155,6 +176,18 @@ module Punchblock
 
                     expect(complete_event.component_id).to eq(component_id.to_s)
                     expect(complete_event.reason).to eq(expected_complete_reason)
+                  end
+
+                  it 'treats it as a failure with code -1' do
+                    treat_as_failure
+                  end
+
+                  context 'with an AsyncAGIExec event' do
+                    let(:ami_event) { ami_event_ast13 }
+
+                    it 'treats it as a failure with code -1' do
+                      treat_as_failure
+                    end
                   end
                 end
 

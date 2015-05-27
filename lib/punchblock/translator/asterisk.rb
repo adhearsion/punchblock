@@ -208,7 +208,7 @@ module Punchblock
             next if channel.bridged? && !EVENTS_ALLOWED_BRIDGED.include?(event.name)
             call.process_ami_event event
           end
-        elsif event.name == "AsyncAGI" && event['SubEvent'] == "Start"
+        elsif event.name == "AsyncAGIStart" || (event.name == "AsyncAGI" && event['SubEvent'] == "Start")
           handle_async_agi_start_event event
         end
       end

@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Feature: Support for Asterisk 13 (AMI v2)
   * Feature: Added max_silence support to Asterisk MRCP ASR
   * Feature: Added speech-complete-timeout support to Asterisk MRCP ASR
   * Bugfix: Handle an illegal AMI response by Asterisk as a failure with code -1

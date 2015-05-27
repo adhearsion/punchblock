@@ -116,14 +116,21 @@ module Punchblock
           when 'Hangup'
             handle_hangup_event ami_event['Cause'].to_i, ami_event.best_time
           when 'AsyncAGI'
-            if component = component_with_id(ami_event['CommandID'])
-              component.handle_ami_event ami_event
-            end
+            component_for_command_id_handle ami_event
 
             if @answered == false && ami_event['SubEvent'] == 'Start'
               @answered = true
               send_pb_event Event::Answered.new(timestamp: ami_event.best_time)
             end
+          when 'AsyncAGIStart'
+            component_for_command_id_handle ami_event
+
+            if @answered == false
+              @answered = true
+              send_pb_event Event::Answered.new(timestamp: ami_event.best_time)
+            end
+          when 'AsyncAGIExec', 'AsyncAGIEnd'
+            component_for_command_id_handle ami_event
           when 'Newstate'
             case ami_event['ChannelState']
             when '5'
@@ -268,7 +275,7 @@ module Punchblock
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
           response = Celluloid::Future.new
-          register_tmp_handler :ami, name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec', [:[], 'CommandID'] => agi.id do |event|
+          register_tmp_handler :ami, [{name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec'}, {name: 'AsyncAGIExec'}], [{[:[], 'CommandID'] => agi.id}, {[:[], 'CommandId'] => agi.id}] do |event|
             response.signal Celluloid::SuccessResponse.new(nil, event)
           end
           agi.execute @ami_client
@@ -354,6 +361,12 @@ module Punchblock
           agi_env.to_a.inject({}) do |accumulator, element|
             accumulator['X-' + element[0].to_s] = element[1] || ''
             accumulator
+          end
+        end
+
+        def component_for_command_id_handle(ami_event)
+          if component = component_with_id(ami_event['CommandID'] || ami_event['CommandId'])
+            component.handle_ami_event ami_event
           end
         end
 

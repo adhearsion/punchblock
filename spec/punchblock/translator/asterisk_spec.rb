@@ -377,14 +377,8 @@ module Punchblock
               'Env'      => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
           end
 
-          before { allow(subject.wrapped_object).to receive :handle_pb_event }
-
-          it 'should be able to look up the call by channel ID' do
-            subject.handle_ami_event ami_event
-            call = subject.call_for_channel('SIP/1234-00000000')
-            expect(call).to be_a Asterisk::Call
-            expect(call.agi_env).to be_a Hash
-            expect(call.agi_env).to eq({
+          let :expected_agi_env do
+            {
               :agi_request      => 'async',
               :agi_channel      => 'SIP/1234-00000000',
               :agi_language     => 'en',
@@ -405,7 +399,17 @@ module Punchblock
               :agi_enhanced     => '0.0',
               :agi_accountcode  => '',
               :agi_threadid     => '4366221312'
-            })
+            }
+          end
+
+          before { allow(subject.wrapped_object).to receive :handle_pb_event }
+
+          it 'should be able to look up the call by channel ID' do
+            subject.handle_ami_event ami_event
+            call = subject.call_for_channel('SIP/1234-00000000')
+            expect(call).to be_a Asterisk::Call
+            expect(call.agi_env).to be_a Hash
+            expect(call.agi_env).to eq(expected_agi_env)
           end
 
           it 'should instruct the call to send an offer' do
@@ -413,6 +417,29 @@ module Punchblock
             expect(Asterisk::Call).to receive(:new).once.and_return mock_call
             expect(mock_call).to receive(:send_offer).once
             subject.handle_ami_event ami_event
+          end
+
+          context 'with an Asterisk 13 AsyncAGIStart event' do
+            let :ami_event do
+              RubyAMI::Event.new 'AsyncAGIStart',
+              'Channel'  => "SIP/1234-00000000",
+              'Env'      => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2F1234-00000000%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201320835995.0%0Aagi_version%3A%201.8.4.1%0Aagi_callerid%3A%205678%0Aagi_calleridname%3A%20Jane%20Smith%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%201000%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20default%0Aagi_extension%3A%201000%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%204366221312%0A%0A"
+            end
+
+            it 'should be able to look up the call by channel ID' do
+              subject.handle_ami_event ami_event
+              call = subject.call_for_channel('SIP/1234-00000000')
+              expect(call).to be_a Asterisk::Call
+              expect(call.agi_env).to be_a Hash
+              expect(call.agi_env).to eq(expected_agi_env)
+            end
+
+            it 'should instruct the call to send an offer' do
+              mock_call = double('Asterisk::Call').as_null_object
+              expect(Asterisk::Call).to receive(:new).once.and_return mock_call
+              expect(mock_call).to receive(:send_offer).once
+              subject.handle_ami_event ami_event
+            end
           end
 
           context 'if a call already exists for a matching channel' do

@@ -44,9 +44,9 @@ module Punchblock
                 expect(mock_call).to receive(:redirect_back)
                 expect(mock_call).to receive(:register_handler).with { |type, *guards|
                   expect(type).to eq(:ami)
-                  expect(guards.size).to eq(2)
-                  expect(guards[0]).to be_a Proc
-                  expect(guards[1]).to eq({:name => 'AsyncAGI'})
+                  expect(guards.size).to eq(1)
+                  expect(guards[0]).to be_a Array
+                  expect(guards[0][1]).to eq({:name => 'AsyncAGIExec'})
                 }
 
                 subject.execute_command command

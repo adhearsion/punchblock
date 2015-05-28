@@ -124,6 +124,15 @@ module Punchblock
               @answered = true
               send_pb_event Event::Answered.new(timestamp: ami_event.best_time)
             end
+          when 'AsyncAGIStart'
+            if @answered == false
+              @answered = true
+              send_pb_event Event::Answered.new(timestamp: ami_event.best_time)
+            end
+          when 'AsyncAGIExec'
+            if component = component_with_id(ami_event['CommandID'])
+              component.handle_ami_event ami_event
+            end
           when 'Newstate'
             case ami_event['ChannelState']
             when '5'

@@ -277,7 +277,7 @@ module Punchblock
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
           response = Celluloid::Future.new
-          register_tmp_handler :ami, name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec', [:[], 'CommandID'] => agi.id do |event|
+          register_tmp_handler :ami, [{name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec'}, {name: 'AsyncAGIExec'}], [:[], 'CommandID'] => agi.id do |event|
             response.signal Celluloid::SuccessResponse.new(nil, event)
           end
           agi.execute @ami_client

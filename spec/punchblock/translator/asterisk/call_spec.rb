@@ -516,28 +516,49 @@ module Punchblock
             let :component do
               Component::Asterisk::AGICommand.new mock_component_node, subject
             end
-
-            let(:ami_event) do
-              RubyAMI::Event.new "AsyncAGI",
-                "SubEvent"  => "End",
-                "Channel"   => "SIP/1234-00000000",
-                "CommandID" => component.id,
-                "Command"   => "EXEC ANSWER",
-                "Result"    => "200%20result=123%20(timeout)%0A"
-            end
-
             before do
               subject.register_component component
             end
 
-            it 'should send the event to the component' do
-              expect(component).to receive(:handle_ami_event).once.with ami_event
-              subject.process_ami_event ami_event
+            context 'with Asterisk 11 AsyncAGI SubEvent' do
+              let(:ami_event) do
+                RubyAMI::Event.new "AsyncAGI",
+                  "SubEvent"  => "End",
+                  "Channel"   => "SIP/1234-00000000",
+                  "CommandID" => component.id,
+                  "Command"   => "EXEC ANSWER",
+                  "Result"    => "200%20result=123%20(timeout)%0A"
+              end
+
+              it 'should send the event to the component' do
+                expect(component).to receive(:handle_ami_event).once.with ami_event
+                subject.process_ami_event ami_event
+              end
+
+              it 'should not send an answered event' do
+                expect(translator).to receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
+                subject.process_ami_event ami_event
+              end
             end
 
-            it 'should not send an answered event' do
-              expect(translator).to receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
-              subject.process_ami_event ami_event
+            context 'with Asterisk 13 AsyncAGIEnd and CommandId with a lowercase d' do
+              let(:ami_event) do
+                RubyAMI::Event.new "AsyncAGIEnd",
+                  "Channel"   => "SIP/1234-00000000",
+                  "CommandId" => component.id,
+                  "Command"   => "EXEC ANSWER",
+                  "Result"    => "200%20result=123%20(timeout)%0A"
+              end
+
+              it 'should send the event to the component' do
+                expect(component).to receive(:handle_ami_event).once.with ami_event
+                subject.process_ami_event ami_event
+              end
+
+              it 'should not send an answered event' do
+                expect(translator).to receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
+                subject.process_ami_event ami_event
+              end
             end
           end
 
@@ -1844,7 +1865,7 @@ module Punchblock
               let(:ami_event) do
                 RubyAMI::Event.new 'AsyncAGIExec',
                   "Channel"    => channel,
-                  "CommandID"  => Punchblock.new_uuid,
+                  "CommandId"  => Punchblock.new_uuid,
                   "Command"    => "EXEC ANSWER",
                   "Result"     => "200%20result=123%20(timeout)%0A"
               end

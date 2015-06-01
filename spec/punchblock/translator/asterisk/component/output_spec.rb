@@ -30,6 +30,8 @@ module Punchblock
             { :render_document => {:value => ssml_doc}, renderer: renderer }
           end
 
+          let(:ast13mode) { false }
+
           subject { Output.new original_command, mock_call }
 
           def expect_answered(value = true)
@@ -933,10 +935,15 @@ module Punchblock
 
                 describe 'interrupt_on' do
                   def ami_event_for_dtmf(digit, position)
-                    RubyAMI::Event.new 'DTMF',
-                      'Digit' => digit.to_s,
-                      'Start' => position == :start ? 'Yes' : 'No',
-                      'End'   => position == :end ? 'Yes' : 'No'
+                    if ast13mode
+                      RubyAMI::Event.new 'DTMF' + (position == :start ? 'Begin' : '') + (position == :end ? 'End' : ''),
+                        'Digit' => digit.to_s
+                    else
+                      RubyAMI::Event.new 'DTMF',
+                        'Digit' => digit.to_s,
+                        'Start' => position == :start ? 'Yes' : 'No',
+                        'End'   => position == :end ? 'Yes' : 'No'
+                    end
                   end
 
                   def send_ami_events_for_dtmf(digit)
@@ -1664,10 +1671,15 @@ module Punchblock
 
               describe 'interrupt_on' do
                 def ami_event_for_dtmf(digit, position)
-                  RubyAMI::Event.new 'DTMF',
-                    'Digit' => digit.to_s,
-                    'Start' => position == :start ? 'Yes' : 'No',
-                    'End'   => position == :end ? 'Yes' : 'No'
+                  if ast13mode
+                    RubyAMI::Event.new 'DTMF' + (position == :start ? 'Begin' : '') + (position == :end ? 'End' : ''),
+                      'Digit' => digit.to_s
+                  else
+                    RubyAMI::Event.new 'DTMF',
+                      'Digit' => digit.to_s,
+                      'Start' => position == :start ? 'Yes' : 'No',
+                      'End'   => position == :end ? 'Yes' : 'No'
+                  end
                 end
 
                 def send_ami_events_for_dtmf(digit)
@@ -1736,17 +1748,21 @@ module Punchblock
                     expect(subject).to receive(:send_finish).and_return nil
                   end
 
+                  def send_correct_complete_event
+                    expect(mock_call).to receive :redirect_back
+                    subject.execute
+                    expect(original_command.response(0.1)).to be_a Ref
+                    expect(original_command).not_to be_complete
+                    send_ami_events_for_dtmf 1
+                    mock_call.process_ami_event ami_event
+                    sleep 0.2
+                    expect(original_command).to be_complete
+                    expect(reason).to be_a Punchblock::Component::Output::Complete::Finish
+                  end
+
                   context "when a DTMF digit is received" do
                     it "sends the correct complete event" do
-                      expect(mock_call).to receive :redirect_back
-                      subject.execute
-                      expect(original_command.response(0.1)).to be_a Ref
-                      expect(original_command).not_to be_complete
-                      send_ami_events_for_dtmf 1
-                      mock_call.process_ami_event ami_event
-                      sleep 0.2
-                      expect(original_command).to be_complete
-                      expect(reason).to be_a Punchblock::Component::Output::Complete::Finish
+                      send_correct_complete_event
                     end
 
                     it "redirects the call back to async AGI" do
@@ -1754,6 +1770,13 @@ module Punchblock
                       subject.execute
                       expect(original_command.response(0.1)).to be_a Ref
                       send_ami_events_for_dtmf 1
+                    end
+
+                    context 'with an Asterisk 13 DTMFEnd event' do
+                      let(:ast13mode) { true }
+                      it "sends the correct complete event" do
+                        send_correct_complete_event
+                      end
                     end
                   end
                 end

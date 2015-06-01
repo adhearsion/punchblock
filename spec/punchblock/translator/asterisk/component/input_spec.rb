@@ -52,11 +52,18 @@ module Punchblock
               { :mode => :dtmf, :grammar => { :value => grammar } }.merge(original_command_opts)
             end
 
+            let (:ast13mode) { false }
+
             def ami_event_for_dtmf(digit, position)
-              RubyAMI::Event.new 'DTMF',
-                'Digit' => digit.to_s,
-                'Start' => position == :start ? 'Yes' : 'No',
-                'End'   => position == :end ? 'Yes' : 'No'
+              if ast13mode
+                RubyAMI::Event.new 'DTMF' + (position == :start ? 'Begin' : '') + (position == :end ? 'End' : ''),
+                  'Digit' => digit.to_s
+              else
+                RubyAMI::Event.new 'DTMF',
+                  'Digit' => digit.to_s,
+                  'Start' => position == :start ? 'Yes' : 'No',
+                  'End'   => position == :end ? 'Yes' : 'No'
+              end
             end
 
             def send_ami_events_for_dtmf(digit)
@@ -103,6 +110,13 @@ module Punchblock
                 it "should not leave the recognizer running" do
                   expect(Celluloid::Actor.all.map { |a| a.class }).not_to include(Punchblock::Translator::DTMFRecognizer)
                 end
+
+                context 'with an Asterisk 13 DTMFEnd event' do
+                  let(:ast13mode) { true }
+                  it "should send a success complete event with the relevant data" do
+                    expect(reason).to eq(expected_event)
+                  end
+                end
               end
 
               context "when the match is invalid" do
@@ -117,6 +131,13 @@ module Punchblock
 
                 it "should send a nomatch complete event" do
                   expect(reason).to eq(expected_event)
+                end
+
+                context 'with an Asterisk 13 DTMFEnd event' do
+                  let(:ast13mode) { true }
+                  it "should send a nomatch complete event" do
+                    expect(reason).to eq(expected_event)
+                  end
                 end
               end
 

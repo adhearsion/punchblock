@@ -76,11 +76,18 @@ module Punchblock
             original_command.request!
           end
 
+          let (:ast13mode) { false }
+
           def ami_event_for_dtmf(digit, position)
-            RubyAMI::Event.new 'DTMF',
-              'Digit' => digit.to_s,
-              'Start' => position == :start ? 'Yes' : 'No',
-              'End'   => position == :end ? 'Yes' : 'No'
+            if ast13mode
+              RubyAMI::Event.new 'DTMF' + (position == :start ? 'Begin' : '') + (position == :end ? 'End' : ''),
+                'Digit' => digit.to_s
+            else
+              RubyAMI::Event.new 'DTMF',
+                'Digit' => digit.to_s,
+                'Start' => position == :start ? 'Yes' : 'No',
+                'End'   => position == :end ? 'Yes' : 'No'
+            end
           end
 
           def send_ami_events_for_dtmf(digit)
@@ -163,13 +170,25 @@ module Punchblock
                     Punchblock::Component::Input::Complete::Match.new nlsml: expected_nlsml
                   end
 
-                  it "should return a match complete event" do
+                  def should_return_a_match_complete_event
                     expected_event
                     subject.execute
                     expect(original_command.response(0.1)).to be_a Ref
                     send_ami_events_for_dtmf 1
 
                     expect(connection.events).to include(expected_event)
+                  end
+
+                  it "should return a match complete event" do
+                    should_return_a_match_complete_event
+                  end
+
+                  context 'with Asterisk 13 DTMFEnd event' do
+                    let (:ast13mode) { true }
+
+                    it "should return a match complete event" do
+                      should_return_a_match_complete_event
+                    end
                   end
                 end
 

@@ -58,7 +58,7 @@ module Punchblock
           end
 
           def register_dtmf_event_handler
-            @dtmf_handler_id = call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
+            @dtmf_handler_id = call.register_handler :ami, [{:name => 'DTMF', [:[], 'End'] => 'Yes'}, {:name => 'DTMFEnd'}] do |event|
               process_dtmf event['Digit']
             end
           end

@@ -13,7 +13,7 @@ module Punchblock
 
         OUTBOUND_CHANNEL_MATCH = /.* <(?<channel>.*)>/.freeze
 
-        attr_reader :id, :channel, :translator, :agi_env, :direction
+        attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[0] = :hungup
@@ -135,6 +135,35 @@ module Punchblock
             case ami_event['ChannelState']
             when '5'
               send_pb_event Event::Ringing.new(timestamp: ami_event.best_time)
+            end
+          when 'BridgeEnter'
+            if other_call_channel = translator.bridges.delete(ami_event['BridgeUniqueid'])
+              if other_call = translator.call_for_channel(other_call_channel)
+                join_command  = other_call.pending_joins.delete channel
+                join_command.response = true if join_command
+
+                event = Event::Joined.new call_uri: other_call.id, timestamp: ami_event.best_time
+                send_pb_event event
+
+                other_call_event = Event::Joined.new call_uri: id, timestamp: ami_event.best_time
+                other_call_event.target_call_id = other_call.id
+                translator.handle_pb_event other_call_event
+              end
+            else
+              translator.bridges[ami_event['BridgeUniqueid']] = ami_event['Channel']
+            end
+           when 'BridgeLeave'
+            if other_call_channel = translator.bridges.delete(ami_event['BridgeUniqueid'] + '_leave')
+              if other_call = translator.call_for_channel(other_call_channel)
+                event = Event::Unjoined.new call_uri: other_call.id, timestamp: ami_event.best_time
+                send_pb_event event
+
+                other_call_event = Event::Unjoined.new call_uri: id, timestamp: ami_event.best_time
+                other_call_event.target_call_id = other_call.id
+                translator.handle_pb_event other_call_event
+              end
+            else
+              translator.bridges[ami_event['BridgeUniqueid'] + '_leave'] = ami_event['Channel']
             end
           when 'OriginateResponse'
             if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'

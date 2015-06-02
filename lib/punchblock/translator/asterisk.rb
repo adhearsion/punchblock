@@ -18,7 +18,7 @@ module Punchblock
       autoload :Channel
       autoload :Component
 
-      attr_reader :ami_client, :connection, :calls
+      attr_reader :ami_client, :connection, :calls, :bridges
 
       REDIRECT_CONTEXT = 'adhearsion-redirect'
       REDIRECT_EXTENSION = '1'
@@ -47,7 +47,7 @@ module Punchblock
 
       def initialize(ami_client, connection)
         @ami_client, @connection = ami_client, connection
-        @calls, @components, @channel_to_call_id = {}, {}, {}
+        @calls, @components, @channel_to_call_id, @bridges = {}, {}, {}, {}
       end
 
       def register_call(call)

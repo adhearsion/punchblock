@@ -808,6 +808,124 @@ module Punchblock
             end
           end
 
+          context 'with a BridgeEnter event' do
+            let(:bridge_uniqueid) { "1234-5678" }
+            let(:call_channel) { "SIP/foo" }
+            let :ami_event do
+              RubyAMI::Event.new 'BridgeEnter',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+            end
+
+            context 'when the event is received the first time' do
+              it 'sets an entry in translator.bridges' do
+                subject.process_ami_event ami_event
+                expect(translator.bridges[bridge_uniqueid]).to eq call_channel
+              end
+            end
+
+            context 'when the event is received a second time for the same BridgeUniqueid' do
+              let(:other_channel) { 'SIP/5678-00000000' }
+              let :other_call do
+                Call.new other_channel, translator, ami_client, connection
+              end
+              let(:other_call_id) { other_call.id }
+
+              let :command do
+                Punchblock::Command::Join.new call_uri: other_call_id
+              end
+
+              let :ami_event do
+                RubyAMI::Event.new 'BridgeEnter',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+              end
+
+              let :expected_joined do
+                Punchblock::Event::Joined.new target_call_id: subject.id,
+                  call_uri: other_call_id
+              end
+
+              let :expected_joined_other do
+                Punchblock::Event::Joined.new target_call_id: other_call_id,
+                  call_uri: subject.id
+              end
+
+              before do
+                translator.bridges[bridge_uniqueid] = other_channel
+                translator.register_call other_call
+
+                other_call.pending_joins[channel] = command
+                command.request!
+                expect(subject).to receive(:execute_agi_command).and_return code: 200
+                subject.execute_command command
+              end
+
+              it 'sends the correct Joined events' do
+                expect(translator).to receive(:handle_pb_event).with expected_joined
+                expect(translator).to receive(:handle_pb_event).with expected_joined_other
+                subject.process_ami_event ami_event
+                expect(command.response(0.5)).to eq(true)
+              end
+            end
+          end
+
+          context 'with a BridgeLeave event' do
+            let(:bridge_uniqueid) { "1234-5678" }
+            let(:call_channel) { "SIP/foo-1234" }
+            let :ami_event do
+              RubyAMI::Event.new 'BridgeLeave',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+            end
+
+            context 'when the event is received the first time' do
+              it 'sets an entry in translator.bridges' do
+                subject.process_ami_event ami_event
+                expect(translator.bridges[bridge_uniqueid + '_leave']).to eq call_channel
+              end
+            end
+
+            context 'when the event is received a second time for the same BridgeUniqueid' do
+              let(:other_channel) { 'SIP/5678-00000000' }
+              let :other_call do
+                Call.new other_channel, translator, ami_client, connection
+              end
+              let(:other_call_id) { other_call.id }
+
+              let :ami_event do
+                RubyAMI::Event.new 'BridgeLeave',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+              end
+
+              let :expected_unjoined do
+                Punchblock::Event::Unjoined.new target_call_id: subject.id,
+                  call_uri: other_call_id
+              end
+
+              let :expected_unjoined_other do
+                Punchblock::Event::Unjoined.new target_call_id: other_call_id,
+                  call_uri: subject.id
+              end
+
+              before do
+                translator.bridges[bridge_uniqueid + '_leave'] = other_channel
+                translator.register_call other_call
+              end
+
+              it 'sends the correct Unjoined events' do
+                expect(translator).to receive(:handle_pb_event).with expected_unjoined
+                expect(translator).to receive(:handle_pb_event).with expected_unjoined_other
+                subject.process_ami_event ami_event
+              end
+            end
+          end
+
           context 'with a BridgeExec event' do
             let :ami_event do
               RubyAMI::Event.new 'BridgeExec',
@@ -866,10 +984,10 @@ module Punchblock
 
           context 'with a Bridge event' do
             let(:other_channel) { 'SIP/5678-00000000' }
-            let(:other_call_id) { 'def567' }
             let :other_call do
               Call.new other_channel, translator, ami_client, connection
             end
+            let(:other_call_id) { other_call.id }
 
             let :ami_event do
               RubyAMI::Event.new 'Bridge',
@@ -900,7 +1018,6 @@ module Punchblock
             before do
               translator.register_call other_call
               expect(translator).to receive(:call_for_channel).with(other_channel).and_return(other_call)
-              expect(other_call).to receive(:id).and_return other_call_id
             end
 
             context "of state 'Link'" do

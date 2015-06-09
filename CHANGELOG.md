@@ -1,11 +1,9 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Feature: Support for Asterisk 13 (AMI v2)
-  * Feature: Added max_silence support to Asterisk MRCP ASR
-  * Feature: Added speech-complete-timeout support to Asterisk MRCP ASR
+  * Feature: Pass all possible MRCP recognition headers through Asterisk [#244](https://github.com/adhearsion/punchblock/pull/244)
   * Bugfix: Handle an illegal AMI response by Asterisk as a failure with code -1
   * Bugfix: Ensure a useful error is raised when attempting to join to a call which doesn't exist [#529](https://github.com/adhearsion/adhearsion/issues/529)
   * Bugfix: Support SSML in MRCPRecog case on Asterisk. This is the case where a prompt component wants to render using Asterisk and recognise using UniMRCP. This worked fine with a uri-list which already has test coverage, but threw (and silently swallowed) an exception for an SSML doc (as provided by Adhearsion) resulting in a hung call with no audio, and then a timeout exception in Adhearsion. [#241](https://github.com/adhearsion/punchblock/pull/241)
-  * Pass all possible MRCP recognition headers through Asterisk [#244](https://github.com/adhearsion/punchblock/pull/244)
 
 # [v2.6.0](https://github.com/adhearsion/punchblock/compare/v2.5.3...v2.6.0) - [2015-02-01](https://rubygems.org/gems/punchblock/versions/2.6.0)
   * Feature: Support recognition-timeout settings on UniMRCP-based ASR on Asterisk ([#228](https://github.com/adhearsion/punchblock/pull/228))

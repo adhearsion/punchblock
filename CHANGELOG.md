@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v2.7.0](https://github.com/adhearsion/punchblock/compare/v2.6.0...v2.7.0) - [2015-06-09](https://rubygems.org/gems/punchblock/versions/2.7.0)
   * Feature: Support for Asterisk 13 (AMI v2)
   * Feature: Pass all possible MRCP recognition headers through Asterisk [#244](https://github.com/adhearsion/punchblock/pull/244)
   * Bugfix: Handle an illegal AMI response by Asterisk as a failure with code -1

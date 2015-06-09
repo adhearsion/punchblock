@@ -17,7 +17,7 @@ module Punchblock
             raise OptionError, 'A document is required.' unless output_node.render_documents.count > 0
             raise OptionError, 'Only one document is allowed.' if output_node.render_documents.count > 1
             raise OptionError, 'Only inline documents are allowed.' if first_doc.url
-            raise OptionError, 'Only one audio file is allowed.' if first_doc.value.size > 1
+            raise OptionError, 'Only one audio file is allowed.' if first_doc.size > 1
 
             raise OptionError, 'A grammar is required.' unless input_node.grammars.count > 0
 
@@ -41,7 +41,19 @@ module Punchblock
           end
 
           def audio_filename
-            first_doc.value.first
+            path = if first_doc.ssml?
+              first_doc.value.children.first.src
+            else
+              first_doc.value.first
+            end.sub('file://', '')
+
+            dir = File.dirname(path)
+            basename = File.basename(path, '.*')
+            if dir == '.'
+              basename
+            else
+              File.join(dir, basename)
+            end
           end
 
           def unimrcp_app_options

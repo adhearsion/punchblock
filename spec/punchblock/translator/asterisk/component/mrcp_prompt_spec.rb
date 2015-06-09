@@ -612,6 +612,485 @@ module Punchblock
             end
           end
 
+          describe 'Input#max-silence' do
+            context 'a positive number' do
+              let(:input_command_opts) { { max_silence: 1000 } }
+
+              it 'should pass the sint option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sint=1000/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { max_silence: 0 } }
+
+              it 'should pass the sint option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sint=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { max_silence: -1000 } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A max-silence value must be -1, 0, or a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { max_silence: nil } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#speech-complete-timeout' do
+            context 'a positive number' do
+              let(:input_command_opts) { { headers: {"Speech-Complete-Timeout" => 1000 } } }
+
+              it 'should pass the sct option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sct=1000/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { headers: {"Speech-Complete-Timeout" => 0 } } }
+
+              it 'should pass the sct option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sct=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { headers: {"Speech-Complete-Timeout" => -1000 } } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A speech-complete-timeout value must be -1, 0, or a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Speech-Complete-Timeout" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Speed-Vs-Accuracy)' do
+            context 'a positive number' do
+              let(:input_command_opts) { { headers: {"Speed-Vs-Accuracy" => 1 } } }
+
+              it 'should pass the sva option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sva=1/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { headers: {"Speed-Vs-Accuracy" => 0 } } }
+
+              it 'should pass the sva option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sva=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { headers: {"Speed-Vs-Accuracy" => -1000 } } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A speed-vs-accuracy value must be a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Speed-Vs-Accuracy" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(N-Best-List-Length)' do
+            context 'a positive number' do
+              let(:input_command_opts) { { headers: {"N-Best-List-Length" => 5 } } }
+
+              it 'should pass the nb option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/nb=5/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { headers: {"N-Best-List-Length" => 0 } } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'An n-best-list-length value must be a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { headers: {"N-Best-List-Length" => -1000 } } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'An n-best-list-length value must be a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"N-Best-List-Length" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Start-Input-Timers)' do
+            context 'true' do
+              let(:input_command_opts) { { headers: {"Start-Input-Timers" => true } } }
+
+              it 'should pass the sit option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sit=true/)
+                subject.execute
+              end
+            end
+
+            context 'false' do
+              let(:input_command_opts) { { headers: {"Start-Input-Timers" => false } } }
+
+              it 'should pass the sit option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sit=false/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Start-Input-Timers" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(DTMF-Terminate-Timeout)' do
+            context 'a positive number' do
+              let(:input_command_opts) { { headers: {"DTMF-Terminate-Timeout" => 1000 } } }
+
+              it 'should pass the dtt option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/dtt=1000/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { headers: {"DTMF-Terminate-Timeout" => 0 } } }
+
+              it 'should pass the dtt option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/dtt=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { headers: {"DTMF-Terminate-Timeout" => -1000 } } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A dtmf-terminate-timeout value must be -1, 0, or a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"DTMF-Terminate-Timeout" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Save-Waveform)' do
+            context 'true' do
+              let(:input_command_opts) { { headers: {"Save-Waveform" => true } } }
+
+              it 'should pass the sw option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sw=true/)
+                subject.execute
+              end
+            end
+
+            context 'false' do
+              let(:input_command_opts) { { headers: {"Save-Waveform" => false } } }
+
+              it 'should pass the sw option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/sw=false/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Save-Waveform" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(New-Audio-Channel)' do
+            context 'true' do
+              let(:input_command_opts) { { headers: {"New-Audio-Channel" => true } } }
+
+              it 'should pass the nac option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/nac=true/)
+                subject.execute
+              end
+            end
+
+            context 'false' do
+              let(:input_command_opts) { { headers: {"New-Audio-Channel" => false } } }
+
+              it 'should pass the nac option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/nac=false/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"New-Audio-Channel" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Recognition-Mode)' do
+            context 'a string' do
+              let(:input_command_opts) { { headers: {"Recognition-Mode" => "hotword" } } }
+
+              it 'should pass the rm option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/rm=hotword/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Recognition-Mode" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Hotword-Max-Duration)' do
+            context 'a positive number' do
+              let(:input_command_opts) { { headers: {"Hotword-Max-Duration" => 1000 } } }
+
+              it 'should pass the hmaxd option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/hmaxd=1000/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { headers: {"Hotword-Max-Duration" => 0 } } }
+
+              it 'should pass the hmaxd option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/hmaxd=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { headers: {"Hotword-Max-Duration" => -1000 } } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A hotword-max-duration value must be -1, 0, or a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Hotword-Max-Duration" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Hotword-Min-Duration)' do
+            context 'a positive number' do
+              let(:input_command_opts) { { headers: {"Hotword-Min-Duration" => 1000 } } }
+
+              it 'should pass the hmind option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/hmind=1000/)
+                subject.execute
+              end
+            end
+
+            context '0' do
+              let(:input_command_opts) { { headers: {"Hotword-Min-Duration" => 0 } } }
+
+              it 'should pass the hmind option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/hmind=0/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { headers: {"Hotword-Min-Duration" => -1000 } } }
+
+              it "should return an error and not execute any actions" do
+                subject.execute
+                error = ProtocolError.new.setup 'option error', 'A hotword-min-duration value must be -1, 0, or a positive integer.'
+                expect(original_command.response(0.1)).to eq(error)
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Hotword-Min-Duration" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Clear-DTMF-Buffer)' do
+            context 'true' do
+              let(:input_command_opts) { { headers: {"Clear-DTMF-Buffer" => true } } }
+
+              it 'should pass the cdb option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/cdb=true/)
+                subject.execute
+              end
+            end
+
+            context 'false' do
+              let(:input_command_opts) { { headers: {"Clear-DTMF-Buffer" => false } } }
+
+              it 'should pass the cdb option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/cdb=false/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Clear-DTMF-Buffer" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Early-No-Match)' do
+            context 'true' do
+              let(:input_command_opts) { { headers: {"Early-No-Match" => true } } }
+
+              it 'should pass the enm option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/enm=true/)
+                subject.execute
+              end
+            end
+
+            context 'a negative number' do
+              let(:input_command_opts) { { headers: {"Early-No-Match" => false } } }
+
+              it "should return an error and not execute any actions" do
+                expect_synthandrecog_with_options(/enm=false/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Early-No-Match" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Input-Waveform-URI)' do
+            context 'a positive number' do
+              let(:input_command_opts) { { headers: {"Input-Waveform-URI" => 'http://wave.form.com' } } }
+
+              it 'should pass the iwu option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/iwu=http:\/\/wave\.form\.com/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Input-Waveform-URI" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
+          describe 'Input#headers(Media-Type)' do
+            context 'a string' do
+              let(:input_command_opts) { { headers: {"Media-Type" => "foo/type" } } }
+
+              it 'should pass the mt option to SynthAndRecog' do
+                expect_synthandrecog_with_options(/mt=foo\/type/)
+                subject.execute
+              end
+            end
+
+            context 'unset' do
+              let(:input_command_opts) { { headers: {"Media-Type" => nil } } }
+
+              it 'should not pass any options to SynthAndRecog' do
+                expect_synthandrecog_with_options(//)
+                subject.execute
+              end
+            end
+          end
+
           describe 'Input#mode' do
             pending
           end

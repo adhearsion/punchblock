@@ -107,7 +107,7 @@ module Punchblock
             send_progress_if_necessary
 
             if interrupt
-              call.register_handler :ami, :name => 'DTMF', [:[], 'End'] => 'Yes' do |event|
+              call.register_handler :ami, [{:name => 'DTMF', [:[], 'End'] => 'Yes'}, {:name => 'DTMFEnd'}] do |event|
                 stop_by_redirect finish_reason
               end
             end

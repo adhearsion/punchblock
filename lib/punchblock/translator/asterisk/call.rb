@@ -13,7 +13,7 @@ module Punchblock
 
         OUTBOUND_CHANNEL_MATCH = /.* <(?<channel>.*)>/.freeze
 
-        attr_reader :id, :channel, :translator, :agi_env, :direction
+        attr_reader :id, :channel, :translator, :agi_env, :direction, :pending_joins
 
         HANGUP_CAUSE_TO_END_REASON = Hash.new { :error }
         HANGUP_CAUSE_TO_END_REASON[0] = :hungup
@@ -116,18 +116,54 @@ module Punchblock
           when 'Hangup'
             handle_hangup_event ami_event['Cause'].to_i, ami_event.best_time
           when 'AsyncAGI'
-            if component = component_with_id(ami_event['CommandID'])
-              component.handle_ami_event ami_event
-            end
+            component_for_command_id_handle ami_event
 
             if @answered == false && ami_event['SubEvent'] == 'Start'
               @answered = true
               send_pb_event Event::Answered.new(timestamp: ami_event.best_time)
             end
+          when 'AsyncAGIStart'
+            component_for_command_id_handle ami_event
+
+            if @answered == false
+              @answered = true
+              send_pb_event Event::Answered.new(timestamp: ami_event.best_time)
+            end
+          when 'AsyncAGIExec', 'AsyncAGIEnd'
+            component_for_command_id_handle ami_event
           when 'Newstate'
             case ami_event['ChannelState']
             when '5'
               send_pb_event Event::Ringing.new(timestamp: ami_event.best_time)
+            end
+          when 'BridgeEnter'
+            if other_call_channel = translator.bridges.delete(ami_event['BridgeUniqueid'])
+              if other_call = translator.call_for_channel(other_call_channel)
+                join_command  = other_call.pending_joins.delete channel
+                join_command.response = true if join_command
+
+                event = Event::Joined.new call_uri: other_call.id, timestamp: ami_event.best_time
+                send_pb_event event
+
+                other_call_event = Event::Joined.new call_uri: id, timestamp: ami_event.best_time
+                other_call_event.target_call_id = other_call.id
+                translator.handle_pb_event other_call_event
+              end
+            else
+              translator.bridges[ami_event['BridgeUniqueid']] = ami_event['Channel']
+            end
+           when 'BridgeLeave'
+            if other_call_channel = translator.bridges.delete(ami_event['BridgeUniqueid'] + '_leave')
+              if other_call = translator.call_for_channel(other_call_channel)
+                event = Event::Unjoined.new call_uri: other_call.id, timestamp: ami_event.best_time
+                send_pb_event event
+
+                other_call_event = Event::Unjoined.new call_uri: id, timestamp: ami_event.best_time
+                other_call_event.target_call_id = other_call.id
+                translator.handle_pb_event other_call_event
+              end
+            else
+              translator.bridges[ami_event['BridgeUniqueid'] + '_leave'] = ami_event['Channel']
             end
           when 'OriginateResponse'
             if ami_event['Response'] == 'Failure' && ami_event['Uniqueid'] == '<null>'
@@ -194,8 +230,12 @@ module Punchblock
             command.response = true
           when Command::Join
             other_call = translator.call_with_id command.call_uri
-            @pending_joins[other_call.channel] = command
-            execute_agi_command 'EXEC Bridge', "#{other_call.channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})"
+            if other_call
+              @pending_joins[other_call.channel] = command
+              execute_agi_command 'EXEC Bridge', "#{other_call.channel},F(#{REDIRECT_CONTEXT},#{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY})"
+            else
+              command.response = ProtocolError.new.setup :service_unavailable, "Could not find join party with address #{command.call_uri}", id
+            end
           when Command::Unjoin
             other_call = translator.call_with_id command.call_uri
             redirect_back other_call
@@ -264,7 +304,7 @@ module Punchblock
         def execute_agi_command(command, *params)
           agi = AGICommand.new Punchblock.new_uuid, channel, command, *params
           response = Celluloid::Future.new
-          register_tmp_handler :ami, name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec', [:[], 'CommandID'] => agi.id do |event|
+          register_tmp_handler :ami, [{name: 'AsyncAGI', [:[], 'SubEvent'] => 'Exec'}, {name: 'AsyncAGIExec'}], [{[:[], 'CommandID'] => agi.id}, {[:[], 'CommandId'] => agi.id}] do |event|
             response.signal Celluloid::SuccessResponse.new(nil, event)
           end
           agi.execute @ami_client
@@ -350,6 +390,12 @@ module Punchblock
           agi_env.to_a.inject({}) do |accumulator, element|
             accumulator['X-' + element[0].to_s] = element[1] || ''
             accumulator
+          end
+        end
+
+        def component_for_command_id_handle(ami_event)
+          if component = component_with_id(ami_event['CommandID'] || ami_event['CommandId'])
+            component.handle_ami_event ami_event
           end
         end
 

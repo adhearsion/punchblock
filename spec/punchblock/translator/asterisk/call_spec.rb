@@ -516,29 +516,78 @@ module Punchblock
             let :component do
               Component::Asterisk::AGICommand.new mock_component_node, subject
             end
-
-            let(:ami_event) do
-              RubyAMI::Event.new "AsyncAGI",
-                "SubEvent"  => "End",
-                "Channel"   => "SIP/1234-00000000",
-                "CommandID" => component.id,
-                "Command"   => "EXEC ANSWER",
-                "Result"    => "200%20result=123%20(timeout)%0A"
-            end
-
             before do
               subject.register_component component
             end
 
-            it 'should send the event to the component' do
-              expect(component).to receive(:handle_ami_event).once.with ami_event
-              subject.process_ami_event ami_event
+            context 'with Asterisk 11 AsyncAGI SubEvent' do
+              let(:ami_event) do
+                RubyAMI::Event.new "AsyncAGI",
+                  "SubEvent"  => "End",
+                  "Channel"   => "SIP/1234-00000000",
+                  "CommandID" => component.id,
+                  "Command"   => "EXEC ANSWER",
+                  "Result"    => "200%20result=123%20(timeout)%0A"
+              end
+
+              it 'should send the event to the component' do
+                expect(component).to receive(:handle_ami_event).once.with ami_event
+                subject.process_ami_event ami_event
+              end
+
+              it 'should not send an answered event' do
+                expect(translator).to receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
+                subject.process_ami_event ami_event
+              end
             end
 
-            it 'should not send an answered event' do
-              expect(translator).to receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
-              subject.process_ami_event ami_event
+            context 'with Asterisk 13 AsyncAGIEnd and CommandId with a lowercase d' do
+              let(:ami_event) do
+                RubyAMI::Event.new "AsyncAGIEnd",
+                  "Channel"   => "SIP/1234-00000000",
+                  "CommandId" => component.id,
+                  "Command"   => "EXEC ANSWER",
+                  "Result"    => "200%20result=123%20(timeout)%0A"
+              end
+
+              it 'should send the event to the component' do
+                expect(component).to receive(:handle_ami_event).once.with ami_event
+                subject.process_ami_event ami_event
+              end
+
+              it 'should not send an answered event' do
+                expect(translator).to receive(:handle_pb_event).with(kind_of(Punchblock::Event::Answered)).never
+                subject.process_ami_event ami_event
+              end
             end
+          end
+
+          def should_send_answered_event
+            expected_answered = Punchblock::Event::Answered.new
+            expected_answered.target_call_id = subject.id
+            expect(translator).to receive(:handle_pb_event).with expected_answered
+            subject.process_ami_event ami_event
+          end
+
+          def answered_should_be_true
+            subject.process_ami_event ami_event
+            expect(subject.answered?).to be_true
+          end
+
+          def should_only_send_one_answered_event
+            expected_answered = Punchblock::Event::Answered.new
+            expected_answered.target_call_id = subject.id
+            expect(translator).to receive(:handle_pb_event).with(expected_answered).once
+            subject.process_ami_event ami_event
+            subject.process_ami_event ami_event
+          end
+
+          def should_use_ami_timestamp_for_rayo_event
+            expected_answered = Punchblock::Event::Answered.new target_call_id: subject.id,
+                                                           timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
+            expect(translator).to receive(:handle_pb_event).with expected_answered
+
+            subject.process_ami_event ami_event
           end
 
           context 'with an AsyncAGI Start event' do
@@ -550,24 +599,16 @@ module Punchblock
             end
 
             it 'should send an answered event' do
-              expected_answered = Punchblock::Event::Answered.new
-              expected_answered.target_call_id = subject.id
-              expect(translator).to receive(:handle_pb_event).with expected_answered
-              subject.process_ami_event ami_event
+              should_send_answered_event
             end
 
             it '#answered? should be true' do
-              subject.process_ami_event ami_event
-              expect(subject.answered?).to be_true
+              answered_should_be_true
             end
 
             context "for a second time" do
               it 'should only send one answered event' do
-                expected_answered = Punchblock::Event::Answered.new
-                expected_answered.target_call_id = subject.id
-                expect(translator).to receive(:handle_pb_event).with(expected_answered).once
-                subject.process_ami_event ami_event
-                subject.process_ami_event ami_event
+                should_only_send_one_answered_event
               end
             end
 
@@ -581,11 +622,42 @@ module Punchblock
               end
 
               it "should use the AMI timestamp for the Rayo event" do
-                expected_answered = Punchblock::Event::Answered.new target_call_id: subject.id,
-                                                                    timestamp: DateTime.new(2014, 2, 25, 22, 46, 20)
-                expect(translator).to receive(:handle_pb_event).with expected_answered
+                should_use_ami_timestamp_for_rayo_event
+              end
+            end
+          end
 
-                subject.process_ami_event ami_event
+          context 'with an Asterisk 13 AsyncAGIStart event' do
+            let(:ami_event) do
+              RubyAMI::Event.new "AsyncAGIStart",
+                "Channel"   => "SIP/1234-00000000",
+                "Env"       => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2Fuserb-00000006%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201390303636.6%0Aagi_version%3A%2011.7.0%0Aagi_callerid%3A%20userb%0Aagi_calleridname%3A%20User%20B%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%20unknown%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20adhearsion-redirect%0Aagi_extension%3A%201%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%20139696536876800%0A%0A"
+            end
+
+            it 'should send an answered event' do
+              should_send_answered_event
+            end
+
+            it '#answered? should be true' do
+              answered_should_be_true
+            end
+
+            context "for a second time" do
+              it 'should only send one answered event' do
+                should_only_send_one_answered_event
+              end
+            end
+
+            context "when the AMI event has a timestamp" do
+              let :ami_event do
+                RubyAMI::Event.new "AsyncAGIStart",
+                  "Channel"   => "SIP/1234-00000000",
+                  "Env"       => "agi_request%3A%20async%0Aagi_channel%3A%20SIP%2Fuserb-00000006%0Aagi_language%3A%20en%0Aagi_type%3A%20SIP%0Aagi_uniqueid%3A%201390303636.6%0Aagi_version%3A%2011.7.0%0Aagi_callerid%3A%20userb%0Aagi_calleridname%3A%20User%20B%0Aagi_callingpres%3A%200%0Aagi_callingani2%3A%200%0Aagi_callington%3A%200%0Aagi_callingtns%3A%200%0Aagi_dnid%3A%20unknown%0Aagi_rdnis%3A%20unknown%0Aagi_context%3A%20adhearsion-redirect%0Aagi_extension%3A%201%0Aagi_priority%3A%201%0Aagi_enhanced%3A%200.0%0Aagi_accountcode%3A%20%0Aagi_threadid%3A%20139696536876800%0A%0A",
+                  'Timestamp' => '1393368380.572575'
+              end
+
+              it "should use the AMI timestamp for the Rayo event" do
+                should_use_ami_timestamp_for_rayo_event
               end
             end
           end
@@ -736,6 +808,124 @@ module Punchblock
             end
           end
 
+          context 'with a BridgeEnter event' do
+            let(:bridge_uniqueid) { "1234-5678" }
+            let(:call_channel) { "SIP/foo" }
+            let :ami_event do
+              RubyAMI::Event.new 'BridgeEnter',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+            end
+
+            context 'when the event is received the first time' do
+              it 'sets an entry in translator.bridges' do
+                subject.process_ami_event ami_event
+                expect(translator.bridges[bridge_uniqueid]).to eq call_channel
+              end
+            end
+
+            context 'when the event is received a second time for the same BridgeUniqueid' do
+              let(:other_channel) { 'SIP/5678-00000000' }
+              let :other_call do
+                Call.new other_channel, translator, ami_client, connection
+              end
+              let(:other_call_id) { other_call.id }
+
+              let :command do
+                Punchblock::Command::Join.new call_uri: other_call_id
+              end
+
+              let :ami_event do
+                RubyAMI::Event.new 'BridgeEnter',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+              end
+
+              let :expected_joined do
+                Punchblock::Event::Joined.new target_call_id: subject.id,
+                  call_uri: other_call_id
+              end
+
+              let :expected_joined_other do
+                Punchblock::Event::Joined.new target_call_id: other_call_id,
+                  call_uri: subject.id
+              end
+
+              before do
+                translator.bridges[bridge_uniqueid] = other_channel
+                translator.register_call other_call
+
+                other_call.pending_joins[channel] = command
+                command.request!
+                expect(subject).to receive(:execute_agi_command).and_return code: 200
+                subject.execute_command command
+              end
+
+              it 'sends the correct Joined events' do
+                expect(translator).to receive(:handle_pb_event).with expected_joined
+                expect(translator).to receive(:handle_pb_event).with expected_joined_other
+                subject.process_ami_event ami_event
+                expect(command.response(0.5)).to eq(true)
+              end
+            end
+          end
+
+          context 'with a BridgeLeave event' do
+            let(:bridge_uniqueid) { "1234-5678" }
+            let(:call_channel) { "SIP/foo-1234" }
+            let :ami_event do
+              RubyAMI::Event.new 'BridgeLeave',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+            end
+
+            context 'when the event is received the first time' do
+              it 'sets an entry in translator.bridges' do
+                subject.process_ami_event ami_event
+                expect(translator.bridges[bridge_uniqueid + '_leave']).to eq call_channel
+              end
+            end
+
+            context 'when the event is received a second time for the same BridgeUniqueid' do
+              let(:other_channel) { 'SIP/5678-00000000' }
+              let :other_call do
+                Call.new other_channel, translator, ami_client, connection
+              end
+              let(:other_call_id) { other_call.id }
+
+              let :ami_event do
+                RubyAMI::Event.new 'BridgeLeave',
+                'Privilege' => "call,all",
+                'BridgeUniqueid'  => bridge_uniqueid,
+                'Channel'  => call_channel
+              end
+
+              let :expected_unjoined do
+                Punchblock::Event::Unjoined.new target_call_id: subject.id,
+                  call_uri: other_call_id
+              end
+
+              let :expected_unjoined_other do
+                Punchblock::Event::Unjoined.new target_call_id: other_call_id,
+                  call_uri: subject.id
+              end
+
+              before do
+                translator.bridges[bridge_uniqueid + '_leave'] = other_channel
+                translator.register_call other_call
+              end
+
+              it 'sends the correct Unjoined events' do
+                expect(translator).to receive(:handle_pb_event).with expected_unjoined
+                expect(translator).to receive(:handle_pb_event).with expected_unjoined_other
+                subject.process_ami_event ami_event
+              end
+            end
+          end
+
           context 'with a BridgeExec event' do
             let :ami_event do
               RubyAMI::Event.new 'BridgeExec',
@@ -794,10 +984,10 @@ module Punchblock
 
           context 'with a Bridge event' do
             let(:other_channel) { 'SIP/5678-00000000' }
-            let(:other_call_id) { 'def567' }
             let :other_call do
               Call.new other_channel, translator, ami_client, connection
             end
+            let(:other_call_id) { other_call.id }
 
             let :ami_event do
               RubyAMI::Event.new 'Bridge',
@@ -828,7 +1018,6 @@ module Punchblock
             before do
               translator.register_call other_call
               expect(translator).to receive(:call_for_channel).with(other_channel).and_return(other_call)
-              expect(other_call).to receive(:id).and_return other_call_id
             end
 
             context "of state 'Link'" do
@@ -1379,6 +1568,15 @@ module Punchblock
               subject.execute_command command
             end
 
+            context "when the other call doesn't exist" do
+              let(:other_call) { nil }
+
+              it "returns an error" do
+                subject.execute_command command
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup(:service_unavailable, "Could not find join party with address #{other_call_id}", subject.id))
+              end
+            end
+
             context "when the AMI command raises an error" do
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
@@ -1758,6 +1956,7 @@ module Punchblock
             end
           end
 
+
           describe 'when receiving an AsyncAGI event' do
             context 'of type Exec' do
               let(:ami_event) do
@@ -1771,11 +1970,27 @@ module Punchblock
 
               it 'should return the result' do
                 fut = Celluloid::Future.new { subject.execute_agi_command 'EXEC ANSWER' }
-
                 sleep 0.25
-
                 subject.process_ami_event ami_event
+                expect(fut.value).to eq({code: 200, result: 123, data: 'timeout'})
+              end
+            end
+          end
 
+          describe 'when receiving an Asterisk 13 AsyncAGIExec event' do
+            context 'without a subtype' do
+              let(:ami_event) do
+                RubyAMI::Event.new 'AsyncAGIExec',
+                  "Channel"    => channel,
+                  "CommandId"  => Punchblock.new_uuid,
+                  "Command"    => "EXEC ANSWER",
+                  "Result"     => "200%20result=123%20(timeout)%0A"
+              end
+
+              it 'should return the result' do
+                fut = Celluloid::Future.new { subject.execute_agi_command 'EXEC ANSWER' }
+                sleep 0.25
+                subject.process_ami_event ami_event
                 expect(fut.value).to eq({code: 200, result: 123, data: 'timeout'})
               end
             end

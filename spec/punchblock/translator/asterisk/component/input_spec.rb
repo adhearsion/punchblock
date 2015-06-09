@@ -108,7 +108,7 @@ module Punchblock
                 end
 
                 it "should not leave the recognizer running" do
-                  expect(Celluloid::Actor.all.map { |a| a.class }).not_to include(Punchblock::Translator::DTMFRecognizer)
+                  expect(Celluloid::Actor.all.any? { |a| a.class == Punchblock::Translator::DTMFRecognizer rescue false }).to eq(false)
                 end
 
                 context 'with an Asterisk 13 DTMFEnd event' do

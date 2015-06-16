@@ -54,10 +54,9 @@ module Punchblock
             end
           end
 
-          class Command
-            describe Complete::Success do
-              let :stanza do
-                <<-MESSAGE
+          describe Command::Complete::Success do
+            let :stanza do
+              <<-MESSAGE
 <complete xmlns="urn:xmpp:rayo:ext:1">
   <success xmlns="urn:xmpp:rayo:asterisk:agi:complete:1">
     <code>200</code>
@@ -65,16 +64,36 @@ module Punchblock
     <data>1187188485.0</data>
   </success>
 </complete>
-                MESSAGE
-              end
+              MESSAGE
+            end
 
-              subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
+            subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-              it { is_expected.to be_instance_of described_class }
+            it { is_expected.to be_instance_of described_class }
 
-              describe '#name' do
-                subject { super().name }
-                it { is_expected.to eq(:success) }
+            describe '#name' do
+              subject { super().name }
+              it { is_expected.to eq(:success) }
+            end
+
+            describe '#code' do
+              subject { super().code }
+              it { is_expected.to eq(200) }
+            end
+
+            describe '#result' do
+              subject { super().result }
+              it { is_expected.to eq(0) }
+            end
+
+            describe '#data' do
+              subject { super().data }
+              it { is_expected.to eq('1187188485.0') }
+            end
+
+            describe "when setting options in initializer" do
+              subject do
+                described_class.new code: 200, result: 0, data: '1187188485.0'
               end
 
               describe '#code' do
@@ -90,27 +109,6 @@ module Punchblock
               describe '#data' do
                 subject { super().data }
                 it { is_expected.to eq('1187188485.0') }
-              end
-
-              describe "when setting options in initializer" do
-                subject do
-                  Complete::Success.new code: 200, result: 0, data: '1187188485.0'
-                end
-
-                describe '#code' do
-                  subject { super().code }
-                  it { is_expected.to eq(200) }
-                end
-
-                describe '#result' do
-                  subject { super().result }
-                  it { is_expected.to eq(0) }
-                end
-
-                describe '#data' do
-                  subject { super().data }
-                  it { is_expected.to eq('1187188485.0') }
-                end
               end
             end
           end

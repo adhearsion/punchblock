@@ -105,11 +105,9 @@ module Punchblock
             end
           end
 
-          class Action
-            class Complete
-              describe Success do
-                let :stanza do
-                  <<-MESSAGE
+          describe Action::Complete::Success do
+            let :stanza do
+              <<-MESSAGE
 <complete xmlns="urn:xmpp:rayo:ext:1">
   <success xmlns="urn:xmpp:rayo:asterisk:ami:complete:1">
     <message>Originate successfully queued</message>
@@ -118,64 +116,62 @@ module Punchblock
     <attribute name="State" value="Ring"/>
   </success>
 </complete>
-                  MESSAGE
-                end
+              MESSAGE
+            end
 
-                subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
+            subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-                it { is_expected.to be_instance_of described_class }
+            it { is_expected.to be_instance_of described_class }
 
-                describe '#name' do
-                  subject { super().name }
-                  it { is_expected.to eq(:success) }
-                end
+            describe '#name' do
+              subject { super().name }
+              it { is_expected.to eq(:success) }
+            end
 
-                describe '#message' do
-                  subject { super().message }
-                  it { is_expected.to eq("Originate successfully queued") }
-                end
+            describe '#message' do
+              subject { super().message }
+              it { is_expected.to eq("Originate successfully queued") }
+            end
 
-                describe '#text_body' do
-                  subject { super().text_body }
-                  it { is_expected.to eq('Some thing happened') }
-                end
+            describe '#text_body' do
+              subject { super().text_body }
+              it { is_expected.to eq('Some thing happened') }
+            end
 
-                describe '#headers' do
-                  subject { super().headers }
-                  it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
-                end
+            describe '#headers' do
+              subject { super().headers }
+              it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
+            end
 
-                describe '#attributes' do
-                  subject { super().attributes }
-                  it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
-                end # For BC
+            describe '#attributes' do
+              subject { super().attributes }
+              it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
+            end # For BC
 
-                describe "when setting options in initializer" do
-                  subject do
-                    described_class.new message: 'Originate successfully queued', text_body: 'Some thing happened', headers: {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
-                  end
-
-                  describe '#message' do
-                    subject { super().message }
-                    it { is_expected.to eq('Originate successfully queued') }
-                  end
-
-                  describe '#text_body' do
-                    subject { super().text_body }
-                    it { is_expected.to eq('Some thing happened') }
-                  end
-
-                  describe '#headers' do
-                    subject { super().headers }
-                    it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
-                  end
-
-                  describe '#attributes' do
-                    subject { super().attributes }
-                    it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
-                  end # For BC
-                end
+            describe "when setting options in initializer" do
+              subject do
+                described_class.new message: 'Originate successfully queued', text_body: 'Some thing happened', headers: {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}
               end
+
+              describe '#message' do
+                subject { super().message }
+                it { is_expected.to eq('Originate successfully queued') }
+              end
+
+              describe '#text_body' do
+                subject { super().text_body }
+                it { is_expected.to eq('Some thing happened') }
+              end
+
+              describe '#headers' do
+                subject { super().headers }
+                it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
+              end
+
+              describe '#attributes' do
+                subject { super().attributes }
+                it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
+              end # For BC
             end
           end
         end

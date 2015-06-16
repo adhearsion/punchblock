@@ -7,7 +7,6 @@ module Punchblock
     OptionError = Class.new Punchblock::Error
 
     autoload :Asterisk
-    autoload :Freeswitch
 
     autoload :DTMFRecognizer
     autoload :InputComponent

@@ -68,7 +68,7 @@ module Punchblock
 
       context 'if the event can be associated with a source component' do
         before do
-          mock_event.stub :source => mock_component
+          allow(mock_event).to receive_messages :source => mock_component
           expect(mock_component).to receive(:add_event).with mock_event
         end
 
@@ -84,7 +84,7 @@ module Punchblock
 
       context 'if the event cannot be associated with a source component' do
         before do
-          mock_event.stub :source => nil
+          allow(mock_event).to receive_messages :source => nil
         end
 
         it 'should call registered event handlers' do

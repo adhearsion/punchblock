@@ -91,7 +91,7 @@ module Punchblock
 
       describe "with the reason" do
         [nil, :decline, :busy, :error].each do |reason|
-          describe reason do
+          describe reason.to_s do
             subject { described_class.new :reason => reason }
 
             describe '#reason' do

@@ -27,7 +27,7 @@ RSpec.configure do |config|
 
   config.before do
     @uuid = SecureRandom.uuid
-    Punchblock.stub new_request_id: @uuid
+    allow(Punchblock).to receive_messages new_request_id: @uuid
   end
 
   config.after :each do
@@ -47,8 +47,8 @@ def import_stanza(xml)
 end
 
 def stub_uuids(value)
-  RubyAMI.stub :new_uuid => value
-  Punchblock.stub :new_uuid => value
+  allow(RubyAMI).to receive_messages :new_uuid => value
+  allow(Punchblock).to receive_messages :new_uuid => value
 end
 
 # FIXME: change this to rayo_event?  It can be ambigous

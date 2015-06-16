@@ -132,7 +132,7 @@ module Punchblock
 
       describe "with a direction" do
         [nil, :duplex, :send, :recv].each do |direction|
-          describe direction do
+          describe direction.to_s do
             subject { described_class.new :direction => direction }
 
             describe '#direction' do

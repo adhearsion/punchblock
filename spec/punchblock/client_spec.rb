@@ -10,12 +10,12 @@ module Punchblock
 
     describe '#connection' do
       subject { super().connection }
-      it { should be connection }
+      it { is_expected.to be connection }
     end
 
     describe '#component_registry' do
       subject { super().component_registry }
-      it { should be_a Client::ComponentRegistry }
+      it { is_expected.to be_a Client::ComponentRegistry }
     end
 
     let(:call_id)         { 'abc123' }

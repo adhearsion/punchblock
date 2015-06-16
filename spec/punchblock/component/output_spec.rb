@@ -12,47 +12,47 @@ module Punchblock
       describe 'default values' do
         describe '#interrupt_on' do
           subject { super().interrupt_on }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#start_offset' do
           subject { super().start_offset }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#start_paused' do
           subject { super().start_paused }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#repeat_interval' do
           subject { super().repeat_interval }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#repeat_times' do
           subject { super().repeat_times }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#max_time' do
           subject { super().max_time }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#voice' do
           subject { super().voice }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#renderer' do
           subject { super().renderer }
-          it { should be nil }
+          it { is_expected.to be nil }
         end
 
         describe '#render_documents' do
           subject { super().render_documents }
-          it { should be == [] }
+          it { is_expected.to eq([]) }
         end
       end
 
@@ -78,47 +78,47 @@ module Punchblock
 
         describe '#interrupt_on' do
           subject { super().interrupt_on }
-          it { should be == :voice }
+          it { is_expected.to eq(:voice) }
         end
 
         describe '#start_offset' do
           subject { super().start_offset }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#start_paused' do
           subject { super().start_paused }
-          it { should be == false }
+          it { is_expected.to eq(false) }
         end
 
         describe '#repeat_interval' do
           subject { super().repeat_interval }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#repeat_times' do
           subject { super().repeat_times }
-          it { should be == 10 }
+          it { is_expected.to eq(10) }
         end
 
         describe '#max_time' do
           subject { super().max_time }
-          it { should be == 30000 }
+          it { is_expected.to eq(30000) }
         end
 
         describe '#voice' do
           subject { super().voice }
-          it { should be == 'allison' }
+          it { is_expected.to eq('allison') }
         end
 
         describe '#renderer' do
           subject { super().renderer }
-          it { should be == 'swift' }
+          it { is_expected.to eq('swift') }
         end
 
         describe '#render_documents' do
           subject { super().render_documents }
-          it { should be == [Output::Document.new(:value => ssml_doc)] }
+          it { is_expected.to eq([Output::Document.new(:value => ssml_doc)]) }
         end
 
         context "using #ssml=" do
@@ -128,7 +128,7 @@ module Punchblock
 
           describe '#render_documents' do
             subject { super().render_documents }
-            it { should be == [Output::Document.new(:value => ssml_doc)] }
+            it { is_expected.to eq([Output::Document.new(:value => ssml_doc)]) }
           end
         end
 
@@ -142,10 +142,10 @@ module Punchblock
 
           describe '#render_documents' do
             subject { super().render_documents }
-            it { should be == [
+            it { is_expected.to eq([
             Output::Document.new(:value => ssml_doc),
             Output::Document.new(:value => ssml_doc(:cardinal))
-          ]}
+          ])}
           end
         end
 
@@ -159,7 +159,7 @@ module Punchblock
 
           describe '#render_documents' do
             subject { super().render_documents }
-            it { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])] }
+            it { is_expected.to eq([Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3'])]) }
           end
 
           describe "exporting to Rayo" do
@@ -182,13 +182,13 @@ module Punchblock
 
           describe '#render_documents' do
             subject { super().render_documents }
-            it { should == [] }
+            it { is_expected.to eq([]) }
           end
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should be == { 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' } }
+          it { is_expected.to eq({ 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' }) }
         end
 
         describe "exporting to Rayo" do
@@ -273,51 +273,51 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of Output }
+        it { is_expected.to be_instance_of Output }
 
         describe '#interrupt_on' do
           subject { super().interrupt_on }
-          it { should be == :voice }
+          it { is_expected.to eq(:voice) }
         end
 
         describe '#start_offset' do
           subject { super().start_offset }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#start_paused' do
           subject { super().start_paused }
-          it { should be == false }
+          it { is_expected.to eq(false) }
         end
 
         describe '#repeat_interval' do
           subject { super().repeat_interval }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#repeat_times' do
           subject { super().repeat_times }
-          it { should be == 10 }
+          it { is_expected.to eq(10) }
         end
 
         describe '#max_time' do
           subject { super().max_time }
-          it { should be == 30000 }
+          it { is_expected.to eq(30000) }
         end
 
         describe '#voice' do
           subject { super().voice }
-          it { should be == 'allison' }
+          it { is_expected.to eq('allison') }
         end
 
         describe '#renderer' do
           subject { super().renderer }
-          it { should be == 'swift' }
+          it { is_expected.to eq('swift') }
         end
 
         describe '#render_documents' do
           subject { super().render_documents }
-          it { should be == [Output::Document.new(:value => ssml_doc), Output::Document.new(:value => ssml_doc)] }
+          it { is_expected.to eq([Output::Document.new(:value => ssml_doc), Output::Document.new(:value => ssml_doc)]) }
         end
 
         context "with a urilist" do
@@ -336,13 +336,13 @@ module Punchblock
 
           describe '#render_documents' do
             subject { super().render_documents }
-            it { should be == [Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'])] }
+            it { is_expected.to eq([Output::Document.new(content_type: 'text/uri-list', value: ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'])]) }
           end
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should be == { 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' } }
+          it { is_expected.to eq({ 'Jump-Size' => '2', 'Kill-On-Barge-In' => 'false' }) }
         end
       end
 
@@ -352,7 +352,7 @@ module Punchblock
 
           describe '#content_type' do
             subject { super().content_type }
-            it { should be == 'application/ssml+xml' }
+            it { is_expected.to eq('application/ssml+xml') }
           end
         end
 
@@ -361,20 +361,20 @@ module Punchblock
 
           describe '#content_type' do
             subject { super().content_type }
-            it { should be == 'application/ssml+xml' }
+            it { is_expected.to eq('application/ssml+xml') }
           end
 
           describe '#value' do
             subject { super().value }
-            it { should be == ssml_doc }
+            it { is_expected.to eq(ssml_doc) }
           end
 
           describe "comparison" do
             let(:document2) { Output::Document.new :value => ssml_doc }
             let(:document3) { Output::Document.new :value => ssml_doc(:normal) }
 
-            it { should be == document2 }
-            it { should_not be == document3 }
+            it { is_expected.to eq(document2) }
+            it { is_expected.not_to eq(document3) }
           end
         end
 
@@ -383,7 +383,7 @@ module Punchblock
 
           describe '#value' do
             subject { super().value }
-            it { should be == Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3') }
+            it { is_expected.to eq(Punchblock::URIList.new('http://example.com/hello.mp3', 'http://example.com/goodbye.mp3')) }
           end
 
           describe "comparison" do
@@ -392,10 +392,10 @@ module Punchblock
             let(:document4) { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/hello.mp3') }
             let(:document5) { Output::Document.new content_type: 'text/uri-list', value: Punchblock::URIList.new('http://example.com/goodbye.mp3', 'http://example.com/hello.mp3') }
 
-            it { should be == document2 }
-            it { should_not be == document3 }
-            it { should_not be == document4 }
-            it { should_not be == document5 }
+            it { is_expected.to eq(document2) }
+            it { is_expected.not_to eq(document3) }
+            it { is_expected.not_to eq(document4) }
+            it { is_expected.not_to eq(document5) }
           end
         end
 
@@ -406,12 +406,12 @@ module Punchblock
 
           describe '#url' do
             subject { super().url }
-            it { should be == url }
+            it { is_expected.to eq(url) }
           end
 
           describe '#content_type' do
             subject { super().content_type }
-            it { should be nil}
+            it { is_expected.to be nil}
           end
 
           describe "comparison" do
@@ -441,17 +441,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<pause xmlns="urn:xmpp:rayo:output:1"/>' }
+            it { is_expected.to eq('<pause xmlns="urn:xmpp:rayo:output:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -485,7 +485,7 @@ module Punchblock
 
           describe '#state_name' do
             subject { command.state_name }
-            it { should be == :paused }
+            it { is_expected.to eq(:paused) }
           end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -498,17 +498,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<resume xmlns="urn:xmpp:rayo:output:1"/>' }
+            it { is_expected.to eq('<resume xmlns="urn:xmpp:rayo:output:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -544,7 +544,7 @@ module Punchblock
 
           describe '#state_name' do
             subject { command.state_name }
-            it { should be == :executing }
+            it { is_expected.to eq(:executing) }
           end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -557,17 +557,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+            it { is_expected.to eq('<stop xmlns="urn:xmpp:rayo:ext:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -599,17 +599,17 @@ module Punchblock
 
             describe '#to_xml' do
               subject { super().to_xml }
-              it { should be == Nokogiri::XML('<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>').root.to_xml }
+              it { is_expected.to eq(Nokogiri::XML('<seek xmlns="urn:xmpp:rayo:output:1" direction="forward" amount="1500"/>').root.to_xml) }
             end
 
             describe '#component_id' do
               subject { super().component_id }
-              it { should be == 'abc123' }
+              it { is_expected.to eq('abc123') }
             end
 
             describe '#target_call_id' do
               subject { super().target_call_id }
-              it { should be == '123abc' }
+              it { is_expected.to eq('123abc') }
             end
           end
 
@@ -650,7 +650,7 @@ module Punchblock
 
             describe '#seek_status_name' do
               subject { command.seek_status_name }
-              it { should be == :seeking }
+              it { is_expected.to eq(:seeking) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -668,7 +668,7 @@ module Punchblock
 
             describe '#seek_status_name' do
               subject { super().seek_status_name }
-              it { should be == :not_seeking }
+              it { is_expected.to eq(:not_seeking) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -683,17 +683,17 @@ module Punchblock
 
             describe '#to_xml' do
               subject { super().to_xml }
-              it { should be == '<speed-up xmlns="urn:xmpp:rayo:output:1"/>' }
+              it { is_expected.to eq('<speed-up xmlns="urn:xmpp:rayo:output:1"/>') }
             end
 
             describe '#component_id' do
               subject { super().component_id }
-              it { should be == 'abc123' }
+              it { is_expected.to eq('abc123') }
             end
 
             describe '#target_call_id' do
               subject { super().target_call_id }
-              it { should be == '123abc' }
+              it { is_expected.to eq('123abc') }
             end
           end
 
@@ -742,7 +742,7 @@ module Punchblock
 
             describe '#speed_status_name' do
               subject { command.speed_status_name }
-              it { should be == :speeding_up }
+              it { is_expected.to eq(:speeding_up) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -755,17 +755,17 @@ module Punchblock
 
             describe '#to_xml' do
               subject { super().to_xml }
-              it { should be == '<speed-down xmlns="urn:xmpp:rayo:output:1"/>' }
+              it { is_expected.to eq('<speed-down xmlns="urn:xmpp:rayo:output:1"/>') }
             end
 
             describe '#component_id' do
               subject { super().component_id }
-              it { should be == 'abc123' }
+              it { is_expected.to eq('abc123') }
             end
 
             describe '#target_call_id' do
               subject { super().target_call_id }
-              it { should be == '123abc' }
+              it { is_expected.to eq('123abc') }
             end
           end
 
@@ -814,7 +814,7 @@ module Punchblock
 
             describe '#speed_status_name' do
               subject { command.speed_status_name }
-              it { should be == :slowing_down }
+              it { is_expected.to eq(:slowing_down) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -832,7 +832,7 @@ module Punchblock
 
             describe '#speed_status_name' do
               subject { command.speed_status_name }
-              it { should be == :not_speeding }
+              it { is_expected.to eq(:not_speeding) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -847,17 +847,17 @@ module Punchblock
 
             describe '#to_xml' do
               subject { super().to_xml }
-              it { should be == '<volume-up xmlns="urn:xmpp:rayo:output:1"/>' }
+              it { is_expected.to eq('<volume-up xmlns="urn:xmpp:rayo:output:1"/>') }
             end
 
             describe '#component_id' do
               subject { super().component_id }
-              it { should be == 'abc123' }
+              it { is_expected.to eq('abc123') }
             end
 
             describe '#target_call_id' do
               subject { super().target_call_id }
-              it { should be == '123abc' }
+              it { is_expected.to eq('123abc') }
             end
           end
 
@@ -906,7 +906,7 @@ module Punchblock
 
             describe '#volume_status_name' do
               subject { command.volume_status_name }
-              it { should be == :voluming_up }
+              it { is_expected.to eq(:voluming_up) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -919,17 +919,17 @@ module Punchblock
 
             describe '#to_xml' do
               subject { super().to_xml }
-              it { should be == '<volume-down xmlns="urn:xmpp:rayo:output:1"/>' }
+              it { is_expected.to eq('<volume-down xmlns="urn:xmpp:rayo:output:1"/>') }
             end
 
             describe '#component_id' do
               subject { super().component_id }
-              it { should be == 'abc123' }
+              it { is_expected.to eq('abc123') }
             end
 
             describe '#target_call_id' do
               subject { super().target_call_id }
-              it { should be == '123abc' }
+              it { is_expected.to eq('123abc') }
             end
           end
 
@@ -978,7 +978,7 @@ module Punchblock
 
             describe '#volume_status_name' do
               subject { command.volume_status_name }
-              it { should be == :voluming_down }
+              it { is_expected.to eq(:voluming_down) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -996,7 +996,7 @@ module Punchblock
 
             describe '#volume_status_name' do
               subject { command.volume_status_name }
-              it { should be == :not_voluming }
+              it { is_expected.to eq(:not_voluming) }
             end
 
             it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -1022,11 +1022,11 @@ module Punchblock
 
         subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-        it { should be_instance_of klass }
+        it { is_expected.to be_instance_of klass }
 
         describe '#name' do
           subject { super().name }
-          it { should be == element_name }
+          it { is_expected.to eq(element_name) }
         end
       end
     end

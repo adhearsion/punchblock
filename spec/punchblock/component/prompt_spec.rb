@@ -16,17 +16,17 @@ module Punchblock
 
         describe '#output' do
           subject { super().output }
-          it { should be == output }
+          it { is_expected.to eq(output) }
         end
 
         describe '#input' do
           subject { super().input }
-          it { should be == input }
+          it { is_expected.to eq(input) }
         end
 
         describe '#barge_in' do
           subject { super().barge_in }
-          it { should be_true }
+          it { is_expected.to be_truthy }
         end
 
         context "with barge-in unset" do
@@ -34,7 +34,7 @@ module Punchblock
 
           describe '#barge_in' do
             subject { super().barge_in }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
         end
 
@@ -43,12 +43,12 @@ module Punchblock
 
           describe '#output' do
             subject { super().output }
-            it { should be == Output.new(renderer: :foo) }
+            it { is_expected.to eq(Output.new(renderer: :foo)) }
           end
 
           describe '#input' do
             subject { super().input }
-            it { should be == Input.new(recognizer: :bar) }
+            it { is_expected.to eq(Input.new(recognizer: :bar)) }
           end
         end
 
@@ -58,7 +58,7 @@ module Punchblock
             expect(new_instance).to be_instance_of described_class
             expect(new_instance.output).to eq(output)
             expect(new_instance.input).to eq(input)
-            expect(new_instance.barge_in).to be_true
+            expect(new_instance.barge_in).to be_truthy
           end
 
           it "should render to a parent node if supplied" do
@@ -103,21 +103,21 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         describe '#barge_in' do
           subject { super().barge_in }
-          it { should be_true }
+          it { is_expected.to be_truthy }
         end
 
         describe '#output' do
           subject { super().output }
-          it { should be == Output.new(:voice => 'allison', :render_document => {:value => ssml}) }
+          it { is_expected.to eq(Output.new(:voice => 'allison', :render_document => {:value => ssml})) }
         end
 
         describe '#input' do
           subject { super().input }
-          it { should be == Input.new(:mode => :voice, :grammar => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'}) }
+          it { is_expected.to eq(Input.new(:mode => :voice, :grammar => {:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'})) }
         end
       end
 
@@ -136,17 +136,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+            it { is_expected.to eq('<stop xmlns="urn:xmpp:rayo:ext:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 

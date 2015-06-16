@@ -12,7 +12,7 @@ module Punchblock
 
     describe '#inspect' do
       subject { super().inspect }
-      it { should be == '#<Punchblock::ProtocolError: name=:item_not_found text="Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]" call_id="f6d437f4-1e18-457b-99f8-b5d853f50347" component_id="abc123">' }
+      it { is_expected.to eq('#<Punchblock::ProtocolError: name=:item_not_found text="Could not find call [id=f6d437f4-1e18-457b-99f8-b5d853f50347]" call_id="f6d437f4-1e18-457b-99f8-b5d853f50347" component_id="abc123">') }
     end
 
     describe ".exception" do
@@ -66,27 +66,27 @@ module Punchblock
     describe "comparison" do
       context "with the same name, text, call ID and component ID" do
         let(:comparison) { ProtocolError.new.setup name, text, call_id, component_id }
-        it { should be == comparison }
+        it { is_expected.to eq(comparison) }
       end
 
       context "with a different name" do
         let(:comparison) { ProtocolError.new.setup :foo, text, call_id, component_id }
-        it { should_not be == comparison }
+        it { is_expected.not_to eq(comparison) }
       end
 
       context "with a different text" do
         let(:comparison) { ProtocolError.new.setup name, 'foo', call_id, component_id }
-        it { should_not be == comparison }
+        it { is_expected.not_to eq(comparison) }
       end
 
       context "with a different call ID" do
         let(:comparison) { ProtocolError.new.setup name, text, 'foo', component_id }
-        it { should_not be == comparison }
+        it { is_expected.not_to eq(comparison) }
       end
 
       context "with a different component ID" do
         let(:comparison) { ProtocolError.new.setup name, text, call_id, 'foo' }
-        it { should_not be == comparison }
+        it { is_expected.not_to eq(comparison) }
       end
     end
   end

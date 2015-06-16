@@ -5,7 +5,7 @@ require 'spec_helper'
 describe Punchblock::URIList do
   describe '#size' do
     subject { super().size }
-    it { should == 0 }
+    it { is_expected.to eq(0) }
   end
 
   context "created with a set of entries" do
@@ -13,17 +13,17 @@ describe Punchblock::URIList do
 
     describe '#size' do
       subject { super().size }
-      it { should == 2 }
+      it { is_expected.to eq(2) }
     end
 
     describe '#to_ary' do
       subject { super().to_ary }
-      it { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+      it { is_expected.to eq(['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3']) }
     end
 
     describe '#to_s' do
       subject { super().to_s }
-      it { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+      it { is_expected.to eq("http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3") }
     end
   end
 
@@ -32,17 +32,17 @@ describe Punchblock::URIList do
 
     describe '#size' do
       subject { super().size }
-      it { should == 2 }
+      it { is_expected.to eq(2) }
     end
 
     describe '#to_ary' do
       subject { super().to_ary }
-      it { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+      it { is_expected.to eq(['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3']) }
     end
 
     describe '#to_s' do
       subject { super().to_s }
-      it { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+      it { is_expected.to eq("http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3") }
     end
   end
 
@@ -58,17 +58,17 @@ describe Punchblock::URIList do
 
     describe '#size' do
       subject { super().size }
-      it { should == 2 }
+      it { is_expected.to eq(2) }
     end
 
     describe '#to_ary' do
       subject { super().to_ary }
-      it { should == ['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3'] }
+      it { is_expected.to eq(['http://example.com/hello.mp3', 'http://example.com/goodbye.mp3']) }
     end
 
     describe '#to_s' do
       subject { super().to_s }
-      it { should == "http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3" }
+      it { is_expected.to eq("http://example.com/hello.mp3\nhttp://example.com/goodbye.mp3") }
     end
   end
 

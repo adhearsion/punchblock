@@ -15,12 +15,12 @@ module Punchblock
 
       describe '#ami_client' do
         subject { super().ami_client }
-        it { should be ami_client }
+        it { is_expected.to be ami_client }
       end
 
       describe '#connection' do
         subject { super().connection }
-        it { should be connection }
+        it { is_expected.to be connection }
       end
 
       before do
@@ -35,10 +35,10 @@ module Punchblock
           let(:call_id) { 'abc123' }
 
           it 'executes the call command' do
-            expect(subject.wrapped_object).to receive(:execute_call_command).with { |c|
+            expect(subject.wrapped_object).to receive(:execute_call_command).with(satisfy { |c|
               expect(c).to be command
               expect(c.target_call_id).to eq(call_id)
-            }
+            })
             subject.execute_command command, :call_id => call_id
           end
         end
@@ -48,10 +48,10 @@ module Punchblock
           let(:component_id)  { '123abc' }
 
           it 'executes the component command' do
-            expect(subject.wrapped_object).to receive(:execute_component_command).with { |c|
+            expect(subject.wrapped_object).to receive(:execute_component_command).with(satisfy { |c|
               expect(c).to be command
               expect(c.component_id).to eq(component_id)
-            }
+            })
             subject.execute_command command, :component_id => component_id
           end
         end

@@ -25,14 +25,14 @@ module Punchblock
       describe '#ami_client' do
         subject { connection.ami_client }
 
-        it { should be_a RubyAMIStreamProxy }
+        it { is_expected.to be_a RubyAMIStreamProxy }
       end
 
       describe '#ami_client' do
         describe '#stream' do
           subject { connection.ami_client.stream }
 
-          it { should be_a RubyAMI::Stream }
+          it { is_expected.to be_a RubyAMI::Stream }
         end
       end
 
@@ -49,13 +49,13 @@ module Punchblock
         end
 
         it 'rebuilds the RubyAMI::Stream if dead' do
-          pending
+          skip
           expect(subject.ami_client.async).to receive(:run).once do
             subject.ami_client.terminate
           end
           expect { subject.run }.to raise_error DisconnectedError
-          expect(subject.ami_client.alive?).to be_false
-          expect(subject).to receive(:new_ami_stream).once.and_return do
+          expect(subject.ami_client.alive?).to be_falsey
+          expect(subject).to receive(:new_ami_stream).once do
             expect(subject.ami_client.alive?).to be true
             expect(subject.ami_client.async).to receive(:run).once
           end

@@ -33,7 +33,7 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
       end
 
       describe "actions" do
@@ -51,17 +51,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+            it { is_expected.to eq('<stop xmlns="urn:xmpp:rayo:ext:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -107,32 +107,32 @@ module Punchblock
         describe "should make the fax data available" do
           subject { complete_node.fax }
 
-          it { should be_instance_of ReceiveFax::Fax }
+          it { is_expected.to be_instance_of ReceiveFax::Fax }
 
           describe '#url' do
             subject { super().url }
-            it { should be == 'http://shakespere.lit/faxes/fax1.tiff' }
+            it { is_expected.to eq('http://shakespere.lit/faxes/fax1.tiff') }
           end
 
           describe '#resolution' do
             subject { super().resolution }
-            it { should be == '595x841' }
+            it { is_expected.to eq('595x841') }
           end
 
           describe '#pages' do
             subject { super().pages }
-            it { should be == 3 }
+            it { is_expected.to eq(3) }
           end
 
           describe '#size' do
             subject { super().size }
-            it { should be == 12287492817 }
+            it { is_expected.to eq(12287492817) }
           end
         end
 
         describe '#fax_metadata' do
           subject { super().fax_metadata }
-          it { should == {'fax-transfer-rate' => '10000', 'foo' => 'true'} }
+          it { is_expected.to eq({'fax-transfer-rate' => '10000', 'foo' => 'true'}) }
         end
       end
     end

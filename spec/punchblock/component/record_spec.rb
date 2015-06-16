@@ -24,47 +24,47 @@ module Punchblock
 
         describe '#format' do
           subject { super().format }
-          it { should be == 'WAV' }
+          it { is_expected.to eq('WAV') }
         end
 
         describe '#start_beep' do
           subject { super().start_beep }
-          it { should be == true }
+          it { is_expected.to eq(true) }
         end
 
         describe '#stop_beep' do
           subject { super().stop_beep }
-          it { should be == false }
+          it { is_expected.to eq(false) }
         end
 
         describe '#start_paused' do
           subject { super().start_paused }
-          it { should be == false }
+          it { is_expected.to eq(false) }
         end
 
         describe '#max_duration' do
           subject { super().max_duration }
-          it { should be == 500000 }
+          it { is_expected.to eq(500000) }
         end
 
         describe '#initial_timeout' do
           subject { super().initial_timeout }
-          it { should be == 10000 }
+          it { is_expected.to eq(10000) }
         end
 
         describe '#final_timeout' do
           subject { super().final_timeout }
-          it { should be == 30000 }
+          it { is_expected.to eq(30000) }
         end
 
         describe '#direction' do
           subject { super().direction }
-          it { should be == :duplex }
+          it { is_expected.to eq(:duplex) }
         end
 
         describe '#mix' do
           subject { super().mix }
-          it { should be == true }
+          it { is_expected.to eq(true) }
         end
 
         describe "exporting to Rayo" do
@@ -110,51 +110,51 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of Record }
+        it { is_expected.to be_instance_of Record }
 
         describe '#format' do
           subject { super().format }
-          it { should be == 'WAV' }
+          it { is_expected.to eq('WAV') }
         end
 
         describe '#start_beep' do
           subject { super().start_beep }
-          it { should be == true }
+          it { is_expected.to eq(true) }
         end
 
         describe '#stop_beep' do
           subject { super().stop_beep }
-          it { should be == false }
+          it { is_expected.to eq(false) }
         end
 
         describe '#start_paused' do
           subject { super().start_paused }
-          it { should be == false }
+          it { is_expected.to eq(false) }
         end
 
         describe '#max_duration' do
           subject { super().max_duration }
-          it { should be == 500000 }
+          it { is_expected.to eq(500000) }
         end
 
         describe '#initial_timeout' do
           subject { super().initial_timeout }
-          it { should be == 10000 }
+          it { is_expected.to eq(10000) }
         end
 
         describe '#final_timeout' do
           subject { super().final_timeout }
-          it { should be == 30000 }
+          it { is_expected.to eq(30000) }
         end
 
         describe '#direction' do
           subject { super().direction }
-          it { should be == :duplex }
+          it { is_expected.to eq(:duplex) }
         end
 
         describe '#mix' do
           subject { super().mix }
-          it { should be == true }
+          it { is_expected.to eq(true) }
         end
       end
 
@@ -165,7 +165,7 @@ module Punchblock
 
             describe '#direction' do
               subject { super().direction }
-              it { should be == direction }
+              it { is_expected.to eq(direction) }
             end
           end
         end
@@ -175,7 +175,7 @@ module Punchblock
 
           describe '#direction' do
             subject { super().direction }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
         end
 
@@ -201,17 +201,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<pause xmlns="urn:xmpp:rayo:record:1"/>' }
+            it { is_expected.to eq('<pause xmlns="urn:xmpp:rayo:record:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -245,7 +245,7 @@ module Punchblock
 
           describe '#state_name' do
             subject { command.state_name }
-            it { should be == :paused }
+            it { is_expected.to eq(:paused) }
           end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -258,17 +258,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<resume xmlns="urn:xmpp:rayo:record:1"/>' }
+            it { is_expected.to eq('<resume xmlns="urn:xmpp:rayo:record:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -304,7 +304,7 @@ module Punchblock
 
           describe '#state_name' do
             subject { command.state_name }
-            it { should be == :executing }
+            it { is_expected.to eq(:executing) }
           end
 
           it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -347,17 +347,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+            it { is_expected.to eq('<stop xmlns="urn:xmpp:rayo:ext:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -400,32 +400,32 @@ module Punchblock
           describe "#reason" do
             subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-            it { should be_instance_of klass }
+            it { is_expected.to be_instance_of klass }
 
             describe '#name' do
               subject { super().name }
-              it { should be == element_name }
+              it { is_expected.to eq(element_name) }
             end
           end
 
           describe "#recording" do
             subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
-            it { should be_instance_of Record::Recording }
+            it { is_expected.to be_instance_of Record::Recording }
 
             describe '#uri' do
               subject { super().uri }
-              it { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+              it { is_expected.to eq("file:/tmp/rayo7451601434771683422.mp3") }
             end
 
             describe '#duration' do
               subject { super().duration }
-              it { should be == 34000 }
+              it { is_expected.to eq(34000) }
             end
 
             describe '#size' do
               subject { super().size }
-              it { should be == 23450 }
+              it { is_expected.to eq(23450) }
             end
           end
         end
@@ -444,22 +444,22 @@ module Punchblock
         describe "#reason" do
           subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-          it { should be_instance_of Event::Complete::Stop }
+          it { is_expected.to be_instance_of Event::Complete::Stop }
 
           describe '#name' do
             subject { super().name }
-            it { should be == :stop }
+            it { is_expected.to eq(:stop) }
           end
         end
 
         describe "#recording" do
           subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
-          it { should be_instance_of Record::Recording }
+          it { is_expected.to be_instance_of Record::Recording }
 
           describe '#uri' do
             subject { super().uri }
-            it { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+            it { is_expected.to eq("file:/tmp/rayo7451601434771683422.mp3") }
           end
         end
       end
@@ -477,22 +477,22 @@ module Punchblock
         describe "#reason" do
           subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-          it { should be_instance_of Event::Complete::Hangup }
+          it { is_expected.to be_instance_of Event::Complete::Hangup }
 
           describe '#name' do
             subject { super().name }
-            it { should be == :hangup }
+            it { is_expected.to eq(:hangup) }
           end
         end
 
         describe "#recording" do
           subject { RayoNode.from_xml(parse_stanza(stanza).root).recording }
 
-          it { should be_instance_of Record::Recording }
+          it { is_expected.to be_instance_of Record::Recording }
 
           describe '#uri' do
             subject { super().uri }
-            it { should be == "file:/tmp/rayo7451601434771683422.mp3" }
+            it { is_expected.to eq("file:/tmp/rayo7451601434771683422.mp3") }
           end
         end
       end

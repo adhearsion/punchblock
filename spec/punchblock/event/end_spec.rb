@@ -23,23 +23,23 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         it_should_behave_like 'event'
 
         describe '#reason' do
           subject { super().reason }
-          it { should be == :timeout }
+          it { is_expected.to eq(:timeout) }
         end
 
         describe '#platform_code' do
           subject { super().platform_code }
-          it { should be == '18' }
+          it { is_expected.to eq('18') }
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
 
         context "with no headers or reason provided" do
@@ -47,17 +47,17 @@ module Punchblock
 
           describe '#reason' do
             subject { super().reason }
-            it { should be_nil}
+            it { is_expected.to be_nil}
           end
 
           describe '#platform_code' do
             subject { super().platform_code }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
 
           describe '#headers' do
             subject { super().headers }
-            it { should == {} }
+            it { is_expected.to eq({}) }
           end
         end
       end
@@ -71,17 +71,17 @@ module Punchblock
 
         describe '#reason' do
           subject { super().reason }
-          it { should be == :hangup }
+          it { is_expected.to eq(:hangup) }
         end
 
         describe '#platform_code' do
           subject { super().platform_code }
-          it { should be == '18' }
+          it { is_expected.to eq('18') }
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
       end
     end

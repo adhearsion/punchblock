@@ -21,11 +21,11 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         describe '#headers' do
           subject { super().headers }
-          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
 
         context "with no headers provided" do
@@ -33,7 +33,7 @@ module Punchblock
 
           describe '#headers' do
             subject { super().headers }
-            it { should == {} }
+            it { is_expected.to eq({}) }
           end
         end
       end
@@ -43,7 +43,7 @@ module Punchblock
 
         describe '#headers' do
           subject { super().headers }
-          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
 
         describe "exporting to Rayo" do

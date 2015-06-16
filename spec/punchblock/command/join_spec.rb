@@ -14,22 +14,22 @@ module Punchblock
 
         describe '#call_uri' do
           subject { super().call_uri }
-          it { should be == 'abc123' }
+          it { is_expected.to eq('abc123') }
         end
 
         describe '#mixer_name' do
           subject { super().mixer_name }
-          it { should be == 'blah' }
+          it { is_expected.to eq('blah') }
         end
 
         describe '#direction' do
           subject { super().direction }
-          it { should be == :duplex }
+          it { is_expected.to eq(:duplex) }
         end
 
         describe '#media' do
           subject { super().media }
-          it { should be == :bridge }
+          it { is_expected.to eq(:bridge) }
         end
 
         context "with old call_id attribute" do
@@ -37,7 +37,7 @@ module Punchblock
 
           describe '#call_uri' do
             subject { super().call_uri }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
         end
 
@@ -83,26 +83,26 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         describe '#call_uri' do
           subject { super().call_uri }
-          it { should be == 'abc123' }
+          it { is_expected.to eq('abc123') }
         end
 
         describe '#mixer_name' do
           subject { super().mixer_name }
-          it { should be == 'blah' }
+          it { is_expected.to eq('blah') }
         end
 
         describe '#direction' do
           subject { super().direction }
-          it { should be == :duplex }
+          it { is_expected.to eq(:duplex) }
         end
 
         describe '#media' do
           subject { super().media }
-          it { should be == :bridge }
+          it { is_expected.to eq(:bridge) }
         end
 
         context "when no attributes are set" do
@@ -110,22 +110,22 @@ module Punchblock
 
           describe '#call_uri' do
             subject { super().call_uri }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
 
           describe '#mixer_name' do
             subject { super().mixer_name }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
 
           describe '#direction' do
             subject { super().direction }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
 
           describe '#media' do
             subject { super().media }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
         end
       end
@@ -137,7 +137,7 @@ module Punchblock
 
             describe '#direction' do
               subject { super().direction }
-              it { should be == direction }
+              it { is_expected.to eq(direction) }
             end
           end
         end
@@ -147,7 +147,7 @@ module Punchblock
 
           describe '#direction' do
             subject { super().direction }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
         end
 

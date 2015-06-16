@@ -309,7 +309,7 @@ module Punchblock
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    expect(latch.wait(2)).to be_true
+                    expect(latch.wait(2)).to be_truthy
                   end
                 end
               end
@@ -415,7 +415,7 @@ module Punchblock
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    expect(latch.wait(2)).to be_true
+                    expect(latch.wait(2)).to be_truthy
                   end
                 end
               end
@@ -719,7 +719,7 @@ module Punchblock
                         latch.countdown!
                       }
                       subject.execute
-                      expect(latch.wait(2)).to be_true
+                      expect(latch.wait(2)).to be_truthy
                     end
                   end
 
@@ -763,7 +763,7 @@ module Punchblock
                       stop_command = Punchblock::Component::Stop.new
                       stop_command.request!
                       subject.execute_command stop_command
-                      expect(latch.wait(2)).to be_true
+                      expect(latch.wait(2)).to be_truthy
                     end
 
                     context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
@@ -888,7 +888,7 @@ module Punchblock
                       stop_command = Punchblock::Component::Stop.new
                       stop_command.request!
                       subject.execute_command stop_command
-                      expect(latch.wait(2)).to be_true
+                      expect(latch.wait(2)).to be_truthy
                     end
                   end
                 end
@@ -1309,7 +1309,7 @@ module Punchblock
                       latch.countdown!
                     }
                     subject.execute
-                    expect(latch.wait(2)).to be_true
+                    expect(latch.wait(2)).to be_truthy
                   end
 
                   it 'should not execute further output after a stop command' do
@@ -1328,7 +1328,7 @@ module Punchblock
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    expect(latch.wait(2)).to be_true
+                    expect(latch.wait(2)).to be_truthy
                   end
 
                   context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
@@ -1475,7 +1475,7 @@ module Punchblock
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    expect(latch.wait(2)).to be_true
+                    expect(latch.wait(2)).to be_truthy
                   end
 
                   context "when the PLAYBACKSTATUS variable is set to 'FAILED'" do
@@ -1624,7 +1624,7 @@ module Punchblock
                     stop_command = Punchblock::Component::Stop.new
                     stop_command.request!
                     subject.execute_command stop_command
-                    expect(latch.wait(2)).to be_true
+                    expect(latch.wait(2)).to be_truthy
                   end
                 end
               end

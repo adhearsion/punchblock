@@ -16,13 +16,13 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         it_should_behave_like 'event'
 
         describe '#call_id' do
           subject { super().call_id }
-          it { should be == "x0yz4ye-lx7-6ai9njwvw8nsb" }
+          it { is_expected.to eq("x0yz4ye-lx7-6ai9njwvw8nsb") }
         end
       end
 
@@ -33,7 +33,7 @@ module Punchblock
 
         describe '#call_id' do
           subject { super().call_id }
-          it { should be == 'abc123' }
+          it { is_expected.to eq('abc123') }
         end
       end
     end

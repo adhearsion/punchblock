@@ -334,7 +334,7 @@ module Punchblock
             end
 
             [:foobar, :swift, :unimrcp].each do |renderer|
-              context renderer do
+              context renderer.to_s do
                 let(:output_command_opts) { { renderer: renderer } }
 
                 it "should return an error and not execute any actions" do
@@ -622,7 +622,7 @@ module Punchblock
           end
 
           describe 'Input#mode' do
-            pending
+            skip
           end
 
           describe 'Input#terminator' do
@@ -646,7 +646,7 @@ module Punchblock
           end
 
           describe 'Input#recognizer' do
-            pending
+            skip
           end
 
           describe 'Input#sensitivity' do
@@ -690,11 +690,11 @@ module Punchblock
           end
 
           describe 'Input#max-silence' do
-            pending
+            skip
           end
 
           describe 'Input#match-content-type' do
-            pending
+            skip
           end
 
           describe 'Input#language' do

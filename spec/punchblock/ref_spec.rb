@@ -14,11 +14,11 @@ module Punchblock
 
       subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-      it { should be_instance_of described_class }
+      it { is_expected.to be_instance_of described_class }
 
       describe '#target_call_id' do
         subject { super().target_call_id }
-        it { should be == '9f00061' }
+        it { is_expected.to eq('9f00061') }
       end
 
       context "when the URI isn't actually a URI" do
@@ -26,27 +26,27 @@ module Punchblock
 
         describe '#uri' do
           subject { super().uri }
-          it { should be == URI('fgh4590') }
+          it { is_expected.to eq(URI('fgh4590')) }
         end
 
         describe '#scheme' do
           subject { super().scheme }
-          it { should be == nil }
+          it { is_expected.to eq(nil) }
         end
 
         describe '#call_id' do
           subject { super().call_id }
-          it { should be == 'fgh4590' }
+          it { is_expected.to eq('fgh4590') }
         end
 
         describe '#domain' do
           subject { super().domain }
-          it { should be == nil }
+          it { is_expected.to eq(nil) }
         end
 
         describe '#component_id' do
           subject { super().component_id }
-          it { should be == 'fgh4590' }
+          it { is_expected.to eq('fgh4590') }
         end
       end
 
@@ -55,27 +55,27 @@ module Punchblock
 
         describe '#uri' do
           subject { super().uri }
-          it { should be == URI('xmpp:fgh4590@rayo.net/abc123') }
+          it { is_expected.to eq(URI('xmpp:fgh4590@rayo.net/abc123')) }
         end
 
         describe '#scheme' do
           subject { super().scheme }
-          it { should be == 'xmpp' }
+          it { is_expected.to eq('xmpp') }
         end
 
         describe '#call_id' do
           subject { super().call_id }
-          it { should be == 'fgh4590' }
+          it { is_expected.to eq('fgh4590') }
         end
 
         describe '#domain' do
           subject { super().domain }
-          it { should be == 'rayo.net' }
+          it { is_expected.to eq('rayo.net') }
         end
 
         describe '#component_id' do
           subject { super().component_id }
-          it { should be == 'abc123' }
+          it { is_expected.to eq('abc123') }
         end
       end
 
@@ -84,27 +84,27 @@ module Punchblock
 
         describe '#uri' do
           subject { super().uri }
-          it { should be == URI('asterisk:fgh4590') }
+          it { is_expected.to eq(URI('asterisk:fgh4590')) }
         end
 
         describe '#scheme' do
           subject { super().scheme }
-          it { should be == 'asterisk' }
+          it { is_expected.to eq('asterisk') }
         end
 
         describe '#call_id' do
           subject { super().call_id }
-          it { should be == 'fgh4590' }
+          it { is_expected.to eq('fgh4590') }
         end
 
         describe '#domain' do
           subject { super().domain }
-          it { should be == nil }
+          it { is_expected.to eq(nil) }
         end
 
         describe '#component_id' do
           subject { super().component_id }
-          it { should be == 'fgh4590' }
+          it { is_expected.to eq('fgh4590') }
         end
       end
     end
@@ -115,7 +115,7 @@ module Punchblock
 
       describe '#uri' do
         subject { super().uri }
-        it { should be == URI('xmpp:fgh4590@rayo.net/abc123') }
+        it { is_expected.to eq(URI('xmpp:fgh4590@rayo.net/abc123')) }
       end
 
       describe "exporting to Rayo" do

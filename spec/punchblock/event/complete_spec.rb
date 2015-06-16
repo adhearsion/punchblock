@@ -15,7 +15,7 @@ module Punchblock
         describe '#reason' do
           it "should set the reason" do
             subject.reason = reason
-            subject.reason.should == reason
+            expect(subject.reason).to eq(reason)
           end
         end
       end
@@ -85,13 +85,13 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         it_should_behave_like 'event'
 
         describe '#reason' do
           subject { super().reason }
-          it { should be_instance_of Complete::Stop }
+          it { is_expected.to be_instance_of Complete::Stop }
         end
       end
     end
@@ -107,11 +107,11 @@ module Punchblock
 
       subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-      it { should be_instance_of Complete::Stop }
+      it { is_expected.to be_instance_of Complete::Stop }
 
       describe '#name' do
         subject { super().name }
-        it { should be == :stop }
+        it { is_expected.to eq(:stop) }
       end
     end
 
@@ -126,11 +126,11 @@ module Punchblock
 
       subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-      it { should be_instance_of Complete::Hangup }
+      it { is_expected.to be_instance_of Complete::Hangup }
 
       describe '#name' do
         subject { super().name }
-        it { should be == :hangup }
+        it { is_expected.to eq(:hangup) }
       end
     end
 
@@ -147,16 +147,16 @@ module Punchblock
 
       subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-      it { should be_instance_of Complete::Error }
+      it { is_expected.to be_instance_of Complete::Error }
 
       describe '#name' do
         subject { super().name }
-        it { should be == :error }
+        it { is_expected.to eq(:error) }
       end
 
       describe '#details' do
         subject { super().details }
-        it { should be == "Something really bad happened" }
+        it { is_expected.to eq("Something really bad happened") }
       end
 
       describe "when setting options in initializer" do
@@ -166,7 +166,7 @@ module Punchblock
 
         describe '#details' do
           subject { super().details }
-          it { should be == 'Ooops' }
+          it { is_expected.to eq('Ooops') }
         end
       end
     end
@@ -174,7 +174,7 @@ module Punchblock
     describe Complete::Reason do
       subject { Complete::Reason.new name: "Foo" }
 
-      it { should be_a Punchblock::Event }
+      it { is_expected.to be_a Punchblock::Event }
     end
   end
 end # Punchblock

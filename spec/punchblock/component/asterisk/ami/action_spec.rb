@@ -29,25 +29,25 @@ module Punchblock
 
             subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-            it { should be_instance_of described_class }
+            it { is_expected.to be_instance_of described_class }
 
             it_should_behave_like 'event'
 
             describe '#name' do
               subject { super().name }
-              it { should be == 'Originate' }
+              it { is_expected.to eq('Originate') }
             end
 
             describe '#params' do
               subject { super().params }
-              it { should be == { 'Channel'   => 'SIP/101test',
+              it { is_expected.to eq({ 'Channel'   => 'SIP/101test',
                                            'Context'   => 'default',
                                            'Exten'     => '8135551212',
                                            'Priority'  => '1',
                                            'Callerid'  => '3125551212',
                                            'Timeout'   => '30000',
                                            'Variable'  => 'var1=23|var2=24|var3=25',
-                                           'Async'     => '1'} }
+                                           'Async'     => '1'}) }
             end
           end
 
@@ -79,12 +79,12 @@ module Punchblock
 
             describe '#name' do
               subject { super().name }
-              it { should be == 'Originate' }
+              it { is_expected.to eq('Originate') }
             end
 
             describe '#params' do
               subject { super().params }
-              it { should be == { 'Channel' => 'SIP/101test' } }
+              it { is_expected.to eq({ 'Channel' => 'SIP/101test' }) }
             end
 
             describe "exporting to Rayo" do
@@ -123,31 +123,31 @@ module Punchblock
 
                 subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-                it { should be_instance_of described_class }
+                it { is_expected.to be_instance_of described_class }
 
                 describe '#name' do
                   subject { super().name }
-                  it { should be == :success }
+                  it { is_expected.to eq(:success) }
                 end
 
                 describe '#message' do
                   subject { super().message }
-                  it { should be == "Originate successfully queued" }
+                  it { is_expected.to eq("Originate successfully queued") }
                 end
 
                 describe '#text_body' do
                   subject { super().text_body }
-                  it { should be == 'Some thing happened' }
+                  it { is_expected.to eq('Some thing happened') }
                 end
 
                 describe '#headers' do
                   subject { super().headers }
-                  it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                  it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
                 end
 
                 describe '#attributes' do
                   subject { super().attributes }
-                  it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                  it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
                 end # For BC
 
                 describe "when setting options in initializer" do
@@ -157,22 +157,22 @@ module Punchblock
 
                   describe '#message' do
                     subject { super().message }
-                    it { should be == 'Originate successfully queued' }
+                    it { is_expected.to eq('Originate successfully queued') }
                   end
 
                   describe '#text_body' do
                     subject { super().text_body }
-                    it { should be == 'Some thing happened' }
+                    it { is_expected.to eq('Some thing happened') }
                   end
 
                   describe '#headers' do
                     subject { super().headers }
-                    it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                    it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
                   end
 
                   describe '#attributes' do
                     subject { super().attributes }
-                    it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+                    it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
                   end # For BC
                 end
               end

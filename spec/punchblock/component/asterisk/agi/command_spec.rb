@@ -22,18 +22,18 @@ module Punchblock
 
             subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-            it { should be_instance_of Command }
+            it { is_expected.to be_instance_of Command }
 
             it_should_behave_like 'event'
 
             describe '#name' do
               subject { super().name }
-              it { should be == 'GET VARIABLE' }
+              it { is_expected.to eq('GET VARIABLE') }
             end
 
             describe '#params' do
               subject { super().params }
-              it { should be == ['UNIQUEID'] }
+              it { is_expected.to eq(['UNIQUEID']) }
             end
           end
 
@@ -45,12 +45,12 @@ module Punchblock
 
             describe '#name' do
               subject { super().name }
-              it { should be == 'GET VARIABLE' }
+              it { is_expected.to eq('GET VARIABLE') }
             end
 
             describe '#params' do
               subject { super().params }
-              it { should be == ['UNIQUEID'] }
+              it { is_expected.to eq(['UNIQUEID']) }
             end
           end
 
@@ -70,26 +70,26 @@ module Punchblock
 
               subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-              it { should be_instance_of described_class }
+              it { is_expected.to be_instance_of described_class }
 
               describe '#name' do
                 subject { super().name }
-                it { should be == :success }
+                it { is_expected.to eq(:success) }
               end
 
               describe '#code' do
                 subject { super().code }
-                it { should be == 200 }
+                it { is_expected.to eq(200) }
               end
 
               describe '#result' do
                 subject { super().result }
-                it { should be == 0 }
+                it { is_expected.to eq(0) }
               end
 
               describe '#data' do
                 subject { super().data }
-                it { should be == '1187188485.0' }
+                it { is_expected.to eq('1187188485.0') }
               end
 
               describe "when setting options in initializer" do
@@ -99,17 +99,17 @@ module Punchblock
 
                 describe '#code' do
                   subject { super().code }
-                  it { should be == 200 }
+                  it { is_expected.to eq(200) }
                 end
 
                 describe '#result' do
                   subject { super().result }
-                  it { should be == 0 }
+                  it { is_expected.to eq(0) }
                 end
 
                 describe '#data' do
                   subject { super().data }
-                  it { should be == '1187188485.0' }
+                  it { is_expected.to eq('1187188485.0') }
                 end
               end
             end

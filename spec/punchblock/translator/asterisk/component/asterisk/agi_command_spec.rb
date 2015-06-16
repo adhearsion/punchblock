@@ -80,7 +80,7 @@ module Punchblock
 
                 it 'should send the component node false' do
                   subject.execute
-                  expect(original_command.response(1)).to be_false
+                  expect(original_command.response(1)).to be_falsey
                 end
 
                 context "which is 'No such channel'" do

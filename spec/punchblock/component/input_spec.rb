@@ -27,57 +27,57 @@ module Punchblock
 
         describe '#grammars' do
           subject { super().grammars }
-          it { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom')] }
+          it { is_expected.to eq([Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom')]) }
         end
 
         describe '#mode' do
           subject { super().mode }
-          it { should be == :voice }
+          it { is_expected.to eq(:voice) }
         end
 
         describe '#terminator' do
           subject { super().terminator }
-          it { should be == '#' }
+          it { is_expected.to eq('#') }
         end
 
         describe '#max_silence' do
           subject { super().max_silence }
-          it { should be == 1000 }
+          it { is_expected.to eq(1000) }
         end
 
         describe '#recognizer' do
           subject { super().recognizer }
-          it { should be == 'default' }
+          it { is_expected.to eq('default') }
         end
 
         describe '#language' do
           subject { super().language }
-          it { should be == 'en-US' }
+          it { is_expected.to eq('en-US') }
         end
 
         describe '#initial_timeout' do
           subject { super().initial_timeout }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#inter_digit_timeout' do
           subject { super().inter_digit_timeout }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#recognition_timeout' do
           subject { super().recognition_timeout }
-          it { should be == 0 }
+          it { is_expected.to eq(0) }
         end
 
         describe '#sensitivity' do
           subject { super().sensitivity }
-          it { should be == 0.5 }
+          it { is_expected.to eq(0.5) }
         end
 
         describe '#min_confidence' do
           subject { super().min_confidence }
-          it { should be == 0.5 }
+          it { is_expected.to eq(0.5) }
         end
 
         context "with multiple grammars" do
@@ -90,10 +90,10 @@ module Punchblock
 
           describe '#grammars' do
             subject { super().grammars }
-            it { should be == [
+            it { is_expected.to eq([
             Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'),
             Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')
-          ]}
+          ])}
           end
         end
 
@@ -109,13 +109,13 @@ module Punchblock
 
           describe '#grammars' do
             subject { super().grammars }
-            it { should == [] }
+            it { is_expected.to eq([]) }
           end
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should be == { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' } }
+          it { is_expected.to eq({ 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' }) }
         end
 
         describe "exporting to Rayo" do
@@ -179,61 +179,61 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of Input }
+        it { is_expected.to be_instance_of Input }
 
         describe '#grammars' do
           subject { super().grammars }
-          it { should be == [Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'), Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')] }
+          it { is_expected.to eq([Input::Grammar.new(:value => '[5 DIGITS]', :content_type => 'application/grammar+custom'), Input::Grammar.new(:value => '[10 DIGITS]', :content_type => 'application/grammar+custom')]) }
         end
 
         describe '#mode' do
           subject { super().mode }
-          it { should be == :voice }
+          it { is_expected.to eq(:voice) }
         end
 
         describe '#terminator' do
           subject { super().terminator }
-          it { should be == '#' }
+          it { is_expected.to eq('#') }
         end
 
         describe '#max_silence' do
           subject { super().max_silence }
-          it { should be == 1000 }
+          it { is_expected.to eq(1000) }
         end
 
         describe '#recognizer' do
           subject { super().recognizer }
-          it { should be == 'default' }
+          it { is_expected.to eq('default') }
         end
 
         describe '#language' do
           subject { super().language }
-          it { should be == 'en-US' }
+          it { is_expected.to eq('en-US') }
         end
 
         describe '#initial_timeout' do
           subject { super().initial_timeout }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#inter_digit_timeout' do
           subject { super().inter_digit_timeout }
-          it { should be == 2000 }
+          it { is_expected.to eq(2000) }
         end
 
         describe '#recognition_timeout' do
           subject { super().recognition_timeout }
-          it { should be == 0 }
+          it { is_expected.to eq(0) }
         end
 
         describe '#sensitivity' do
           subject { super().sensitivity }
-          it { should be == 0.5 }
+          it { is_expected.to eq(0.5) }
         end
 
         describe '#min_confidence' do
           subject { super().min_confidence }
-          it { should be == 0.5 }
+          it { is_expected.to eq(0.5) }
         end
 
         context "without any grammars" do
@@ -241,13 +241,13 @@ module Punchblock
 
           describe '#grammars' do
             subject { super().grammars }
-            it { should be == [] }
+            it { is_expected.to eq([]) }
           end
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should be == { 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' } }
+          it { is_expected.to eq({ 'Confidence-Threshold' => '0.5', 'Sensitivity-Level' => '0.2' }) }
         end
       end
 
@@ -267,7 +267,7 @@ module Punchblock
 
           describe '#content_type' do
             subject { super().content_type }
-            it { should be == 'application/srgs+xml' }
+            it { is_expected.to eq('application/srgs+xml') }
           end
         end
 
@@ -276,20 +276,20 @@ module Punchblock
 
           describe '#content_type' do
             subject { super().content_type }
-            it { should be == 'application/srgs+xml' }
+            it { is_expected.to eq('application/srgs+xml') }
           end
 
           describe '#value' do
             subject { super().value }
-            it { should be == grxml_doc }
+            it { is_expected.to eq(grxml_doc) }
           end
 
           describe "comparison" do
             let(:grammar2) { Input::Grammar.new :value => grxml_doc }
             let(:grammar3) { Input::Grammar.new :value => grxml_doc(:voice) }
 
-            it { should be == grammar2 }
-            it { should_not be == grammar3 }
+            it { is_expected.to eq(grammar2) }
+            it { is_expected.not_to eq(grammar3) }
           end
 
           it "has children nested inside" do
@@ -304,12 +304,12 @@ module Punchblock
 
           describe '#url' do
             subject { super().url }
-            it { should be == url }
+            it { is_expected.to eq(url) }
           end
 
           describe '#content_type' do
             subject { super().content_type }
-            it { should be nil}
+            it { is_expected.to be nil}
           end
 
           describe "comparison" do
@@ -347,17 +347,17 @@ module Punchblock
 
           describe '#to_xml' do
             subject { super().to_xml }
-            it { should be == '<stop xmlns="urn:xmpp:rayo:ext:1"/>' }
+            it { is_expected.to eq('<stop xmlns="urn:xmpp:rayo:ext:1"/>') }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == 'abc123' }
+            it { is_expected.to eq('abc123') }
           end
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == '123abc' }
+            it { is_expected.to eq('123abc') }
           end
         end
 
@@ -422,41 +422,41 @@ module Punchblock
 
         subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-        it { should be_instance_of Input::Complete::Match }
+        it { is_expected.to be_instance_of Input::Complete::Match }
 
         describe '#name' do
           subject { super().name }
-          it { should be == :match }
+          it { is_expected.to eq(:match) }
         end
 
         describe '#content_type' do
           subject { super().content_type }
-          it { should be == 'application/nlsml+xml' }
+          it { is_expected.to eq('application/nlsml+xml') }
         end
 
         describe '#nlsml' do
           subject { super().nlsml }
-          it { should be == expected_nlsml }
+          it { is_expected.to eq(expected_nlsml) }
         end
 
         describe '#mode' do
           subject { super().mode }
-          it { should be == :voice }
+          it { is_expected.to eq(:voice) }
         end
 
         describe '#confidence' do
           subject { super().confidence }
-          it { should be == 0.6 }
+          it { is_expected.to eq(0.6) }
         end
 
         describe '#interpretation' do
           subject { super().interpretation }
-          it { should be == { airline: { to_city: 'Pittsburgh' } } }
+          it { is_expected.to eq({ airline: { to_city: 'Pittsburgh' } }) }
         end
 
         describe '#utterance' do
           subject { super().utterance }
-          it { should be == 'I want to go to Pittsburgh' }
+          it { is_expected.to eq('I want to go to Pittsburgh') }
         end
 
         describe "when creating from an NLSML document" do
@@ -466,32 +466,32 @@ module Punchblock
 
           describe '#content_type' do
             subject { super().content_type }
-            it { should be == 'application/nlsml+xml' }
+            it { is_expected.to eq('application/nlsml+xml') }
           end
 
           describe '#nlsml' do
             subject { super().nlsml }
-            it { should be == expected_nlsml }
+            it { is_expected.to eq(expected_nlsml) }
           end
 
           describe '#mode' do
             subject { super().mode }
-            it { should be == :voice }
+            it { is_expected.to eq(:voice) }
           end
 
           describe '#confidence' do
             subject { super().confidence }
-            it { should be == 0.6 }
+            it { is_expected.to eq(0.6) }
           end
 
           describe '#interpretation' do
             subject { super().interpretation }
-            it { should be == { airline: { to_city: 'Pittsburgh' } } }
+            it { is_expected.to eq({ airline: { to_city: 'Pittsburgh' } }) }
           end
 
           describe '#utterance' do
             subject { super().utterance }
-            it { should be == 'I want to go to Pittsburgh' }
+            it { is_expected.to eq('I want to go to Pittsburgh') }
           end
         end
 
@@ -563,11 +563,11 @@ module Punchblock
 
         subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-        it { should be_instance_of Input::Complete::NoMatch }
+        it { is_expected.to be_instance_of Input::Complete::NoMatch }
 
         describe '#name' do
           subject { super().name }
-          it { should be == :nomatch }
+          it { is_expected.to eq(:nomatch) }
         end
       end
 
@@ -582,11 +582,11 @@ module Punchblock
 
         subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-        it { should be_instance_of Input::Complete::NoInput }
+        it { is_expected.to be_instance_of Input::Complete::NoInput }
 
         describe '#name' do
           subject { super().name }
-          it { should be == :noinput }
+          it { is_expected.to eq(:noinput) }
         end
       end
 
@@ -599,27 +599,27 @@ module Punchblock
 
         subject { RayoNode.from_xml(parse_stanza(stanza).root) }
 
-        it { should be_instance_of Input::Signal }
-        it { should be_a Punchblock::Event }
+        it { is_expected.to be_instance_of Input::Signal }
+        it { is_expected.to be_a Punchblock::Event }
 
         describe '#name' do
           subject { super().name }
-          it { should be == :signal }
+          it { is_expected.to eq(:signal) }
         end
 
         describe '#type' do
           subject { super().type }
-          it { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+          it { is_expected.to eq('urn:xmpp:rayo:cpa:beep:1') }
         end
 
         describe '#duration' do
           subject { super().duration }
-          it { should be == 1000 }
+          it { is_expected.to eq(1000) }
         end
 
         describe '#value' do
           subject { super().value }
-          it { should be == '8000' }
+          it { is_expected.to eq('8000') }
         end
 
         describe "when creating from options" do
@@ -629,22 +629,22 @@ module Punchblock
 
           describe '#name' do
             subject { super().name }
-            it { should be == :signal }
+            it { is_expected.to eq(:signal) }
           end
 
           describe '#type' do
             subject { super().type }
-            it { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+            it { is_expected.to eq('urn:xmpp:rayo:cpa:beep:1') }
           end
 
           describe '#duration' do
             subject { super().duration }
-            it { should be == 1000 }
+            it { is_expected.to eq(1000) }
           end
 
           describe '#value' do
             subject { super().value }
-            it { should be == '8000' }
+            it { is_expected.to eq('8000') }
           end
         end
 
@@ -659,26 +659,26 @@ module Punchblock
 
           subject { RayoNode.from_xml(parse_stanza(stanza).root).reason }
 
-          it { should be_instance_of Input::Signal }
+          it { is_expected.to be_instance_of Input::Signal }
 
           describe '#name' do
             subject { super().name }
-            it { should be == :signal }
+            it { is_expected.to eq(:signal) }
           end
 
           describe '#type' do
             subject { super().type }
-            it { should be == 'urn:xmpp:rayo:cpa:beep:1' }
+            it { is_expected.to eq('urn:xmpp:rayo:cpa:beep:1') }
           end
 
           describe '#duration' do
             subject { super().duration }
-            it { should be == 1000 }
+            it { is_expected.to eq(1000) }
           end
 
           describe '#value' do
             subject { super().value }
-            it { should be == '8000' }
+            it { is_expected.to eq('8000') }
           end
         end
 

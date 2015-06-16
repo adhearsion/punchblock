@@ -15,7 +15,7 @@ module Punchblock
 
       describe '#render_documents' do
         subject { super().render_documents }
-        it { should be == [SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])] }
+        it { is_expected.to eq([SendFax::FaxDocument.new(url: 'http://example.com/faxes/document.tiff', pages: [1..4,5,7..9])]) }
       end
 
       describe "exporting to Rayo" do
@@ -52,7 +52,7 @@ module Punchblock
 
         describe '#render_documents' do
           subject { super().render_documents }
-          it { should be == [SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])] }
+          it { is_expected.to eq([SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])]) }
         end
 
         context "without optional attributes" do
@@ -66,7 +66,7 @@ module Punchblock
 
           describe '#render_documents' do
             subject { super().render_documents }
-            it { should be == [SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff')] }
+            it { is_expected.to eq([SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff')]) }
           end
         end
       end
@@ -81,22 +81,22 @@ module Punchblock
 
       describe '#url' do
         subject { super().url }
-        it { should == 'http://shakespere.lit/my_fax.tiff' }
+        it { is_expected.to eq('http://shakespere.lit/my_fax.tiff') }
       end
 
       describe '#identity' do
         subject { super().identity }
-        it { should == '+14045555555' }
+        it { is_expected.to eq('+14045555555') }
       end
 
       describe '#header' do
         subject { super().header }
-        it { should == 'Hello world' }
+        it { is_expected.to eq('Hello world') }
       end
 
       describe '#pages' do
         subject { super().pages }
-        it { should == [1..4,5,7..9] }
+        it { is_expected.to eq([1..4,5,7..9]) }
       end
 
       context "without optional attributes" do
@@ -104,44 +104,44 @@ module Punchblock
 
         describe '#url' do
           subject { super().url }
-          it { should == 'http://shakespere.lit/my_fax.tiff' }
+          it { is_expected.to eq('http://shakespere.lit/my_fax.tiff') }
         end
 
         describe '#identity' do
           subject { super().identity }
-          it { should be_nil }
+          it { is_expected.to be_nil }
         end
 
         describe '#header' do
           subject { super().header }
-          it { should be_nil }
+          it { is_expected.to be_nil }
         end
 
         describe '#pages' do
           subject { super().pages }
-          it { should be_nil }
+          it { is_expected.to be_nil }
         end
       end
 
       describe "comparison" do
         it "should be the same with the same attributes" do
-          should be == SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])
+          is_expected.to eq(SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9]))
         end
 
         it "should be different with a different url" do
-          should_not be == SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_other_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9])
+          is_expected.not_to eq(SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_other_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,7..9]))
         end
 
         it "should be different with a different identity" do
-          should_not be == SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555556', header: 'Hello world', pages: [1..4,5,7..9])
+          is_expected.not_to eq(SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555556', header: 'Hello world', pages: [1..4,5,7..9]))
         end
 
         it "should be different with a different header" do
-          should_not be == SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello Paul', pages: [1..4,5,7..9])
+          is_expected.not_to eq(SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello Paul', pages: [1..4,5,7..9]))
         end
 
         it "should be different with a different pages" do
-          should_not be == SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,6..9])
+          is_expected.not_to eq(SendFax::FaxDocument.new(url: 'http://shakespere.lit/my_fax.tiff', identity: '+14045555555', header: 'Hello world', pages: [1..4,5,6..9]))
         end
       end
     end

@@ -9,7 +9,7 @@ module Punchblock
         Class.new(described_class) { register 'foo'}.new
       end
 
-      it { should be_new }
+      it { is_expected.to be_new }
 
       describe "#add_event" do
         let(:event) { Event::Complete.new }

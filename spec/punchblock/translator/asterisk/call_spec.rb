@@ -64,22 +64,22 @@ module Punchblock
 
         describe '#id' do
           subject { super().id }
-          it { should be_a String }
+          it { is_expected.to be_a String }
         end
 
         describe '#channel' do
           subject { super().channel }
-          it { should be == channel }
+          it { is_expected.to eq(channel) }
         end
 
         describe '#translator' do
           subject { super().translator }
-          it { should be translator }
+          it { is_expected.to be translator }
         end
 
         describe '#agi_env' do
           subject { super().agi_env }
-          it { should be == agi_env }
+          it { is_expected.to eq(agi_env) }
         end
 
         before { allow(translator).to receive :handle_pb_event }
@@ -571,7 +571,7 @@ module Punchblock
 
           def answered_should_be_true
             subject.process_ami_event ami_event
-            expect(subject.answered?).to be_true
+            expect(subject.answered?).to be_truthy
           end
 
           def should_only_send_one_answered_event
@@ -689,7 +689,7 @@ module Punchblock
 
               it '#answered? should return false' do
                 subject.process_ami_event ami_event
-                expect(subject.answered?).to be_false
+                expect(subject.answered?).to be_falsey
               end
 
               context "when the AMI event has a timestamp" do
@@ -1373,18 +1373,18 @@ module Punchblock
             end
 
             it "should send an EXEC Transfer AGI command" do
-              subject.should_receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
+              expect(subject).to receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
               subject.execute_command command
-              command.response(0.5).should be true
+              expect(command.response(0.5)).to be true
             end
 
             context "when TRANSFERSTATUS is 'FAILURE'" do
               let(:transferstatus) { 'FAILURE' }
 
               it "should return an error" do
-                subject.should_receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
+                expect(subject).to receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', 'TRANSFERSTATUS was FAILURE', subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', 'TRANSFERSTATUS was FAILURE', subject.id))
               end
             end
 
@@ -1392,9 +1392,9 @@ module Punchblock
               let(:transferstatus) { 'UNSUPPORTED' }
 
               it "should return an error" do
-                subject.should_receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
+                expect(subject).to receive(:execute_agi_command).with('EXEC Transfer', 'other@place.com').and_return code: 200
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', 'TRANSFERSTATUS was UNSUPPORTED', subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', 'TRANSFERSTATUS was UNSUPPORTED', subject.id))
               end
             end
 
@@ -1402,11 +1402,11 @@ module Punchblock
               let(:message) { 'Some error' }
               let(:error)   { RubyAMI::Error.new.tap { |e| e.message = message } }
 
-              before { subject.should_receive(:execute_agi_command).and_raise error }
+              before { expect(subject).to receive(:execute_agi_command).and_raise error }
 
               it "should return an error with the message" do
                 subject.execute_command command
-                command.response(0.5).should be == ProtocolError.new.setup('error', message, subject.id)
+                expect(command.response(0.5)).to eq(ProtocolError.new.setup('error', message, subject.id))
               end
 
               context "because the channel is gone" do
@@ -1414,7 +1414,7 @@ module Punchblock
 
                 it "should return an :item_not_found event for the call" do
                   subject.execute_command command
-                  command.response(0.5).should be == ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id)
+                  expect(command.response(0.5)).to eq(ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{subject.id}", subject.id))
                 end
               end
             end
@@ -1628,7 +1628,7 @@ module Punchblock
 
               subject.execute_command command
 
-              expect(command.response(1)).to be_true
+              expect(command.response(1)).to be_truthy
             end
 
             it "executes the unjoin through redirection, on the subject call and the other call" do

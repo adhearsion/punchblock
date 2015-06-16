@@ -23,23 +23,23 @@ module Punchblock
 
             subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-            it { should be_instance_of Event }
+            it { is_expected.to be_instance_of Event }
 
             it_should_behave_like 'event'
 
             describe '#name' do
               subject { super().name }
-              it { should be == 'Newchannel' }
+              it { is_expected.to eq('Newchannel') }
             end
 
             describe '#headers' do
               subject { super().headers }
-              it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+              it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
             end
 
             describe '#attributes' do
               subject { super().attributes }
-              it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+              it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
             end # For BC
           end
 
@@ -51,17 +51,17 @@ module Punchblock
 
             describe '#name' do
               subject { super().name }
-              it { should be == 'Newchannel' }
+              it { is_expected.to eq('Newchannel') }
             end
 
             describe '#headers' do
               subject { super().headers }
-              it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+              it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
             end
 
             describe '#attributes' do
               subject { super().attributes }
-              it { should be == {'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'} }
+              it { is_expected.to eq({'Channel' => 'SIP/101-3f3f', 'State' => 'Ring'}) }
             end # For BC
 
             describe "exporting to Rayo" do

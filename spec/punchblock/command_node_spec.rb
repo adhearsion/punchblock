@@ -12,12 +12,12 @@ module Punchblock
 
       describe '#state_name' do
         subject { super().state_name }
-        it { should be == :new }
+        it { is_expected.to eq(:new) }
       end
 
       describe '#request_id' do
         subject { super().request_id }
-        it { should be == @uuid }
+        it { is_expected.to eq(@uuid) }
       end
 
       describe "#new" do
@@ -28,12 +28,12 @@ module Punchblock
 
           describe '#target_call_id' do
             subject { super().target_call_id }
-            it { should be == call_id }
+            it { is_expected.to eq(call_id) }
           end
 
           describe '#component_id' do
             subject { super().component_id }
-            it { should be == component_id }
+            it { is_expected.to eq(component_id) }
           end
         end
       end
@@ -43,7 +43,7 @@ module Punchblock
 
         describe '#state_name' do
           subject { command.state_name }
-          it { should be == :requested }
+          it { is_expected.to eq(:requested) }
         end
 
         it "should raise a StateMachine::InvalidTransition when received a second time" do
@@ -66,7 +66,7 @@ module Punchblock
 
           describe '#state_name' do
             subject { super().state_name }
-            it { should be == :executing }
+            it { is_expected.to eq(:executing) }
           end
         end
       end
@@ -80,7 +80,7 @@ module Punchblock
 
         describe '#state_name' do
           subject { super().state_name }
-          it { should be == :complete }
+          it { is_expected.to eq(:complete) }
         end
 
         it "should raise a StateMachine::InvalidTransition when received a second time" do

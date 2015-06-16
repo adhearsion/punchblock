@@ -55,12 +55,12 @@ end
 shared_examples_for 'event' do
   describe '#target_call_id' do
     subject { super().target_call_id }
-    it { should be == '9f00061' }
+    it { is_expected.to eq('9f00061') }
   end
 
   describe '#component_id' do
     subject { super().component_id }
-    it { should be == '1' }
+    it { is_expected.to eq('1') }
   end
 end
 

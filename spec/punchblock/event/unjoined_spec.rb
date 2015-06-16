@@ -14,23 +14,23 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         it_should_behave_like 'event'
 
         describe '#call_uri' do
           subject { super().call_uri }
-          it { should be == 'b' }
+          it { is_expected.to eq('b') }
         end
 
         describe '#call_id' do
           subject { super().call_id }
-          it { should be == 'b' }
+          it { is_expected.to eq('b') }
         end
 
         describe '#mixer_name' do
           subject { super().mixer_name }
-          it { should be == 'm' }
+          it { is_expected.to eq('m') }
         end
       end
 
@@ -39,12 +39,12 @@ module Punchblock
 
         describe '#call_id' do
           subject { super().call_id }
-          it { should be == 'abc123' }
+          it { is_expected.to eq('abc123') }
         end
 
         describe '#mixer_name' do
           subject { super().mixer_name }
-          it { should be == 'blah' }
+          it { is_expected.to eq('blah') }
         end
       end
     end

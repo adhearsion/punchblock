@@ -24,7 +24,7 @@ module Punchblock
 
           describe '#root_domain' do
             subject { super().root_domain }
-            it { should be == 'app.rayo.net' }
+            it { is_expected.to eq('app.rayo.net') }
           end
 
           describe '#new_call_uri' do
@@ -39,7 +39,7 @@ module Punchblock
 
           describe '#root_domain' do
             subject { super().root_domain }
-            it { should be == 'rayo.org' }
+            it { is_expected.to eq('rayo.org') }
           end
 
           describe '#new_call_uri' do
@@ -54,7 +54,7 @@ module Punchblock
 
           describe '#root_domain' do
             subject { super().root_domain }
-            it { should be == 'rayo.org' }
+            it { is_expected.to eq('rayo.org') }
           end
 
           describe '#new_call_uri' do
@@ -79,7 +79,7 @@ module Punchblock
       end
 
       it "looking up original command by command ID" do
-        pending
+        skip
         offer = Event::Offer.new
         offer.call_id = '9f00061'
         offer.to = 'sip:whatever@127.0.0.1'
@@ -140,11 +140,11 @@ module Punchblock
         let(:command) { Punchblock::Command::Answer.new request_id: 'fooobarrr', target_call_id: 'foo', domain: 'bar.com' }
 
         it "should write an IQ containing the command to the socket" do
-          expect(client).to receive(:write).once.with { |stanza|
+          expect(client).to receive(:write).once.with(satisfy { |stanza|
             expect(stanza).to be_a Blather::Stanza::Iq
             expect(stanza.to).to eq('foo@bar.com')
             expect(stanza.type).to eq(:set)
-          }
+          })
           connection.write command
         end
 
@@ -154,54 +154,54 @@ module Punchblock
         end
 
         it "should use the command's request_id as the ID id" do
-          expect(client).to receive(:write).once.with { |stanza|
+          expect(client).to receive(:write).once.with(satisfy { |stanza|
             expect(stanza.id).to eq('fooobarrr')
-          }
+          })
           connection.write command
         end
       end
 
       it 'should send a "Chat" presence when ready' do
-        expect(client).to receive(:write).once.with { |stanza|
+        expect(client).to receive(:write).once.with(satisfy { |stanza|
           expect(stanza.to).to eq('rayo.net')
           expect(stanza).to be_a Blather::Stanza::Presence::Status
           expect(stanza.chat?).to be true
-        }
+        })
         connection.ready!
       end
 
       it 'should send a "Do Not Disturb" presence when not_ready' do
-        expect(client).to receive(:write).once.with { |stanza|
+        expect(client).to receive(:write).once.with(satisfy { |stanza|
           expect(stanza.to).to eq('rayo.net')
           expect(stanza).to be_a Blather::Stanza::Presence::Status
           expect(stanza.dnd?).to be true
-        }
+        })
         connection.not_ready!
       end
 
       describe '#send_message' do
         it 'should send a "normal" message to the given user and domain' do
-          expect(client).to receive(:write).once.with { |stanza|
+          expect(client).to receive(:write).once.with(satisfy { |stanza|
             expect(stanza.to).to eq('someone@example.org')
             expect(stanza).to be_a Blather::Stanza::Message
             expect(stanza.type).to eq(:normal)
             expect(stanza.body).to eq('Hello World!')
             expect(stanza.subject).to be_nil
-          }
+          })
           connection.send_message 'someone', 'example.org', 'Hello World!'
         end
 
         it 'should default to the root domain' do
-          expect(client).to receive(:write).once.with { |stanza|
+          expect(client).to receive(:write).once.with(satisfy { |stanza|
             expect(stanza.to).to eq('someone@rayo.net')
-          }
+          })
           connection.send_message "someone", nil, nil
         end
 
         it 'should send a message with the given subject' do
-          expect(client).to receive(:write).once.with { |stanza|
+          expect(client).to receive(:write).once.with(satisfy { |stanza|
             expect(stanza.subject).to eq("Important Message")
-          }
+          })
           connection.send_message nil, nil, nil, :subject => "Important Message"
         end
       end
@@ -256,14 +256,14 @@ module Punchblock
             it { expect(example_event).to be_a Blather::Stanza::Presence }
 
             it 'should call the event handler with the event' do
-              expect(mock_event_handler).to receive(:call).once.with { |event|
+              expect(mock_event_handler).to receive(:call).once.with(satisfy { |event|
                 expect(event).to be_instance_of Event::Offer
                 expect(event.target_call_id).to eq('9f00061')
                 expect(event.source_uri).to eq('xmpp:9f00061@call.rayo.net')
                 expect(event.domain).to eq('call.rayo.net')
                 expect(event.transport).to eq('xmpp')
                 expect(event.timestamp).to eq(@now)
-              }
+              })
               handle_presence
             end
 
@@ -278,9 +278,9 @@ module Punchblock
               end
 
               it 'should stamp that time on the rayo event' do
-                expect(mock_event_handler).to receive(:call).once.with { |event|
+                expect(mock_event_handler).to receive(:call).once.with(satisfy { |event|
                   expect(event.timestamp).to eq(DateTime.new(2002, 9, 10, 23, 8, 25, 0))
-                }
+                })
                 handle_presence
               end
             end
@@ -298,7 +298,7 @@ module Punchblock
             let(:example_event) { import_stanza irrelevant_xml }
 
             it 'should not be considered to be a rayo event' do
-              expect(example_event.rayo_event?).to be_false
+              expect(example_event.rayo_event?).to be_falsey
             end
 
             it 'should have a nil rayo_node' do
@@ -441,12 +441,12 @@ module Punchblock
           let(:active_speaker_event) { import_stanza active_speaker_xml }
 
           it "should tag those events with a mixer name, rather than a call ID" do
-            expect(mock_event_handler).to receive(:call).once.with { |event|
+            expect(mock_event_handler).to receive(:call).once.with(satisfy { |event|
               expect(event).to be_instance_of Event::StartedSpeaking
               expect(event.target_mixer_name).to eq('foomixer')
               expect(event.target_call_id).to be nil
               expect(event.domain).to eq('rayo.net')
-            }
+            })
             connection.__send__ :handle_presence, active_speaker_event
           end
         end

@@ -17,32 +17,32 @@ module Punchblock
 
         describe '#to' do
           subject { super().to }
-          it { should be == 'tel:+14155551212' }
+          it { is_expected.to eq('tel:+14155551212') }
         end
 
         describe '#from' do
           subject { super().from }
-          it { should be == 'tel:+13035551212' }
+          it { is_expected.to eq('tel:+13035551212') }
         end
 
         describe '#uri' do
           subject { super().uri }
-          it { should be == 'xmpp:foo@bar.com' }
+          it { is_expected.to eq('xmpp:foo@bar.com') }
         end
 
         describe '#timeout' do
           subject { super().timeout }
-          it { should be == 30000 }
+          it { is_expected.to eq(30000) }
         end
 
         describe '#join' do
           subject { super().join }
-          it { should be == Join.new(join_params) }
+          it { is_expected.to eq(Join.new(join_params)) }
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
 
         describe "exporting to Rayo" do
@@ -89,36 +89,36 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         describe '#to' do
           subject { super().to }
-          it { should be == 'tel:+14155551212' }
+          it { is_expected.to eq('tel:+14155551212') }
         end
 
         describe '#from' do
           subject { super().from }
-          it { should be == 'tel:+13035551212' }
+          it { is_expected.to eq('tel:+13035551212') }
         end
 
         describe '#uri' do
           subject { super().uri }
-          it { should be == 'xmpp:foo@bar.com' }
+          it { is_expected.to eq('xmpp:foo@bar.com') }
         end
 
         describe '#timeout' do
           subject { super().timeout }
-          it { should be == 30000 }
+          it { is_expected.to eq(30000) }
         end
 
         describe '#join' do
           subject { super().join }
-          it { should be == Join.new(join_params) }
+          it { is_expected.to eq(Join.new(join_params)) }
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should be == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
 
         context "with no headers provided" do
@@ -126,7 +126,7 @@ module Punchblock
 
           describe '#headers' do
             subject { super().headers }
-            it { should == {} }
+            it { is_expected.to eq({}) }
           end
         end
       end

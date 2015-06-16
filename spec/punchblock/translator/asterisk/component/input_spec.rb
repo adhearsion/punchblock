@@ -349,7 +349,7 @@ module Punchblock
             end
 
             describe 'recognizer' do
-              pending
+              skip
             end
 
             describe 'initial-timeout' do
@@ -522,15 +522,15 @@ module Punchblock
             end
 
             describe 'sensitivity' do
-              pending
+              skip
             end
 
             describe 'min-confidence' do
-              pending
+              skip
             end
 
             describe 'max-silence' do
-              pending
+              skip
             end
           end
 

@@ -14,12 +14,12 @@ module Punchblock
 
         describe '#reason' do
           subject { super().reason }
-          it { should be == :busy }
+          it { is_expected.to eq(:busy) }
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
 
         describe "exporting to Rayo" do
@@ -62,16 +62,16 @@ module Punchblock
 
         subject { RayoNode.from_xml parse_stanza(stanza).root, '9f00061', '1' }
 
-        it { should be_instance_of described_class }
+        it { is_expected.to be_instance_of described_class }
 
         describe '#reason' do
           subject { super().reason }
-          it { should be == :busy }
+          it { is_expected.to eq(:busy) }
         end
 
         describe '#headers' do
           subject { super().headers }
-          it { should == { 'X-skill' => 'agent', 'X-customer-id' => '8877' } }
+          it { is_expected.to eq({ 'X-skill' => 'agent', 'X-customer-id' => '8877' }) }
         end
 
         context "with no headers or reason provided" do
@@ -79,12 +79,12 @@ module Punchblock
 
           describe '#reason' do
             subject { super().reason }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
 
           describe '#headers' do
             subject { super().headers }
-            it { should == {} }
+            it { is_expected.to eq({}) }
           end
         end
       end
@@ -96,7 +96,7 @@ module Punchblock
 
             describe '#reason' do
               subject { super().reason }
-              it { should be == reason }
+              it { is_expected.to eq(reason) }
             end
           end
         end
@@ -106,7 +106,7 @@ module Punchblock
 
           describe '#reason' do
             subject { super().reason }
-            it { should be_nil }
+            it { is_expected.to be_nil }
           end
         end
 

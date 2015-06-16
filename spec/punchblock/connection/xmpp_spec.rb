@@ -248,7 +248,7 @@ module Punchblock
 
             before do
               @now = DateTime.now
-              DateTime.stub now: @now
+              allow(DateTime).to receive_messages now: @now
             end
 
             let(:example_event) { import_stanza offer_xml }

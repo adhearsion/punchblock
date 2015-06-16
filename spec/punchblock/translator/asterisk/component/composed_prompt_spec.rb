@@ -71,7 +71,7 @@ module Punchblock
           let(:playbackstatus) { 'SUCCESS' }
 
           before do
-            call.stub answered?: true, execute_agi_command: true
+            allow(call).to receive_messages answered?: true, execute_agi_command: true
             allow(call).to receive(:channel_var).with('PLAYBACKSTATUS').and_return playbackstatus
             original_command.request!
           end

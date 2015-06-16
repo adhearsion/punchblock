@@ -122,10 +122,11 @@ module Punchblock
           end
 
           def expect_app_with_options(app, options)
-            expect(mock_call).to receive(:execute_agi_command).once.with { |*args|
+            expect(mock_call).to receive(:execute_agi_command).once { |*args|
               expect(args[0]).to eq("EXEC #{app}")
               expect(args[1]).to match options
-            }.and_return code: 200, result: 1
+              {code: 200, result: 1}
+            }
           end
 
           describe 'Output#document' do

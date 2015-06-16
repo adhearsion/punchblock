@@ -74,11 +74,15 @@ describe Punchblock::URIList do
 
   describe "comparisons" do
     context "when the elements are the same" do
-      described_class.new('foo', 'bar').should == described_class.new('foo', 'bar')
+      it "resolves equal" do
+        expect(described_class.new('foo', 'bar')).to eq(described_class.new('foo', 'bar'))
+      end
     end
 
     context "when the elements are different" do
-      described_class.new('foo', 'baz').should_not == described_class.new('bar', 'baz')
+      it "does not resolve equal" do
+        expect(described_class.new('foo', 'baz')).not_to eq(described_class.new('bar', 'baz'))
+      end
     end
   end
 end

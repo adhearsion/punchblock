@@ -39,7 +39,7 @@ module Punchblock
           end
 
           def expect_mrcpsynth_with_options(options)
-            expect(mock_call).to receive(:execute_agi_command).once.with { |*args|
+            expect(mock_call).to receive(:execute_agi_command).once { |*args|
               expect(args[0]).to eq('EXEC MRCPSynth')
               expect(args[1]).to match options
             }.and_return code: 200, result: 1
@@ -299,7 +299,7 @@ module Punchblock
                       sleep 0.5
                     end
                     latch = CountDownLatch.new 1
-                    expect(original_command).to receive(:add_event).once.with { |e|
+                    expect(original_command).to receive(:add_event).once { |e|
                       expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
                     }
@@ -405,7 +405,7 @@ module Punchblock
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    expect(original_command).to receive(:add_event).once.with { |e|
+                    expect(original_command).to receive(:add_event).once { |e|
                       expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
                     }
@@ -714,7 +714,7 @@ module Punchblock
                       expect_answered
                       expect_playback [audio_filename1, audio_filename2].join('&')
                       latch = CountDownLatch.new 1
-                      expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(original_command).to receive(:add_event).once { |e|
                         expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
                       }
@@ -753,7 +753,7 @@ module Punchblock
                         sleep 0.2
                       end
                       latch = CountDownLatch.new 1
-                      expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(original_command).to receive(:add_event).once { |e|
                         expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
                       }
@@ -878,7 +878,7 @@ module Punchblock
                         sleep 0.2
                       end
                       latch = CountDownLatch.new 1
-                      expect(original_command).to receive(:add_event).once.with { |e|
+                      expect(original_command).to receive(:add_event).once { |e|
                         expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                         latch.countdown!
                       }
@@ -1304,7 +1304,7 @@ module Punchblock
                     expect_playback audio_filename2
                     expect_playback audio_filename3
                     latch = CountDownLatch.new 1
-                    expect(original_command).to receive(:add_event).once.with { |e|
+                    expect(original_command).to receive(:add_event).once { |e|
                       expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
                     }
@@ -1318,7 +1318,7 @@ module Punchblock
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    expect(original_command).to receive(:add_event).once.with { |e|
+                    expect(original_command).to receive(:add_event).once { |e|
                       expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
                     }
@@ -1465,7 +1465,7 @@ module Punchblock
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    expect(original_command).to receive(:add_event).once.with { |e|
+                    expect(original_command).to receive(:add_event).once { |e|
                       expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
                     }
@@ -1614,7 +1614,7 @@ module Punchblock
                       sleep 0.2
                     end
                     latch = CountDownLatch.new 1
-                    expect(original_command).to receive(:add_event).once.with { |e|
+                    expect(original_command).to receive(:add_event).once { |e|
                       expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
                       latch.countdown!
                     }

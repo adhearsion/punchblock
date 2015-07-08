@@ -58,6 +58,14 @@ module Punchblock
               expect(subject).to receive(:send_complete_event).once.with Punchblock::Event::Complete::Hangup.new
               subject.call_ended
             end
+
+            it "should deregister component from translator" do
+              translator.register_component(subject)
+              expect(translator.component_with_id(subject.id)).not_to be nil
+              expect(translator).to receive(:handle_pb_event).once
+              subject.call_ended
+              expect(translator.component_with_id(subject.id)).to be nil
+            end
           end
 
           describe '#execute_command' do

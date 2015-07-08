@@ -72,6 +72,10 @@ module Punchblock
         @components[component.id] ||= component
       end
 
+      def deregister_component(id)
+        @components.delete id
+      end
+
       def component_with_id(component_id)
         @components[component_id]
       end

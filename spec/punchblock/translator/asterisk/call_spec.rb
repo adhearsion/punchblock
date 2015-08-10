@@ -868,6 +868,29 @@ module Punchblock
                 translator.handle_ami_event second_ami_event
                 expect(command.response(0.5)).to eq(true)
               end
+
+              context 'out of order' do
+                let :ami_event do
+                  RubyAMI::Event.new 'BridgeEnter',
+                  'Privilege' => "call,all",
+                  'BridgeUniqueid'  => bridge_uniqueid,
+                  'Channel'  => other_channel
+                end
+
+                let :second_ami_event do
+                  RubyAMI::Event.new 'BridgeEnter',
+                  'Privilege' => "call,all",
+                  'BridgeUniqueid'  => bridge_uniqueid,
+                  'Channel'  => call_channel
+                end
+
+                it 'sends the correct Joined events' do
+                  expect(translator).to receive(:handle_pb_event).with expected_joined
+                  expect(translator).to receive(:handle_pb_event).with expected_joined_other
+                  translator.handle_ami_event second_ami_event
+                  expect(command.response(0.5)).to eq(true)
+                end
+              end
             end
           end
 
@@ -922,6 +945,28 @@ module Punchblock
                 expect(translator).to receive(:handle_pb_event).with expected_unjoined
                 expect(translator).to receive(:handle_pb_event).with expected_unjoined_other
                 translator.handle_ami_event second_ami_event
+              end
+
+              context 'out of order' do
+                let :ami_event do
+                  RubyAMI::Event.new 'BridgeLeave',
+                  'Privilege' => "call,all",
+                  'BridgeUniqueid'  => bridge_uniqueid,
+                  'Channel'  => other_channel
+                end
+
+                let :second_ami_event do
+                  RubyAMI::Event.new 'BridgeLeave',
+                  'Privilege' => "call,all",
+                  'BridgeUniqueid'  => bridge_uniqueid,
+                  'Channel'  => call_channel
+                end
+
+                it 'sends the correct Unjoined events' do
+                  expect(translator).to receive(:handle_pb_event).with expected_unjoined
+                  expect(translator).to receive(:handle_pb_event).with expected_unjoined_other
+                  translator.handle_ami_event second_ami_event
+                end
               end
             end
           end

@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/punchblock)
 
+# [v2.7.2](https://github.com/adhearsion/punchblock/compare/v2.7.1...v2.7.2) - [2015-08-10](https://rubygems.org/gems/punchblock/versions/2.7.2)
+  * Bugfix: Process joined events on Asterisk 13 in any order, avoiding Join command timeouts
+
 # [v2.7.1](https://github.com/adhearsion/punchblock/compare/v2.7.0...v2.7.1) - [2015-07-14](https://rubygems.org/gems/punchblock/versions/2.7.1)
   * Bugfix: Ensure components are deregistered from asterisk translator once the call is ended ([#250](https://github.com/adhearsion/punchblock/pull/250))
 

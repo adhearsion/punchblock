@@ -47,7 +47,7 @@ module Punchblock
                   expect(guards.size).to eq(1)
                   expect(guards[0]).to be_a Array
                   expect(guards[0][0]).to eq({:name => 'AsyncAGI', [:[], 'SubEvent']=>'Start'})
-                  expect(guards[0][1]).to eq({:name => 'AsyncAGIExec'})
+                  expect(guards[0][1]).to eq({:name => 'AsyncAGIStart'})
                 }
 
                 subject.execute_command command

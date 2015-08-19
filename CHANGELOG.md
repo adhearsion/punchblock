@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Avoid race conditions in processing calls with interactions between them
 
 # [v2.7.3](https://github.com/adhearsion/punchblock/compare/v2.7.2...v2.7.3) - [2015-08-18](https://rubygems.org/gems/punchblock/versions/2.7.3)
   * Bugfix: Handle correct event for confirming that a component stop was completed on Asterisk 13

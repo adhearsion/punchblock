@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/punchblock)
+
+# [v2.7.3](https://github.com/adhearsion/punchblock/compare/v2.7.2...v2.7.3) - [2015-08-18](https://rubygems.org/gems/punchblock/versions/2.7.3)
   * Bugfix: Handle correct event for confirming that a component stop was completed on Asterisk 13
 
 # [v2.7.2](https://github.com/adhearsion/punchblock/compare/v2.7.1...v2.7.2) - [2015-08-10](https://rubygems.org/gems/punchblock/versions/2.7.2)

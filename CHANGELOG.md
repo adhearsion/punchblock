@@ -2,6 +2,9 @@
   * Change: Remove support for FreeSWITCH translator on Inbound EventSocket
   * Bugfix: Ensure components are deregistered from asterisk translator once the call is ended ([#250](https://github.com/adhearsion/punchblock/pull/250))
 
+# [v2.7.4](https://github.com/adhearsion/punchblock/compare/v2.7.3...v2.7.4) - [2015-08-19](https://rubygems.org/gems/punchblock/versions/2.7.4)
+  * Bugfix: Avoid race conditions in processing calls with interactions between them
+
 # [v2.7.3](https://github.com/adhearsion/punchblock/compare/v2.7.2...v2.7.3) - [2015-08-18](https://rubygems.org/gems/punchblock/versions/2.7.3)
   * Bugfix: Handle correct event for confirming that a component stop was completed on Asterisk 13
 

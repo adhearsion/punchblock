@@ -818,13 +818,6 @@ module Punchblock
                 'Channel'  => call_channel
             end
 
-            context 'when the event is received the first time' do
-              it 'sets an entry in translator.bridges' do
-                subject.process_ami_event ami_event
-                expect(translator.bridges[bridge_uniqueid]).to eq call_channel
-              end
-            end
-
             context 'when the event is received a second time for the same BridgeUniqueid' do
               let(:other_channel) { 'SIP/5678-00000000' }
               let :other_call do
@@ -902,13 +895,6 @@ module Punchblock
                 'Privilege' => "call,all",
                 'BridgeUniqueid'  => bridge_uniqueid,
                 'Channel'  => call_channel
-            end
-
-            context 'when the event is received the first time' do
-              it 'sets an entry in translator.bridges' do
-                subject.process_ami_event ami_event
-                expect(translator.bridges[bridge_uniqueid + '_leave']).to eq call_channel
-              end
             end
 
             context 'when the event is received a second time for the same BridgeUniqueid' do

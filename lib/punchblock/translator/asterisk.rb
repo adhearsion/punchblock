@@ -18,7 +18,7 @@ module Punchblock
       autoload :Channel
       autoload :Component
 
-      attr_reader :ami_client, :connection, :calls, :bridges
+      attr_reader :ami_client, :connection, :calls
 
       REDIRECT_CONTEXT = 'adhearsion-redirect'
       REDIRECT_EXTENSION = '1'
@@ -83,10 +83,27 @@ module Punchblock
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
 
-        if event.name == 'FullyBooted'
+        case event.name
+        when 'FullyBooted'
           handle_pb_event Connection::Connected.new
           run_at_fully_booted
           return
+        when 'BridgeEnter'
+          if other_channel = @bridges.delete(event['BridgeUniqueid'])
+            if event['OtherCall'] = call_for_channel(other_channel)
+              join_command   = call_for_channel(event['Channel']).pending_joins.delete other_channel
+              join_command ||= event['OtherCall'].pending_joins.delete event['Channel']
+              join_command.response = true if join_command
+            end
+          else
+            @bridges[event['BridgeUniqueid']] = event['Channel']
+          end
+        when 'BridgeLeave'
+          if other_channel = @bridges.delete(event['BridgeUniqueid'] + '_leave')
+            event['OtherCall'] = call_for_channel(other_channel)
+          else
+            @bridges[event['BridgeUniqueid'] + '_leave'] = event['Channel']
+          end
         end
 
         handle_varset_ami_event event

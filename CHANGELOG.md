@@ -1,5 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
-  * Bugfix: Revert "Avoid race conditions in processing calls with interactions between them". This introduced crashes relating to creating call actors at high call volume. An alternative fix is in the works.
+  * Bugfix: Alternative fix for "Avoid race conditions in processing calls with interactions between them". The original fix in 2.7.4 introduced crashes relating to creating call actors at high call volume.
 
 # [v2.7.4](https://github.com/adhearsion/punchblock/compare/v2.7.3...v2.7.4) - [2015-08-19](https://rubygems.org/gems/punchblock/versions/2.7.4)
   * YANKED

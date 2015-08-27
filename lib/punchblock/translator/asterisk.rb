@@ -18,7 +18,7 @@ module Punchblock
       autoload :Channel
       autoload :Component
 
-      attr_reader :ami_client, :connection, :calls, :bridges
+      attr_reader :ami_client, :connection, :calls
 
       REDIRECT_CONTEXT = 'adhearsion-redirect'
       REDIRECT_EXTENSION = '1'
@@ -83,10 +83,28 @@ module Punchblock
       def handle_ami_event(event)
         return unless event.is_a? RubyAMI::Event
 
-        if event.name == 'FullyBooted'
+        case event.name
+        when 'FullyBooted'
           handle_pb_event Connection::Connected.new
           run_at_fully_booted
           return
+        when 'BridgeEnter'
+          if other_channel = @bridges.delete(event['BridgeUniqueid'])
+            if event['OtherCall'] = call_for_channel(other_channel)
+              join_command = event['OtherCall'].pending_joins.delete event['Channel']
+              call = call_for_channel(event['Channel'])
+              join_command ||= call.pending_joins.delete other_channel if call
+              join_command.response = true if join_command
+            end
+          else
+            @bridges[event['BridgeUniqueid']] = event['Channel']
+          end
+        when 'BridgeLeave'
+          if other_channel = @bridges.delete(event['BridgeUniqueid'] + '_leave')
+            event['OtherCall'] = call_for_channel(other_channel)
+          else
+            @bridges[event['BridgeUniqueid'] + '_leave'] = event['Channel']
+          end
         end
 
         handle_varset_ami_event event
@@ -151,7 +169,7 @@ module Punchblock
           if call = call_with_id(command.uri)
             command.response = ProtocolError.new.setup(:conflict, 'Call ID already in use')
           else
-            call = Call.new command.to, self, ami_client, connection, nil, command.uri
+            call = Call.new command.to, current_actor, ami_client, connection, nil, command.uri
             register_call call
             call.dial command
           end
@@ -231,7 +249,7 @@ module Punchblock
 
         return if env[:agi_extension] == 'h' || env[:agi_type] == 'Kill'
 
-        call = Call.new event['Channel'], self, ami_client, connection, env
+        call = Call.new event['Channel'], current_actor, ami_client, connection, env
         register_call call
         call.send_offer
       end

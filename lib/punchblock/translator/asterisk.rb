@@ -91,8 +91,9 @@ module Punchblock
         when 'BridgeEnter'
           if other_channel = @bridges.delete(event['BridgeUniqueid'])
             if event['OtherCall'] = call_for_channel(other_channel)
-              join_command   = call_for_channel(event['Channel']).pending_joins.delete other_channel
-              join_command ||= event['OtherCall'].pending_joins.delete event['Channel']
+              join_command = event['OtherCall'].pending_joins.delete event['Channel']
+              call = call_for_channel(event['Channel'])
+              join_command ||= call.pending_joins.delete other_channel if call
               join_command.response = true if join_command
             end
           else

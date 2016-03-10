@@ -7,7 +7,6 @@ module Punchblock
     class Asterisk
       class Call
         include HasGuardedHandlers
-        include DeadActorSafety
 
         InvalidCommandError = Class.new Punchblock::Error
 

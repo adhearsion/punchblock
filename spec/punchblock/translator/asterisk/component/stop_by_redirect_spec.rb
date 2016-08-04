@@ -18,7 +18,8 @@ module Punchblock
           let(:connection)  { double 'Connection' }
           let(:ami_client)  { double('AMI Client').as_null_object }
           let(:translator)  { Punchblock::Translator::Asterisk.new ami_client, connection }
-          let(:mock_call)   { Call.new 'SIP/foo', translator, ami_client, connection }
+          let(:call_id)     { SecureRandom.uuid }
+          let(:mock_call)   { Call.new 'SIP/foo', translator, ami_client, connection, {}, call_id }
 
           subject { MockComponent.new Hash.new, mock_call }
 
@@ -52,6 +53,12 @@ module Punchblock
                 subject.set_complete
                 subject.execute_command command
                 expect(command.response(0.1)).to be_a ProtocolError
+              end
+
+              it "returns a not found error if the channel is down" do
+                expect(mock_call).to receive(:redirect_back).and_raise(ChannelGoneError)
+                subject.execute_command command
+                expect(command.response(0.1)).to eq(Punchblock::ProtocolError.new.setup(:item_not_found, "Could not find a call with ID #{call_id}", call_id))
               end
             end
           end

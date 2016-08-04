@@ -13,3 +13,5 @@ matrix:
 notifications:
   irc: "irc.freenode.org#adhearsion"
 sudo: false
+before_install:
+  - gem install bundler

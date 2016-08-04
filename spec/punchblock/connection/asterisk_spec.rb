@@ -76,7 +76,7 @@ module Punchblock
       end
 
       it 'sends events from RubyAMI to the translator' do
-        pending "Replace with integration tests"
+        skip "Replace with integration tests"
         event = RubyAMI::Event.new 'FullyBooted'
         expect(subject.translator.async).to receive(:handle_ami_event).once.with event
         expect(subject.translator.async).to receive(:handle_ami_event).once.with RubyAMI::Stream::Disconnected.new
@@ -85,7 +85,7 @@ module Punchblock
 
       describe '#write' do
         it 'sends a command to the translator' do
-          pending "Replace with integration tests"
+          skip "Replace with integration tests"
           command = double 'Command'
           options = {:foo => :bar}
           expect(subject.translator.async).to receive(:execute_command).once.with command, options

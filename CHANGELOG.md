@@ -1,6 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
   * Change: Remove support for FreeSWITCH translator on Inbound EventSocket
-  * Bugfix: Ensure components are deregistered from asterisk translator once the call is ended ([#250](https://github.com/adhearsion/punchblock/pull/250))
   * Bugfix: Return the correct error when the call is down when stopping an output rather than crashing the translator ([#256](https://github.com/adhearsion/punchblock/pull/256))
   * Bugfix: Handle more AMI error responses which mean the channel is not found
 

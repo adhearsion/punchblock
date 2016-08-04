@@ -43,7 +43,7 @@ module Punchblock
       describe '#run' do
         it 'starts the RubyAMI::Stream' do
           expect(subject.ami_client.wrapped_object).to receive(:run).once do
-            subject.ami_client.terminate
+            subject.ami_client.terminate!
           end
           expect { subject.run }.to raise_error DisconnectedError
         end

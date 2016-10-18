@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/punchblock)
+  * Bugfix: Return correct recording uri for wav49 format with Asterisk.
   * Change: Remove support for FreeSWITCH translator on Inbound EventSocket
   * Bugfix: Return the correct error when the call is down when stopping an output rather than crashing the translator ([#256](https://github.com/adhearsion/punchblock/pull/256))
   * Bugfix: Handle more AMI error responses which mean the channel is not found

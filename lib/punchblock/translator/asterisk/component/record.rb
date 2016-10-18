@@ -80,7 +80,8 @@ module Punchblock
           end
 
           def recording
-            Punchblock::Component::Record::Recording.new :uri => "file://#{filename}.#{@format}"
+            ext = @format.gsub('wav49', 'WAV')
+            Punchblock::Component::Record::Recording.new :uri => "file://#{filename}.#{ext}"
           end
 
           def stop_reason

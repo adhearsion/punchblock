@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<state_machine>, ["~> 1.0"]
   s.add_runtime_dependency %q<future-resource>, ["~> 1.0"]
   s.add_runtime_dependency %q<has-guarded-handlers>, ["~> 1.5"]
-  s.add_runtime_dependency %q<celluloid>, ["~> 0.15.2"]
+  s.add_runtime_dependency %q<celluloid>, ["~> 0.15", ">= 0.15.2"]
   s.add_runtime_dependency %q<ruby_ami>, ["~> 2.2"]
   s.add_runtime_dependency %q<ruby_speech>, ["~> 2.3"]
   s.add_runtime_dependency %q<virtus>, ["~> 1.0"]

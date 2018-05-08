@@ -129,12 +129,12 @@ module Punchblock
                     if all_numbers?(node.text)
                       #Valid node, do nothing.
                     else
-                      raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+                      raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
                     end
                   when String
-                    raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.' if node.include?(' ')
+                    raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details' if node.include?(' ')
                   else
-                  raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+                  raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
                 end
               end
             end
@@ -162,10 +162,10 @@ module Punchblock
                  if all_numbers?(node.text)
                    say_number(node.text)
                  else
-                   raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+                   raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
                  end
                 else
-                 raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+                 raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
               end
             end
           end

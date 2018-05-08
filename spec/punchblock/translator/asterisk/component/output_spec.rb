@@ -503,6 +503,10 @@ module Punchblock
                   expect(mock_call).to receive(:execute_agi_command).once.with('EXEC Playback', audio_filename + ',noanswer').and_return code: 200
                 end
 
+                def expect_say_number(number)
+                  expect(mock_call).to receive(:execute_agi_command).once.with('EXEC SayNumber', number).and_return code: 200
+                end
+
                 let(:audio_filename) { 'tt-monkeys' }
 
                 let :ssml_doc do
@@ -703,7 +707,8 @@ module Punchblock
 
                     it 'should playback all audio files using Playback' do
                       latch = CountDownLatch.new 2
-                      expect_playback [audio_filename1, audio_filename2].join('&')
+                      expect_playback audio_filename1
+                      expect_playback audio_filename2
                       expect_answered
                       subject.execute
                       latch.wait 2
@@ -712,7 +717,8 @@ module Punchblock
 
                     it 'should send a complete event after the final file has finished playback' do
                       expect_answered
-                      expect_playback [audio_filename1, audio_filename2].join('&')
+                      expect_playback audio_filename1
+                      expect_playback audio_filename2
                       latch = CountDownLatch.new 1
                       expect(original_command).to receive(:add_event).once { |e|
                         expect(e.reason).to be_a Punchblock::Component::Output::Complete::Finish
@@ -722,6 +728,41 @@ module Punchblock
                       expect(latch.wait(2)).to be_truthy
                     end
                   end
+
+                  context 'with an audio file and a number' do
+                    let(:audio_filename) { 'filename' }
+                    let :ssml_doc do
+                      RubySpeech::SSML.draw do
+                        audio :src => audio_filename
+                        say_as(:interpret_as => :cardinal) { '1234' }
+                      end
+                    end
+
+                    it 'should playback an audio file, and say a number' do
+                      expect_answered
+                      expect_playback audio_filename
+                      expect_say_number '1234'
+                      subject.execute
+                    end
+                  end
+
+                  context 'with an audio file and a number+text' do
+                    let(:audio_filename) { 'filename' }
+                    let :ssml_doc do
+                      RubySpeech::SSML.draw do
+                        audio :src => audio_filename
+                        say_as(:interpret_as => :cardinal) { '1234X' }
+                      end
+                    end
+
+                    it "should return an unrenderable document error" do
+                      subject.execute
+                      error = ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.'
+                      expect(original_command.response(0.1)).to eq(error)
+                    end
+                  end
+
+
 
                   context "with an SSML document containing elements other than <audio/>" do
                     let :ssml_doc do

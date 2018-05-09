@@ -119,23 +119,12 @@ module Punchblock
             @call.send_progress if @early
           end
 
+          # Validates if the input document contains only audio files, or numbers.
           def validate_audio_number_only
             render_docs.each do |doc|
               doc.value.children.each do |node|
-                case node
-                when RubySpeech::SSML::Audio
-                  # Valid node, do nothing
-                when RubySpeech::SSML::SayAs
-                  if all_numbers?(node.text)
-                    #Valid node, do nothing.
-                  else
-                    raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
-                  end
-                when String
-                  raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details' if node.include?(' ')
-                else
-                  raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
-                end
+                next if RubySpeech::SSML::Audio === node || (RubySpeech::SSML::SayAs === node && all_numbers?(node.text) ) || (String === node && !node.include?(' '))
+                raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
               end
             end
           end

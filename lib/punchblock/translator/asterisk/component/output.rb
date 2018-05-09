@@ -31,7 +31,7 @@ module Punchblock
 
             case rendering_engine.to_sym
             when :asterisk
-              validate_audio_number_only
+              validate_audio_or_number_only
               setup_for_native
 
               repeat_times.times do
@@ -119,8 +119,8 @@ module Punchblock
             @call.send_progress if @early
           end
 
-          # Validates if the input document contains only audio files, or numbers.
-          def validate_audio_number_only
+          # Validates if the input document contains only audio files, or numbers.  Raises UnrendernableDocError if the document isn't valid.
+          def validate_audio_or_number_only
             render_docs.each do |doc|
               doc.value.children.each do |node|
                 next if RubySpeech::SSML::Audio === node || (RubySpeech::SSML::SayAs === node && all_numbers?(node.text) ) || (String === node && !node.include?(' '))

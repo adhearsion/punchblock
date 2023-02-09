@@ -179,14 +179,20 @@ module Punchblock
       end
 
       def run_at_fully_booted
-        send_ami_action 'Command', 'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
+        if redirect_context_status =~ /failed/
+          send_ami_action 'Command', 'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
 
-        result = send_ami_action 'Command', 'Command' => "dialplan show #{REDIRECT_CONTEXT}"
-        if result.text_body =~ /failed/
-          pb_logger.error "Punchblock failed to add the #{REDIRECT_EXTENSION} extension to the #{REDIRECT_CONTEXT} context. Please add a [#{REDIRECT_CONTEXT}] entry to your dialplan."
+          if redirect_context_status =~ /failed/
+            pb_logger.error "Punchblock failed to add the #{REDIRECT_EXTENSION} extension to the #{REDIRECT_CONTEXT} context. Please add a [#{REDIRECT_CONTEXT}] entry to your dialplan."
+          end
         end
 
         check_recording_directory
+      end
+
+      def redirect_context_status
+        result = send_ami_action 'Command', 'Command' => "dialplan show #{REDIRECT_CONTEXT}"
+        result.text_body
       end
 
       def check_recording_directory

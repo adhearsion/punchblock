@@ -193,6 +193,9 @@ module Punchblock
       def redirect_context_status
         result = send_ami_action 'Command', 'Command' => "dialplan show #{REDIRECT_CONTEXT}"
         result.text_body
+
+      rescue RubyAMI::Error => e
+        e.text_body
       end
 
       def check_recording_directory

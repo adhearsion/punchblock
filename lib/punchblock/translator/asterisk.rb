@@ -180,6 +180,7 @@ module Punchblock
 
       def run_at_fully_booted
         if redirect_context_status =~ /failed/
+          pb_logger.warn "Redirect context #{REDIRECT_CONTEXT} does not exist! Adding context to dialplan"
           send_ami_action 'Command', 'Command' => "dialplan add extension #{REDIRECT_EXTENSION},#{REDIRECT_PRIORITY},AGI,agi:async into #{REDIRECT_CONTEXT}"
 
           if redirect_context_status =~ /failed/

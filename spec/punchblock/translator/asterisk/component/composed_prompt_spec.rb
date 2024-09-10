@@ -129,7 +129,7 @@ module Punchblock
                 end
 
                 context "if output fails to start" do
-                  let(:output_response) { ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.' }
+                  let(:output_response) { ProtocolError.new.setup 'unrenderable document error', 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details' }
 
                   let :ssml_doc do
                     RubySpeech::SSML.draw do

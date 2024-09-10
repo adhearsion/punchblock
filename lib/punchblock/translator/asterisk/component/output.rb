@@ -31,12 +31,12 @@ module Punchblock
 
             case rendering_engine.to_sym
             when :asterisk
-              validate_audio_only
+              validate_audio_or_number_only
               setup_for_native
 
               repeat_times.times do
                 render_docs.each do |doc|
-                  playback(filenames(doc).values) || raise(PlaybackError)
+                  play_doc_asterisk(doc)
                 end
               end
             when :native_or_unimrcp
@@ -119,9 +119,13 @@ module Punchblock
             @call.send_progress if @early
           end
 
-          def validate_audio_only
+          # Validates if the input document contains only audio files, or numbers.  Raises UnrendernableDocError if the document isn't valid.
+          def validate_audio_or_number_only
             render_docs.each do |doc|
-              filenames doc, -> { raise UnrenderableDocError, 'The provided document could not be rendered. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details.' }
+              doc.value.children.each do |node|
+                next if RubySpeech::SSML::Audio === node || (RubySpeech::SSML::SayAs === node && all_numbers?(node.text) ) || (String === node && !node.include?(' '))
+                raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
+              end
             end
           end
 
@@ -136,20 +140,27 @@ module Punchblock
             end
           end
 
-          def filenames(doc, check_audio_only_policy = -> {})
-            names = {}
+          def play_doc_asterisk(doc)
             doc.value.children.each do |node|
               case node
               when RubySpeech::SSML::Audio
-                names[node] = path_for_audio_node node
+                playback([path_for_audio_node(node)]) || raise(PlaybackError)
               when String
-                check_audio_only_policy.call if node.include?(' ')
-                names[nil] = node
-              else
-                check_audio_only_policy.call
+                  playback([node])   || raise(PlaybackError)
+              when RubySpeech::SSML::SayAs
+                 if all_numbers?(node.text)
+                   say_number(node.text)
+                 else
+                   raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
+                 end
+                else
+                 raise UnrenderableDocError, 'The provided document could not be rendered. When using Asterisk rendering the document must contain either numbers, or links to audio files. See http://adhearsion.com/docs/common_problems#unrenderable-document-error for details'
               end
             end
-            names
+          end
+         
+          def all_numbers?(input)
+            !!(/^[0-9]+$/ =~ input)
           end
 
           def playback_options(paths)
@@ -164,6 +175,11 @@ module Punchblock
             @call.channel_var('PLAYBACKSTATUS') != 'FAILED'
           end
 
+          def say_number(number)
+             return true if @stopped
+             @call.execute_agi_command 'EXEC SayNumber', number
+          end
+          
           def fallback_doc(original, failed_audio_node)
             children = failed_audio_node.nokogiri_children
             copied_doc original, children

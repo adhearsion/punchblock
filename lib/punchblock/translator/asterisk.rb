@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require 'celluloid'
+require 'celluloid/autostart'
 require 'ruby_ami'
 
 module Punchblock

@@ -3,7 +3,7 @@
 require 'punchblock'
 require 'countdownlatch'
 require 'logger'
-require 'celluloid'
+require 'celluloid/autostart'
 require 'coveralls'
 require 'ruby_ami'
 Coveralls.wear!
